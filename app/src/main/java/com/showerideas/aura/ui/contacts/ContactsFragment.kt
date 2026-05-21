@@ -34,7 +34,8 @@ class ContactsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         adapter = ContactsAdapter { contact ->
-            // TODO: navigate to contact detail
+            ContactDetailBottomSheet.newInstance(contact.id)
+                .show(childFragmentManager, "contact_detail")
         }
         binding.recyclerView.adapter = adapter
 

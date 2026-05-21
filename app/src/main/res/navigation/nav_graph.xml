@@ -25,11 +25,7 @@
     <fragment
         android:id="@+id/contactsFragment"
         android:name="com.showerideas.aura.ui.contacts.ContactsFragment"
-        android:label="Contacts">
-        <action
-            android:id="@+id/action_exchange_to_contacts"
-            app:destination="@id/contactsFragment" />
-    </fragment>
+        android:label="Contacts" />
 
     <fragment
         android:id="@+id/exchangeFragment"

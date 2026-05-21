@@ -43,6 +43,8 @@ class MainActivity : AppCompatActivity() {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 add(Manifest.permission.POST_NOTIFICATIONS)
+                // Required for Wi-Fi P2P used by Nearby Connections on API 33+
+                add(Manifest.permission.NEARBY_WIFI_DEVICES)
             }
         }.toTypedArray()
 

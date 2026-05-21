@@ -52,7 +52,9 @@ class VolumeButtonListenerService : Service() {
     }
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    // Synchronised deque — MediaSession callbacks may arrive off the main thread
     private val pressTimestamps = ArrayDeque<Long>(REQUIRED_PRESSES + 1)
+    private val timestampLock = Any()
 
     // MediaSession approach — intercepts volume key events at the audio focus level
     private val mediaSessionCallback = object : android.media.session.MediaSession.Callback() {
@@ -107,22 +109,25 @@ class VolumeButtonListenerService : Service() {
     }
 
     private fun handleVolumeDown() {
-        val now = System.currentTimeMillis()
-        pressTimestamps.addLast(now)
+        val triggered = synchronized(timestampLock) {
+            val now = System.currentTimeMillis()
+            pressTimestamps.addLast(now)
 
-        // Drop presses outside the time window
-        while (pressTimestamps.isNotEmpty() &&
-            now - pressTimestamps.first() > TRIPLE_PRESS_WINDOW_MS
-        ) {
-            pressTimestamps.removeFirst()
+            // Drop presses outside the time window
+            while (pressTimestamps.isNotEmpty() &&
+                now - pressTimestamps.first() > TRIPLE_PRESS_WINDOW_MS
+            ) {
+                pressTimestamps.removeFirst()
+            }
+
+            Timber.d("Volume down — ${pressTimestamps.size}/$REQUIRED_PRESSES in window")
+
+            if (pressTimestamps.size >= REQUIRED_PRESSES) {
+                pressTimestamps.clear()
+                true
+            } else false
         }
-
-        Timber.d("Volume down — ${pressTimestamps.size}/$REQUIRED_PRESSES in window")
-
-        if (pressTimestamps.size >= REQUIRED_PRESSES) {
-            pressTimestamps.clear()
-            onTriplePressDetected()
-        }
+        if (triggered) onTriplePressDetected()
     }
 
     private fun onTriplePressDetected() {
