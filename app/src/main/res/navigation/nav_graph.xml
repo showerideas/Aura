@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.showerideas.aura.ui.home.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_exchange"
+            app:destination="@id/exchangeFragment"
+            app:enterAnim="@anim/slide_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_down" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.showerideas.aura.ui.profile.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/contactsFragment"
+        android:name="com.showerideas.aura.ui.contacts.ContactsFragment"
+        android:label="Contacts">
+        <action
+            android:id="@+id/action_exchange_to_contacts"
+            app:destination="@id/contactsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/exchangeFragment"
+        android:name="com.showerideas.aura.ui.exchange.ExchangeFragment"
+        android:label="Exchange">
+        <action
+            android:id="@+id/action_exchange_to_contacts"
+            app:destination="@id/contactsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+</navigation>

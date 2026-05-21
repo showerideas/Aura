@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aura</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="btn_activate">Activate AURA</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_record_gesture">Hold to Record Gesture</string>
+    <string name="hint_name">Display Name *</string>
+    <string name="hint_phone">Phone</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_company">Company</string>
+    <string name="hint_title">Title / Role</string>
+    <string name="hint_website">Website</string>
+    <string name="hint_bio">Bio</string>
+    <string name="label_share">Share this field</string>
+    <string name="label_gesture">Gesture Authentication</string>
+    <string name="status_advertising">Broadcasting presence\u2026</string>
+    <string name="status_discovering">Looking for nearby AURA users\u2026</string>
+    <string name="status_connecting">Found someone! Connecting\u2026</string>
+    <string name="status_exchanging">Exchanging contact info securely\u2026</string>
+    <string name="empty_contacts">No contacts yet.\nTriple-press volume down to share.</string>
+    <string name="search_hint">Search contacts\u2026</string>
+</resources>
