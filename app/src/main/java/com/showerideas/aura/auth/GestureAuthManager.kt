@@ -51,6 +51,20 @@ class GestureAuthManager @Inject constructor(
     private val accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
+    // Lazy-initialised once — EncryptedSharedPreferences init has I/O cost, don't recreate per call
+    private val encryptedPrefs: android.content.SharedPreferences by lazy {
+        val masterKey = androidx.security.crypto.MasterKey.Builder(context)
+            .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        androidx.security.crypto.EncryptedSharedPreferences.create(
+            context,
+            "aura_gesture_prefs",
+            masterKey,
+            androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
     private val _recordingState = MutableStateFlow<RecordingState>(RecordingState.Idle)
     val recordingState: StateFlow<RecordingState> = _recordingState
 
@@ -136,7 +150,7 @@ class GestureAuthManager @Inject constructor(
         storedPattern = pattern
         // Serialize feature vector to comma-delimited string for preferences storage
         val vectorString = pattern.featureVector.joinToString(",")
-        getEncryptedPrefs(context).edit()
+        encryptedPrefs.edit()
             .putString(PREFS_KEY_PATTERN, vectorString)
             .putString(PREFS_KEY_PATTERN_ID, pattern.id)
             .apply()
@@ -145,7 +159,7 @@ class GestureAuthManager @Inject constructor(
 
     fun loadStoredPattern(): GesturePattern? {
         storedPattern?.let { return it }
-        val prefs = getEncryptedPrefs(context)
+        val prefs = encryptedPrefs
         val vectorString = prefs.getString(PREFS_KEY_PATTERN, null) ?: return null
         val id = prefs.getString(PREFS_KEY_PATTERN_ID, UUID.randomUUID().toString())!!
         val features = vectorString.split(",").mapNotNull { it.toFloatOrNull() }.toFloatArray()
@@ -171,7 +185,7 @@ class GestureAuthManager @Inject constructor(
 
     fun clearPattern() {
         storedPattern = null
-        getEncryptedPrefs(context).edit()
+        encryptedPrefs.edit()
             .remove(PREFS_KEY_PATTERN)
             .remove(PREFS_KEY_PATTERN_ID)
             .apply()
@@ -232,20 +246,4 @@ class GestureAuthManager @Inject constructor(
         return cost[n - 1][m - 1] / maxOf(n, m).toFloat()
     }
 
-    // -------------------------------------------------------------------------
-    // Internal helpers
-    // -------------------------------------------------------------------------
-
-    private fun getEncryptedPrefs(context: Context): android.content.SharedPreferences {
-        val masterKey = androidx.security.crypto.MasterKey.Builder(context)
-            .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        return androidx.security.crypto.EncryptedSharedPreferences.create(
-            context,
-            "aura_gesture_prefs",
-            masterKey,
-            androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
 }

@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.data.ProfileRepository
@@ -303,10 +304,9 @@ class NearbyExchangeService : Service() {
         scope.launch {
             try {
                 val decrypted = CryptoUtils.decrypt(key, encryptedData)
+                val mapType = object : TypeToken<Map<String, String>>() {}.type
                 val profileMap: Map<String, String> =
-                    gson.fromJson(String(decrypted, Charsets.UTF_8), Map::class.java)
-                        .map { (k, v) -> k.toString() to v.toString() }
-                        .toMap()
+                    gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
 
                 val contact = Contact.fromMap(
                     id = UUID.randomUUID().toString(),

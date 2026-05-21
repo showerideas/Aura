@@ -20,6 +20,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "aura.db")
+            // v1 → vN: add explicit Migration objects here before release.
+            // fallbackToDestructiveMigration is acceptable for v1.0 dev builds only.
             .fallbackToDestructiveMigration()
             .build()
 
