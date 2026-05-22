@@ -16,4 +16,8 @@ object DataStoreKeys {
 
     // PR-16: Auth method preference ("gesture" | "biometric").
     val AUTH_METHOD = stringPreferencesKey("auth_method")
+
+    // PR-19: whether the VolumeButtonListenerService is allowed to run in
+    // the background to detect the triple-press activation gesture.
+    val BG_ACTIVATION_ENABLED = booleanPreferencesKey("bg_activation_enabled")
 }

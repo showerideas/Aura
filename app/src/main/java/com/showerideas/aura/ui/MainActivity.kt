@@ -17,11 +17,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.showerideas.aura.R
+import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.service.VolumeButtonListenerService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import javax.inject.Inject
@@ -30,6 +32,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var onboardingPreferences: OnboardingPreferences
+    @Inject lateinit var authPreferences: AuthPreferences
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -148,7 +151,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onPermissionsGranted() {
-        VolumeButtonListenerService.start(this)
+        // PR-19: only start the background listener if the user hasn't
+        // disabled it in Settings. Defaults to true so first-run behaviour
+        // is unchanged.
+        val bgEnabled = runBlocking { authPreferences.bgActivationEnabled.first() }
+        if (bgEnabled) {
+            VolumeButtonListenerService.start(this)
+        }
     }
 
     private fun registerActivationReceiver() {
@@ -157,6 +166,33 @@ class MainActivity : AppCompatActivity() {
             registerReceiver(activationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(activationReceiver, filter)
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // PR-19: Settings entry point.
+    //
+    // The toolbar gear navigates to the SettingsFragment in the nav graph.
+    // We use the classic onCreate/onSelect menu pair instead of
+    // MenuProvider so existing fragments that already add their own
+    // MenuProviders (e.g. ContactsFragment) don't collide on lifecycle
+    // ordering.
+    // -----------------------------------------------------------------
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                if (navController.currentDestination?.id != R.id.settingsFragment) {
+                    navController.navigate(R.id.settingsFragment)
+                }
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }

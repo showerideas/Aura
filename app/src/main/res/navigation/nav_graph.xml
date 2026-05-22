@@ -64,4 +64,19 @@
             app:popUpTo="@id/homeFragment" />
     </fragment>
 
+    <!-- PR-19: Settings + Blocked devices destinations. -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.showerideas.aura.ui.settings.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settings_to_blocked_devices"
+            app:destination="@id/blockedDevicesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/blockedDevicesFragment"
+        android:name="com.showerideas.aura.ui.settings.BlockedDevicesFragment"
+        android:label="Blocked devices" />
+
 </navigation>

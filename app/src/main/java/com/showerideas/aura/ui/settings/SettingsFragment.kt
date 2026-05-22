@@ -1,0 +1,161 @@
+package com.showerideas.aura.ui.settings
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.showerideas.aura.BuildConfig
+import com.showerideas.aura.R
+import com.showerideas.aura.auth.BiometricAuthHelper
+import com.showerideas.aura.data.AuthPreferences
+import com.showerideas.aura.databinding.FragmentSettingsBinding
+import com.showerideas.aura.service.VolumeButtonListenerService
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+/**
+ * PR-19: top-level Settings screen. Surfaces:
+ *  - Auth method radio group (gesture / biometric — PR-16).
+ *  - Background-activation switch (drives [VolumeButtonListenerService]).
+ *  - Data shortcuts: blocked devices (PR-14), clear gesture, clear all contacts.
+ *  - About: version + privacy policy link.
+ */
+@AndroidEntryPoint
+class SettingsFragment : Fragment() {
+
+    companion object {
+        private const val PRIVACY_POLICY_URL = "https://showerideas.app/aura/privacy"
+    }
+
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: SettingsViewModel by viewModels()
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        wireAuthSection()
+        wireActivationSection()
+        wireDataSection()
+        wireAboutSection()
+    }
+
+    private fun wireAuthSection() {
+        // Disable the biometric option entirely when the device has no
+        // hardware enrolled. The label keeps reading "Biometric" but the
+        // subtitle becomes visible explaining the situation.
+        val biometricAvailable = BiometricAuthHelper.isAvailable(requireContext())
+        binding.rbAuthBiometric.isEnabled = biometricAvailable
+        binding.tvBiometricSubtitle.visibility =
+            if (biometricAvailable) View.GONE else View.VISIBLE
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.authMethod.collect { method ->
+                    binding.rbAuthGesture.isChecked =
+                        method == AuthPreferences.METHOD_GESTURE
+                    binding.rbAuthBiometric.isChecked =
+                        method == AuthPreferences.METHOD_BIOMETRIC
+                }
+            }
+        }
+        binding.rgAuthMethod.setOnCheckedChangeListener { _, checkedId ->
+            val method = when (checkedId) {
+                R.id.rb_auth_biometric -> AuthPreferences.METHOD_BIOMETRIC
+                else -> AuthPreferences.METHOD_GESTURE
+            }
+            viewModel.setAuthMethod(method)
+        }
+    }
+
+    private fun wireActivationSection() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.bgActivationEnabled.collect { enabled ->
+                    if (binding.switchBgActivation.isChecked != enabled) {
+                        binding.switchBgActivation.isChecked = enabled
+                    }
+                }
+            }
+        }
+        binding.switchBgActivation.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setBgActivation(isChecked)
+            if (isChecked) {
+                VolumeButtonListenerService.start(requireContext())
+            } else {
+                VolumeButtonListenerService.stop(requireContext())
+            }
+        }
+    }
+
+    private fun wireDataSection() {
+        binding.rowBlockedDevices.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_blocked_devices)
+        }
+        binding.rowClearGesture.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Delete your recorded gesture?")
+                .setMessage(
+                    "You'll need to record a new gesture in Profile before " +
+                        "any future exchange can use gesture authentication."
+                )
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Delete") { _, _ ->
+                    viewModel.clearGesture()
+                    Toast.makeText(requireContext(), "Gesture cleared", Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
+        binding.rowClearContacts.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val count = viewModel.contactCount()
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Delete all $count contacts?")
+                    .setMessage("This cannot be undone.")
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton("Delete all") { _, _ ->
+                        viewModel.clearAllContacts()
+                        Toast.makeText(requireContext(), "Contacts cleared", Toast.LENGTH_SHORT).show()
+                    }
+                    .show()
+            }
+        }
+    }
+
+    private fun wireAboutSection() {
+        binding.tvVersion.text = BuildConfig.VERSION_NAME
+        binding.rowPrivacy.setOnClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+            } catch (e: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    "Privacy policy: $PRIVACY_POLICY_URL",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
