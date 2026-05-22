@@ -39,4 +39,24 @@
     <string name="exchange_cancelled">Exchange cancelled</string>
     <string name="exchange_error_generic">Something went wrong. Try again.</string>
     <string name="exchange_error_bluetooth">Exchange failed. Make sure Bluetooth and location are on.</string>
+
+    <!-- Permission rationale (PR-03) -->
+    <string name="perm_rationale_title">AURA needs a few permissions</string>
+    <string name="perm_rationale_subtitle">These let AURA find and exchange contacts with people nearby. Nothing leaves your device.</string>
+    <string name="perm_rationale_open_settings">Open Settings</string>
+    <string name="perm_rationale_not_now">Not now</string>
+    <string name="perm_label_bluetooth_scan">Nearby scanning</string>
+    <string name="perm_reason_bluetooth_scan">To find people around you over Bluetooth.</string>
+    <string name="perm_label_bluetooth_advertise">Broadcast presence</string>
+    <string name="perm_reason_bluetooth_advertise">So others nearby can find you when you activate AURA.</string>
+    <string name="perm_label_bluetooth_connect">Bluetooth connect</string>
+    <string name="perm_reason_bluetooth_connect">To exchange the encrypted contact payload with the chosen device.</string>
+    <string name="perm_label_location">Approximate location</string>
+    <string name="perm_reason_location">Android requires this for Bluetooth scanning on older versions.</string>
+    <string name="perm_label_nearby_wifi">Nearby Wi-Fi devices</string>
+    <string name="perm_reason_nearby_wifi">For higher-speed exchange over Wi-Fi P2P when available.</string>
+    <string name="perm_label_notifications">Notifications</string>
+    <string name="perm_reason_notifications">So you see live status while an exchange is running.</string>
+    <string name="perm_label_generic">Permission required</string>
+    <string name="perm_reason_generic">AURA needs this permission to function correctly.</string>
 </resources>
