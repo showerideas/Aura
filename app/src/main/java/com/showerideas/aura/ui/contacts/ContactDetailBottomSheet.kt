@@ -93,21 +93,29 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     // name so reading down the action row is intelligible.
                     // PR-20: pulled the format strings into strings.xml so
                     // they translate as a unit.
-                    val r = com.showerideas.aura.R.string
+                    // Note: `R.string` is a Kotlin class, not an object, so it
+                    // cannot be aliased to a `val`. Reference resources via
+                    // the fully-qualified `R.string.*` form below.
                     val nameForA11y = contact.displayName.ifBlank {
-                        getString(r.contact_unknown_name)
+                        getString(com.showerideas.aura.R.string.contact_unknown_name)
                     }
-                    binding.btnCall.contentDescription = getString(r.contact_a11y_call, nameForA11y)
-                    binding.btnEmail.contentDescription = getString(r.contact_a11y_email, nameForA11y)
-                    binding.btnCopy.contentDescription = getString(r.contact_a11y_copy, nameForA11y)
-                    binding.btnExport.contentDescription = getString(r.contact_a11y_export, nameForA11y)
-                    binding.btnDelete.contentDescription = getString(r.contact_a11y_delete, nameForA11y)
-                    binding.btnBlock.contentDescription = getString(r.contact_a11y_block)
+                    binding.btnCall.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_call, nameForA11y)
+                    binding.btnEmail.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_email, nameForA11y)
+                    binding.btnCopy.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_copy, nameForA11y)
+                    binding.btnExport.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_export, nameForA11y)
+                    binding.btnDelete.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_delete, nameForA11y)
+                    binding.btnBlock.contentDescription =
+                        getString(com.showerideas.aura.R.string.contact_a11y_block)
                     binding.btnFavourite.contentDescription =
                         if (contact.isFavorite)
-                            getString(r.contact_a11y_unmark_favourite, nameForA11y)
+                            getString(com.showerideas.aura.R.string.contact_a11y_unmark_favourite, nameForA11y)
                         else
-                            getString(r.contact_a11y_mark_favourite, nameForA11y)
+                            getString(com.showerideas.aura.R.string.contact_a11y_mark_favourite, nameForA11y)
 
                     binding.btnCall.setOnClickListener {
                         startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.phone}")))
