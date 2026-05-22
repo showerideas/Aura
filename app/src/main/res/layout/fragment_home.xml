@@ -35,6 +35,7 @@
         android:layout_height="200dp"
         android:layout_marginTop="48dp"
         android:text="AURA"
+        android:contentDescription="Activate AURA to share your contact"
         android:textSize="20sp"
         android:textStyle="bold"
         app:backgroundTint="@color/aura_purple"

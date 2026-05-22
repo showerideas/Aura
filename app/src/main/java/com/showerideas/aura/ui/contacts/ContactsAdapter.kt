@@ -49,6 +49,14 @@ class ContactsAdapter(
             binding.ivFavouriteBadge.visibility =
                 if (contact.isFavorite) View.VISIBLE else View.GONE
 
+            // PR-17: synthesise a TalkBack-friendly description that
+            // includes the favourite state and tells the user the row is
+            // tappable. The interior TextViews remain unannotated to
+            // avoid double-announcement.
+            val favSuffix = if (contact.isFavorite) ", favourite" else ""
+            binding.root.contentDescription =
+                "${binding.tvName.text}$favSuffix, ${binding.tvSubtitle.text}, double tap to view details"
+
             binding.root.setOnClickListener { onContactClick(contact) }
         }
     }
