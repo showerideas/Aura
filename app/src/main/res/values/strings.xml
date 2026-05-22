@@ -108,6 +108,10 @@
     <string name="room_join_action">Join</string>
     <string name="room_guest_done">Got the host’s card!</string>
     <string name="room_hold_to_confirm">Hold the action button to confirm with your gesture.</string>
+
+    <!-- Avatar sharing (PR-10) -->
+    <string name="profile_avatar_desc">Tap to pick a profile photo</string>
+    <string name="profile_avatar_too_large">Image was too large — try a smaller picture.</string>
     <plurals name="room_host_count">
         <item quantity="zero">Waiting for people to join…</item>
         <item quantity="one">%d person joined</item>
