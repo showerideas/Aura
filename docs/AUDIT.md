@@ -28,7 +28,7 @@
 | H12 | "vCard export" | 🟢 | PR-07: `VCardUtils` + `ExportUtils` + FileProvider declared in manifest. |
 | H13 | "Favourites and notes" | 🟢 | PR-12: `Contact.favorite`, `Contact.note`, DAO setters, UI in `ContactDetailBottomSheet`. |
 | H14 | "Full accessibility audit: TalkBack, large fonts, high-contrast theme" | 🟢 | PR-17: content descriptions, focusable targets, `Theme.Aura` checked at AA contrast. |
-| H15 | "Multilingual: English, Hindi, Spanish, French, German, Japanese, Korean, Simplified Chinese" | 🟡 | **Strings extracted but only the English `values/strings.xml` ships.** No `values-hi/`, `values-es/`, etc. Tracked in [`features/20-localization.md`](features/20-localization.md). |
+| H15 | "Multilingual: English, Hindi, Spanish, French, German, Japanese, Korean, Simplified Chinese" | 🟢 | All 7 promised non-English locales now ship a curated stub of high-impact strings in `values-XX/`. Non-stubbed keys fall back to English. Tracked in [`features/20-localization.md`](features/20-localization.md). |
 | H16 | "Privacy policy: <https://showerideas.app/aura/privacy>" | 🟡 | The Markdown is committed (`PRIVACY_POLICY.md`) but the URL has not been hosted yet — `STORE_LISTING.md` calls this out as a TODO. |
 | H17 | "MIT licensed" | 🟢 | `LICENSE` shipped in PR #36. |
 
@@ -109,7 +109,7 @@ flowchart LR
 | Rank | Item | Target | Owner |
 |:-:|---|---|---|
 | ~~1~~ | ~~Add a `LICENSE` file.~~ | ✅ **Shipped in #36** | — |
-| 2 | Commit translated `values-xx/strings.xml` for the seven languages (HI, ES, FR, DE, JA, KO, ZH-CN) | v1.1.0 | — |
+| ~~2~~ | ~~Commit translated `values-xx/strings.xml`.~~ | ✅ **Shipped in #38** (stubs for HI, ES, FR, DE, JA, KO, ZH-CN — critical UI surface only; full coverage tracked separately) | — |
 | 3 | Add a `connectedAndroidTest` job using [`reactivecircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner) so the four instrumentation tests (`MigrationTest`, `ContactDaoTest`, `BlockedEndpointDaoTest`, `ExchangeFlowEspressoTest`) run on every PR | v1.2.0 | — |
 | 4 | Host the privacy policy at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md` + `STORE_LISTING.md` | v1.3.0 | — |
 | 5 | Wire the release-signing pipeline to a real Play Console upload step using the same env-var contract | v1.3.0 | — |

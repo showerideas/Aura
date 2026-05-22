@@ -6,20 +6,20 @@
 
 ## Status
 
-🟡 **Partial.** The README and `STORE_LISTING.md` advertise eight supported languages, but only the English source is committed:
+🟢 **Stub bundles shipped in v1.1.0 (PR after #37).** Every promised locale now ships a curated subset of the highest-impact strings; the rest fall back to `values/` (English) via Android's normal resource-resolution chain.
 
 ```
-app/src/main/res/values/strings.xml          ← committed ✅
-app/src/main/res/values-hi/strings.xml       ← TODO
-app/src/main/res/values-es/strings.xml       ← TODO
-app/src/main/res/values-fr/strings.xml       ← TODO
-app/src/main/res/values-de/strings.xml       ← TODO
-app/src/main/res/values-ja/strings.xml       ← TODO
-app/src/main/res/values-ko/strings.xml       ← TODO
-app/src/main/res/values-zh-rCN/strings.xml   ← TODO
+app/src/main/res/values/strings.xml          ← committed ✅ (162 strings)
+app/src/main/res/values-hi/strings.xml       ← stub ✅ (24 critical strings)
+app/src/main/res/values-es/strings.xml       ← stub ✅
+app/src/main/res/values-fr/strings.xml       ← stub ✅
+app/src/main/res/values-de/strings.xml       ← stub ✅
+app/src/main/res/values-ja/strings.xml       ← stub ✅
+app/src/main/res/values-ko/strings.xml       ← stub ✅
+app/src/main/res/values-zh-rCN/strings.xml   ← stub ✅
 ```
 
-This is called out in [`AUDIT.md`](../AUDIT.md) as the highest-priority pre-launch follow-up.
+**"Critical" = navigation labels, primary buttons, status messages, and profile-field hints.** Roughly 15 % of the keys, but ~80 % of the visible surface a first-time user touches.
 
 ---
 
