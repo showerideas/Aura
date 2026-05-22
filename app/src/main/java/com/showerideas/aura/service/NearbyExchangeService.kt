@@ -271,6 +271,9 @@ class NearbyExchangeService : Service() {
         peerCtxByEndpoint.clear()
         connectedCount.value = 0
         currentMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
+        // Reset avatar bookkeeping (PR-10) so a stale awaiting flag cannot
+        // bleed into the next session.
+        awaitingAvatarStream.clear()
 
         Timber.d("Session terminated with state $endState")
         stopSelf()

@@ -67,9 +67,9 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         ?.let { AvatarUtils.loadBitmap(File(it)) }
                     if (avatarBitmap != null) {
                         binding.ivAvatar.setImageBitmap(avatarBitmap)
-                        binding.ivAvatar.visibility = android.view.View.VISIBLE
+                        binding.ivAvatar.visibility = View.VISIBLE
                     } else {
-                        binding.ivAvatar.visibility = android.view.View.GONE
+                        binding.ivAvatar.visibility = View.GONE
                     }
                     binding.tvTitle.text = buildString {
                         if (contact.title.isNotBlank()) append(contact.title)

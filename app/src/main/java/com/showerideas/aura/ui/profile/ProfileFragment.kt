@@ -30,21 +30,23 @@ class ProfileFragment : Fragment() {
 
     private val viewModel: ProfileViewModel by viewModels()
 
-    // PR-10: SAF image picker. The resulting Uri is compressed into
-    // filesDir/avatar.jpg and the path is persisted on the Profile entity.
+    // PR-10: SAF image picker. The result callback can fire after a config
+    // change or detachment — use nullable context/_binding so it never NPEs.
     private val pickAvatarLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri ?: return@registerForActivityResult
-        val target = AvatarUtils.userAvatarFile(requireContext())
-        val ok = AvatarUtils.compressFromUri(requireContext(), uri, target)
+        val ctx = context ?: return@registerForActivityResult
+        val target = AvatarUtils.userAvatarFile(ctx)
+        val ok = AvatarUtils.compressFromUri(ctx, uri, target)
         if (!ok) {
-            Toast.makeText(requireContext(), R.string.profile_avatar_too_large, Toast.LENGTH_LONG).show()
+            Toast.makeText(ctx, R.string.profile_avatar_too_large, Toast.LENGTH_LONG).show()
             return@registerForActivityResult
         }
-        // Refresh the preview by re-decoding from disk.
-        binding.ivAvatar.setImageBitmap(AvatarUtils.loadBitmap(target))
         viewModel.setAvatarUri(target.absolutePath)
+        // Update the preview only if the view is still alive; otherwise the
+        // Profile flow collector in onViewCreated will reload it on resume.
+        _binding?.ivAvatar?.setImageBitmap(AvatarUtils.loadBitmap(target))
     }
 
     override fun onCreateView(
