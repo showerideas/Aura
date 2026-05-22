@@ -16,6 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.showerideas.aura.databinding.BottomSheetContactDetailBinding
+import com.showerideas.aura.utils.shareVCard
+import com.showerideas.aura.utils.toVCard
 import com.showerideas.aura.utils.toast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -86,6 +88,13 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(ClipData.newPlainText("Contact", text))
                         requireContext().toast("Copied to clipboard")
+                    }
+                    binding.btnExport.setOnClickListener {
+                        // PR-07: export this contact as a .vcf via FileProvider.
+                        requireContext().shareVCard(
+                            contact.toVCard(),
+                            contact.displayName.ifBlank { "contact" }
+                        )
                     }
                     binding.btnDelete.setOnClickListener {
                         viewModel.deleteContact(contact)
