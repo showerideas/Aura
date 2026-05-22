@@ -116,6 +116,27 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         dismiss()
                     }
 
+                    // PR-14: block-this-device action. Guarded by a
+                    // confirmation dialog because it's irreversible from
+                    // here — unblocking lives in Settings (PR-19).
+                    binding.btnBlock.setOnClickListener {
+                        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Block this device?")
+                            .setMessage(
+                                "Future exchanges from this device will be " +
+                                    "silently rejected. You can unblock it later in Settings."
+                            )
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton("Block") { _, _ ->
+                                viewModel.blockEndpoint(
+                                    contact.sourceEndpointId,
+                                    note = contact.displayName
+                                )
+                                dismiss()
+                            }
+                            .show()
+                    }
+
                     // PR-12: favourite toggle. Re-observing viewModel.contact
                     // is handled by this same collector — toggleFavorite
                     // pushes the updated copy back into _contact so the icon

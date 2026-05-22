@@ -14,6 +14,7 @@ import com.google.android.gms.nearby.connection.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
+import com.showerideas.aura.data.BlocklistRepository
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.Contact
@@ -155,6 +156,8 @@ class NearbyExchangeService : Service() {
 
     @Inject lateinit var profileRepository: ProfileRepository
     @Inject lateinit var contactRepository: ContactRepository
+    /** PR-14: blocklist check on every incoming connection initiation. */
+    @Inject lateinit var blocklistRepository: BlocklistRepository
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -344,6 +347,23 @@ class NearbyExchangeService : Service() {
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Timber.d("Connection initiated from $endpointId (${info.endpointName})")
+            // PR-14: hard-reject blocked endpoints before any handshake.
+            // runBlocking is acceptable here — the DAO call is a single PK
+            // lookup on a local SQLite DB and we cannot return until we
+            // decide accept vs reject (Nearby's contract is synchronous).
+            val blocked = try {
+                kotlinx.coroutines.runBlocking {
+                    blocklistRepository.isBlocked(endpointId)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Blocklist lookup failed for $endpointId — defaulting to accept")
+                false
+            }
+            if (blocked) {
+                connectionsClient.rejectConnection(endpointId)
+                Timber.i("Rejected blocked endpoint: $endpointId")
+                return
+            }
             // Auto-accept — AURA's security is at the gesture + ECDH layer
             connectionsClient.acceptConnection(endpointId, payloadCallback)
         }

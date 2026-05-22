@@ -7,7 +7,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.showerideas.aura.data.local.AppDatabase
 import com.showerideas.aura.data.local.Migrations
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,5 +58,57 @@ class MigrationTest {
         assertNotNull(db.contactDao())
         assertNotNull(db.profileDao())
         db.close()
+    }
+
+    /**
+     * PR-14: validate the 1→ 2 migration. Inserts a sample contact at v1,
+     * runs the migration, and asserts:
+     *   - existing rows survive untouched (no data loss)
+     *   - the new blocked_endpoints table is now usable
+     */
+    @Test
+    @Throws(IOException::class)
+    fun migrate_1_to_2_preserves_data_and_creates_blocked_endpoints() {
+        // Seed a v1 database with one contact.
+        helper.createDatabase(TEST_DB, 1).use { v1 ->
+            v1.execSQL(
+                """
+                INSERT INTO contacts (
+                    id, displayName, phone, email, company, title, website, bio,
+                    avatarUri, sourceEndpointId, rssiAtExchange, receivedAt,
+                    isFavorite, notes
+                ) VALUES (
+                    'c1', 'Ada Lovelace', '111', 'ada@x.com', '', '', '', '',
+                    '', 'ep-1', 0, 1700000000000, 0, ''
+                )
+                """.trimIndent()
+            )
+        }
+
+        // Run the migration in isolation and let Room validate the
+        // resulting schema against the exported v2 JSON.
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DB, 2, true, Migrations.MIGRATION_1_2
+        )
+
+        // Existing row preserved.
+        migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c1'").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(1, c.getInt(0))
+        }
+        // New table exists and is empty.
+        migrated.query("SELECT COUNT(*) FROM blocked_endpoints").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(0, c.getInt(0))
+        }
+        // And it accepts inserts.
+        migrated.execSQL(
+            "INSERT INTO blocked_endpoints (endpointId, blockedAt, note) VALUES ('ep-2', 1, '')"
+        )
+        migrated.query("SELECT note FROM blocked_endpoints WHERE endpointId = 'ep-2'").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals("", c.getString(0))
+        }
+        migrated.close()
     }
 }
