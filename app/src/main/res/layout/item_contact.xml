@@ -72,7 +72,7 @@
                     android:layout_marginStart="6dp"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_star"
-                    android:tint="@color/aura_cyan"
+                    app:tint="@color/aura_cyan"
                     android:visibility="gone" />
             </LinearLayout>
 

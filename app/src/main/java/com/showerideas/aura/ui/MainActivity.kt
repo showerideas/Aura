@@ -162,11 +162,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun registerActivationReceiver() {
         val filter = IntentFilter(VolumeButtonListenerService.ACTION_AURA_ACTIVATE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(activationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(activationReceiver, filter)
-        }
+        // ContextCompat.registerReceiver handles the API 33+ RECEIVER_*_EXPORTED
+        // flag requirement transparently across all minSdk levels we support;
+        // it also satisfies the UnspecifiedRegisterReceiverFlag lint check that
+        // was failing with the prior if/else branch.
+        ContextCompat.registerReceiver(
+            this,
+            activationReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     // -----------------------------------------------------------------
