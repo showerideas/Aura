@@ -36,6 +36,14 @@
     <!-- Vibration for gesture feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Camera — QR fallback scanner (PR-08). Marked not required so the
+         app still installs on devices without a camera; the QR fallback
+         path simply won't work in that case. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <!-- Foreground service (volume-button listener) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"
