@@ -21,6 +21,7 @@ import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.ui.MainActivity
 import com.showerideas.aura.utils.CryptoUtils
+import com.showerideas.aura.utils.PayloadValidator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -165,6 +166,8 @@ class NearbyExchangeService : Service() {
 
     private lateinit var sessionId: String
     private var timeoutJob: Job? = null
+    /** PR-15: periodic nonce cache flush so memory is bounded. */
+    private var noncePurgeJob: Job? = null
 
     /**
      * State of the per-session ECDH handshake. Replaces the previous
@@ -214,6 +217,15 @@ class NearbyExchangeService : Service() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification("Starting exchange..."))
+        // PR-15: kick off the periodic nonce-cache flush. Lifetime matches
+        // the service: cancelled in onDestroy. The cache is shared across
+        // sessions so the purge interval is much longer than a session.
+        noncePurgeJob = scope.launch {
+            while (isActive) {
+                delay(PayloadValidator.PURGE_INTERVAL_MS)
+                PayloadValidator.purgeNonces()
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -229,6 +241,10 @@ class NearbyExchangeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        // PR-15: stop the nonce purger before tearing the scope down so we
+        // don't strand a coroutine waiting on delay().
+        noncePurgeJob?.cancel()
+        noncePurgeJob = null
         scope.cancel()
         connectionsClient.stopAllEndpoints()
         connectionsClient.stopAdvertising()
@@ -706,9 +722,18 @@ class NearbyExchangeService : Service() {
                     val mapType = object : TypeToken<Map<String, String>>() {}.type
                     val profileMap: Map<String, String> =
                         gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
+                    // PR-15: replay/skew check on every profile, even room.
+                    when (val r = PayloadValidator.validateProfilePayload(profileMap)) {
+                        is PayloadValidator.ValidationResult.Ok -> { /* continue */ }
+                        else -> {
+                            Timber.w("Room-guest profile rejected: $r (endpoint=$endpointId)")
+                            return@launch
+                        }
+                    }
+                    val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
                     val contact = Contact.fromMap(
                         id = UUID.randomUUID().toString(),
-                        map = profileMap,
+                        map = cleanMap,
                         endpointId = endpointId
                     )
                     contactRepository.save(contact)
@@ -732,9 +757,25 @@ class NearbyExchangeService : Service() {
                 val profileMap: Map<String, String> =
                     gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
 
+                // PR-15: stale-timestamp / replay-nonce guard. A captured
+                // ciphertext is useless to an attacker because the _ts and
+                // _nonce inside are validated here — a re-played payload
+                // either trips the age check or the nonce dedup set.
+                when (val r = PayloadValidator.validateProfilePayload(profileMap)) {
+                    is PayloadValidator.ValidationResult.Ok -> { /* continue */ }
+                    else -> {
+                        Timber.w("Profile payload rejected: $r (endpoint=$endpointId)")
+                        terminateSession(ExchangeSession.State.ERROR)
+                        return@launch
+                    }
+                }
+                // Strip the underscore-prefixed internal fields before
+                // materialising a Contact — they're protocol metadata, not
+                // user-visible profile data.
+                val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
                 val contact = Contact.fromMap(
                     id = UUID.randomUUID().toString(),
-                    map = profileMap,
+                    map = cleanMap,
                     endpointId = endpointId
                 )
                 contactRepository.save(contact)
@@ -778,7 +819,11 @@ class NearbyExchangeService : Service() {
         }
         scope.launch {
             val profile = profileRepository.get() ?: return@launch
-            val profileJson = gson.toJson(profile.toShareableMap())
+            // PR-15: stamp _ts + _nonce on the outgoing payload so the peer
+            // can prove freshness and reject any later replay of these bytes.
+            val stamped = profile.toShareableMap().toMutableMap()
+            PayloadValidator.stampOutgoingProfile(stamped)
+            val profileJson = gson.toJson(stamped)
             val encrypted = CryptoUtils.encrypt(key, profileJson.toByteArray(Charsets.UTF_8))
             val payload = byteArrayOf(MSG_TYPE_PROFILE) + encrypted
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
