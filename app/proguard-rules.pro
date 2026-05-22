@@ -22,3 +22,17 @@
 
 # Security crypto
 -keep class androidx.security.crypto.** { *; }
+
+# PR-08: ZXing / journeyapps QR scanner — reflection-heavy.
+-keep class com.journeyapps.** { *; }
+-keep class com.google.zxing.** { *; }
+-dontwarn com.google.zxing.**
+-dontwarn com.journeyapps.**
+
+# PR-07: FileProvider for vCard share intents.
+-keep class androidx.core.content.FileProvider { *; }
+
+# PR-14: BlockedEndpoint model — explicitly kept (already covered by the
+# model.** rule above, but pinned here so future refactors of the umbrella
+# rule don't accidentally drop it).
+-keep class com.showerideas.aura.model.BlockedEndpoint { *; }

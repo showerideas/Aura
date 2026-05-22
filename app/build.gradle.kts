@@ -34,6 +34,21 @@ android {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
+    // PR-22: release signing. The keystore itself is never committed —
+    // both its file path and the three secret values are read from
+    // environment variables. CI (.github/workflows/ci.yml) leaves them
+    // blank, so assembleRelease still runs (the resulting APK is
+    // unsigned and used only for compile-time validation). Real release
+    // builds set these in the Play publishing pipeline.
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "keystore/release.jks")
+            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD") ?: ""
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -50,6 +65,10 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
+            // PR-22: wire the env-driven signing config. Safe to attach
+            // unconditionally — when env vars are unset, Gradle simply
+            // skips signing and produces an unsigned release APK.
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
