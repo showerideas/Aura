@@ -35,7 +35,9 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnActivate.setOnClickListener {
-            NearbyExchangeService.start(requireContext())
+            // The exchange fragment is responsible for running the gesture
+            // gate and then starting NearbyExchangeService once the gate is
+            // opened. We must not start the service before that — see PR-01.
             findNavController().navigate(R.id.action_home_to_exchange)
         }
 

@@ -23,4 +23,20 @@
     <string name="status_exchanging">Exchanging contact info securely\u2026</string>
     <string name="empty_contacts">No contacts yet.\nTriple-press volume down to share.</string>
     <string name="search_hint">Search contacts\u2026</string>
+
+    <!-- Exchange screen / gesture gate (PR-01) -->
+    <string name="someone">someone</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_done">Done</string>
+    <string name="exchange_gesture_hint">Hold and perform your gesture to confirm</string>
+    <string name="exchange_gesture_confirmed">Gesture confirmed!</string>
+    <string name="exchange_gesture_failed_retry">Gesture didn\'t match. %1$d attempt(s) left.</string>
+    <string name="exchange_gesture_failed_max">Too many failed gesture attempts. Exchange cancelled.</string>
+    <string name="exchange_unprotected_title">No gesture set</string>
+    <string name="exchange_unprotected_message">No gesture set — exchange is unprotected. Continue?</string>
+    <string name="exchange_completed">Exchanged with %1$s!</string>
+    <string name="exchange_cancelled">Exchange cancelled</string>
+    <string name="exchange_error_generic">Something went wrong. Try again.</string>
+    <string name="exchange_error_bluetooth">Exchange failed. Make sure Bluetooth and location are on.</string>
 </resources>
