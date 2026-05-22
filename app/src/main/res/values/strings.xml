@@ -112,6 +112,93 @@
     <!-- Avatar sharing (PR-10) -->
     <string name="profile_avatar_desc">Tap to pick a profile photo</string>
     <string name="profile_avatar_too_large">Image was too large — try a smaller picture.</string>
+
+    <!--
+      ============================================================
+      TRANSLATION GUIDE (PR-20)
+      - Format strings use %1$s / %1$d positional placeholders so
+        translators can re-order arguments per language. Keep the
+        placeholders intact in every translation.
+      - Sections are grouped by screen for context.
+      - URLs and brand names ("AURA") are NOT to be translated.
+      ============================================================
+    -->
+
+    <!-- PR-20: Home -->
+    <string name="home_greeting">Hey, %1$s</string>
+    <string name="home_greeting_no_profile">Set up your profile to get started</string>
+    <string name="home_contact_count">%1$d contacts exchanged</string>
+    <string name="home_aura_button">AURA</string>
+
+    <!-- PR-20: Profile -->
+    <string name="profile_btn_record">Record Gesture</string>
+    <string name="profile_btn_recording">Recording… (release to stop)</string>
+    <string name="profile_btn_rerecord">Re-record Gesture</string>
+    <string name="profile_gesture_status_perform">Perform your gesture now</string>
+    <string name="profile_gesture_status_saved">Gesture saved!</string>
+    <string name="profile_gesture_status_saved_idle">Gesture saved</string>
+    <string name="profile_gesture_status_none">No gesture set</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="profile_gesture_strength_label">gesture strength</string>
+    <string name="profile_gesture_strength_a11y">Gesture strength: %1$d out of 5</string>
+
+    <!-- PR-20: Contact detail bottom sheet -->
+    <string name="contact_copied">Copied to clipboard</string>
+    <string name="contact_unknown_name">Unknown</string>
+    <string name="contact_block_button">Block this device</string>
+    <string name="contact_block_dialog_title">Block this device?</string>
+    <string name="contact_block_dialog_message">Future exchanges from this device will be silently rejected. You can unblock it later in Settings.</string>
+    <string name="contact_block_dialog_confirm">Block</string>
+    <string name="contact_a11y_call">Call %1$s</string>
+    <string name="contact_a11y_email">Email %1$s</string>
+    <string name="contact_a11y_copy">Copy %1$s to clipboard</string>
+    <string name="contact_a11y_export">Export %1$s as vCard</string>
+    <string name="contact_a11y_delete">Delete contact %1$s</string>
+    <string name="contact_a11y_mark_favourite">Mark %1$s as favourite</string>
+    <string name="contact_a11y_unmark_favourite">Unmark %1$s as favourite</string>
+    <string name="contact_a11y_block">Block this device</string>
+    <string name="contact_a11y_row">%1$s, %2$s, double tap to view details</string>
+    <string name="contact_a11y_row_favourite">%1$s, favourite, %2$s, double tap to view details</string>
+    <string name="contact_note_hint">Add a note…</string>
+    <string name="contact_save_note">Save note</string>
+
+    <!-- PR-20: Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_auth">Authentication</string>
+    <string name="settings_section_activation">Activation</string>
+    <string name="settings_section_data">Data</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_auth_method">Auth method</string>
+    <string name="settings_auth_gesture">Gesture</string>
+    <string name="settings_auth_biometric">Biometric</string>
+    <string name="settings_biometric_unavailable">Not available on this device</string>
+    <string name="settings_bg_activation">Background activation</string>
+    <string name="settings_blocked_devices">Blocked devices</string>
+    <string name="settings_clear_gesture">Clear gesture</string>
+    <string name="settings_clear_contacts">Clear all contacts</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_clear_gesture_title">Delete your recorded gesture?</string>
+    <string name="settings_clear_gesture_message">You\'ll need to record a new gesture in Profile before any future exchange can use gesture authentication.</string>
+    <string name="settings_clear_gesture_confirm">Delete</string>
+    <string name="settings_clear_gesture_done">Gesture cleared</string>
+    <string name="settings_clear_contacts_title">Delete all %1$d contacts?</string>
+    <string name="settings_clear_contacts_message">This cannot be undone.</string>
+    <string name="settings_clear_contacts_confirm">Delete all</string>
+    <string name="settings_clear_contacts_done">Contacts cleared</string>
+    <string name="settings_privacy_fallback">Privacy policy: %1$s</string>
+
+    <!-- PR-20: Blocked devices -->
+    <string name="blocked_devices_title">Blocked devices</string>
+    <string name="blocked_devices_empty">No blocked devices</string>
+    <string name="blocked_devices_unblock">Unblock</string>
+
+    <!-- PR-20: Biometric prompt copy -->
+    <string name="biometric_title">Confirm identity</string>
+    <string name="biometric_subtitle">Share your contact with the person nearby</string>
+    <string name="biometric_negative">Cancel</string>
+    <string name="biometric_unavailable_fallback">Biometric unavailable, using gesture</string>
+    <string name="biometric_auth_failed">Authentication failed</string>
     <plurals name="room_host_count">
         <item quantity="zero">Waiting for people to join…</item>
         <item quantity="one">%d person joined</item>
