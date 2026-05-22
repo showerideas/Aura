@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.showerideas.aura.data.local.AppDatabase
 import com.showerideas.aura.data.local.ContactDao
+import com.showerideas.aura.data.local.Migrations
 import com.showerideas.aura.data.local.ProfileDao
 import dagger.Module
 import dagger.Provides
@@ -20,9 +21,10 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "aura.db")
-            // v1 → vN: add explicit Migration objects here before release.
-            // fallbackToDestructiveMigration is acceptable for v1.0 dev builds only.
-            .fallbackToDestructiveMigration()
+            // PR-04: explicit migration framework. `fallbackToDestructiveMigration`
+            // is intentionally NOT called — any future schema bump must add a
+            // matching Migration object to [Migrations.ALL].
+            .addMigrations(*Migrations.ALL)
             .build()
 
     @Provides
