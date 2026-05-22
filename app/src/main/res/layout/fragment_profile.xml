@@ -171,7 +171,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="No gesture set"
+            android:text="@string/profile_gesture_status_none"
             android:textColor="@color/on_surface_secondary"
             android:textSize="13sp" />
 
@@ -180,7 +180,7 @@
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_marginTop="8dp"
-            android:text="Hold to Record Gesture"
+            android:text="@string/btn_record_gesture"
             app:backgroundTint="@color/aura_purple" />
 
         <!--
@@ -231,7 +231,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:gravity="center"
-            android:text="gesture strength"
+            android:text="@string/profile_gesture_strength_label"
             android:textColor="@color/on_surface_secondary"
             android:textSize="11sp"
             android:visibility="gone" />
