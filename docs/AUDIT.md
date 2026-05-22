@@ -1,6 +1,6 @@
 # Intent-fulfilment audit
 
-> Every promise the project makes to a user, a reviewer, or the Play Store is listed below and scored **green / yellow / red** against the code as it stands on `main` at the time of writing (after PR-22i, commit [`a251fa6`](https://github.com/showerideas/Aura/commit/a251fa6)).
+> Every promise the project makes to a user, a reviewer, or the Play Store is listed below and scored **green / yellow / red** against the code as it stands on `main` after the v1.0.0 release ([`v1.0.0`](https://github.com/showerideas/Aura/releases/tag/v1.0.0)).
 
 | Legend | Meaning |
 |---|---|
@@ -30,6 +30,7 @@
 | H14 | "Full accessibility audit: TalkBack, large fonts, high-contrast theme" | 🟢 | PR-17: content descriptions, focusable targets, `Theme.Aura` checked at AA contrast. |
 | H15 | "Multilingual: English, Hindi, Spanish, French, German, Japanese, Korean, Simplified Chinese" | 🟡 | **Strings extracted but only the English `values/strings.xml` ships.** No `values-hi/`, `values-es/`, etc. Tracked in [`features/20-localization.md`](features/20-localization.md). |
 | H16 | "Privacy policy: <https://showerideas.app/aura/privacy>" | 🟡 | The Markdown is committed (`PRIVACY_POLICY.md`) but the URL has not been hosted yet — `STORE_LISTING.md` calls this out as a TODO. |
+| H17 | "MIT licensed" | 🟢 | `LICENSE` shipped in PR #36. |
 
 ---
 
@@ -62,37 +63,55 @@
 
 ---
 
-## 3. Cross-cutting gaps
+## 3. Cross-cutting status
 
 ```mermaid
-flowchart TB
-    subgraph done[Delivered ✅]
-        d1[Crypto / ECDH / AES-GCM]
-        d2[Gesture + biometric gates]
-        d3[Room v2 + migrations]
-        d4[Blocklist + replay window]
-        d5[QR + Room mode + Avatar]
-        d6[Accessibility + Onboarding]
-        d7[CI + R8 + unsigned APK artifact]
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':28,'rankSpacing':34,'padding':12}}}%%
+flowchart LR
+    subgraph DONE["✅&nbsp;Delivered&nbsp;in&nbsp;v1.0.0"]
+        direction TB
+        d1["Crypto<br/>ECDH&nbsp;+&nbsp;AES-GCM"]:::ok
+        d2["Gesture<br/>+&nbsp;biometric"]:::ok
+        d3["Room&nbsp;v2<br/>+&nbsp;migrations"]:::ok
+        d4["Blocklist<br/>+&nbsp;replay"]:::ok
+        d5["QR&nbsp;+&nbsp;Room<br/>+&nbsp;Avatar"]:::ok
+        d6["Onboarding<br/>+&nbsp;A11y"]:::ok
+        d7["CI&nbsp;+&nbsp;R8<br/>+&nbsp;APK"]:::ok
+        d8["MIT<br/>LICENSE"]:::ok
     end
-    subgraph gap[Outstanding 🟡 / 🔴]
-        g1[Translated values-xx resources]
-        g2[Espresso UI tests in CI emulator job]
-        g3[Signed release pipeline → Play Console]
-        g4[Hosted privacy-policy URL]
-        g5[LICENSE file]
+    subgraph TODO["🛠️&nbsp;Roadmap"]
+        direction TB
+        g1["7&nbsp;translated<br/>values-xx/"]:::warn
+        g2["Emulator&nbsp;CI<br/>connectedTest"]:::warn
+        g3["Signed&nbsp;.aab<br/>→&nbsp;Play&nbsp;Console"]:::warn
+        g4["Hosted<br/>privacy&nbsp;URL"]:::warn
     end
-    d1 --> g3
-    d7 --> g3
-    d6 --> g1
+    DONE -->|"v1.1"| g1
+    DONE -->|"v1.2"| g2
+    DONE -->|"v1.3"| g3
+    DONE -->|"v1.3"| g4
+
+    classDef ok fill:#22C55E,color:#FFFFFF,stroke:#166534,stroke-width:2px
+    classDef warn fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
 ```
 
-### Priority-ranked follow-ups
+### Priority-ranked roadmap
 
-1. **Add a `LICENSE` file.** README says "MIT" but the file is missing; without it the repo is implicitly all-rights-reserved.
-2. **Commit translated `values-xx/strings.xml`** for the eight languages promised in the Store listing — even machine-translated drafts are better than the current English-only fallback.
-3. **Add a `connectedAndroidTest` job** to CI (using `reactivecircus/android-emulator-runner`) so the four instrumentation tests (`MigrationTest`, `ContactDaoTest`, `BlockedEndpointDaoTest`, `ExchangeFlowEspressoTest`) actually run on every PR rather than only on local machines.
-4. **Host the privacy policy** at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md` + `STORE_LISTING.md`.
-5. **Wire the release-signing pipeline** to a real Play Console upload step using the same env-var contract.
+| Rank | Item | Target | Owner |
+|:-:|---|---|---|
+| ~~1~~ | ~~Add a `LICENSE` file.~~ | ✅ **Shipped in #36** | — |
+| 2 | Commit translated `values-xx/strings.xml` for the seven languages (HI, ES, FR, DE, JA, KO, ZH-CN) | v1.1.0 | — |
+| 3 | Add a `connectedAndroidTest` job using [`reactivecircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner) so the four instrumentation tests (`MigrationTest`, `ContactDaoTest`, `BlockedEndpointDaoTest`, `ExchangeFlowEspressoTest`) run on every PR | v1.2.0 | — |
+| 4 | Host the privacy policy at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md` + `STORE_LISTING.md` | v1.3.0 | — |
+| 5 | Wire the release-signing pipeline to a real Play Console upload step using the same env-var contract | v1.3.0 | — |
 
-None of these block the v1.0.0 unsigned validation APK that ships in the [first GitHub Release](https://github.com/showerideas/Aura/releases/latest); they are all "before Play Store submission" items.
+None of these blocked **[v1.0.0 — first public release](https://github.com/showerideas/Aura/releases/tag/v1.0.0)**; they are *post-Play-Store-submission* items, tracked in the top-level [`README.md` → Roadmap](../README.md#-roadmap).

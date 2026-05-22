@@ -7,6 +7,18 @@
 ## 1. Key material at a glance
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart TB
     subgraph Long-lived["Long-lived (per device, lifetime of install)"]
         IDKEY[/Identity EC256 keypair<br/>alias: aura_device_identity<br/>Android Keystore (non-extractable)/]
@@ -88,6 +100,18 @@ Full justification per permission lives in [`features/03-permission-rationale.md
 ## 5. Build / release hardening
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     src[Kotlin source] --> compile[kotlinc<br/>jvmTarget=17]
     compile --> r8[R8<br/>shrink + obfuscate]

@@ -7,6 +7,18 @@
 ## 1. Entity-relationship diagram
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 erDiagram
     Profile {
         long id PK "single row, id = 0"
@@ -69,6 +81,18 @@ erDiagram
 The migration is exercised at instrumentation-test time in `MigrationTest.kt` against the on-disk schema JSON; see [`features/04-room-migrations.md`](features/04-room-migrations.md).
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     V1[(v1<br/>Contact, Profile)] -- MIGRATION_1_2 --> V2[(v2<br/>+ BlockedEndpoint)]
     V2 -. "future PRs" .-> V3[(...)]

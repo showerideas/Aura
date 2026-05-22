@@ -9,6 +9,18 @@ The implementation lives in [`GestureAuthManager.kt`](../app/src/main/java/com/s
 ## 1. Pipeline overview
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     A[Accelerometer<br/>SensorManager<br/>SENSOR_DELAY_GAME] --> B[Ring buffer of<br/>GestureEvent(x,y,z,t)]
     B --> C{Recording<br/>finished?}
@@ -35,6 +47,18 @@ The whole pipeline is JVM-pure once the samples are captured — `computeVarianc
 A user's motion will *never* be repeated exactly: the speed, amplitude, and orientation drift between attempts. **Dynamic Time Warping** measures how well two sequences align under non-linear time stretching, so a slightly faster repetition of the same shape still matches. A cryptographic hash would force the user to be a robot.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     subgraph attempt
     A1["a₁ a₂ a₃ a₄ a₅"]
@@ -60,6 +84,18 @@ A flat or near-constant feature vector — for example, the phone sitting on a t
 The strength meter on the Profile screen turns the same variance value into a 1-of-5 bar visualisation:
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     var[(variance σ²)] --> sc{σ² range}
     sc -- "< 0.05" --> S1[1 / 5 — weak]
