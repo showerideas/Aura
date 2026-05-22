@@ -16,9 +16,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.showerideas.aura.databinding.BottomSheetContactDetailBinding
+import com.showerideas.aura.utils.AvatarUtils
 import com.showerideas.aura.utils.shareVCard
 import com.showerideas.aura.utils.toVCard
 import com.showerideas.aura.utils.toast
+import java.io.File
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -58,6 +60,17 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                 viewModel.contact.collect { contact ->
                     contact ?: return@collect
                     binding.tvName.text = contact.displayName.ifBlank { "Unknown" }
+
+                    // PR-10: show the peer's avatar bitmap when present.
+                    val avatarBitmap = contact.avatarUri
+                        .takeIf { it.isNotBlank() }
+                        ?.let { AvatarUtils.loadBitmap(File(it)) }
+                    if (avatarBitmap != null) {
+                        binding.ivAvatar.setImageBitmap(avatarBitmap)
+                        binding.ivAvatar.visibility = android.view.View.VISIBLE
+                    } else {
+                        binding.ivAvatar.visibility = android.view.View.GONE
+                    }
                     binding.tvTitle.text = buildString {
                         if (contact.title.isNotBlank()) append(contact.title)
                         if (contact.title.isNotBlank() && contact.company.isNotBlank()) append(" @ ")

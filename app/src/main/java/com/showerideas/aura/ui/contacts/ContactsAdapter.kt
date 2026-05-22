@@ -1,12 +1,15 @@
 package com.showerideas.aura.ui.contacts
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.showerideas.aura.databinding.ItemContactBinding
 import com.showerideas.aura.model.Contact
+import com.showerideas.aura.utils.AvatarUtils
+import java.io.File
 
 class ContactsAdapter(
     private val onContactClick: (Contact) -> Unit
@@ -30,6 +33,17 @@ class ContactsAdapter(
                 .mapNotNull { it.firstOrNull()?.uppercaseChar() }
                 .joinToString("")
                 .ifBlank { "?" }
+
+            // PR-10: prefer the saved photo when present; fall back to initials.
+            val avatarPath = contact.avatarUri
+            val bitmap = if (avatarPath.isNotBlank()) AvatarUtils.loadBitmap(File(avatarPath)) else null
+            if (bitmap != null) {
+                binding.ivAvatar.setImageBitmap(bitmap)
+                binding.ivAvatar.visibility = View.VISIBLE
+            } else {
+                binding.ivAvatar.setImageDrawable(null)
+                binding.ivAvatar.visibility = View.GONE
+            }
 
             binding.root.setOnClickListener { onContactClick(contact) }
         }

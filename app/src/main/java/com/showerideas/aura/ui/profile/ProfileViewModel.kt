@@ -60,4 +60,16 @@ class ProfileViewModel @Inject constructor(
     fun saveGesturePattern(pattern: GesturePattern) = gestureAuthManager.savePattern(pattern)
 
     fun clearGesturePattern() = gestureAuthManager.clearPattern()
+
+    /**
+     * PR-10: persist the absolute filesystem path of the user's chosen
+     * avatar onto the Profile entity. The actual JPEG lives on disk —
+     * we only store its path here so the share pipeline can stream it.
+     */
+    fun setAvatarUri(path: String) {
+        viewModelScope.launch {
+            val existing = profileRepository.getOrCreate()
+            profileRepository.update(existing.copy(avatarUri = path))
+        }
+    }
 }

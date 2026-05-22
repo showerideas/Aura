@@ -71,6 +71,9 @@ class NearbyExchangeService : Service() {
         // Message type prefixes (single-byte header in the payload)
         private const val MSG_TYPE_PUBLIC_KEY: Byte = 0x01
         private const val MSG_TYPE_PROFILE: Byte = 0x02
+        // PR-10: avatar stream signalling.
+        private const val MSG_TYPE_AVATAR: Byte = 0x03
+        private const val MAX_AVATAR_BYTES: Long = 200_000L
 
         val sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
 
@@ -369,16 +372,36 @@ class NearbyExchangeService : Service() {
     // Payload handling
     // -------------------------------------------------------------------------
 
+    /**
+     * PR-10: per-endpoint flag, set when the peer announces an incoming
+     * avatar STREAM with [MSG_TYPE_AVATAR]. Cleared once we've ingested
+     * the STREAM (or dropped it for being oversized / missing contact).
+     */
+    private val awaitingAvatarStream: MutableSet<String> = mutableSetOf()
+
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            if (payload.type != Payload.Type.BYTES) return
-            val data = payload.asBytes() ?: return
-            if (data.isEmpty()) return
-
-            when (data[0]) {
-                MSG_TYPE_PUBLIC_KEY -> handleIncomingPublicKey(endpointId, data.copyOfRange(1, data.size))
-                MSG_TYPE_PROFILE -> handleIncomingProfile(endpointId, data.copyOfRange(1, data.size))
-                else -> Timber.w("Unknown message type: ${data[0]}")
+            when (payload.type) {
+                Payload.Type.BYTES -> {
+                    val data = payload.asBytes() ?: return
+                    if (data.isEmpty()) return
+                    when (data[0]) {
+                        MSG_TYPE_PUBLIC_KEY ->
+                            handleIncomingPublicKey(endpointId, data.copyOfRange(1, data.size))
+                        MSG_TYPE_PROFILE ->
+                            handleIncomingProfile(endpointId, data.copyOfRange(1, data.size))
+                        MSG_TYPE_AVATAR -> {
+                            // Bytes body is intentionally empty — the byte
+                            // header is just an out-of-band signal that a
+                            // STREAM payload will follow shortly.
+                            awaitingAvatarStream.add(endpointId)
+                            Timber.d("Avatar stream announced by $endpointId")
+                        }
+                        else -> Timber.w("Unknown message type: ${data[0]}")
+                    }
+                }
+                Payload.Type.STREAM -> handleIncomingAvatarStream(endpointId, payload)
+                else -> Timber.d("Ignoring payload type ${payload.type} from $endpointId")
             }
         }
 
@@ -578,6 +601,102 @@ class NearbyExchangeService : Service() {
             val payload = byteArrayOf(MSG_TYPE_PROFILE) + encrypted
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
                 .addOnSuccessListener { Timber.d("Encrypted profile sent to $endpointId") }
+
+            // PR-10: ship the avatar (if any) right after the profile so the
+            // receiver can attach it to the contact it just saved.
+            sendAvatarIfPresent(endpointId, profile.avatarUri)
+        }
+    }
+
+    /**
+     * PR-10: send the user's avatar JPEG as a STREAM payload, preceded by
+     * a BYTES MSG_TYPE_AVATAR signal. Silently no-ops when no avatar is set,
+     * the file is missing, empty, or exceeds [MAX_AVATAR_BYTES].
+     */
+    private fun sendAvatarIfPresent(endpointId: String, avatarPath: String) {
+        if (avatarPath.isBlank()) return
+        val file = java.io.File(avatarPath)
+        if (!file.exists() || file.length() <= 0L) {
+            Timber.w("Avatar path is set but file missing/empty: $avatarPath")
+            return
+        }
+        if (file.length() > MAX_AVATAR_BYTES) {
+            Timber.w("Avatar exceeds ${MAX_AVATAR_BYTES}B (${file.length()}) — skipping")
+            return
+        }
+        try {
+            connectionsClient.sendPayload(
+                endpointId,
+                Payload.fromBytes(byteArrayOf(MSG_TYPE_AVATAR))
+            )
+            val pfd = android.os.ParcelFileDescriptor.open(
+                file, android.os.ParcelFileDescriptor.MODE_READ_ONLY
+            )
+            connectionsClient.sendPayload(endpointId, Payload.fromStream(pfd))
+                .addOnSuccessListener {
+                    Timber.d("Avatar stream sent (${file.length()}B) to $endpointId")
+                }
+                .addOnFailureListener { e -> Timber.e(e, "Avatar stream send failed") }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to open avatar for stream send")
+        }
+    }
+
+    /**
+     * PR-10: ingest the peer's avatar STREAM. Resolve the matching saved
+     * contact (most recent for this endpoint), write the bytes into the
+     * dedicated avatars folder, and patch the contact's avatarUri.
+     */
+    private fun handleIncomingAvatarStream(endpointId: String, payload: Payload) {
+        if (!awaitingAvatarStream.contains(endpointId)) {
+            Timber.w("STREAM from $endpointId without preceding MSG_TYPE_AVATAR — dropping")
+            return
+        }
+        val inputStream = payload.asStream()?.asInputStream() ?: return
+        scope.launch {
+            val tmp = java.io.File.createTempFile("avatar-incoming-", ".jpg", cacheDir)
+            try {
+                var written = 0L
+                inputStream.use { input ->
+                    tmp.outputStream().use { out ->
+                        val buf = ByteArray(8 * 1024)
+                        while (true) {
+                            val n = input.read(buf)
+                            if (n <= 0) break
+                            written += n
+                            if (written > MAX_AVATAR_BYTES) {
+                                Timber.w("Avatar from $endpointId exceeded ${MAX_AVATAR_BYTES}B — aborting")
+                                tmp.delete()
+                                awaitingAvatarStream.remove(endpointId)
+                                return@launch
+                            }
+                            out.write(buf, 0, n)
+                        }
+                    }
+                }
+                val contact = contactRepository.findLatestByEndpoint(endpointId)
+                if (contact == null) {
+                    Timber.w("No saved contact yet for $endpointId; discarding avatar")
+                    tmp.delete()
+                    return@launch
+                }
+                val dest = com.showerideas.aura.utils.AvatarUtils.peerAvatarFile(
+                    this@NearbyExchangeService, contact.id
+                )
+                if (dest.exists()) dest.delete()
+                if (!tmp.renameTo(dest)) {
+                    // Fallback to copy when rename fails (different fs).
+                    tmp.inputStream().use { i -> dest.outputStream().use { o -> i.copyTo(o) } }
+                    tmp.delete()
+                }
+                contactRepository.update(contact.copy(avatarUri = dest.absolutePath))
+                Timber.i("Saved peer avatar (${dest.length()}B) for ${contact.displayName}")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to ingest avatar stream")
+                tmp.delete()
+            } finally {
+                awaitingAvatarStream.remove(endpointId)
+            }
         }
     }
 

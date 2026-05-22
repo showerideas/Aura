@@ -1,20 +1,24 @@
 package com.showerideas.aura.ui.profile
 
 import android.animation.ObjectAnimator
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.CycleInterpolator
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.showerideas.aura.R
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.databinding.FragmentProfileBinding
 import com.showerideas.aura.model.GesturePattern
+import com.showerideas.aura.utils.AvatarUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -25,6 +29,23 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ProfileViewModel by viewModels()
+
+    // PR-10: SAF image picker. The resulting Uri is compressed into
+    // filesDir/avatar.jpg and the path is persisted on the Profile entity.
+    private val pickAvatarLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri ?: return@registerForActivityResult
+        val target = AvatarUtils.userAvatarFile(requireContext())
+        val ok = AvatarUtils.compressFromUri(requireContext(), uri, target)
+        if (!ok) {
+            Toast.makeText(requireContext(), R.string.profile_avatar_too_large, Toast.LENGTH_LONG).show()
+            return@registerForActivityResult
+        }
+        // Refresh the preview by re-decoding from disk.
+        binding.ivAvatar.setImageBitmap(AvatarUtils.loadBitmap(target))
+        viewModel.setAvatarUri(target.absolutePath)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -48,6 +69,10 @@ class ProfileFragment : Fragment() {
                     binding.etTitle.setText(profile.title)
                     binding.etWebsite.setText(profile.website)
                     binding.etBio.setText(profile.bio)
+
+                    // PR-10: load avatar from disk if previously saved.
+                    val avatar = AvatarUtils.userAvatarFile(requireContext())
+                    AvatarUtils.loadBitmap(avatar)?.let { binding.ivAvatar.setImageBitmap(it) }
                 }
             }
         }
@@ -92,6 +117,9 @@ class ProfileFragment : Fragment() {
         }
 
         binding.btnSave.setOnClickListener { saveProfile() }
+
+        // PR-10: tap the avatar to launch the system picker.
+        binding.ivAvatar.setOnClickListener { pickAvatarLauncher.launch("image/*") }
     }
 
     private fun saveProfile() {

@@ -17,6 +17,18 @@
         android:background="#555566"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Avatar (PR-10) — hidden when the contact has no photo -->
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/circle_avatar_bg"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/tv_name"
         android:layout_width="match_parent"
