@@ -3,6 +3,7 @@ package com.showerideas.aura.di
 import android.content.Context
 import androidx.room.Room
 import com.showerideas.aura.data.local.AppDatabase
+import com.showerideas.aura.data.local.BlockedEndpointDao
 import com.showerideas.aura.data.local.ContactDao
 import com.showerideas.aura.data.local.Migrations
 import com.showerideas.aura.data.local.ProfileDao
@@ -32,4 +33,9 @@ object DatabaseModule {
 
     @Provides
     fun provideProfileDao(db: AppDatabase): ProfileDao = db.profileDao()
+
+    /** PR-14: blocklist DAO. */
+    @Provides
+    fun provideBlockedEndpointDao(db: AppDatabase): BlockedEndpointDao =
+        db.blockedEndpointDao()
 }

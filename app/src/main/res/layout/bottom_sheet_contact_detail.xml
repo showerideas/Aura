@@ -177,4 +177,17 @@
 
     </LinearLayout>
 
+    <!--
+      PR-14: block this device. Stays a low-emphasis text button so it
+      doesn't compete visually with the primary actions row above.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_block"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Block this device"
+        android:textColor="@color/error" />
+
 </LinearLayout>
