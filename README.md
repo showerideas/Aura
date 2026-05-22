@@ -46,6 +46,7 @@
 | 🔄 **Exchange flow** | [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md) |
 | ✋ **Gesture auth** | [`docs/GESTURE_AUTH.md`](docs/GESTURE_AUTH.md) |
 | 🧪 **Audit** (intent fulfilment) | [`docs/AUDIT.md`](docs/AUDIT.md) |
+| 📸 **Showcase** (screenshots + demo) | [`docs/SHOWCASE.md`](docs/SHOWCASE.md) |
 | 🛠 **Build locally** | [`docs/BUILD.md`](docs/BUILD.md) |
 | 📜 **Privacy policy** | [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
 | 🛍 **Play Store copy** | [`STORE_LISTING.md`](STORE_LISTING.md) |
