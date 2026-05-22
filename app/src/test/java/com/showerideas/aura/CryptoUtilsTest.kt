@@ -87,4 +87,67 @@ class CryptoUtilsTest {
         val pt = CryptoUtils.decrypt(bobKey, ct)
         assertArrayEquals(plaintext, pt)
     }
+
+    // -------------------------------------------------------------------------
+    // PR-13: ECDSA challenge / response
+    //
+    // The Android Keystore path (getOrCreateDeviceIdentityKey) is unavailable
+    // on the JVM — so for unit testing we generate plain secp256r1 keys via
+    // KeyPairGenerator and exercise signChallenge / verifyChallenge directly.
+    // -------------------------------------------------------------------------
+
+    private fun makeIdentityKeyPair(): java.security.KeyPair {
+        val kpg = java.security.KeyPairGenerator.getInstance("EC")
+        kpg.initialize(java.security.spec.ECGenParameterSpec("secp256r1"))
+        return kpg.generateKeyPair()
+    }
+
+    @Test
+    fun `signChallenge and verifyChallenge round trip passes`() {
+        val kp = makeIdentityKeyPair()
+        val challenge = ByteArray(32) { it.toByte() }
+        val sig = CryptoUtils.signChallenge(kp.private, challenge)
+        assertTrue(
+            "A signature produced by signChallenge must verify against its own public key",
+            CryptoUtils.verifyChallenge(kp.public, challenge, sig)
+        )
+    }
+
+    @Test
+    fun `tampered challenge bytes fail verification`() {
+        val kp = makeIdentityKeyPair()
+        val challenge = ByteArray(32) { it.toByte() }
+        val sig = CryptoUtils.signChallenge(kp.private, challenge)
+        // Flip a single byte in the challenge — the signature must now reject.
+        val tampered = challenge.copyOf().also { it[0] = (it[0] + 1).toByte() }
+        assertFalse(
+            "Verification must fail when the challenge is mutated post-signing",
+            CryptoUtils.verifyChallenge(kp.public, tampered, sig)
+        )
+    }
+
+    @Test
+    fun `wrong public key fails verification`() {
+        val signer = makeIdentityKeyPair()
+        val attacker = makeIdentityKeyPair()
+        val challenge = ByteArray(32) { (it * 7).toByte() }
+        val sig = CryptoUtils.signChallenge(signer.private, challenge)
+        assertFalse(
+            "Verification must fail when the wrong identity key is presented",
+            CryptoUtils.verifyChallenge(attacker.public, challenge, sig)
+        )
+    }
+
+    @Test
+    fun `garbage signature bytes fail verification without throwing`() {
+        val kp = makeIdentityKeyPair()
+        val challenge = ByteArray(32) { it.toByte() }
+        // Random byte garbage — verifyChallenge wraps in runCatching so it
+        // must return false, never throw.
+        val garbage = ByteArray(72) { (it * 13).toByte() }
+        assertFalse(
+            "Malformed signatures must be swallowed and return false",
+            CryptoUtils.verifyChallenge(kp.public, challenge, garbage)
+        )
+    }
 }
