@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AURA — French (Français) translation stub.
+
+  Strings listed here are the high-impact UI surface (navigation,
+  primary buttons, status messages, profile-field hints) translated
+  by the maintainers for v1.1.0. Any string not present here falls
+  back to values/strings.xml (English) via Android's normal resource
+  resolution.
+
+  Pull requests adding more translated keys are welcome — please
+  preserve the existing key order and run `./gradlew lintDebug`
+  before opening.
+-->
+<resources>
+    <string name="app_name">Aura</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="btn_activate">Activer AURA</string>
+    <string name="btn_cancel">Annuler</string>
+    <string name="btn_save">Enregistrer</string>
+    <string name="btn_record_gesture">Maintenir pour enregistrer le geste</string>
+    <string name="hint_name">Nom affiché *</string>
+    <string name="hint_phone">Téléphone</string>
+    <string name="hint_email">E-mail</string>
+    <string name="hint_company">Entreprise</string>
+    <string name="hint_title">Poste / Rôle</string>
+    <string name="hint_website">Site web</string>
+    <string name="hint_bio">Bio</string>
+    <string name="search_hint">Rechercher des contacts…</string>
+    <string name="empty_contacts">Aucun contact pour le moment.\nAppuyez trois fois sur volume bas pour partager.</string>
+    <string name="status_advertising">Diffusion de la présence…</string>
+    <string name="status_discovering">Recherche d\'utilisateurs AURA à proximité…</string>
+    <string name="status_connecting">Trouvé ! Connexion…</string>
+    <string name="status_exchanging">Échange sécurisé en cours…</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_continue">Continuer</string>
+    <string name="action_done">Terminé</string>
+</resources>

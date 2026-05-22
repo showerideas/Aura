@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aura</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="btn_activate">Activate AURA</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_record_gesture">Hold to Record Gesture</string>
+    <string name="hint_name">Display Name *</string>
+    <string name="hint_phone">Phone</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_company">Company</string>
+    <string name="hint_title">Title / Role</string>
+    <string name="hint_website">Website</string>
+    <string name="hint_bio">Bio</string>
+    <string name="label_share">Share this field</string>
+    <string name="label_gesture">Gesture Authentication</string>
+    <string name="status_advertising">Broadcasting presence\u2026</string>
+    <string name="status_discovering">Looking for nearby AURA users\u2026</string>
+    <string name="status_connecting">Found someone! Connecting\u2026</string>
+    <string name="status_exchanging">Exchanging contact info securely\u2026</string>
+    <string name="empty_contacts">No contacts yet.\nTriple-press volume down to share.</string>
+    <string name="search_hint">Search contacts\u2026</string>
+
+    <!-- Exchange screen / gesture gate (PR-01) -->
+    <string name="someone">someone</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_done">Done</string>
+    <string name="exchange_gesture_hint">Hold and perform your gesture to confirm</string>
+    <string name="exchange_gesture_confirmed">Gesture confirmed!</string>
+    <string name="exchange_gesture_failed_retry">Gesture didn\'t match. %1$d attempt(s) left.</string>
+    <string name="exchange_gesture_failed_max">Too many failed gesture attempts. Exchange cancelled.</string>
+    <string name="exchange_unprotected_title">No gesture set</string>
+    <string name="exchange_unprotected_message">No gesture set — exchange is unprotected. Continue?</string>
+    <string name="exchange_completed">Exchanged with %1$s!</string>
+    <string name="exchange_cancelled">Exchange cancelled</string>
+    <string name="exchange_error_generic">Something went wrong. Try again.</string>
+    <string name="exchange_error_bluetooth">Exchange failed. Make sure Bluetooth and location are on.</string>
+
+    <!-- Permission rationale (PR-03) -->
+    <string name="perm_rationale_title">AURA needs a few permissions</string>
+    <string name="perm_rationale_subtitle">These let AURA find and exchange contacts with people nearby. Nothing leaves your device.</string>
+    <string name="perm_rationale_open_settings">Open Settings</string>
+    <string name="perm_rationale_not_now">Not now</string>
+    <string name="perm_label_bluetooth_scan">Nearby scanning</string>
+    <string name="perm_reason_bluetooth_scan">To find people around you over Bluetooth.</string>
+    <string name="perm_label_bluetooth_advertise">Broadcast presence</string>
+    <string name="perm_reason_bluetooth_advertise">So others nearby can find you when you activate AURA.</string>
+    <string name="perm_label_bluetooth_connect">Bluetooth connect</string>
+    <string name="perm_reason_bluetooth_connect">To exchange the encrypted contact payload with the chosen device.</string>
+    <string name="perm_label_location">Approximate location</string>
+    <string name="perm_reason_location">Android requires this for Bluetooth scanning on older versions.</string>
+    <string name="perm_label_nearby_wifi">Nearby Wi-Fi devices</string>
+    <string name="perm_reason_nearby_wifi">For higher-speed exchange over Wi-Fi P2P when available.</string>
+    <string name="perm_label_notifications">Notifications</string>
+    <string name="perm_reason_notifications">So you see live status while an exchange is running.</string>
+    <string name="perm_label_generic">Permission required</string>
+    <string name="perm_reason_generic">AURA needs this permission to function correctly.</string>
+
+    <!-- Onboarding (PR-05) -->
+    <string name="onboarding_welcome_tagline">Trade contacts with a shake.</string>
+    <string name="onboarding_welcome_body">AURA exchanges your contact card with anyone nearby using an end-to-end encrypted Bluetooth handshake. No accounts, no servers, nothing leaves your device unless you choose to share it.</string>
+    <string name="onboarding_profile_title">Who are you?</string>
+    <string name="onboarding_profile_subtitle">Just the essentials. You can fill in the rest later from the Profile screen.</string>
+    <string name="onboarding_gesture_title">Set an unlock gesture</string>
+    <string name="onboarding_gesture_subtitle">Pick a quick motion only you would make. AURA will use it to confirm every exchange.</string>
+    <string name="onboarding_gesture_skip">Skip for now</string>
+    <string name="onboarding_gesture_skipped">Skipped — you can add a gesture later from the Profile screen.</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_name_required">Please enter your name to continue.</string>
+    <string name="gesture_recording">Perform your gesture now…</string>
+    <string name="gesture_saved">Gesture saved!</string>
+    <string name="gesture_status_no_gesture">No gesture set yet</string>
+
+    <!-- vCard export (PR-07) -->
+    <string name="action_export">Export</string>
+    <string name="action_export_all">Export all</string>
+    <string name="export_all_empty">No contacts to export yet.</string>
+
+    <!-- QR fallback exchange (PR-08) -->
+    <string name="home_qr_fallback">Can’t connect? Use QR</string>
+    <string name="qr_title">Scan to pair</string>
+    <string name="qr_subtitle">Have the other person scan this code, then scan theirs.</string>
+    <string name="qr_code_image_desc">Your single-use pairing QR code</string>
+    <string name="qr_scan_button">Scan their QR</string>
+    <string name="qr_scan_prompt">Point at the other phone’s QR code</string>
+    <string name="qr_countdown_template">Refreshes in %1$ds</string>
+    <string name="qr_refreshing">Refreshing…</string>
+    <string name="qr_render_failed">Could not render the QR code.</string>
+    <string name="qr_scan_cancelled">Scan cancelled.</string>
+    <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
+    <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
+    <string name="qr_pairing_ok">Paired with %1$s… (relay TODO)</string>
+
+    <!-- Room exchange (PR-09) -->
+    <string name="home_room_mode">Room mode</string>
+    <string name="room_mode_host">Host a room</string>
+    <string name="room_mode_guest">Join a room</string>
+    <string name="room_host_idle_status">Open a room</string>
+    <string name="room_host_subtitle">Up to 10 nearby people can join and share their card with you.</string>
+    <string name="room_guest_idle_status">Join a nearby room</string>
+    <string name="room_guest_subtitle">You’ll receive the host’s card. Your card is sent in return.</string>
+    <string name="room_open_action">Open room</string>
+    <string name="room_close_action">Close room</string>
+    <string name="room_join_action">Join</string>
+    <string name="room_guest_done">Got the host’s card!</string>
+    <string name="room_hold_to_confirm">Hold the action button to confirm with your gesture.</string>
+
+    <!-- Avatar sharing (PR-10) -->
+    <string name="profile_avatar_desc">Tap to pick a profile photo</string>
+    <string name="profile_avatar_too_large">Image was too large — try a smaller picture.</string>
+
+    <!--
+      ============================================================
+      TRANSLATION GUIDE (PR-20)
+      - Format strings use %1$s / %1$d positional placeholders so
+        translators can re-order arguments per language. Keep the
+        placeholders intact in every translation.
+      - Sections are grouped by screen for context.
+      - URLs and brand names ("AURA") are NOT to be translated.
+      ============================================================
+    -->
+
+    <!-- PR-20: Home -->
+    <string name="home_greeting">Hey, %1$s</string>
+    <string name="home_greeting_no_profile">Set up your profile to get started</string>
+    <string name="home_contact_count">%1$d contacts exchanged</string>
+    <string name="home_aura_button">AURA</string>
+
+    <!-- PR-20: Profile -->
+    <string name="profile_btn_record">Record Gesture</string>
+    <string name="profile_btn_recording">Recording… (release to stop)</string>
+    <string name="profile_btn_rerecord">Re-record Gesture</string>
+    <string name="profile_gesture_status_perform">Perform your gesture now</string>
+    <string name="profile_gesture_status_saved">Gesture saved!</string>
+    <string name="profile_gesture_status_saved_idle">Gesture saved</string>
+    <string name="profile_gesture_status_none">No gesture set</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="profile_gesture_strength_label">gesture strength</string>
+    <string name="profile_gesture_strength_a11y">Gesture strength: %1$d out of 5</string>
+
+    <!-- PR-20: Contact detail bottom sheet -->
+    <string name="contact_copied">Copied to clipboard</string>
+    <string name="contact_unknown_name">Unknown</string>
+    <string name="contact_block_button">Block this device</string>
+    <string name="contact_block_dialog_title">Block this device?</string>
+    <string name="contact_block_dialog_message">Future exchanges from this device will be silently rejected. You can unblock it later in Settings.</string>
+    <string name="contact_block_dialog_confirm">Block</string>
+    <string name="contact_a11y_call">Call %1$s</string>
+    <string name="contact_a11y_email">Email %1$s</string>
+    <string name="contact_a11y_copy">Copy %1$s to clipboard</string>
+    <string name="contact_a11y_export">Export %1$s as vCard</string>
+    <string name="contact_a11y_delete">Delete contact %1$s</string>
+    <string name="contact_a11y_mark_favourite">Mark %1$s as favourite</string>
+    <string name="contact_a11y_unmark_favourite">Unmark %1$s as favourite</string>
+    <string name="contact_a11y_block">Block this device</string>
+    <string name="contact_a11y_row">%1$s, %2$s, double tap to view details</string>
+    <string name="contact_a11y_row_favourite">%1$s, favourite, %2$s, double tap to view details</string>
+    <string name="contact_note_hint">Add a note…</string>
+    <string name="contact_save_note">Save note</string>
+
+    <!-- PR-20: Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_auth">Authentication</string>
+    <string name="settings_section_activation">Activation</string>
+    <string name="settings_section_data">Data</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_auth_method">Auth method</string>
+    <string name="settings_auth_gesture">Gesture</string>
+    <string name="settings_auth_biometric">Biometric</string>
+    <string name="settings_biometric_unavailable">Not available on this device</string>
+    <string name="settings_bg_activation">Background activation</string>
+    <string name="settings_blocked_devices">Blocked devices</string>
+    <string name="settings_clear_gesture">Clear gesture</string>
+    <string name="settings_clear_contacts">Clear all contacts</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_clear_gesture_title">Delete your recorded gesture?</string>
+    <string name="settings_clear_gesture_message">You\'ll need to record a new gesture in Profile before any future exchange can use gesture authentication.</string>
+    <string name="settings_clear_gesture_confirm">Delete</string>
+    <string name="settings_clear_gesture_done">Gesture cleared</string>
+    <string name="settings_clear_contacts_title">Delete all %1$d contacts?</string>
+    <string name="settings_clear_contacts_message">This cannot be undone.</string>
+    <string name="settings_clear_contacts_confirm">Delete all</string>
+    <string name="settings_clear_contacts_done">Contacts cleared</string>
+    <string name="settings_privacy_fallback">Privacy policy: %1$s</string>
+
+    <!-- PR-20: Blocked devices -->
+    <string name="blocked_devices_title">Blocked devices</string>
+    <string name="blocked_devices_empty">No blocked devices</string>
+    <string name="blocked_devices_unblock">Unblock</string>
+
+    <!-- PR-20: Biometric prompt copy -->
+    <string name="biometric_title">Confirm identity</string>
+    <string name="biometric_subtitle">Share your contact with the person nearby</string>
+    <string name="biometric_negative">Cancel</string>
+    <string name="biometric_unavailable_fallback">Biometric unavailable, using gesture</string>
+    <string name="biometric_auth_failed">Authentication failed</string>
+    <plurals name="room_host_count">
+        <item quantity="zero">Waiting for people to join…</item>
+        <item quantity="one">%d person joined</item>
+        <item quantity="other">%d people joined</item>
+    </plurals>
+</resources>

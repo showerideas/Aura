@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AURA — Korean (한국어) translation stub.
+
+  Strings listed here are the high-impact UI surface (navigation,
+  primary buttons, status messages, profile-field hints) translated
+  by the maintainers for v1.1.0. Any string not present here falls
+  back to values/strings.xml (English) via Android's normal resource
+  resolution.
+
+  Pull requests adding more translated keys are welcome — please
+  preserve the existing key order and run `./gradlew lintDebug`
+  before opening.
+-->
+<resources>
+    <string name="app_name">Aura</string>
+    <string name="nav_home">홈</string>
+    <string name="nav_profile">프로필</string>
+    <string name="nav_contacts">연락처</string>
+    <string name="btn_activate">AURA 활성화</string>
+    <string name="btn_cancel">취소</string>
+    <string name="btn_save">저장</string>
+    <string name="btn_record_gesture">길게 눌러 제스처 녹화</string>
+    <string name="hint_name">표시 이름 *</string>
+    <string name="hint_phone">전화</string>
+    <string name="hint_email">이메일</string>
+    <string name="hint_company">회사</string>
+    <string name="hint_title">직책 / 역할</string>
+    <string name="hint_website">웹사이트</string>
+    <string name="hint_bio">소개</string>
+    <string name="search_hint">연락처 검색…</string>
+    <string name="empty_contacts">아직 연락처가 없습니다.\n볼륨 다운을 3번 눌러 공유하세요.</string>
+    <string name="status_advertising">내 존재 알리는 중…</string>
+    <string name="status_discovering">주변 AURA 사용자 검색 중…</string>
+    <string name="status_connecting">찾았습니다! 연결 중…</string>
+    <string name="status_exchanging">연락처를 안전하게 교환 중…</string>
+    <string name="action_cancel">취소</string>
+    <string name="action_continue">계속</string>
+    <string name="action_done">완료</string>
+</resources>
