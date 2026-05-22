@@ -210,6 +210,10 @@ class ProfileFragment : Fragment() {
                     )
                 }
         }
+        // PR-17: the bars themselves are flagged importantForAccessibility=no
+        // so the meter is communicated to TalkBack purely through the label.
+        binding.tvVarianceLabel.contentDescription =
+            "Gesture strength: $litCount out of 5"
     }
 
     private fun shakeView(target: View) {

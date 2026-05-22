@@ -87,6 +87,19 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     binding.btnEmail.isEnabled = contact.email.isNotBlank()
                     binding.btnCopy.isEnabled = true
 
+                    // PR-17: dynamic TalkBack labels that include the contact
+                    // name so reading down the action row is intelligible.
+                    val nameForA11y = contact.displayName.ifBlank { "this contact" }
+                    binding.btnCall.contentDescription = "Call $nameForA11y"
+                    binding.btnEmail.contentDescription = "Email $nameForA11y"
+                    binding.btnCopy.contentDescription = "Copy $nameForA11y to clipboard"
+                    binding.btnExport.contentDescription = "Export $nameForA11y as vCard"
+                    binding.btnDelete.contentDescription = "Delete contact $nameForA11y"
+                    binding.btnBlock.contentDescription = "Block this device"
+                    binding.btnFavourite.contentDescription =
+                        if (contact.isFavorite) "Unmark $nameForA11y as favourite"
+                        else "Mark $nameForA11y as favourite"
+
                     binding.btnCall.setOnClickListener {
                         startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.phone}")))
                     }
