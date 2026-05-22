@@ -42,10 +42,20 @@ android {
     // builds set these in the Play publishing pipeline.
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "keystore/release.jks")
-            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD") ?: ""
+            // Read each value defensively. System.getenv returns the literal
+            // empty string when an env var is set-but-empty (which is exactly
+            // what CI does); the Kotlin '?:' operator only fires on null, so
+            // a naive `env ?: ""` would still feed file("") to Gradle and
+            // throw 'path may not be null or empty string'.
+            // takeIf { it.isNotBlank() } collapses null AND empty into null,
+            // which then becomes the fallback path or null storeFile.
+            val storePath = System.getenv("KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+            if (storePath != null) {
+                storeFile = file(storePath)
+            }
+            storePassword = System.getenv("KEYSTORE_STORE_PASSWORD").orEmpty()
+            keyAlias = System.getenv("KEYSTORE_KEY_ALIAS").orEmpty()
+            keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD").orEmpty()
         }
     }
 
@@ -65,10 +75,16 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
-            // PR-22: wire the env-driven signing config. Safe to attach
-            // unconditionally — when env vars are unset, Gradle simply
-            // skips signing and produces an unsigned release APK.
-            signingConfig = signingConfigs.getByName("release")
+            // Wire the env-driven signing config only when KEYSTORE_PATH was
+            // actually provided. In CI the env var is intentionally empty
+            // (we just want to validate that assembleRelease runs through
+            // R8 + resource shrinking); leaving signingConfig unset produces
+            // an unsigned release APK, which is what we want for validation.
+            // Real publishing builds set KEYSTORE_PATH to the real path and
+            // pick up the signing config automatically.
+            if (!System.getenv("KEYSTORE_PATH").isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
