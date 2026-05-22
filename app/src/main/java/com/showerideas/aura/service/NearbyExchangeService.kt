@@ -24,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.security.PublicKey
 import java.util.Base64
@@ -75,10 +76,15 @@ class NearbyExchangeService : Service() {
         private const val MSG_TYPE_AVATAR: Byte = 0x03
         private const val MAX_AVATAR_BYTES: Long = 200_000L
 
-        val sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
+        // FIX-B: keep the mutable flow private so external callers (ViewModels)
+        // cannot bypass the service's internal state machine. Public surface is
+        // read-only StateFlow.
+        private val _sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
+        val sessionState: StateFlow<ExchangeSession?> = _sessionState.asStateFlow()
 
         /** Live count of guests that have joined a room host session (PR-09). */
-        val connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
+        private val _connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
+        val connectedCount: StateFlow<Int> = _connectedCount.asStateFlow()
 
         /**
          * Gate flag — the exchange service refuses to advance past
@@ -214,7 +220,7 @@ class NearbyExchangeService : Service() {
         if (!gestureVerified) {
             Timber.w("startSession() blocked — gesture not verified")
             sessionId = UUID.randomUUID().toString()
-            sessionState.value = ExchangeSession(
+            _sessionState.value = ExchangeSession(
                 sessionId = sessionId,
                 state = ExchangeSession.State.CANCELLED,
                 mode = mode,
@@ -228,7 +234,7 @@ class NearbyExchangeService : Service() {
         sessionId = UUID.randomUUID().toString()
         currentMode = mode
         ourKeyPair = CryptoUtils.generateEphemeralECDHKeyPair()
-        connectedCount.value = 0
+        _connectedCount.value = 0
         peerCtxByEndpoint.clear()
 
         val session = ExchangeSession(
@@ -236,7 +242,7 @@ class NearbyExchangeService : Service() {
             state = ExchangeSession.State.ADVERTISING,
             mode = mode
         )
-        sessionState.value = session
+        _sessionState.value = session
         broadcastState(session)
 
         Timber.i("Starting AURA exchange session $sessionId (mode=$mode)")
@@ -258,7 +264,7 @@ class NearbyExchangeService : Service() {
         connectionsClient.stopDiscovery()
 
         val current = sessionState.value
-        sessionState.value = current?.copy(state = endState)
+        _sessionState.value = current?.copy(state = endState)
         broadcastState(sessionState.value)
 
         // Reset the gate so the next exchange must re-authenticate.
@@ -269,7 +275,7 @@ class NearbyExchangeService : Service() {
         sessionKey = null
         // Reset room bookkeeping (PR-09).
         peerCtxByEndpoint.clear()
-        connectedCount.value = 0
+        _connectedCount.value = 0
         currentMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
         // Reset avatar bookkeeping (PR-10) so a stale awaiting flag cannot
         // bleed into the next session.
@@ -337,9 +343,14 @@ class NearbyExchangeService : Service() {
 
         override fun onDisconnected(endpointId: String) {
             Timber.d("Disconnected from $endpointId")
+            // FIX-C: if the peer dropped mid-avatar-stream, sweep any partial
+            // tmp files created in cacheDir for this endpoint so we don't
+            // leak storage. The tmp files are named avatar-incoming-*.jpg.
+            cleanupPartialAvatarFiles(endpointId)
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                 // Room stays open if one guest drops; clear that guest's ctx.
                 peerCtxByEndpoint.remove(endpointId)
+                awaitingAvatarStream.remove(endpointId)
                 return
             }
             if (sessionState.value?.state != ExchangeSession.State.COMPLETED) {
@@ -533,7 +544,7 @@ class NearbyExchangeService : Service() {
                         endpointId = endpointId
                     )
                     contactRepository.save(contact)
-                    connectedCount.value = connectedCount.value + 1
+                    _connectedCount.value = _connectedCount.value + 1
                     Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to process room-guest profile")
@@ -561,7 +572,7 @@ class NearbyExchangeService : Service() {
                 contactRepository.save(contact)
 
                 val current = sessionState.value
-                sessionState.value = current?.copy(
+                _sessionState.value = current?.copy(
                     state = ExchangeSession.State.COMPLETED,
                     receivedContact = contact
                 )
@@ -703,6 +714,33 @@ class NearbyExchangeService : Service() {
         }
     }
 
+    /**
+     * FIX-C: scrub any partial avatar tmp files left in cacheDir if the peer
+     * disconnected mid-stream. We only delete files that match the
+     * `avatar-incoming-` prefix to avoid touching unrelated cache contents.
+     * Also clears the awaiting-avatar flag for this endpoint so a re-connect
+     * starts from a clean slate.
+     */
+    private fun cleanupPartialAvatarFiles(endpointId: String) {
+        try {
+            awaitingAvatarStream.remove(endpointId)
+            val dir = cacheDir ?: return
+            dir.listFiles { f -> f.name.startsWith("avatar-incoming-") && f.name.endsWith(".jpg") }
+                ?.forEach { stale ->
+                    val age = System.currentTimeMillis() - stale.lastModified()
+                    // Only delete things that look stale (>5s old) so we don't
+                    // race the live stream writer on a parallel connection.
+                    if (age > 5_000L) {
+                        if (stale.delete()) {
+                            Timber.d("Removed partial avatar tmp: ${stale.name} (age=${age}ms)")
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Partial avatar cleanup failed for $endpointId")
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -714,7 +752,7 @@ class NearbyExchangeService : Service() {
 
     private fun updateSessionState(state: ExchangeSession.State) {
         val current = sessionState.value
-        sessionState.value = current?.copy(state = state)
+        _sessionState.value = current?.copy(state = state)
         broadcastState(sessionState.value)
         updateNotification(state.name)
     }

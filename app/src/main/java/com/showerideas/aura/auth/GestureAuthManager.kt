@@ -53,7 +53,7 @@ class GestureAuthManager @Inject constructor(
          * companion-object level so other layers (UI live-strength meter
          * in PR-11, unit tests) share exactly one implementation.
          */
-        fun computeVariance(vector: FloatArray): Float {
+        internal fun computeVariance(vector: FloatArray): Float {
             if (vector.isEmpty()) return 0f
             var sum = 0f
             for (v in vector) sum += v
