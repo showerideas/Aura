@@ -1,5 +1,6 @@
 package com.showerideas.aura
 
+import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.model.GesturePattern
 import org.junit.Test
 import org.junit.Assert.*
@@ -51,6 +52,28 @@ class GestureAuthTest {
     fun `empty gesture should return MAX_VALUE`() {
         val v = FloatArray(50) { 1f }
         assertEquals(Float.MAX_VALUE, dtw(floatArrayOf(), v), 0.001f)
+    }
+
+    @Test
+    fun `stationary hold should fail variance check`() {
+        // A flat feature vector — simulates the user holding the phone still.
+        val flat = FloatArray(50) { 0.02f }
+        val v = GestureAuthManager.computeVariance(flat)
+        assertTrue(
+            "Variance for a flat hold ($v) must be below the MIN_GESTURE_VARIANCE threshold",
+            v < GestureAuthManager.MIN_GESTURE_VARIANCE
+        )
+    }
+
+    @Test
+    fun `sharp movement should pass variance check`() {
+        // Alternating peaks/troughs — simulates a deliberate shake.
+        val sharp = FloatArray(50) { i -> if (i % 2 == 0) 3f else -3f }
+        val v = GestureAuthManager.computeVariance(sharp)
+        assertTrue(
+            "Variance for a deliberate motion ($v) must exceed the threshold",
+            v > GestureAuthManager.MIN_GESTURE_VARIANCE
+        )
     }
 
     @Test

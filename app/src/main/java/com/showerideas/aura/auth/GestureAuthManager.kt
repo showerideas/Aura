@@ -38,6 +38,33 @@ class GestureAuthManager @Inject constructor(
         private const val DTW_THRESHOLD = 4.5f           // empirically tuned
         private const val PREFS_KEY_PATTERN = "gesture_feature_vector"
         private const val PREFS_KEY_PATTERN_ID = "gesture_pattern_id"
+
+        /**
+         * Minimum population variance required for a recorded gesture to
+         * be accepted (PR-06). A stationary hold produces variance near 0
+         * because gravity is subtracted from each sample; even a gentle
+         * shake produces > 0.5, so 0.15 sits comfortably between "nothing
+         * happened" and "the user did something deliberate".
+         */
+        const val MIN_GESTURE_VARIANCE = 0.15f
+
+        /**
+         * Population variance of a float feature vector. Exposed at the
+         * companion-object level so other layers (UI live-strength meter
+         * in PR-11, unit tests) share exactly one implementation.
+         */
+        fun computeVariance(vector: FloatArray): Float {
+            if (vector.isEmpty()) return 0f
+            var sum = 0f
+            for (v in vector) sum += v
+            val mean = sum / vector.size
+            var sqSum = 0f
+            for (v in vector) {
+                val d = v - mean
+                sqSum += d * d
+            }
+            return sqSum / vector.size
+        }
     }
 
     sealed class RecordingState {
@@ -133,6 +160,19 @@ class GestureAuthManager @Inject constructor(
         }
 
         val features = extractFeatures(events)
+
+        // PR-06: reject "gestures" that don't actually move — a stationary
+        // 2-second hold currently produces a flat magnitude envelope, which
+        // the DTW matcher would happily accept as a valid pattern.
+        val variance = computeVariance(features)
+        Timber.d("Recorded gesture variance: $variance (threshold: $MIN_GESTURE_VARIANCE)")
+        if (variance < MIN_GESTURE_VARIANCE) {
+            _recordingState.value = RecordingState.Error(
+                "Gesture too subtle — try a more deliberate movement"
+            )
+            return
+        }
+
         val pattern = GesturePattern(
             id = UUID.randomUUID().toString(),
             label = "user_gesture",
