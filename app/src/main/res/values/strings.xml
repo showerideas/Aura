@@ -79,4 +79,19 @@
     <string name="action_export">Export</string>
     <string name="action_export_all">Export all</string>
     <string name="export_all_empty">No contacts to export yet.</string>
+
+    <!-- QR fallback exchange (PR-08) -->
+    <string name="home_qr_fallback">Can’t connect? Use QR</string>
+    <string name="qr_title">Scan to pair</string>
+    <string name="qr_subtitle">Have the other person scan this code, then scan theirs.</string>
+    <string name="qr_code_image_desc">Your single-use pairing QR code</string>
+    <string name="qr_scan_button">Scan their QR</string>
+    <string name="qr_scan_prompt">Point at the other phone’s QR code</string>
+    <string name="qr_countdown_template">Refreshes in %1$ds</string>
+    <string name="qr_refreshing">Refreshing…</string>
+    <string name="qr_render_failed">Could not render the QR code.</string>
+    <string name="qr_scan_cancelled">Scan cancelled.</string>
+    <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
+    <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
+    <string name="qr_pairing_ok">Paired with %1$s… (relay TODO)</string>
 </resources>

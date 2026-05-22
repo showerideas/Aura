@@ -41,6 +41,11 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_home_to_exchange)
         }
 
+        // PR-08: QR fallback for environments where BLE / Wi-Fi P2P is blocked.
+        binding.btnQrFallback.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_qr)
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.profile.collect { profile ->
