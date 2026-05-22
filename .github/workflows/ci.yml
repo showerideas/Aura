@@ -1,0 +1,90 @@
+# PR-22: GitHub Actions CI for AURA.
+#
+# This is the only place the project is built end-to-end (sandbox builds
+# during development were skipped because the SDK download is impractical).
+# Every PR and every push to main runs:
+#
+#   1. testDebugUnitTest   — JVM tests (DTW, crypto, profile, payload
+#                             validator, vCard, etc.). Catches regressions
+#                             cheaply; ~1 minute on a clean runner.
+#   2. lintDebug           — Android Lint with the existing baseline. Will
+#                             fail CI on new issues but not on pre-existing
+#                             warnings.
+#   3. assembleRelease     — Full release build with R8 + resource shrinking
+#                             and the env-driven signing config from PR-22a.
+#                             KEYSTORE_* env vars are left blank, so Gradle
+#                             produces an unsigned release APK; this still
+#                             validates that ProGuard rules are correct and
+#                             every transitive dep survives shrinking.
+#
+# androidTest (Espresso + Room) is NOT run in CI yet — that needs an
+# emulator job (`reactivecircus/android-emulator-runner`) which roughly
+# triples runtime. Track it as a follow-up.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Unit tests (testDebugUnitTest)
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Android Lint (lintDebug)
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Assemble release (assembleRelease)
+        run: ./gradlew assembleRelease --stacktrace
+        env:
+          # Intentionally blank in CI. The signing config in
+          # app/build.gradle.kts falls back to empty strings, and Gradle
+          # produces an unsigned release APK. Real release signing is
+          # done in the publishing pipeline with these populated.
+          KEYSTORE_PATH: ""
+          KEYSTORE_STORE_PASSWORD: ""
+          KEYSTORE_KEY_ALIAS: ""
+          KEYSTORE_KEY_PASSWORD: ""
+
+      - name: Upload unsigned release APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aura-release-unsigned
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/tests
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+          if-no-files-found: ignore
+          retention-days: 14
