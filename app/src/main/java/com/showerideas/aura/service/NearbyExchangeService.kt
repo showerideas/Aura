@@ -116,11 +116,19 @@ class NearbyExchangeService : Service() {
     private lateinit var sessionId: String
     private var timeoutJob: Job? = null
 
+    /**
+     * State of the per-session ECDH handshake. Replaces the previous
+     * `peerPublicKeyPending` boolean which couldn't disambiguate the
+     * "both sides sent first" race.
+     */
+    private enum class HandshakeState { IDLE, KEY_SENT, KEY_RECEIVED, COMPLETE }
+
     // Per-session ephemeral ECDH state
     private var ourKeyPair: java.security.KeyPair? = null
     private var sessionKey: javax.crypto.SecretKey? = null
     private var connectedEndpoint: String? = null
-    private var peerPublicKeyPending = false   // waiting for peer's pubkey
+    private var peerPublicKey: PublicKey? = null
+    private var handshakeState: HandshakeState = HandshakeState.IDLE
 
     // -------------------------------------------------------------------------
     // Service lifecycle
@@ -202,6 +210,10 @@ class NearbyExchangeService : Service() {
 
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
+        // Reset handshake bookkeeping (PR-02).
+        handshakeState = HandshakeState.IDLE
+        peerPublicKey = null
+        sessionKey = null
 
         Timber.d("Session terminated with state $endState")
         stopSelf()
@@ -305,6 +317,17 @@ class NearbyExchangeService : Service() {
 
     // -------------------------------------------------------------------------
     // ECDH key exchange
+    //
+    // PR-02: the previous boolean-based race handling allowed a symmetric
+    // "both sides sent first" scenario to drop one peer's response. The new
+    // [HandshakeState] machine captures the four possible local states:
+    //
+    //   IDLE          — nothing sent or received yet
+    //   KEY_SENT      — we sent ours, awaiting peer's key
+    //   KEY_RECEIVED  — peer's key arrived first, we still need to send ours
+    //   COMPLETE      — both keys exchanged, sessionKey derived
+    //
+    // Both peers ultimately converge on COMPLETE regardless of order.
     // -------------------------------------------------------------------------
 
     private fun sendPublicKey(endpointId: String) {
@@ -313,27 +336,50 @@ class NearbyExchangeService : Service() {
         val payload = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + encodedKey.toByteArray(Charsets.UTF_8)
         connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
             .addOnSuccessListener { Timber.d("Public key sent to $endpointId") }
-        peerPublicKeyPending = true
+        // Only flip to KEY_SENT if we haven't already received the peer's key.
+        if (handshakeState == HandshakeState.IDLE) {
+            handshakeState = HandshakeState.KEY_SENT
+        }
     }
 
     private fun handleIncomingPublicKey(endpointId: String, data: ByteArray) {
         try {
             val encodedKey = String(data, Charsets.UTF_8)
             val keyBytes = Base64.getDecoder().decode(encodedKey)
-            val peerPublicKey = decodeEC256PublicKey(keyBytes)
-            val kp = ourKeyPair ?: return
+            val decodedPeerKey = decodeEC256PublicKey(keyBytes)
+            peerPublicKey = decodedPeerKey
 
-            sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, peerPublicKey)
-            Timber.d("Session key derived from ECDH exchange")
-
-            // If peer sent their key before us, we need to send ours back
-            if (!peerPublicKeyPending) {
-                sendPublicKey(endpointId)
+            val kp = ourKeyPair ?: run {
+                Timber.e("Local keypair missing when peer key arrived")
+                terminateSession(ExchangeSession.State.ERROR)
+                return
             }
-            peerPublicKeyPending = false
 
-            // Now send our encrypted profile
-            sendProfile(endpointId)
+            when (handshakeState) {
+                HandshakeState.KEY_SENT -> {
+                    // We sent first — peer's reply has now arrived. Derive the
+                    // session key and ship the profile.
+                    sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    handshakeState = HandshakeState.COMPLETE
+                    Timber.d("Handshake COMPLETE (we sent first)")
+                    sendProfile(endpointId)
+                }
+                HandshakeState.IDLE -> {
+                    // Peer's key beat ours to the wire. Store it, send ours,
+                    // then derive the session key. We deliberately set state
+                    // to KEY_RECEIVED first so sendPublicKey() will not
+                    // overwrite the order tracking.
+                    handshakeState = HandshakeState.KEY_RECEIVED
+                    sendPublicKey(endpointId)
+                    sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    handshakeState = HandshakeState.COMPLETE
+                    Timber.d("Handshake COMPLETE (peer sent first)")
+                    sendProfile(endpointId)
+                }
+                HandshakeState.KEY_RECEIVED, HandshakeState.COMPLETE -> {
+                    Timber.w("Duplicate or out-of-order public key (state=$handshakeState) — ignoring")
+                }
+            }
         } catch (e: Exception) {
             Timber.e(e, "Failed to process peer public key")
             terminateSession(ExchangeSession.State.ERROR)
@@ -380,8 +426,15 @@ class NearbyExchangeService : Service() {
     }
 
     private fun sendProfile(endpointId: String) {
+        // PR-02: never attempt to send a profile if the ECDH handshake
+        // didn't actually finish. Without a session key the recipient
+        // could not decrypt, which used to fail silently.
+        val key = sessionKey ?: run {
+            Timber.e("sendProfile() invoked without sessionKey — aborting session")
+            terminateSession(ExchangeSession.State.ERROR)
+            return
+        }
         scope.launch {
-            val key = sessionKey ?: return@launch
             val profile = profileRepository.get() ?: return@launch
             val profileJson = gson.toJson(profile.toShareableMap())
             val encrypted = CryptoUtils.encrypt(key, profileJson.toByteArray(Charsets.UTF_8))
