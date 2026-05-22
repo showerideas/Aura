@@ -26,7 +26,15 @@
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_down" />
+        <action
+            android:id="@+id/action_home_to_qr"
+            app:destination="@id/qrExchangeFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/qrExchangeFragment"
+        android:name="com.showerideas.aura.ui.qr.QRExchangeFragment"
+        android:label="QR Exchange" />
 
     <fragment
         android:id="@+id/profileFragment"

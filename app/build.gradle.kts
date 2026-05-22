@@ -113,6 +113,9 @@ dependencies {
     // ViewPager2 for onboarding (PR-05)
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
+    // ZXing for QR fallback exchange (PR-08)
+    implementation(libs.zxing.android.embedded)
+
     // Biometric
     implementation(libs.androidx.biometric)
 
