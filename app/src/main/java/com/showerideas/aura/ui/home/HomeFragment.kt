@@ -93,13 +93,14 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 NearbyExchangeService.sessionState.collect { session ->
+                    // FIX-4: ROOM_HOST/ROOM_GUEST removed from State enum; topology
+                    // is now expressed via session.mode. Active states are the four
+                    // in-progress stage values regardless of mode.
                     val active = session != null && session.state in setOf(
                         ExchangeSession.State.ADVERTISING,
                         ExchangeSession.State.DISCOVERING,
                         ExchangeSession.State.CONNECTING,
-                        ExchangeSession.State.EXCHANGING,
-                        ExchangeSession.State.ROOM_HOST,
-                        ExchangeSession.State.ROOM_GUEST
+                        ExchangeSession.State.EXCHANGING
                     )
                     startPulse(if (active) R.color.aura_cyan else R.color.aura_purple)
                 }

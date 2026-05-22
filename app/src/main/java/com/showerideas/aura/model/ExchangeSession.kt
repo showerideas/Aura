@@ -31,11 +31,12 @@ data class ExchangeSession(
         /** User cancelled or timed out */
         CANCELLED,
         /** An unrecoverable error occurred */
-        ERROR,
-        /** Room mode: hosting a multi-guest collection session (PR-09) */
-        ROOM_HOST,
-        /** Room mode: joined as a guest, awaiting host card (PR-09) */
-        ROOM_GUEST
+        ERROR
+        // FIX-4: ROOM_HOST and ROOM_GUEST removed. These described exchange topology,
+        // not exchange stage — mixing them with stage values (ADVERTISING, CONNECTING,
+        // COMPLETED, …) made when/else branches ambiguous and tests hard to reason about.
+        // Topology is now expressed exclusively via [ExchangeMode]. To check whether a
+        // session is in room-host mode use: session.mode == ExchangeMode.ROOM_HOST
     }
 
     /** Topology selector for the exchange — PR-09. */

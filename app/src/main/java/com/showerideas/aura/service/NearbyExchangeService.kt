@@ -16,6 +16,7 @@ import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
 import com.showerideas.aura.data.BlocklistRepository
 import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.data.KnownPeerRepository
 import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
@@ -85,15 +86,10 @@ class NearbyExchangeService : Service() {
         private const val CHALLENGE_SEPARATOR: Byte = '|'.code.toByte()
         private const val MAX_AVATAR_BYTES: Long = 200_000L
 
-        /**
-         * PR-13: process-wide registry of {endpointId -> peer identity
-         * public key}. The first time we see a new endpoint we record
-         * its identity key here; on every subsequent session we hard-fail
-         * if the same endpoint presents a different key. This is the
-         * MITM endpoint-substitution detector.
-         */
-        private val peerIdentityRegistry: MutableMap<String, PublicKey> =
-            java.util.Collections.synchronizedMap(mutableMapOf())
+        // FIX-2: peerIdentityRegistry moved to KnownPeerRepository (Room-backed).
+        // The previous in-memory map was wiped on every service restart, allowing
+        // an attacker to force a restart to bypass TOFU endpoint-substitution
+        // detection. The persisted registry survives reboots and process deaths.
 
         // FIX-B: keep the mutable flow private so external callers (ViewModels)
         // cannot bypass the service's internal state machine. Public surface is
@@ -113,6 +109,16 @@ class NearbyExchangeService : Service() {
          * If no gesture pattern is stored, the UI is responsible for
          * confirming the unprotected exchange with the user and calling
          * [markGestureVerified] explicitly.
+         *
+         * NOTE (FIX-5): gestureVerified gates *session start*, not individual
+         * peer connections. In ROOM_HOST mode, the host's single gesture opens
+         * the room; all subsequent guests that join are accepted without
+         * re-verification. This is intentional by design — the host deliberately
+         * opens the room and controls when to close it via the UI.
+         * If per-guest verification is ever required, add a BiometricPrompt /
+         * gesture-replay dialog in RoomExchangeFragment for each onConnectionInitiated
+         * event in host mode (requires a pending-approval queue per endpoint).
+         * // DECISION(FIX-5): gesture verifies session start, not each peer — see git log
          */
         @Volatile
         var gestureVerified: Boolean = false
@@ -159,6 +165,8 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var contactRepository: ContactRepository
     /** PR-14: blocklist check on every incoming connection initiation. */
     @Inject lateinit var blocklistRepository: BlocklistRepository
+    /** FIX-2: persisted TOFU endpoint-identity registry. */
+    @Inject lateinit var knownPeerRepository: KnownPeerRepository
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -389,8 +397,9 @@ class NearbyExchangeService : Service() {
                 Timber.i("Connected to $endpointId (mode=$currentMode)")
                 if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                     // Host keeps advertising; each guest tracks its own state.
+                    // FIX-4: topology is mode, stage stays CONNECTING→EXCHANGING.
                     peerCtxByEndpoint[endpointId] = PeerCtx()
-                    updateSessionState(ExchangeSession.State.ROOM_HOST)
+                    updateSessionState(ExchangeSession.State.CONNECTING)
                     // PR-13: identity challenge first; ECDH is gated behind
                     // a successful challenge response.
                     sendChallenge(endpointId)
@@ -398,11 +407,9 @@ class NearbyExchangeService : Service() {
                     connectedEndpoint = endpointId
                     connectionsClient.stopAdvertising()
                     connectionsClient.stopDiscovery()
-                    val nextState = if (currentMode == ExchangeSession.ExchangeMode.ROOM_GUEST)
-                        ExchangeSession.State.ROOM_GUEST
-                    else
-                        ExchangeSession.State.EXCHANGING
-                    updateSessionState(nextState)
+                    // FIX-4: both ROOM_GUEST and PEER_TO_PEER advance to CONNECTING here;
+                    // topology is expressed via session.mode == ExchangeMode.ROOM_GUEST.
+                    updateSessionState(ExchangeSession.State.CONNECTING)
                     // PR-13: identity challenge first.
                     sendChallenge(endpointId)
                 }
@@ -558,14 +565,19 @@ class NearbyExchangeService : Service() {
             val challenge = body.copyOfRange(sepIdx + 1, body.size)
             val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
-            // TOFU registry check: if this endpoint has been seen with a
-            // different identity key in this process, refuse to talk to it.
-            val known = peerIdentityRegistry[endpointId]
+            // FIX-2: TOFU registry check against the persisted (Room-backed) registry.
+            // Survives service restarts and reboots — an attacker can no longer bypass
+            // this check by forcing the service to restart.
+            val known = runBlocking(Dispatchers.IO) {
+                knownPeerRepository.getIdentityKey(endpointId)
+            }
             if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
                 Timber.e("Endpoint $endpointId presented a NEW identity key — possible MITM")
                 terminateSession(ExchangeSession.State.ERROR); return
             }
-            if (known == null) peerIdentityRegistry[endpointId] = peerIdentityKey
+            if (known == null) {
+                scope.launch { knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey) }
+            }
 
             // Sign the peer's challenge with our own device identity key.
             val ourKey = CryptoUtils.getOrCreateDeviceIdentityKey()
@@ -602,15 +614,18 @@ class NearbyExchangeService : Service() {
                 Timber.e("Challenge verification failed for $endpointId — possible MITM")
                 terminateSession(ExchangeSession.State.ERROR); return
             }
-            // Cross-check the identity key against the TOFU registry (the
-            // incoming-challenge path may have populated it on a separate
-            // frame). A mismatch here is the strongest MITM signal.
-            val known = peerIdentityRegistry[endpointId]
+            // FIX-2: cross-check against the persisted TOFU registry. A mismatch
+            // here is the strongest MITM signal — same endpoint, different key.
+            val known = runBlocking(Dispatchers.IO) {
+                knownPeerRepository.getIdentityKey(endpointId)
+            }
             if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
                 Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
                 terminateSession(ExchangeSession.State.ERROR); return
             }
-            if (known == null) peerIdentityRegistry[endpointId] = peerIdentityKey
+            if (known == null) {
+                scope.launch { knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey) }
+            }
 
             challengeVerifiedByEndpoint.add(endpointId)
             pendingChallengeByEndpoint.remove(endpointId)
