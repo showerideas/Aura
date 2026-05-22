@@ -57,7 +57,10 @@ class MainActivity : AppCompatActivity() {
             onPermissionsGranted()
         } else {
             Timber.w("Permissions denied: $denied")
-            // Show rationale dialog in a real build
+            // PR-03: show a rationale bottom sheet that deep-links to settings.
+            PermissionRationaleBottomSheet
+                .newInstance(denied.toList())
+                .show(supportFragmentManager, PermissionRationaleBottomSheet.TAG)
         }
     }
 
