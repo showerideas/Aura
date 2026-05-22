@@ -8,6 +8,7 @@ import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.Signature
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
 import javax.crypto.KeyGenerator
@@ -100,6 +101,42 @@ object CryptoUtils {
      * Get or create the device identity keypair in the Android Keystore.
      * Used to sign challenge tokens during peer authentication.
      */
+    // -------------------------------------------------------------------------
+    // ECDSA challenge / response (PR-13)
+    //
+    // The device identity key returned by [getOrCreateDeviceIdentityKey] is
+    // long-lived. We sign random per-session challenges with it so the peer
+    // can prove they hold the same private key they presented as part of
+    // any prior pairing. This catches MITM endpoint substitution and
+    // tampered re-binds of an endpoint ID to a different identity.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sign a 32-byte random challenge with the device's long-lived ECDSA
+     * key. Uses SHA256withECDSA — supported by the secp256r1 keys we
+     * generate in [getOrCreateDeviceIdentityKey].
+     */
+    fun signChallenge(privateKey: PrivateKey, challenge: ByteArray): ByteArray {
+        return Signature.getInstance("SHA256withECDSA").apply {
+            initSign(privateKey)
+            update(challenge)
+        }.sign()
+    }
+
+    /**
+     * Verify a signature produced by [signChallenge]. Returns false on any
+     * crypto failure (bad signature, wrong key, malformed bytes) — callers
+     * must treat false as a hard rejection.
+     */
+    fun verifyChallenge(publicKey: PublicKey, challenge: ByteArray, signature: ByteArray): Boolean {
+        return runCatching {
+            Signature.getInstance("SHA256withECDSA").apply {
+                initVerify(publicKey)
+                update(challenge)
+            }.verify(signature)
+        }.getOrDefault(false)
+    }
+
     fun getOrCreateDeviceIdentityKey(): KeyPair {
         val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
         if (!ks.containsAlias(KEYSTORE_ALIAS_DEVICE_ID)) {
