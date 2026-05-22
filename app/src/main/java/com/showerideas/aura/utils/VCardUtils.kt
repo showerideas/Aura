@@ -37,9 +37,19 @@ fun Contact.toVCard(): String = buildString {
     append("VERSION:3.0").append(CRLF)
     appendField("FN", displayName)
     if (displayName.isNotBlank()) {
-        // Whole display name goes into the surname slot for clients that
-        // parse N but ignore FN. Remaining components are empty.
-        appendField("N", "$displayName;;;;")
+        // N is a structured field with five components separated by ';'.
+        // We put the whole display name in the first slot and leave the
+        // remaining four empty. The semicolons are *delimiters*, not
+        // content, so they must NOT go through appendField (which would
+        // escape them as \;). We emit the line directly with only the
+        // value portion escaped.
+        val escapedName = displayName
+            .replace("\\", "\\\\")
+            .replace("\n", "\\n")
+            .replace("\r", "")
+            .replace(",", "\\,")
+            .replace(";", "\\;")
+        append("N:").append(escapedName).append(";;;;").append(CRLF)
     }
     appendField("TEL;TYPE=CELL", phone)
     appendField("EMAIL;TYPE=INTERNET", email)

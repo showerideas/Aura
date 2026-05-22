@@ -39,9 +39,21 @@ class NearbyExchangeServiceGateTest {
     private fun clearGate() {
         // The companion property has a private setter; tests access it
         // through reflection to keep the production API surface clean.
+        //
+        // Kotlin can place the backing field for a companion @Volatile var
+        // on EITHER the Companion inner class OR (after JVM hoisting) on the
+        // outer NearbyExchangeService class. The exact location depends on
+        // compiler version and annotations, so try both locations rather
+        // than baking in a single assumption.
+        val outer = NearbyExchangeService::class.java
         val companion = NearbyExchangeService.Companion::class.java
-        val field = companion.getDeclaredField("gestureVerified")
+        val field = runCatching { outer.getDeclaredField("gestureVerified") }
+            .recoverCatching { companion.getDeclaredField("gestureVerified") }
+            .getOrThrow()
         field.isAccessible = true
-        field.setBoolean(NearbyExchangeService.Companion, false)
+        // The field is static regardless of which class hosts it (companion
+        // properties compile to static members), so `null` is the right
+        // receiver for setBoolean.
+        field.setBoolean(null, false)
     }
 }
