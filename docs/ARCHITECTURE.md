@@ -7,80 +7,97 @@
 ## 1. Module / package map
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart TB
-    subgraph app["app (single Gradle module)"]
-        direction TB
-        subgraph ui["com.showerideas.aura.ui"]
-            home[home/]
-            profile[profile/]
-            exchange[exchange/]
-            contacts[contacts/]
-            onboarding[onboarding/]
-            qr[qr/]
-            room[room/]
-            settings[settings/]
-            MA[MainActivity]
-            PR[PermissionRationaleBottomSheet]
+    subgraph UI["🎨&nbsp;ui"]
+        direction LR
+        home["home"]:::ui
+        profile["profile"]:::ui
+        exchange["exchange"]:::ui
+        contacts["contacts"]:::ui
+        onboarding["onboarding"]:::ui
+        qr["qr"]:::ui
+        room["room"]:::ui
+        settings["settings"]:::ui
+        MA["Main<br/>Activity"]:::ui
+        PRr["Permission<br/>Rationale"]:::ui
+    end
+    subgraph AUTH["🔐&nbsp;auth"]
+        direction LR
+        GAM["Gesture<br/>AuthMgr"]:::service
+        BAH["Biometric<br/>Helper"]:::service
+    end
+    subgraph SVC["⚙️&nbsp;service"]
+        direction LR
+        VBLS["Volume<br/>Service"]:::service
+        NES["Nearby<br/>Service"]:::service
+    end
+    subgraph DATA["💾&nbsp;data"]
+        direction LR
+        CR["Contact<br/>Repo"]:::data
+        PRP["Profile<br/>Repo"]:::data
+        BR["Blocklist<br/>Repo"]:::data
+        AP["Auth<br/>Prefs"]:::data
+        OP["Onboard<br/>Prefs"]:::data
+        subgraph LOC["local"]
+            direction LR
+            AD["AppDb<br/>v2"]:::data
+            CD["Contact<br/>Dao"]:::data
+            PD["Profile<br/>Dao"]:::data
+            BD["Blocked<br/>Dao"]:::data
+            MIG["Migrations"]:::data
         end
-        subgraph auth["com.showerideas.aura.auth"]
-            GAM[GestureAuthManager]
-            BAH[BiometricAuthHelper]
-        end
-        subgraph service["com.showerideas.aura.service"]
-            VBLS[VolumeButtonListenerService]
-            NES[NearbyExchangeService]
-        end
-        subgraph data["com.showerideas.aura.data"]
-            CR[ContactRepository]
-            PRr[ProfileRepository]
-            BR[BlocklistRepository]
-            AP[AuthPreferences]
-            OP[OnboardingPreferences]
-            subgraph local["data/local"]
-                AD[AppDatabase v2]
-                CD[ContactDao]
-                PD[ProfileDao]
-                BD[BlockedEndpointDao]
-                MIG[Migrations]
-            end
-        end
-        subgraph model["com.showerideas.aura.model"]
-            Mp[Profile]
-            Mc[Contact]
-            Mb[BlockedEndpoint]
-            Me[ExchangeSession]
-            Mg[GesturePattern]
-        end
-        subgraph utils["com.showerideas.aura.utils"]
-            CU[CryptoUtils]
-            PV[PayloadValidator]
-            VU[VCardUtils]
-            EU[ExportUtils]
-            AU[AvatarUtils]
-            EX[Extensions]
-        end
-        subgraph di["com.showerideas.aura.di"]
-            DM[DatabaseModule]
-        end
-        App[AuraApplication]
+    end
+    subgraph MOD["📦&nbsp;model"]
+        direction LR
+        Mp["Profile"]:::muted
+        Mc["Contact"]:::muted
+        Mb["Blocked<br/>Endpoint"]:::muted
+        Me["Exchange<br/>Session"]:::muted
+        Mg["Gesture<br/>Pattern"]:::muted
+    end
+    subgraph UTILS["🔧&nbsp;utils"]
+        direction LR
+        CU["Crypto<br/>Utils"]:::crypto
+        PV["Payload<br/>Validator"]:::crypto
+        VU["VCard<br/>Utils"]:::crypto
+        EU["Export<br/>Utils"]:::crypto
+        AU["Avatar<br/>Utils"]:::crypto
+        EX["Extensions"]:::crypto
+    end
+    subgraph DI["💉&nbsp;di"]
+        DM["Database<br/>Module"]:::ok
     end
 
-    ui --> auth
-    ui --> data
-    ui --> service
-    service --> auth
-    service --> data
-    service --> utils
-    data --> model
-    data --> local
-    local --> model
-    auth --> utils
-    di --> data
+    UI --> AUTH
+    UI --> DATA
+    UI --> SVC
+    SVC --> AUTH
+    SVC --> DATA
+    SVC --> UTILS
+    DATA --> MOD
+    DATA --> LOC
+    LOC --> MOD
+    AUTH --> UTILS
+    DI --> DATA
 
-    classDef pkg fill:#eef2ff,stroke:#4338ca,color:#1e1b4b
-    classDef sub fill:#fef3c7,stroke:#b45309,color:#451a03
-    class app pkg
-    class ui,auth,service,data,model,utils,di,local sub
+    classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
+    classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
+    classDef data fill:#10B981,color:#FFFFFF,stroke:#065F46,stroke-width:2px
+    classDef crypto fill:#EC4899,color:#FFFFFF,stroke:#9D174D,stroke-width:2px
+    classDef muted fill:#64748B,color:#FFFFFF,stroke:#1E293B,stroke-width:2px
+    classDef ok fill:#22C55E,color:#FFFFFF,stroke:#166534,stroke-width:2px
 ```
 
 ### Dependency-direction rules
@@ -96,53 +113,62 @@ flowchart TB
 ## 2. Runtime component diagram
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
-    subgraph foreground["Foreground services"]
-        VBLS[/VolumeButtonListenerService\<br/>media-button receiver/]
-        NES[/NearbyExchangeService\<br/>state machine/]
+    subgraph FG["⚙️&nbsp;Foreground&nbsp;services"]
+        direction TB
+        VBLS["Volume<br/>Service"]:::service
+        NES["Nearby<br/>Service"]:::service
+    end
+    subgraph UIp["🎨&nbsp;UI&nbsp;process"]
+        direction TB
+        MA["Main<br/>Activity"]:::ui
+        EF["Exchange<br/>Fragment"]:::ui
+        HF["Home<br/>Fragment"]:::ui
+    end
+    subgraph OS["📱&nbsp;Android&nbsp;OS"]
+        direction TB
+        ME["Media<br/>Session"]:::muted
+        NC["Nearby<br/>Conn API"]:::muted
+        KS["Android<br/>Keystore"]:::muted
+        SM["Sensor<br/>Manager"]:::muted
+        BIO["Biometric<br/>Prompt"]:::muted
+    end
+    subgraph STO["💾&nbsp;On-device&nbsp;storage"]
+        direction TB
+        ROOM[("Room<br/>v2")]:::data
+        ESP[("Encrypted<br/>Prefs")]:::data
+        DSP[("Data<br/>Store")]:::data
     end
 
-    subgraph activities["UI process"]
-        MA[MainActivity]
-        EF[ExchangeFragment]
-        HF[HomeFragment]
-    end
-
-    subgraph os["Android OS"]
-        ME[MediaSession / VolumeKey]
-        NC[Nearby Connections API]
-        KS[Android Keystore]
-        SM[SensorManager<br/>accelerometer]
-        BIO[BiometricPrompt]
-    end
-
-    subgraph storage["On-device storage"]
-        ROOM[(Room v2)]
-        ESP[(EncryptedSharedPreferences)]
-        DSP[(DataStore preferences)]
-    end
-
-    ME -- key events --> VBLS
-    VBLS -- "ACTION_ACTIVATE" --> MA
+    ME -->|"key events"| VBLS
+    VBLS -->|"ACTION_ACTIVATE"| MA
     MA --> EF
     HF --> NES
-    EF -- "verified gesture" --> NES
-    EF -- "perform gesture" --> SM
-    EF -- "or biometric" --> BIO
-    NES <--> NC
+    EF -->|"verified gesture"| NES
+    EF -->|"perform"| SM
+    EF -->|"or biometric"| BIO
+    NES <-->|"BLE / WiFi-P2P"| NC
     NES --> KS
     NES --> ROOM
     EF --> ESP
     MA --> DSP
 
-    classDef svc fill:#0ea5e9,color:#fff
-    classDef ui fill:#f59e0b,color:#fff
-    classDef os fill:#6b7280,color:#fff
-    classDef store fill:#10b981,color:#fff
-    class VBLS,NES svc
-    class MA,EF,HF ui
-    class ME,NC,KS,SM,BIO os
-    class ROOM,ESP,DSP store
+    classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
+    classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
+    classDef muted fill:#64748B,color:#FFFFFF,stroke:#1E293B,stroke-width:2px
+    classDef data fill:#10B981,color:#FFFFFF,stroke:#065F46,stroke-width:2px
 ```
 
 ### Why two services?
@@ -161,6 +187,18 @@ Both services are declared in [`AndroidManifest.xml`](../app/src/main/AndroidMan
 `NearbyExchangeService` is the single largest class (~1 kLOC) and the security-critical hot path. Internally it is a small state machine plus a typed message protocol over the Nearby Connections `Payload` API.
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 stateDiagram-v2
     [*] --> Idle
     Idle --> Advertising: start()
@@ -201,19 +239,35 @@ See [`EXCHANGE_FLOW.md`](EXCHANGE_FLOW.md) for the full ordered walkthrough.
 ## 4. Navigation graph
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
-    Splash([app start]) --> Onb{First launch?}
-    Onb -- yes --> Onboard[OnboardingFragment]
-    Onb -- no --> Home[HomeFragment]
+    Splash(["app<br/>start"]):::user --> Onb{"First<br/>launch?"}:::gate
+    Onb -- "yes" --> Onboard["Onboard<br/>Fragment"]:::ui
+    Onb -- "no" --> Home["Home<br/>Fragment"]:::ui
     Onboard --> Home
-    Home -- Activate --> Exchange[ExchangeFragment]
-    Home -- Edit --> Profile[ProfileFragment]
-    Home -- Contacts --> Contacts[ContactsFragment]
-    Home -- QR --> QR[QRExchangeFragment]
-    Home -- Room --> Room[RoomExchangeFragment]
-    Home -- Settings --> Settings[SettingsFragment]
-    Settings --> Blocked[BlockedDevicesFragment]
-    Contacts -- tap --> Detail[ContactDetailBottomSheet]
+    Home -->|"Activate"| Exchange["Exchange<br/>Fragment"]:::ui
+    Home -->|"Edit"| Profile["Profile<br/>Fragment"]:::ui
+    Home -->|"Contacts"| Contacts["Contacts<br/>Fragment"]:::ui
+    Home -->|"QR"| QR["QR<br/>Fragment"]:::ui
+    Home -->|"Room"| Room["Room<br/>Fragment"]:::ui
+    Home -->|"Settings"| Settings["Settings<br/>Fragment"]:::ui
+    Settings --> Blocked["Blocked<br/>Fragment"]:::ui
+    Contacts -->|"tap"| Detail["Contact<br/>Detail"]:::ui
+
+    classDef user fill:#6E56CF,color:#FFFFFF,stroke:#3D2C7A,stroke-width:2px
+    classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
+    classDef gate fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
 ```
 
 The `nav_graph.xml` lives at [`app/src/main/res/navigation/nav_graph.xml`](../app/src/main/res/navigation/nav_graph.xml).

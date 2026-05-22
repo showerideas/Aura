@@ -11,6 +11,18 @@ Every change ships as one PR, named `PR-NN<letter>: <subject>`. The number is th
 Branch names follow `pr-NN-short-slug` (lowercase, hyphens).
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     Issue["Idea / bug / feature"] --> Branch[pr-NN-slug]
     Branch --> Commits[1+ commits]

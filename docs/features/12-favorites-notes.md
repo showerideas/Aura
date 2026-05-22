@@ -7,6 +7,18 @@
 ## Data flow
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{
+  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+  'fontSize':'14px',
+  'primaryColor':'#0EA5E9',
+  'primaryTextColor':'#0F172A',
+  'primaryBorderColor':'#075985',
+  'lineColor':'#475569',
+  'secondaryColor':'#F1F5F9',
+  'tertiaryColor':'#FAFAF9',
+  'clusterBkg':'#F8FAFC',
+  'clusterBorder':'#CBD5E1'
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     UI[ContactDetailBottomSheet] -- "tap ⭐ / save note" --> VM[ContactDetailViewModel]
     VM -- "setFavorite / setNote" --> Repo[ContactRepository]
