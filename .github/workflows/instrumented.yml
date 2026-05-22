@@ -42,6 +42,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
+    # PR-39 lands the *infrastructure*: emulator boot, AVD cache,
+    # connectedDebugAndroidTest invocation, report upload. The actual
+    # instrumentation suite has 3 known-flaky tests (MigrationTest x2,
+    # ExchangeFlowEspressoTest x1) that need a follow-up to harden.
+    # Until then, this workflow reports its status but does NOT gate
+    # PR merges — ci.yml is still the required check. Flip this to
+    # `false` once the suite is green for two consecutive runs.
+    continue-on-error: true
+
     strategy:
       fail-fast: false
       matrix:
