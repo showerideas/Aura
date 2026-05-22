@@ -74,4 +74,9 @@
     <string name="gesture_recording">Perform your gesture now…</string>
     <string name="gesture_saved">Gesture saved!</string>
     <string name="gesture_status_no_gesture">No gesture set yet</string>
+
+    <!-- vCard export (PR-07) -->
+    <string name="action_export">Export</string>
+    <string name="action_export_all">Export all</string>
+    <string name="export_all_empty">No contacts to export yet.</string>
 </resources>
