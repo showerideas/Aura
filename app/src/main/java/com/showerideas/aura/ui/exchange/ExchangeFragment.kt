@@ -13,6 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.showerideas.aura.R
+import com.showerideas.aura.auth.BiometricAuthHelper
+import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentExchangeBinding
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
@@ -60,16 +62,13 @@ class ExchangeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (viewModel.hasGesturePattern()) {
-            // Gate via gesture confirmation
-            binding.gestureConfirmSection.visibility = View.VISIBLE
-            binding.tvGestureHint.text = getString(R.string.exchange_gesture_hint)
-            wireGestureButton()
-        } else {
-            // No gesture set — confirm the user really wants to exchange
-            // without authentication, then unlock the gate directly.
-            binding.gestureConfirmSection.visibility = View.GONE
-            showUnprotectedExchangeDialog()
+        // PR-16: branch on the user's selected auth method. Biometric is
+        // routed through the AndroidX BiometricPrompt and bypasses the
+        // gesture flow entirely. Gesture remains the default for any user
+        // who hasn't visited Settings to change it (PR-19).
+        when (viewModel.authMethod.value) {
+            AuthPreferences.METHOD_BIOMETRIC -> startBiometricGate()
+            else -> startGestureGate()
         }
 
         binding.btnCancel.setOnClickListener {
@@ -86,6 +85,54 @@ class ExchangeFragment : Fragment() {
                 }
             }
         }
+    }
+
+    /**
+     * PR-16: original gesture/no-gesture branch, extracted so the new
+     * biometric path can call it as a fallback when the device reports
+     * no usable biometric hardware.
+     */
+    private fun startGestureGate() {
+        if (viewModel.hasGesturePattern()) {
+            binding.gestureConfirmSection.visibility = View.VISIBLE
+            binding.tvGestureHint.text = getString(R.string.exchange_gesture_hint)
+            wireGestureButton()
+        } else {
+            binding.gestureConfirmSection.visibility = View.GONE
+            showUnprotectedExchangeDialog()
+        }
+    }
+
+    /**
+     * PR-16: biometric gate. Hides the gesture confirm UI and shows the
+     * system BiometricPrompt. On success the same service-gate flip
+     * happens as for a confirmed gesture; on failure we navigate back.
+     * If the device has no biometric hardware enrolled we silently
+     * fall back to the gesture flow.
+     */
+    private fun startBiometricGate() {
+        binding.gestureConfirmSection.visibility = View.GONE
+        if (!BiometricAuthHelper.isAvailable(requireContext())) {
+            Toast.makeText(
+                requireContext(),
+                "Biometric unavailable, using gesture",
+                Toast.LENGTH_SHORT
+            ).show()
+            startGestureGate()
+            return
+        }
+        BiometricAuthHelper.authenticate(
+            fragment = this,
+            onSuccess = {
+                viewModel.markExchangeVerified()
+                startServiceOnce()
+            },
+            onFailure = { msg ->
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                viewModel.cancelExchange()
+                findNavController().navigateUp()
+            }
+        )
     }
 
     private fun wireGestureButton() {
