@@ -69,18 +69,30 @@ class RoomExchangeFragment : Fragment() {
         }
         renderInitialState()
 
-        // Tap-to-start: this triggers gesture record / unprotected confirm /
-        // service start. Long-press-to-record is more typical, but for room
-        // mode a single tap is enough — the action button title makes the
-        // contract explicit ("Open room" / "Join").
-        binding.btnRoomAction.setOnClickListener { onActionPressed() }
-        // Hold-to-record gesture: press starts recording, release validates.
-        binding.btnRoomAction.setOnLongClickListener {
-            if (sessionRunning || !viewModel.hasGesturePattern()) return@setOnLongClickListener false
-            viewModel.startGestureRecording()
-            binding.tvRoomStatus.setText(R.string.gesture_recording)
+        // Two paths through the action button (mirrors ExchangeFragment):
+        //   1. If a session is already running OR no gesture is stored, a
+        //      plain tap is the action (close-room / open-confirm dialog).
+        //   2. If a gesture is stored, press-and-hold the button to record;
+        //      releasing the button runs DTW + unlocks the service gate.
+        // We use an onTouchListener so press/release are unambiguously
+        // paired — the previous long-press + tap-again flow was fragile.
+        binding.btnRoomAction.setOnTouchListener { v, event ->
+            val useTouchGesture = !sessionRunning && viewModel.hasGesturePattern()
+            if (!useTouchGesture) {
+                if (event.action == android.view.MotionEvent.ACTION_UP) v.performClick()
+                return@setOnTouchListener false
+            }
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    viewModel.startGestureRecording()
+                    binding.tvRoomStatus.setText(R.string.gesture_recording)
+                }
+                android.view.MotionEvent.ACTION_UP,
+                android.view.MotionEvent.ACTION_CANCEL -> onGestureReleased()
+            }
             true
         }
+        binding.btnRoomAction.setOnClickListener { onActionPressed() }
 
         binding.btnRoomCancel.setOnClickListener {
             viewModel.closeRoom()
@@ -127,10 +139,11 @@ class RoomExchangeFragment : Fragment() {
     }
 
     /**
-     * Called when the user taps the action button. Branches on:
-     *   - already running → close the room
-     *   - gesture pattern exists → require a hold-to-record (long-press)
-     *   - no gesture pattern → show the unprotected-exchange dialog
+     * Reached when a tap (rather than press-and-release) is the intended
+     * action: the session is already running (close), or no gesture
+     * pattern is stored (confirm-unprotected dialog). When a gesture IS
+     * stored, [setOnTouchListener] on the action button handles the
+     * record/validate cycle directly.
      */
     private fun onActionPressed() {
         if (sessionRunning) {
@@ -141,13 +154,8 @@ class RoomExchangeFragment : Fragment() {
         }
 
         if (viewModel.hasGesturePattern()) {
-            // The user must hold the button to record. If they tap it short
-            // we tell them how to confirm.
-            val state = viewModel.gestureRecordingState.value
-            if (state is com.showerideas.aura.auth.GestureAuthManager.RecordingState.Recording) {
-                onGestureReleased()
-                return
-            }
+            // A plain tap when a gesture is configured — nudge the user to
+            // press-and-hold instead. The touch listener owns the real path.
             Toast.makeText(
                 requireContext(),
                 R.string.room_hold_to_confirm,
