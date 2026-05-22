@@ -5,6 +5,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.showerideas.aura.R
 
 /**
  * PR-16: thin wrapper around AndroidX BiometricPrompt so the rest of the
@@ -50,14 +51,15 @@ object BiometricAuthHelper {
                 onFailure(msg.toString())
             }
             override fun onAuthenticationFailed() {
-                onFailure("Authentication failed")
+                onFailure(fragment.getString(R.string.biometric_auth_failed))
             }
         }
+        val ctx = fragment.requireContext()
         BiometricPrompt(fragment, executor, callback).authenticate(
             BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Confirm identity")
-                .setSubtitle("Share your contact with the person nearby")
-                .setNegativeButtonText("Cancel")
+                .setTitle(ctx.getString(R.string.biometric_title))
+                .setSubtitle(ctx.getString(R.string.biometric_subtitle))
+                .setNegativeButtonText(ctx.getString(R.string.biometric_negative))
                 .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
                 .build()
         )

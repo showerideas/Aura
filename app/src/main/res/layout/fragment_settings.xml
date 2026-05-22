@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:text="Authentication"
+            android:text="@string/settings_section_auth"
             android:textColor="@color/aura_purple_light"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -31,7 +31,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Auth method"
+            android:text="@string/settings_auth_method"
             android:textColor="@color/on_surface"
             android:textSize="15sp" />
 
@@ -44,13 +44,13 @@
                 android:id="@+id/rb_auth_gesture"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Gesture"
+                android:text="@string/settings_auth_gesture"
                 android:textColor="@color/on_surface" />
             <RadioButton
                 android:id="@+id/rb_auth_biometric"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Biometric"
+                android:text="@string/settings_auth_biometric"
                 android:textColor="@color/on_surface" />
         </RadioGroup>
 
@@ -58,7 +58,7 @@
             android:id="@+id/tv_biometric_subtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Not available on this device"
+            android:text="@string/settings_biometric_unavailable"
             android:textColor="@color/on_surface_secondary"
             android:textSize="12sp"
             android:visibility="gone" />
@@ -71,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Activation"
+            android:text="@string/settings_section_activation"
             android:textColor="@color/aura_purple_light"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -86,7 +86,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Background activation"
+                android:text="@string/settings_bg_activation"
                 android:textColor="@color/on_surface"
                 android:textSize="15sp" />
             <com.google.android.material.switchmaterial.SwitchMaterial
@@ -103,7 +103,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Data"
+            android:text="@string/settings_section_data"
             android:textColor="@color/aura_purple_light"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -114,7 +114,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
             android:paddingVertical="14dp"
-            android:text="Blocked devices"
+            android:text="@string/settings_blocked_devices"
             android:textColor="@color/on_surface"
             android:textSize="15sp" />
 
@@ -124,7 +124,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
             android:paddingVertical="14dp"
-            android:text="Clear gesture"
+            android:text="@string/settings_clear_gesture"
             android:textColor="@color/on_surface"
             android:textSize="15sp" />
 
@@ -134,7 +134,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
             android:paddingVertical="14dp"
-            android:text="Clear all contacts"
+            android:text="@string/settings_clear_contacts"
             android:textColor="@color/error"
             android:textSize="15sp" />
 
@@ -146,7 +146,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="About"
+            android:text="@string/settings_section_about"
             android:textColor="@color/aura_purple_light"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -160,7 +160,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Version"
+                android:text="@string/settings_version"
                 android:textColor="@color/on_surface"
                 android:textSize="15sp" />
             <TextView
@@ -177,7 +177,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
             android:paddingVertical="14dp"
-            android:text="Privacy policy"
+            android:text="@string/settings_privacy"
             android:textColor="@color/on_surface"
             android:textSize="15sp" />
 

@@ -106,7 +106,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Add a note…"
+        android:hint="@string/contact_note_hint"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_notes"
@@ -124,7 +124,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_marginTop="4dp"
-        android:text="Save note"
+        android:text="@string/contact_save_note"
         android:visibility="gone" />
 
     <!-- Action buttons -->
@@ -187,7 +187,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Block this device"
+        android:text="@string/contact_block_button"
         android:textColor="@color/error" />
 
 </LinearLayout>
