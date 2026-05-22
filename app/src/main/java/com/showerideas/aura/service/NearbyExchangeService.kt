@@ -71,6 +71,9 @@ class NearbyExchangeService : Service() {
         // Message type prefixes (single-byte header in the payload)
         private const val MSG_TYPE_PUBLIC_KEY: Byte = 0x01
         private const val MSG_TYPE_PROFILE: Byte = 0x02
+        // PR-10: avatar stream signalling.
+        private const val MSG_TYPE_AVATAR: Byte = 0x03
+        private const val MAX_AVATAR_BYTES: Long = 200_000L
 
         val sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
 
