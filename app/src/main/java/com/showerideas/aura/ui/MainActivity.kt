@@ -17,14 +17,19 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.showerideas.aura.R
+import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.service.VolumeButtonListenerService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject lateinit var onboardingPreferences: OnboardingPreferences
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -100,6 +105,17 @@ class MainActivity : AppCompatActivity() {
         val navHost = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHost.navController
+
+        // PR-05: route first-run users to the onboarding flow before the
+        // nav host inflates its default start destination. We use runBlocking
+        // intentionally here — this is a one-off DataStore read on app start
+        // and must complete before navigation can begin.
+        val needsOnboarding = runBlocking { !onboardingPreferences.isOnboardingCompleteOnce() }
+        if (needsOnboarding) {
+            val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+            graph.setStartDestination(R.id.onboardingFragment)
+            navController.graph = graph
+        }
 
         val appBarConfig = AppBarConfiguration(
             setOf(R.id.homeFragment, R.id.profileFragment, R.id.contactsFragment)

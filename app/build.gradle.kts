@@ -110,6 +110,9 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // ViewPager2 for onboarding (PR-05)
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
     // Biometric
     implementation(libs.androidx.biometric)
 
