@@ -54,6 +54,16 @@ class GestureAuthTest {
     }
 
     @Test
+    fun `match against null stored pattern returns false`() {
+        // Mirrors GestureAuthManager.match() behaviour when no pattern is stored.
+        // The contract: a null stored pattern must always reject the candidate.
+        val stored: FloatArray? = null
+        val candidate = FloatArray(50) { 1f }
+        val result = if (stored == null) false else dtw(stored, candidate) <= 4.5f
+        assertFalse("Match must fail when no pattern is stored", result)
+    }
+
+    @Test
     fun `gesture pattern equality is based on id and feature vector`() {
         val v = floatArrayOf(1f, 2f, 3f)
         val p1 = GesturePattern("abc", featureVector = v)

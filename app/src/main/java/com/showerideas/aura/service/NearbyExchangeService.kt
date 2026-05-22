@@ -35,6 +35,7 @@ import javax.inject.Inject
  *
  * Protocol (STAR topology, P2P_CLUSTER strategy):
  * ┌─────────────────────────────────────────────────────────────────────┐
+ * │  0. Gesture (or biometric) auth must mark session verified          │
  * │  1. Both peers ADVERTISE + DISCOVER simultaneously                  │
  * │  2. First mutual discovery → requestConnection()                    │
  * │  3. Both accept → CONNECTED                                         │
@@ -68,6 +69,29 @@ class NearbyExchangeService : Service() {
         private const val MSG_TYPE_PROFILE: Byte = 0x02
 
         val sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
+
+        /**
+         * Gate flag — the exchange service refuses to advance past
+         * [startSession] until the UI/auth layer flips this to true via
+         * [markGestureVerified]. Reset to false at the end of every session.
+         *
+         * If no gesture pattern is stored, the UI is responsible for
+         * confirming the unprotected exchange with the user and calling
+         * [markGestureVerified] explicitly.
+         */
+        @Volatile
+        var gestureVerified: Boolean = false
+            private set
+
+        /**
+         * Called by [com.showerideas.aura.ui.exchange.ExchangeViewModel]
+         * after a successful gesture match (or biometric / acknowledged
+         * skip when no pattern is set).
+         */
+        fun markGestureVerified() {
+            gestureVerified = true
+            Timber.d("Gesture verified — exchange gate opened")
+        }
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, NearbyExchangeService::class.java).apply {
@@ -131,6 +155,23 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
 
     private fun startSession() {
+        // Hard gate: refuse to advertise/discover until the auth layer has
+        // explicitly verified the user. The UI is required to call
+        // markGestureVerified() before the service is started, OR to show
+        // an explicit "no gesture set" confirmation before doing so.
+        if (!gestureVerified) {
+            Timber.w("startSession() blocked — gesture not verified")
+            sessionId = UUID.randomUUID().toString()
+            sessionState.value = ExchangeSession(
+                sessionId = sessionId,
+                state = ExchangeSession.State.CANCELLED,
+                errorMessage = "Gesture verification required"
+            )
+            broadcastState(sessionState.value)
+            terminateSession(ExchangeSession.State.CANCELLED)
+            return
+        }
+
         sessionId = UUID.randomUUID().toString()
         ourKeyPair = CryptoUtils.generateEphemeralECDHKeyPair()
 
@@ -158,6 +199,9 @@ class NearbyExchangeService : Service() {
         val current = sessionState.value
         sessionState.value = current?.copy(state = endState)
         broadcastState(sessionState.value)
+
+        // Reset the gate so the next exchange must re-authenticate.
+        gestureVerified = false
 
         Timber.d("Session terminated with state $endState")
         stopSelf()
@@ -322,6 +366,9 @@ class NearbyExchangeService : Service() {
                 )
                 broadcastState(sessionState.value)
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")
+
+                // Reset gate on success too.
+                gestureVerified = false
 
                 delay(500)
                 stopSelf()

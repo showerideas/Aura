@@ -66,8 +66,9 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == VolumeButtonListenerService.ACTION_AURA_ACTIVATE) {
                 Timber.i("Activation broadcast received — launching exchange")
+                // ExchangeFragment runs the gesture gate before starting the
+                // NearbyExchangeService (PR-01). Do NOT start the service here.
                 navController.navigate(R.id.exchangeFragment)
-                NearbyExchangeService.start(this@MainActivity)
             }
         }
     }

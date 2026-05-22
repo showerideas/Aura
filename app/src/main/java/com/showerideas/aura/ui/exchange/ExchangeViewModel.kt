@@ -26,13 +26,32 @@ class ExchangeViewModel @Inject constructor(
 
     fun startGestureRecording() = gestureAuthManager.startRecording()
 
-    fun stopGestureAndValidate(): Boolean {
+    /**
+     * Stop the gesture recording, run a DTW match against the stored
+     * pattern, and — if the match succeeds — flip the service-level
+     * verification gate so [NearbyExchangeService.startSession] can proceed.
+     *
+     * @return true when the gesture matched and the service gate was opened.
+     */
+    fun validateGestureAndUnlockService(): Boolean {
         gestureAuthManager.stopRecording()
         val state = gestureAuthManager.recordingState.value
         if (state is GestureAuthManager.RecordingState.Complete) {
-            return gestureAuthManager.match(state.pattern)
+            val ok = gestureAuthManager.match(state.pattern)
+            if (ok) {
+                NearbyExchangeService.markGestureVerified()
+            }
+            return ok
         }
         return false
+    }
+
+    /**
+     * Called when the user explicitly acknowledges they want to proceed
+     * without any gesture protection. Opens the gate directly.
+     */
+    fun proceedWithoutGesture() {
+        NearbyExchangeService.markGestureVerified()
     }
 
     fun hasGesturePattern(): Boolean = gestureAuthManager.hasStoredPattern()
