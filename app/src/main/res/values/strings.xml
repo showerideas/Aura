@@ -59,4 +59,19 @@
     <string name="perm_reason_notifications">So you see live status while an exchange is running.</string>
     <string name="perm_label_generic">Permission required</string>
     <string name="perm_reason_generic">AURA needs this permission to function correctly.</string>
+
+    <!-- Onboarding (PR-05) -->
+    <string name="onboarding_welcome_tagline">Trade contacts with a shake.</string>
+    <string name="onboarding_welcome_body">AURA exchanges your contact card with anyone nearby using an end-to-end encrypted Bluetooth handshake. No accounts, no servers, nothing leaves your device unless you choose to share it.</string>
+    <string name="onboarding_profile_title">Who are you?</string>
+    <string name="onboarding_profile_subtitle">Just the essentials. You can fill in the rest later from the Profile screen.</string>
+    <string name="onboarding_gesture_title">Set an unlock gesture</string>
+    <string name="onboarding_gesture_subtitle">Pick a quick motion only you would make. AURA will use it to confirm every exchange.</string>
+    <string name="onboarding_gesture_skip">Skip for now</string>
+    <string name="onboarding_gesture_skipped">Skipped — you can add a gesture later from the Profile screen.</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_name_required">Please enter your name to continue.</string>
+    <string name="gesture_recording">Perform your gesture now…</string>
+    <string name="gesture_saved">Gesture saved!</string>
+    <string name="gesture_status_no_gesture">No gesture set yet</string>
 </resources>
