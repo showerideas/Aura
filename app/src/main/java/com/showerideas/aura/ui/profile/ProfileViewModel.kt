@@ -26,6 +26,12 @@ class ProfileViewModel @Inject constructor(
     val gestureRecordingState: StateFlow<GestureAuthManager.RecordingState> =
         gestureAuthManager.recordingState
 
+    /**
+     * PR-11: rolling variance from the gesture manager, surfaced to the UI
+     * to drive the 5-bar gesture-strength meter while recording.
+     */
+    val liveVariance: StateFlow<Float> = gestureAuthManager.liveVariance
+
     val hasGesturePattern: Boolean get() = gestureAuthManager.hasStoredPattern()
 
     private val _saveSuccess = MutableStateFlow(false)

@@ -183,6 +183,59 @@
             android:text="Hold to Record Gesture"
             app:backgroundTint="@color/aura_purple" />
 
+        <!--
+          PR-11: gesture strength indicator.
+          Five rounded segments + a text label that becomes visible only
+          while a gesture is actively being recorded.
+        -->
+        <LinearLayout
+            android:id="@+id/gesture_strength_bars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:importantForAccessibility="no">
+            <View android:id="@+id/gesture_bar_1"
+                android:layout_width="8dp" android:layout_height="24dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                android:background="@drawable/gesture_strength_bar"
+                android:importantForAccessibility="no" />
+            <View android:id="@+id/gesture_bar_2"
+                android:layout_width="8dp" android:layout_height="24dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                android:background="@drawable/gesture_strength_bar"
+                android:importantForAccessibility="no" />
+            <View android:id="@+id/gesture_bar_3"
+                android:layout_width="8dp" android:layout_height="24dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                android:background="@drawable/gesture_strength_bar"
+                android:importantForAccessibility="no" />
+            <View android:id="@+id/gesture_bar_4"
+                android:layout_width="8dp" android:layout_height="24dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                android:background="@drawable/gesture_strength_bar"
+                android:importantForAccessibility="no" />
+            <View android:id="@+id/gesture_bar_5"
+                android:layout_width="8dp" android:layout_height="24dp"
+                android:layout_marginStart="4dp" android:layout_marginEnd="4dp"
+                android:background="@drawable/gesture_strength_bar"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_variance_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="gesture strength"
+            android:textColor="@color/on_surface_secondary"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
         <!-- Save button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
