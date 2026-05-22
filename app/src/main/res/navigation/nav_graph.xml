@@ -29,7 +29,15 @@
         <action
             android:id="@+id/action_home_to_qr"
             app:destination="@id/qrExchangeFragment" />
+        <action
+            android:id="@+id/action_home_to_room"
+            app:destination="@id/roomExchangeFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/roomExchangeFragment"
+        android:name="com.showerideas.aura.ui.room.RoomExchangeFragment"
+        android:label="Room Exchange" />
 
     <fragment
         android:id="@+id/qrExchangeFragment"

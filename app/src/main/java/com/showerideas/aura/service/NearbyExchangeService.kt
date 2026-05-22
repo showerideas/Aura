@@ -54,6 +54,9 @@ class NearbyExchangeService : Service() {
     companion object {
         const val ACTION_START = "com.showerideas.aura.nearby.START"
         const val ACTION_STOP = "com.showerideas.aura.nearby.STOP"
+        // PR-09: room-mode actions
+        const val ACTION_START_ROOM_HOST = "com.showerideas.aura.nearby.START_ROOM_HOST"
+        const val ACTION_START_ROOM_GUEST = "com.showerideas.aura.nearby.START_ROOM_GUEST"
         const val ACTION_STATE_UPDATE = "com.showerideas.aura.nearby.STATE_UPDATE"
         const val EXTRA_STATE = "extra_state"
 
@@ -61,6 +64,7 @@ class NearbyExchangeService : Service() {
         private const val CHANNEL_ID = "aura_exchange_channel"
         private const val NOTIFICATION_ID = 1002
         private const val SESSION_TIMEOUT_MS = 30_000L   // 30 seconds
+        private const val ROOM_TIMEOUT_MS = 300_000L     // 5 min for room host
 
         private val STRATEGY = Strategy.P2P_CLUSTER
 
@@ -69,6 +73,9 @@ class NearbyExchangeService : Service() {
         private const val MSG_TYPE_PROFILE: Byte = 0x02
 
         val sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
+
+        /** Live count of guests that have joined a room host session (PR-09). */
+        val connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
 
         /**
          * Gate flag — the exchange service refuses to advance past
@@ -104,6 +111,20 @@ class NearbyExchangeService : Service() {
                 action = ACTION_STOP
             })
         }
+
+        /** PR-09: start as a room host (multi-guest collector). */
+        fun startRoomHost(context: Context) {
+            context.startForegroundService(Intent(context, NearbyExchangeService::class.java).apply {
+                action = ACTION_START_ROOM_HOST
+            })
+        }
+
+        /** PR-09: start as a room guest (receives host card, terminates after one exchange). */
+        fun startRoomGuest(context: Context) {
+            context.startForegroundService(Intent(context, NearbyExchangeService::class.java).apply {
+                action = ACTION_START_ROOM_GUEST
+            })
+        }
     }
 
     @Inject lateinit var profileRepository: ProfileRepository
@@ -123,12 +144,28 @@ class NearbyExchangeService : Service() {
      */
     private enum class HandshakeState { IDLE, KEY_SENT, KEY_RECEIVED, COMPLETE }
 
-    // Per-session ephemeral ECDH state
+    // Per-session ephemeral ECDH state (peer-to-peer & room-guest modes).
     private var ourKeyPair: java.security.KeyPair? = null
     private var sessionKey: javax.crypto.SecretKey? = null
     private var connectedEndpoint: String? = null
     private var peerPublicKey: PublicKey? = null
     private var handshakeState: HandshakeState = HandshakeState.IDLE
+
+    /** Active exchange mode for the in-flight session (PR-09). */
+    private var currentMode: ExchangeSession.ExchangeMode =
+        ExchangeSession.ExchangeMode.PEER_TO_PEER
+
+    /**
+     * Per-endpoint ECDH state for room-host mode. Each connected guest
+     * carries its own handshake state and derived AES key so concurrent
+     * handshakes don't trample each other.
+     */
+    private data class PeerCtx(
+        var handshake: HandshakeState = HandshakeState.IDLE,
+        var sessionKey: javax.crypto.SecretKey? = null,
+        var peerPub: PublicKey? = null
+    )
+    private val peerCtxByEndpoint = mutableMapOf<String, PeerCtx>()
 
     // -------------------------------------------------------------------------
     // Service lifecycle
@@ -142,7 +179,9 @@ class NearbyExchangeService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> startSession()
+            ACTION_START -> startSession(ExchangeSession.ExchangeMode.PEER_TO_PEER)
+            ACTION_START_ROOM_HOST -> startSession(ExchangeSession.ExchangeMode.ROOM_HOST)
+            ACTION_START_ROOM_GUEST -> startSession(ExchangeSession.ExchangeMode.ROOM_GUEST)
             ACTION_STOP -> terminateSession(ExchangeSession.State.CANCELLED)
         }
         return START_NOT_STICKY
@@ -162,7 +201,9 @@ class NearbyExchangeService : Service() {
     // Session management
     // -------------------------------------------------------------------------
 
-    private fun startSession() {
+    private fun startSession(
+        mode: ExchangeSession.ExchangeMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
+    ) {
         // Hard gate: refuse to advertise/discover until the auth layer has
         // explicitly verified the user. The UI is required to call
         // markGestureVerified() before the service is started, OR to show
@@ -173,6 +214,7 @@ class NearbyExchangeService : Service() {
             sessionState.value = ExchangeSession(
                 sessionId = sessionId,
                 state = ExchangeSession.State.CANCELLED,
+                mode = mode,
                 errorMessage = "Gesture verification required"
             )
             broadcastState(sessionState.value)
@@ -181,19 +223,27 @@ class NearbyExchangeService : Service() {
         }
 
         sessionId = UUID.randomUUID().toString()
+        currentMode = mode
         ourKeyPair = CryptoUtils.generateEphemeralECDHKeyPair()
+        connectedCount.value = 0
+        peerCtxByEndpoint.clear()
 
-        val session = ExchangeSession(sessionId = sessionId, state = ExchangeSession.State.ADVERTISING)
+        val session = ExchangeSession(
+            sessionId = sessionId,
+            state = ExchangeSession.State.ADVERTISING,
+            mode = mode
+        )
         sessionState.value = session
         broadcastState(session)
 
-        Timber.i("Starting AURA exchange session $sessionId")
+        Timber.i("Starting AURA exchange session $sessionId (mode=$mode)")
         startAdvertisingAndDiscovery()
 
-        // Auto-cancel after timeout
+        val timeoutMs = if (mode == ExchangeSession.ExchangeMode.ROOM_HOST)
+            ROOM_TIMEOUT_MS else SESSION_TIMEOUT_MS
         timeoutJob = scope.launch {
-            delay(SESSION_TIMEOUT_MS)
-            Timber.w("Session timed out")
+            delay(timeoutMs)
+            Timber.w("Session timed out (mode=$mode)")
             terminateSession(ExchangeSession.State.CANCELLED)
         }
     }
@@ -214,6 +264,10 @@ class NearbyExchangeService : Service() {
         handshakeState = HandshakeState.IDLE
         peerPublicKey = null
         sessionKey = null
+        // Reset room bookkeeping (PR-09).
+        peerCtxByEndpoint.clear()
+        connectedCount.value = 0
+        currentMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
 
         Timber.d("Session terminated with state $endState")
         stopSelf()
@@ -252,12 +306,23 @@ class NearbyExchangeService : Service() {
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             if (result.status.isSuccess) {
-                Timber.i("Connected to $endpointId")
-                connectedEndpoint = endpointId
-                connectionsClient.stopAdvertising()
-                connectionsClient.stopDiscovery()
-                updateSessionState(ExchangeSession.State.EXCHANGING)
-                sendPublicKey(endpointId)
+                Timber.i("Connected to $endpointId (mode=$currentMode)")
+                if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
+                    // Host keeps advertising; each guest tracks its own state.
+                    peerCtxByEndpoint[endpointId] = PeerCtx()
+                    updateSessionState(ExchangeSession.State.ROOM_HOST)
+                    sendPublicKey(endpointId)
+                } else {
+                    connectedEndpoint = endpointId
+                    connectionsClient.stopAdvertising()
+                    connectionsClient.stopDiscovery()
+                    val nextState = if (currentMode == ExchangeSession.ExchangeMode.ROOM_GUEST)
+                        ExchangeSession.State.ROOM_GUEST
+                    else
+                        ExchangeSession.State.EXCHANGING
+                    updateSessionState(nextState)
+                    sendPublicKey(endpointId)
+                }
             } else {
                 Timber.w("Connection to $endpointId failed: ${result.status.statusMessage}")
                 updateSessionState(ExchangeSession.State.ERROR)
@@ -266,6 +331,11 @@ class NearbyExchangeService : Service() {
 
         override fun onDisconnected(endpointId: String) {
             Timber.d("Disconnected from $endpointId")
+            if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
+                // Room stays open if one guest drops; clear that guest's ctx.
+                peerCtxByEndpoint.remove(endpointId)
+                return
+            }
             if (sessionState.value?.state != ExchangeSession.State.COMPLETED) {
                 terminateSession(ExchangeSession.State.CANCELLED)
             }
@@ -274,7 +344,9 @@ class NearbyExchangeService : Service() {
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            Timber.d("Endpoint found: $endpointId (${info.endpointName})")
+            Timber.d("Endpoint found: $endpointId (${info.endpointName}) (mode=$currentMode)")
+            // Hosts only advertise; they don't initiate outgoing connections.
+            if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) return
             // Only request connection if we haven't connected yet
             if (connectedEndpoint == null) {
                 connectionsClient.requestConnection(
@@ -336,6 +408,12 @@ class NearbyExchangeService : Service() {
         val payload = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + encodedKey.toByteArray(Charsets.UTF_8)
         connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
             .addOnSuccessListener { Timber.d("Public key sent to $endpointId") }
+
+        if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
+            val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
+            if (ctx.handshake == HandshakeState.IDLE) ctx.handshake = HandshakeState.KEY_SENT
+            return
+        }
         // Only flip to KEY_SENT if we haven't already received the peer's key.
         if (handshakeState == HandshakeState.IDLE) {
             handshakeState = HandshakeState.KEY_SENT
@@ -347,13 +425,36 @@ class NearbyExchangeService : Service() {
             val encodedKey = String(data, Charsets.UTF_8)
             val keyBytes = Base64.getDecoder().decode(encodedKey)
             val decodedPeerKey = decodeEC256PublicKey(keyBytes)
-            peerPublicKey = decodedPeerKey
 
             val kp = ourKeyPair ?: run {
                 Timber.e("Local keypair missing when peer key arrived")
                 terminateSession(ExchangeSession.State.ERROR)
                 return
             }
+
+            // PR-09: room-host uses a per-endpoint state machine.
+            if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
+                val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
+                ctx.peerPub = decodedPeerKey
+                when (ctx.handshake) {
+                    HandshakeState.KEY_SENT -> {
+                        ctx.sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                        ctx.handshake = HandshakeState.COMPLETE
+                        sendProfile(endpointId)
+                    }
+                    HandshakeState.IDLE -> {
+                        ctx.handshake = HandshakeState.KEY_RECEIVED
+                        sendPublicKey(endpointId)
+                        ctx.sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                        ctx.handshake = HandshakeState.COMPLETE
+                        sendProfile(endpointId)
+                    }
+                    else -> Timber.w("Duplicate room-host public key from $endpointId")
+                }
+                return
+            }
+
+            peerPublicKey = decodedPeerKey
 
             when (handshakeState) {
                 HandshakeState.KEY_SENT -> {
@@ -387,6 +488,34 @@ class NearbyExchangeService : Service() {
     }
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
+        // PR-09: room-host decrypts with per-guest session key and keeps the room open.
+        if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
+            val ctx = peerCtxByEndpoint[endpointId]
+            val rkey = ctx?.sessionKey ?: run {
+                Timber.e("No room session key for $endpointId")
+                return
+            }
+            scope.launch {
+                try {
+                    val decrypted = CryptoUtils.decrypt(rkey, encryptedData)
+                    val mapType = object : TypeToken<Map<String, String>>() {}.type
+                    val profileMap: Map<String, String> =
+                        gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
+                    val contact = Contact.fromMap(
+                        id = UUID.randomUUID().toString(),
+                        map = profileMap,
+                        endpointId = endpointId
+                    )
+                    contactRepository.save(contact)
+                    connectedCount.value = connectedCount.value + 1
+                    Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to process room-guest profile")
+                }
+            }
+            return
+        }
+
         val key = sessionKey ?: run {
             Timber.e("No session key available — cannot decrypt profile")
             return
@@ -426,12 +555,20 @@ class NearbyExchangeService : Service() {
     }
 
     private fun sendProfile(endpointId: String) {
-        // PR-02: never attempt to send a profile if the ECDH handshake
-        // didn't actually finish. Without a session key the recipient
-        // could not decrypt, which used to fail silently.
-        val key = sessionKey ?: run {
-            Timber.e("sendProfile() invoked without sessionKey — aborting session")
-            terminateSession(ExchangeSession.State.ERROR)
+        // PR-09: room-host uses per-guest key; other modes use the single sessionKey.
+        val key: javax.crypto.SecretKey? =
+            if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST)
+                peerCtxByEndpoint[endpointId]?.sessionKey
+            else
+                sessionKey
+
+        if (key == null) {
+            Timber.e("sendProfile() invoked without sessionKey for $endpointId")
+            if (currentMode != ExchangeSession.ExchangeMode.ROOM_HOST) {
+                // PR-02: in peer-to-peer this is fatal. In room mode we just
+                // drop the one guest and keep the room alive.
+                terminateSession(ExchangeSession.State.ERROR)
+            }
             return
         }
         scope.launch {
@@ -440,7 +577,7 @@ class NearbyExchangeService : Service() {
             val encrypted = CryptoUtils.encrypt(key, profileJson.toByteArray(Charsets.UTF_8))
             val payload = byteArrayOf(MSG_TYPE_PROFILE) + encrypted
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
-                .addOnSuccessListener { Timber.d("Encrypted profile sent") }
+                .addOnSuccessListener { Timber.d("Encrypted profile sent to $endpointId") }
         }
     }
 

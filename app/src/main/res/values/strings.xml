@@ -94,4 +94,23 @@
     <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
     <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
     <string name="qr_pairing_ok">Paired with %1$s… (relay TODO)</string>
+
+    <!-- Room exchange (PR-09) -->
+    <string name="home_room_mode">Room mode</string>
+    <string name="room_mode_host">Host a room</string>
+    <string name="room_mode_guest">Join a room</string>
+    <string name="room_host_idle_status">Open a room</string>
+    <string name="room_host_subtitle">Up to 10 nearby people can join and share their card with you.</string>
+    <string name="room_guest_idle_status">Join a nearby room</string>
+    <string name="room_guest_subtitle">You’ll receive the host’s card. Your card is sent in return.</string>
+    <string name="room_open_action">Open room</string>
+    <string name="room_close_action">Close room</string>
+    <string name="room_join_action">Join</string>
+    <string name="room_guest_done">Got the host’s card!</string>
+    <string name="room_hold_to_confirm">Hold the action button to confirm with your gesture.</string>
+    <plurals name="room_host_count">
+        <item quantity="zero">Waiting for people to join…</item>
+        <item quantity="one">%d person joined</item>
+        <item quantity="other">%d people joined</item>
+    </plurals>
 </resources>

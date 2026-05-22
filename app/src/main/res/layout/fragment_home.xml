@@ -67,4 +67,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_activate_hint" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_room_mode"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/home_room_mode"
+        android:textColor="@color/aura_cyan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_qr_fallback" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
