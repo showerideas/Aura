@@ -46,6 +46,15 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_home_to_qr)
         }
 
+        // PR-09: room mode — also reachable via long-press on the AURA button.
+        binding.btnRoomMode.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_room)
+        }
+        binding.btnActivate.setOnLongClickListener {
+            findNavController().navigate(R.id.action_home_to_room)
+            true
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.profile.collect { profile ->

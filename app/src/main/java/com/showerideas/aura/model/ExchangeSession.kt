@@ -9,6 +9,8 @@ package com.showerideas.aura.model
 data class ExchangeSession(
     val sessionId: String,
     val state: State = State.ADVERTISING,
+    /** Which exchange topology this session is running under (PR-09). */
+    val mode: ExchangeMode = ExchangeMode.PEER_TO_PEER,
     val discoveredEndpoints: List<DiscoveredEndpoint> = emptyList(),
     val connectedEndpointId: String? = null,
     val receivedContact: Contact? = null,
@@ -29,7 +31,18 @@ data class ExchangeSession(
         /** User cancelled or timed out */
         CANCELLED,
         /** An unrecoverable error occurred */
-        ERROR
+        ERROR,
+        /** Room mode: hosting a multi-guest collection session (PR-09) */
+        ROOM_HOST,
+        /** Room mode: joined as a guest, awaiting host card (PR-09) */
+        ROOM_GUEST
+    }
+
+    /** Topology selector for the exchange — PR-09. */
+    enum class ExchangeMode {
+        PEER_TO_PEER,
+        ROOM_HOST,
+        ROOM_GUEST
     }
 
     data class DiscoveredEndpoint(
