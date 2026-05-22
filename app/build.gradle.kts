@@ -34,6 +34,20 @@ android {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
+    // PR-38 (translation stubs): we ship curated values-XX/ bundles that
+    // intentionally translate only the highest-impact UI surface; all
+    // other keys fall back to values/ (English) via Android's normal
+    // resource resolution. This is a *deliberate* coverage decision —
+    // disable the MissingTranslation lint check so CI doesn't reject
+    // every key that isn't yet translated in all 7 bundles. ExtraTranslation
+    // and InvalidTranslation are kept ON to catch real mistakes.
+    lint {
+        disable += setOf("MissingTranslation")
+        abortOnError = true
+        warningsAsErrors = false
+        checkReleaseBuilds = true
+    }
+
     // PR-22: release signing. The keystore itself is never committed —
     // both its file path and the three secret values are read from
     // environment variables. CI (.github/workflows/ci.yml) leaves them
