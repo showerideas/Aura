@@ -115,7 +115,7 @@ class ExchangeFragment : Fragment() {
         if (!BiometricAuthHelper.isAvailable(requireContext())) {
             Toast.makeText(
                 requireContext(),
-                "Biometric unavailable, using gesture",
+                getString(R.string.biometric_unavailable_fallback),
                 Toast.LENGTH_SHORT
             ).show()
             startGestureGate()

@@ -61,7 +61,9 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.contact.collect { contact ->
                     contact ?: return@collect
-                    binding.tvName.text = contact.displayName.ifBlank { "Unknown" }
+                    binding.tvName.text = contact.displayName.ifBlank {
+                        getString(com.showerideas.aura.R.string.contact_unknown_name)
+                    }
 
                     // PR-10: show the peer's avatar bitmap when present.
                     val avatarBitmap = contact.avatarUri
@@ -89,16 +91,23 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
 
                     // PR-17: dynamic TalkBack labels that include the contact
                     // name so reading down the action row is intelligible.
-                    val nameForA11y = contact.displayName.ifBlank { "this contact" }
-                    binding.btnCall.contentDescription = "Call $nameForA11y"
-                    binding.btnEmail.contentDescription = "Email $nameForA11y"
-                    binding.btnCopy.contentDescription = "Copy $nameForA11y to clipboard"
-                    binding.btnExport.contentDescription = "Export $nameForA11y as vCard"
-                    binding.btnDelete.contentDescription = "Delete contact $nameForA11y"
-                    binding.btnBlock.contentDescription = "Block this device"
+                    // PR-20: pulled the format strings into strings.xml so
+                    // they translate as a unit.
+                    val r = com.showerideas.aura.R.string
+                    val nameForA11y = contact.displayName.ifBlank {
+                        getString(r.contact_unknown_name)
+                    }
+                    binding.btnCall.contentDescription = getString(r.contact_a11y_call, nameForA11y)
+                    binding.btnEmail.contentDescription = getString(r.contact_a11y_email, nameForA11y)
+                    binding.btnCopy.contentDescription = getString(r.contact_a11y_copy, nameForA11y)
+                    binding.btnExport.contentDescription = getString(r.contact_a11y_export, nameForA11y)
+                    binding.btnDelete.contentDescription = getString(r.contact_a11y_delete, nameForA11y)
+                    binding.btnBlock.contentDescription = getString(r.contact_a11y_block)
                     binding.btnFavourite.contentDescription =
-                        if (contact.isFavorite) "Unmark $nameForA11y as favourite"
-                        else "Mark $nameForA11y as favourite"
+                        if (contact.isFavorite)
+                            getString(r.contact_a11y_unmark_favourite, nameForA11y)
+                        else
+                            getString(r.contact_a11y_mark_favourite, nameForA11y)
 
                     binding.btnCall.setOnClickListener {
                         startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.phone}")))
@@ -115,7 +124,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         }
                         val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(ClipData.newPlainText("Contact", text))
-                        requireContext().toast("Copied to clipboard")
+                        requireContext().toast(getString(com.showerideas.aura.R.string.contact_copied))
                     }
                     binding.btnExport.setOnClickListener {
                         // PR-07: export this contact as a .vcf via FileProvider.
@@ -134,13 +143,10 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     // here — unblocking lives in Settings (PR-19).
                     binding.btnBlock.setOnClickListener {
                         com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Block this device?")
-                            .setMessage(
-                                "Future exchanges from this device will be " +
-                                    "silently rejected. You can unblock it later in Settings."
-                            )
+                            .setTitle(com.showerideas.aura.R.string.contact_block_dialog_title)
+                            .setMessage(com.showerideas.aura.R.string.contact_block_dialog_message)
                             .setNegativeButton(android.R.string.cancel, null)
-                            .setPositiveButton("Block") { _, _ ->
+                            .setPositiveButton(com.showerideas.aura.R.string.contact_block_dialog_confirm) { _, _ ->
                                 viewModel.blockEndpoint(
                                     contact.sourceEndpointId,
                                     note = contact.displayName

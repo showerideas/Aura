@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="48dp"
-        android:text="No blocked devices"
+        android:text="@string/blocked_devices_empty"
         android:textColor="@color/on_surface_secondary"
         android:textSize="16sp"
         android:visibility="gone"

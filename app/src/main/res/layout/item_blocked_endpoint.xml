@@ -46,7 +46,7 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Unblock"
+            android:text="@string/blocked_devices_unblock"
             android:textColor="@color/aura_cyan" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

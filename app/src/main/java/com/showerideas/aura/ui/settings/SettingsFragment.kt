@@ -111,15 +111,16 @@ class SettingsFragment : Fragment() {
         }
         binding.rowClearGesture.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete your recorded gesture?")
-                .setMessage(
-                    "You'll need to record a new gesture in Profile before " +
-                        "any future exchange can use gesture authentication."
-                )
+                .setTitle(R.string.settings_clear_gesture_title)
+                .setMessage(R.string.settings_clear_gesture_message)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Delete") { _, _ ->
+                .setPositiveButton(R.string.settings_clear_gesture_confirm) { _, _ ->
                     viewModel.clearGesture()
-                    Toast.makeText(requireContext(), "Gesture cleared", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.settings_clear_gesture_done,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 .show()
         }
@@ -127,12 +128,16 @@ class SettingsFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val count = viewModel.contactCount()
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Delete all $count contacts?")
-                    .setMessage("This cannot be undone.")
+                    .setTitle(getString(R.string.settings_clear_contacts_title, count))
+                    .setMessage(R.string.settings_clear_contacts_message)
                     .setNegativeButton(android.R.string.cancel, null)
-                    .setPositiveButton("Delete all") { _, _ ->
+                    .setPositiveButton(R.string.settings_clear_contacts_confirm) { _, _ ->
                         viewModel.clearAllContacts()
-                        Toast.makeText(requireContext(), "Contacts cleared", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.settings_clear_contacts_done,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     .show()
             }
@@ -147,7 +152,7 @@ class SettingsFragment : Fragment() {
             } catch (e: Exception) {
                 Toast.makeText(
                     requireContext(),
-                    "Privacy policy: $PRIVACY_POLICY_URL",
+                    getString(R.string.settings_privacy_fallback, PRIVACY_POLICY_URL),
                     Toast.LENGTH_LONG
                 ).show()
             }
