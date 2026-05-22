@@ -1,6 +1,7 @@
 package com.showerideas.aura.ui.profile
 
 import android.animation.ObjectAnimator
+import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.view.animation.CycleInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -88,23 +90,54 @@ class ProfileFragment : Fragment() {
                             binding.btnRecordGesture.text = "Record Gesture"
                             binding.gestureStatus.text = if (viewModel.hasGesturePattern)
                                 "Gesture saved" else "No gesture set"
+                            // PR-11: hide and reset bars when not recording.
+                            binding.gestureStrengthBars.visibility = View.GONE
+                            binding.tvVarianceLabel.visibility = View.GONE
+                            paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Recording -> {
                             binding.btnRecordGesture.text = "Recording... (release to stop)"
                             binding.gestureStatus.text = "Perform your gesture now"
+                            // PR-11: surface the bars while the user holds the button.
+                            binding.gestureStrengthBars.visibility = View.VISIBLE
+                            binding.tvVarianceLabel.visibility = View.VISIBLE
                         }
                         is GestureAuthManager.RecordingState.Complete -> {
                             viewModel.saveGesturePattern(state.pattern)
                             binding.btnRecordGesture.text = "Re-record Gesture"
                             binding.gestureStatus.text = "Gesture saved!"
+                            binding.gestureStrengthBars.visibility = View.GONE
+                            binding.tvVarianceLabel.visibility = View.GONE
+                            paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Error -> {
                             binding.gestureStatus.text = state.message
                             // PR-06: shake the record button so the failure
                             // is also conveyed tactilely, not just textually.
                             shakeView(binding.btnRecordGesture)
+                            binding.gestureStrengthBars.visibility = View.GONE
+                            binding.tvVarianceLabel.visibility = View.GONE
+                            paintStrengthBars(0)
                         }
                     }
+                }
+            }
+        }
+
+        // PR-11: live-variance → strength bars. Separate collector so it can
+        // tick independently of the recording-state machine above.
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.liveVariance.collect { variance ->
+                    val litCount = when {
+                        variance < 0.15f -> 0
+                        variance < 0.35f -> 1
+                        variance < 0.60f -> 2
+                        variance < 1.00f -> 3
+                        variance < 2.00f -> 4
+                        else             -> 5
+                    }
+                    paintStrengthBars(litCount)
                 }
             }
         }
@@ -148,6 +181,35 @@ class ProfileFragment : Fragment() {
             if (binding.cbShareBio.isChecked) add("bio")
             add("displayName")  // Always share name
         }.joinToString(",")
+    }
+
+    /**
+     * PR-11: paint the 5-segment strength meter. [litCount] bars become
+     * aura_purple, the rest revert to surface_variant. Tint via setColorFilter
+     * on the shared drawable would mutate a single instance for all bars, so
+     * we use setBackgroundColor on the per-bar View instead — the rounded
+     * corners come from the drawable's initial layer.
+     */
+    private fun paintStrengthBars(litCount: Int) {
+        val ctx = context ?: return
+        val binding = _binding ?: return
+        val lit = ContextCompat.getColor(ctx, R.color.aura_purple)
+        val unlit = ContextCompat.getColor(ctx, R.color.surface_variant)
+        val bars = listOf(
+            binding.gestureBar1, binding.gestureBar2, binding.gestureBar3,
+            binding.gestureBar4, binding.gestureBar5
+        )
+        bars.forEachIndexed { index, view ->
+            // Re-apply the rounded background then tint it so we keep the
+            // shape but get the correct fill colour.
+            view.background = ContextCompat.getDrawable(ctx, R.drawable.gesture_strength_bar)
+                ?.mutate()?.apply {
+                    setColorFilter(
+                        if (index < litCount) lit else unlit,
+                        PorterDuff.Mode.SRC_IN
+                    )
+                }
+        }
     }
 
     private fun shakeView(target: View) {

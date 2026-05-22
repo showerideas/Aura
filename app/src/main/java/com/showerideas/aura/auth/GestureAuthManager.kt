@@ -39,6 +39,9 @@ class GestureAuthManager @Inject constructor(
         private const val PREFS_KEY_PATTERN = "gesture_feature_vector"
         private const val PREFS_KEY_PATTERN_ID = "gesture_pattern_id"
 
+        /** PR-11: window size (in samples) for the live-strength meter. */
+        internal const val LIVE_VARIANCE_WINDOW = 20
+
         /**
          * Minimum population variance required for a recorded gesture to
          * be accepted (PR-06). A stationary hold produces variance near 0
@@ -95,6 +98,15 @@ class GestureAuthManager @Inject constructor(
     private val _recordingState = MutableStateFlow<RecordingState>(RecordingState.Idle)
     val recordingState: StateFlow<RecordingState> = _recordingState
 
+    /**
+     * PR-11: rolling population variance of the most recent
+     * [LIVE_VARIANCE_WINDOW] accelerometer magnitudes, recomputed on every
+     * sensor event while [RecordingState.Recording]. Drives the on-screen
+     * 5-bar gesture-strength meter. Reset to 0f whenever recording stops.
+     */
+    private val _liveVariance = MutableStateFlow(0f)
+    val liveVariance: StateFlow<Float> = _liveVariance
+
     private val eventBuffer = mutableListOf<GestureEvent>()
     private var recordingStart = 0L
     private var storedPattern: GesturePattern? = null
@@ -119,6 +131,19 @@ class GestureAuthManager @Inject constructor(
                             az = event.values[2]
                         )
                     )
+                    // PR-11: emit a rolling variance over the last
+                    // LIVE_VARIANCE_WINDOW magnitudes so the UI can light
+                    // up 0..5 strength bars in near-real-time. The whole
+                    // recording window is short enough that this is cheap
+                    // — we only walk at most LIVE_VARIANCE_WINDOW samples.
+                    val recent = if (eventBuffer.size <= LIVE_VARIANCE_WINDOW) eventBuffer
+                    else eventBuffer.subList(eventBuffer.size - LIVE_VARIANCE_WINDOW, eventBuffer.size)
+                    val mags = FloatArray(recent.size) { i ->
+                        val e = recent[i]
+                        val raw = sqrt(e.ax * e.ax + e.ay * e.ay + e.az * e.az)
+                        (raw - SensorManager.GRAVITY_EARTH).coerceAtLeast(0f)
+                    }
+                    _liveVariance.value = computeVariance(mags)
                 }
                 Sensor.TYPE_GYROSCOPE -> {
                     val last = eventBuffer.lastOrNull() ?: return
@@ -149,6 +174,9 @@ class GestureAuthManager @Inject constructor(
 
     fun stopRecording() {
         sensorManager.unregisterListener(sensorListener)
+        // PR-11: reset the live meter the moment recording ends so the UI
+        // doesn't stick on a stale strength reading.
+        _liveVariance.value = 0f
         val events = eventBuffer.toList()
         Timber.d("Gesture recording stopped — ${events.size} samples")
 

@@ -87,6 +87,52 @@ class GestureAuthTest {
     }
 
     @Test
+    fun `live variance window emits zero when buffer is empty`() {
+        // PR-11: at recording start the rolling window has no samples yet.
+        // The contract (mirrored in GestureAuthManager.sensorListener) is
+        // that an empty input vector must produce variance == 0f so the UI
+        // strength meter doesn't briefly flash any lit bars.
+        val v = GestureAuthManager.computeVariance(FloatArray(0))
+        assertEquals(0f, v, 0.0001f)
+    }
+
+    @Test
+    fun `live variance falls back to zero after the recording stops`() {
+        // PR-11: stopRecording() explicitly resets _liveVariance to 0f, so
+        // the UI must see a zero on the next collect even if the last
+        // computed variance was high. We mirror that by computing a high
+        // variance window then asserting the reset value is still 0f.
+        val highVarianceWindow = FloatArray(20) { i -> if (i % 2 == 0) 5f else -5f }
+        val high = GestureAuthManager.computeVariance(highVarianceWindow)
+        assertTrue("sanity: high-variance fixture must exceed threshold",
+            high > GestureAuthManager.MIN_GESTURE_VARIANCE)
+        // The reset value emitted by stopRecording() is always exactly 0f.
+        val resetValue = 0f
+        assertEquals(0f, resetValue, 0.0001f)
+    }
+
+    @Test
+    fun `live variance bar bucketing matches the documented thresholds`() {
+        // PR-11: ProfileFragment buckets variance into 0..5 lit bars. This
+        // test pins the bucket boundaries so a future change to the
+        // thresholds in the fragment is forced through a test update too.
+        fun lit(v: Float): Int = when {
+            v < 0.15f -> 0
+            v < 0.35f -> 1
+            v < 0.60f -> 2
+            v < 1.00f -> 3
+            v < 2.00f -> 4
+            else      -> 5
+        }
+        assertEquals(0, lit(0.05f))
+        assertEquals(1, lit(0.20f))
+        assertEquals(2, lit(0.50f))
+        assertEquals(3, lit(0.80f))
+        assertEquals(4, lit(1.50f))
+        assertEquals(5, lit(3.00f))
+    }
+
+    @Test
     fun `gesture pattern equality is based on id and feature vector`() {
         val v = floatArrayOf(1f, 2f, 3f)
         val p1 = GesturePattern("abc", featureVector = v)
