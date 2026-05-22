@@ -22,6 +22,11 @@
     <!-- Wi-Fi Aware / P2P (used by Nearby Connections) -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- BLE scanning on API < 31 requires location. We declare both COARSE
+         and FINE because lint requires the pair, and to satisfy older OEM
+         BLE stacks that fall back to network-location when FINE is denied.
+         AURA never reads geographic location; see PRIVACY_POLICY.md. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
