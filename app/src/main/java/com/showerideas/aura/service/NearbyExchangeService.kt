@@ -372,16 +372,36 @@ class NearbyExchangeService : Service() {
     // Payload handling
     // -------------------------------------------------------------------------
 
+    /**
+     * PR-10: per-endpoint flag, set when the peer announces an incoming
+     * avatar STREAM with [MSG_TYPE_AVATAR]. Cleared once we've ingested
+     * the STREAM (or dropped it for being oversized / missing contact).
+     */
+    private val awaitingAvatarStream: MutableSet<String> = mutableSetOf()
+
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            if (payload.type != Payload.Type.BYTES) return
-            val data = payload.asBytes() ?: return
-            if (data.isEmpty()) return
-
-            when (data[0]) {
-                MSG_TYPE_PUBLIC_KEY -> handleIncomingPublicKey(endpointId, data.copyOfRange(1, data.size))
-                MSG_TYPE_PROFILE -> handleIncomingProfile(endpointId, data.copyOfRange(1, data.size))
-                else -> Timber.w("Unknown message type: ${data[0]}")
+            when (payload.type) {
+                Payload.Type.BYTES -> {
+                    val data = payload.asBytes() ?: return
+                    if (data.isEmpty()) return
+                    when (data[0]) {
+                        MSG_TYPE_PUBLIC_KEY ->
+                            handleIncomingPublicKey(endpointId, data.copyOfRange(1, data.size))
+                        MSG_TYPE_PROFILE ->
+                            handleIncomingProfile(endpointId, data.copyOfRange(1, data.size))
+                        MSG_TYPE_AVATAR -> {
+                            // Bytes body is intentionally empty — the byte
+                            // header is just an out-of-band signal that a
+                            // STREAM payload will follow shortly.
+                            awaitingAvatarStream.add(endpointId)
+                            Timber.d("Avatar stream announced by $endpointId")
+                        }
+                        else -> Timber.w("Unknown message type: ${data[0]}")
+                    }
+                }
+                Payload.Type.STREAM -> handleIncomingAvatarStream(endpointId, payload)
+                else -> Timber.d("Ignoring payload type ${payload.type} from $endpointId")
             }
         }
 
