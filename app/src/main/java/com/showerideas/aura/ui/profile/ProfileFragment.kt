@@ -1,9 +1,11 @@
 package com.showerideas.aura.ui.profile
 
+import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.CycleInterpolator
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -71,6 +73,9 @@ class ProfileFragment : Fragment() {
                         }
                         is GestureAuthManager.RecordingState.Error -> {
                             binding.gestureStatus.text = state.message
+                            // PR-06: shake the record button so the failure
+                            // is also conveyed tactilely, not just textually.
+                            shakeView(binding.btnRecordGesture)
                         }
                     }
                 }
@@ -113,6 +118,14 @@ class ProfileFragment : Fragment() {
             if (binding.cbShareBio.isChecked) add("bio")
             add("displayName")  // Always share name
         }.joinToString(",")
+    }
+
+    private fun shakeView(target: View) {
+        ObjectAnimator.ofFloat(target, "translationX", 0f, 24f).apply {
+            duration = 350
+            interpolator = CycleInterpolator(3f)
+            start()
+        }
     }
 
     override fun onDestroyView() {
