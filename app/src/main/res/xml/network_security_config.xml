@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PR-22: AURA never makes outbound network calls in production.
+
+    Profile/contact exchange happens exclusively over local Nearby Connections
+    transports (BLE / Wi-Fi P2P / hotspot fallback). We therefore disallow
+    cleartext (HTTP) traffic app-wide and pin the trust store to the system
+    certificate set, in case any future dependency attempts an HTTPS call.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

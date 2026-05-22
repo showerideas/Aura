@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/onboardingFragment"
+        android:name="com.showerideas.aura.ui.onboarding.OnboardingFragment"
+        android:label="Welcome">
+        <action
+            android:id="@+id/action_onboarding_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/onboardingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.showerideas.aura.ui.home.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_exchange"
+            app:destination="@id/exchangeFragment"
+            app:enterAnim="@anim/slide_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_down" />
+        <action
+            android:id="@+id/action_home_to_qr"
+            app:destination="@id/qrExchangeFragment" />
+        <action
+            android:id="@+id/action_home_to_room"
+            app:destination="@id/roomExchangeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/roomExchangeFragment"
+        android:name="com.showerideas.aura.ui.room.RoomExchangeFragment"
+        android:label="Room Exchange" />
+
+    <fragment
+        android:id="@+id/qrExchangeFragment"
+        android:name="com.showerideas.aura.ui.qr.QRExchangeFragment"
+        android:label="QR Exchange" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.showerideas.aura.ui.profile.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/contactsFragment"
+        android:name="com.showerideas.aura.ui.contacts.ContactsFragment"
+        android:label="Contacts" />
+
+    <fragment
+        android:id="@+id/exchangeFragment"
+        android:name="com.showerideas.aura.ui.exchange.ExchangeFragment"
+        android:label="Exchange">
+        <action
+            android:id="@+id/action_exchange_to_contacts"
+            app:destination="@id/contactsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+    <!-- PR-19: Settings + Blocked devices destinations. -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.showerideas.aura.ui.settings.SettingsFragment"
+        android:label="Settings">
+        <action
+            android:id="@+id/action_settings_to_blocked_devices"
+            app:destination="@id/blockedDevicesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/blockedDevicesFragment"
+        android:name="com.showerideas.aura.ui.settings.BlockedDevicesFragment"
+        android:label="Blocked devices" />
+
+</navigation>

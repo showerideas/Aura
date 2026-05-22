@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AURA — Japanese (日本語) translation stub.
+
+  Strings listed here are the high-impact UI surface (navigation,
+  primary buttons, status messages, profile-field hints) translated
+  by the maintainers for v1.1.0. Any string not present here falls
+  back to values/strings.xml (English) via Android's normal resource
+  resolution.
+
+  Pull requests adding more translated keys are welcome — please
+  preserve the existing key order and run `./gradlew lintDebug`
+  before opening.
+-->
+<resources>
+    <string name="app_name">Aura</string>
+    <string name="nav_home">ホーム</string>
+    <string name="nav_profile">プロフィール</string>
+    <string name="nav_contacts">連絡先</string>
+    <string name="btn_activate">AURAを起動</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_record_gesture">長押しでジェスチャーを記録</string>
+    <string name="hint_name">表示名 *</string>
+    <string name="hint_phone">電話番号</string>
+    <string name="hint_email">メール</string>
+    <string name="hint_company">会社</string>
+    <string name="hint_title">役職 / 役割</string>
+    <string name="hint_website">ウェブサイト</string>
+    <string name="hint_bio">自己紹介</string>
+    <string name="search_hint">連絡先を検索…</string>
+    <string name="empty_contacts">まだ連絡先がありません。\n音量下ボタンを3回押して共有しましょう。</string>
+    <string name="status_advertising">存在を通知中…</string>
+    <string name="status_discovering">近くのAURAユーザーを検索中…</string>
+    <string name="status_connecting">見つかりました!接続中…</string>
+    <string name="status_exchanging">連絡先を安全に交換中…</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_continue">続ける</string>
+    <string name="action_done">完了</string>
+</resources>
