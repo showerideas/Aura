@@ -67,9 +67,9 @@ class HomeFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.profile.collect { profile ->
                     binding.tvGreeting.text = if (profile?.displayName?.isNotBlank() == true) {
-                        "Hey, ${profile.displayName}"
+                        getString(R.string.home_greeting, profile.displayName)
                     } else {
-                        "Set up your profile to get started"
+                        getString(R.string.home_greeting_no_profile)
                     }
                 }
             }
@@ -78,7 +78,8 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.recentContacts.collect { contacts ->
-                    binding.tvContactCount.text = "${contacts.size} contacts exchanged"
+                    binding.tvContactCount.text =
+                        getString(R.string.home_contact_count, contacts.size)
                 }
             }
         }

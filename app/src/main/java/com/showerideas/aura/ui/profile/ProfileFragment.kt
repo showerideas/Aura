@@ -87,25 +87,32 @@ class ProfileFragment : Fragment() {
                 viewModel.gestureRecordingState.collect { state ->
                     when (state) {
                         is GestureAuthManager.RecordingState.Idle -> {
-                            binding.btnRecordGesture.text = "Record Gesture"
-                            binding.gestureStatus.text = if (viewModel.hasGesturePattern)
-                                "Gesture saved" else "No gesture set"
+                            binding.btnRecordGesture.text = getString(R.string.profile_btn_record)
+                            binding.gestureStatus.text =
+                                if (viewModel.hasGesturePattern)
+                                    getString(R.string.profile_gesture_status_saved_idle)
+                                else
+                                    getString(R.string.profile_gesture_status_none)
                             // PR-11: hide and reset bars when not recording.
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Recording -> {
-                            binding.btnRecordGesture.text = "Recording... (release to stop)"
-                            binding.gestureStatus.text = "Perform your gesture now"
+                            binding.btnRecordGesture.text =
+                                getString(R.string.profile_btn_recording)
+                            binding.gestureStatus.text =
+                                getString(R.string.profile_gesture_status_perform)
                             // PR-11: surface the bars while the user holds the button.
                             binding.gestureStrengthBars.visibility = View.VISIBLE
                             binding.tvVarianceLabel.visibility = View.VISIBLE
                         }
                         is GestureAuthManager.RecordingState.Complete -> {
                             viewModel.saveGesturePattern(state.pattern)
-                            binding.btnRecordGesture.text = "Re-record Gesture"
-                            binding.gestureStatus.text = "Gesture saved!"
+                            binding.btnRecordGesture.text =
+                                getString(R.string.profile_btn_rerecord)
+                            binding.gestureStatus.text =
+                                getString(R.string.profile_gesture_status_saved)
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
@@ -168,7 +175,7 @@ class ProfileFragment : Fragment() {
             bio = binding.etBio.text.toString(),
             shareFields = getCheckedShareFields()
         )
-        Toast.makeText(requireContext(), "Profile saved", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), R.string.profile_saved, Toast.LENGTH_SHORT).show()
     }
 
     private fun getCheckedShareFields(): String {
@@ -213,7 +220,7 @@ class ProfileFragment : Fragment() {
         // PR-17: the bars themselves are flagged importantForAccessibility=no
         // so the meter is communicated to TalkBack purely through the label.
         binding.tvVarianceLabel.contentDescription =
-            "Gesture strength: $litCount out of 5"
+            getString(R.string.profile_gesture_strength_a11y, litCount)
     }
 
     private fun shakeView(target: View) {
