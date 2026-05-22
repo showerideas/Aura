@@ -28,21 +28,43 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
 
-    <!-- Pulsing activate button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_activate"
+    <!--
+      PR-18: pulsing activate button. The FrameLayout holds two layers:
+        - pulse_ring  decorative ring animated by HomeFragment (scale + alpha).
+        - btn_activate  the actual tappable AURA button on top.
+      The ring lives behind the button and is flagged importantForAccessibility=no
+      so TalkBack ignores it.
+    -->
+    <FrameLayout
+        android:id="@+id/activate_container"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginTop="48dp"
-        android:text="AURA"
-        android:contentDescription="Activate AURA to share your contact"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:backgroundTint="@color/aura_purple"
-        app:cornerRadius="100dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_contact_count" />
+        app:layout_constraintTop_toBottomOf="@id/tv_contact_count">
+
+        <View
+            android:id="@+id/pulse_ring"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:alpha="0"
+            android:background="@drawable/circle_pulse_bg"
+            android:importantForAccessibility="no" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_activate"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:contentDescription="Activate AURA to share your contact"
+            android:text="AURA"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/aura_purple"
+            app:cornerRadius="100dp" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/tv_activate_hint"
@@ -54,7 +76,7 @@
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_activate" />
+        app:layout_constraintTop_toBottomOf="@id/activate_container" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_qr_fallback"
