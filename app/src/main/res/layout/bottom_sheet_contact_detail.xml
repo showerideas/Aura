@@ -29,13 +29,32 @@
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tv_name"
+    <!--
+      PR-12: name row gains a favourite-toggle star. Wrapped in a horizontal
+      LinearLayout so the existing block stays a vertical LinearLayout child.
+      The star is a 48x48 ImageButton (accessibility touch-target minimum).
+    -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/on_surface"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/on_surface"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <ImageButton
+            android:id="@+id/btn_favourite"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Toggle favourite"
+            android:src="@drawable/ic_star_border" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_title"
@@ -78,6 +97,35 @@
 
     <TextView android:id="@+id/tv_bio" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="8dp" android:textColor="@color/on_surface_secondary" android:textSize="13sp" />
+
+    <!--
+      PR-12: inline notes editor. The Save button stays gone until the user
+      types something; it surfaces only when the text actually changes.
+    -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Add a note…"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_notes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textCapSentences"
+            android:minLines="2"
+            android:gravity="top|start" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_save_note"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="4dp"
+        android:text="Save note"
+        android:visibility="gone" />
 
     <!-- Action buttons -->
     <LinearLayout

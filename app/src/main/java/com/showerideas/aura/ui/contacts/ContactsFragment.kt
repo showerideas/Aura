@@ -88,6 +88,18 @@ class ContactsFragment : Fragment() {
                 }
             }
         }
+
+        // PR-12: favourites filter chip.
+        binding.chipFavourites.setOnClickListener { viewModel.toggleFavouritesFilter() }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.showFavouritesOnly.collect { isOn ->
+                    if (binding.chipFavourites.isChecked != isOn) {
+                        binding.chipFavourites.isChecked = isOn
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {

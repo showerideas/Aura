@@ -45,6 +45,10 @@ class ContactsAdapter(
                 binding.ivAvatar.visibility = View.GONE
             }
 
+            // PR-12: small star badge next to the name when isFavorite=true.
+            binding.ivFavouriteBadge.visibility =
+                if (contact.isFavorite) View.VISIBLE else View.GONE
+
             binding.root.setOnClickListener { onContactClick(contact) }
         }
     }

@@ -30,10 +30,30 @@ class ContactDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * PR-12: flip the favourite flag and refresh the observed contact so the
+     * bottom sheet's star button repaints immediately. The previous version
+     * mutated state but only the row in the list reflected it; the sheet
+     * itself kept the stale `isFavorite` value until you reopened it.
+     */
     fun toggleFavorite(contact: Contact) {
         viewModelScope.launch {
-            contactRepository.update(contact.copy(isFavorite = !contact.isFavorite))
-            _contact.value = contact.copy(isFavorite = !contact.isFavorite)
+            val updated = contact.copy(isFavorite = !contact.isFavorite)
+            contactRepository.update(updated)
+            _contact.value = updated
+        }
+    }
+
+    /**
+     * PR-12: persist inline notes. We refresh _contact so subsequent
+     * toggleFavorite calls operate on the latest `notes` value and don't
+     * overwrite the just-saved text with a stale copy.
+     */
+    fun saveNote(contact: Contact, note: String) {
+        viewModelScope.launch {
+            val updated = contact.copy(notes = note)
+            contactRepository.update(updated)
+            _contact.value = updated
         }
     }
 }
