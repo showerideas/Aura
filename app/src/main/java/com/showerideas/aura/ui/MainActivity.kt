@@ -122,6 +122,18 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfig)
         binding.bottomNav.setupWithNavController(navController)
+
+        // Hide the bottom nav on full-screen / flow destinations so the user
+        // can't tap-bypass the onboarding gate or an in-flight exchange.
+        // PR-05 + PR-08 + PR-09 contract.
+        val rootDestinations = setOf(
+            R.id.homeFragment, R.id.profileFragment, R.id.contactsFragment
+        )
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            binding.bottomNav.visibility =
+                if (destination.id in rootDestinations) android.view.View.VISIBLE
+                else android.view.View.GONE
+        }
     }
 
     private fun checkAndRequestPermissions() {
