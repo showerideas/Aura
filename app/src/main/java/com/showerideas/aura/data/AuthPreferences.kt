@@ -43,4 +43,18 @@ class AuthPreferences @Inject constructor(
         }
         context.authPrefsDataStore.edit { it[DataStoreKeys.AUTH_METHOD] = method }
     }
+
+    /**
+     * PR-19: whether the user wants AURA to run a background listener for
+     * the triple-press volume-down activation gesture. Defaults to true
+     * so the headline feature works out of the box.
+     */
+    val bgActivationEnabled: Flow<Boolean> = context.authPrefsDataStore.data
+        .map { it[DataStoreKeys.BG_ACTIVATION_ENABLED] ?: true }
+
+    suspend fun setBgActivationEnabled(enabled: Boolean) {
+        context.authPrefsDataStore.edit {
+            it[DataStoreKeys.BG_ACTIVATION_ENABLED] = enabled
+        }
+    }
 }
