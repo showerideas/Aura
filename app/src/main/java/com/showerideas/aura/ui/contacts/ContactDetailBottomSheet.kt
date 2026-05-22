@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -113,9 +115,47 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         viewModel.deleteContact(contact)
                         dismiss()
                     }
+
+                    // PR-12: favourite toggle. Re-observing viewModel.contact
+                    // is handled by this same collector — toggleFavorite
+                    // pushes the updated copy back into _contact so the icon
+                    // refreshes on the next emission without dismissing.
+                    binding.btnFavourite.setImageResource(
+                        if (contact.isFavorite) com.showerideas.aura.R.drawable.ic_star
+                        else com.showerideas.aura.R.drawable.ic_star_border
+                    )
+                    binding.btnFavourite.setOnClickListener {
+                        viewModel.toggleFavorite(contact)
+                    }
+
+                    // PR-12: inline notes. Pre-populate on every contact load
+                    // (incl. after toggleFavorite which refreshes _contact)
+                    // but don't reattach the TextWatcher every emission —
+                    // we attach it once below.
+                    if (binding.etNotes.text?.toString() != contact.notes) {
+                        binding.etNotes.setText(contact.notes)
+                    }
+                    binding.btnSaveNote.setOnClickListener {
+                        viewModel.saveNote(contact, binding.etNotes.text?.toString().orEmpty())
+                        binding.btnSaveNote.visibility = View.GONE
+                    }
                 }
             }
         }
+
+        // PR-12: surface the Save-note button only when the text differs from
+        // the persisted value. Attached once so we don't stack watchers on
+        // every emission of viewModel.contact.
+        binding.etNotes.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                val current = s?.toString().orEmpty()
+                val saved = viewModel.contact.value?.notes.orEmpty()
+                binding.btnSaveNote.visibility =
+                    if (current != saved) View.VISIBLE else View.GONE
+            }
+        })
     }
 
     override fun onDestroyView() {
