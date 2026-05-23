@@ -4,7 +4,7 @@
 **Application:** AURA — Contact Exchange (package `com.showerideas.aura`)
 **Publisher:** Shower Ideas
 
-> **TODO:** Host this document at <https://showerideas.app/aura/privacy> before Play Store submission.
+**Hosted at:** <https://showerideas.app/aura/privacy> (deployed via GitHub Pages — see `.github/workflows/gh-pages.yml`)
 
 ---
 
