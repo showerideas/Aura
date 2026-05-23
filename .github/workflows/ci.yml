@@ -61,6 +61,22 @@ jobs:
         env:
           GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
+      # Prompt-10: generate JaCoCo XML report and enforce the 40% branch-
+      # coverage floor. The report artifact is uploaded for tracking over time.
+      - name: JaCoCo coverage report + gate (jacocoTestReport)
+        run: ./gradlew jacocoTestReport --stacktrace
+        env:
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
+
+      - name: Upload JaCoCo XML coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport/
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Android Lint (lintDebug)
         run: ./gradlew lintDebug --stacktrace
 

@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
     alias(libs.plugins.navigation.safeargs)
+    // Prompt-10: JaCoCo coverage reporting for JVM unit tests.
+    jacoco
 }
 
 android {
@@ -81,6 +83,9 @@ android {
             isDebuggable = true
             isMinifyEnabled = false
             buildConfigField("boolean", "ENABLE_LOGGING", "true")
+            // Prompt-10: enable JaCoCo instrumentation on debug so the
+            // jacocoTestReport task can produce coverage data.
+            enableUnitTestCoverage = true
         }
         release {
             isMinifyEnabled = true
@@ -326,4 +331,98 @@ fun computeSha256(file: java.io.File): String {
 
 tasks.named("preBuild") {
     dependsOn("downloadGestureModel")
+}
+
+// ---------------------------------------------------------------------------
+// Prompt-10: JaCoCo unit-test coverage report + CI drop gate.
+//
+// Run:  ./gradlew jacocoTestReport
+//       ./gradlew jacocoTestCoverageVerification   ← fails if branch drops below gate
+//
+// The report is generated from testDebugUnitTest execution data.
+// Classes from DI modules, Room DAOs/Entities, generated Hilt code, and the
+// Android resource-generated R class are excluded — they have trivial coverage
+// and add noise to the report.
+//
+// COVERAGE_GATE: branch coverage must be >= 40%.
+// This is deliberately conservative for the first enforcement iteration.
+// Raise in 5-point increments as tests are added.
+// ---------------------------------------------------------------------------
+val coverageExcludePatterns = listOf(
+    // Generated / boilerplate
+    "**/R.class",
+    "**/R$*.class",
+    "**/BuildConfig.class",
+    "**/Manifest*.*",
+    // Hilt generated
+    "**/*_HiltModules*",
+    "**/*_Factory*",
+    "**/*_MembersInjector*",
+    "**/*Hilt_*",
+    "**/*_GeneratedInjector*",
+    // Room generated
+    "**/*_Impl.class",
+    // Android data binding
+    "**/*databinding*",
+    "**/*DataBinding*",
+    // Navigation SafeArgs
+    "**/*Directions*",
+    "**/*Args*",
+)
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    group = "verification"
+    description = "Generate JaCoCo coverage report from debug unit test execution data."
+
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val javaClasses = fileTree("${buildDir}/intermediates/javac/debug") {
+        exclude(coverageExcludePatterns)
+    }
+    val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude(coverageExcludePatterns)
+    }
+    classDirectories.setFrom(files(javaClasses, kotlinClasses))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(buildDir) {
+        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    group = "verification"
+    description = "Fail if coverage drops below the configured threshold."
+
+    dependsOn("jacocoTestReport")
+
+    val javaClasses = fileTree("${buildDir}/intermediates/javac/debug") {
+        exclude(coverageExcludePatterns)
+    }
+    val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude(coverageExcludePatterns)
+    }
+    classDirectories.setFrom(files(javaClasses, kotlinClasses))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(buildDir) {
+        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
+
+    violationRules {
+        rule {
+            element = "BUNDLE"
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                // Prompt-10: 40% branch coverage floor.
+                // Raise in 5-point increments: 40 → 45 → 50 → ... target 70%.
+                minimum = "0.40".toBigDecimal()
+            }
+        }
+    }
 }

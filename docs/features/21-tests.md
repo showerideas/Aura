@@ -47,7 +47,7 @@ flowchart TB
 | File | Surface area |
 |---|---|
 | `CryptoUtilsTest` | ECDH agree, AES-GCM round-trip, tampered-tag failure |
-| `GestureMatchTest` | DTW correctness, variance gate, threshold edges |
+| `GestureMatchTest` | Cosine-similarity matching, variance gate, threshold edges |
 | `NearbyExchangeServiceGateTest` | Service refuses to start without a verified gesture; race-fix from PR-02 |
 | `PayloadValidatorTest` | Allowed schema, size limits, embedded-HTML rejection |
 | `ProfileTest` | Profile field defaults + share-toggle behaviour |

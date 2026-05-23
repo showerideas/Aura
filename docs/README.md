@@ -47,7 +47,7 @@ flowchart LR
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Module map, package graph, dependency-direction rules, top-level diagrams |
 | [`EXCHANGE_FLOW.md`](EXCHANGE_FLOW.md) | End-to-end sequence: gesture → ECDH → challenge → AES-GCM → avatar → replay window |
 | [`SECURITY.md`](SECURITY.md) | Threat model, crypto primitives, key lifecycle, what AURA does **not** defend against |
-| [`GESTURE_AUTH.md`](GESTURE_AUTH.md) | Accelerometer pipeline, DTW matcher, variance gate, strength meter, storage |
+| [`GESTURE_AUTH.md`](GESTURE_AUTH.md) | CameraX + MediaPipe pipeline, 42-float embedding, cosine-similarity matching, stability gate, security properties |
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Room v1 → v2 schema, entity diagram, DAO surface, migration tests |
 | [`BUILD.md`](BUILD.md) | Toolchain, env vars, Gradle targets, CI parity, release signing |
 | [`AUDIT.md`](AUDIT.md) | **Intent fulfilment audit** — every promise scored 🟢 / 🟡 / 🔴 |
