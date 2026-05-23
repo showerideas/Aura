@@ -24,12 +24,37 @@ class KnownPeerRepository @Inject constructor(
 ) {
 
     /**
-     * Return the persisted [PublicKey] for [endpointId], or null if this
-     * endpoint has never been seen before.
+     * FIX-4: sealed result so callers can distinguish three states:
+     * - [Found]    — record exists and key decoded successfully.
+     * - [NotFound] — endpoint is genuinely new (TOFU first-use path).
+     * - [Corrupt]  — record exists but key bytes are malformed.
+     *
+     * Prior to this change [getIdentityKey] returned null for both NotFound
+     * and Corrupt. The service interpreted null as first-use, meaning a
+     * corrupt DB row silently caused the attacker's new key to be trusted
+     * and persisted — a TOFU bypass.
      */
-    suspend fun getIdentityKey(endpointId: String): PublicKey? {
-        val record = knownPeerDao.get(endpointId) ?: return null
-        return decodePublicKey(record.identityPublicKeyBase64)
+    sealed class IdentityKeyResult {
+        data class Found(val key: PublicKey) : IdentityKeyResult()
+        object NotFound : IdentityKeyResult()
+        data class Corrupt(val endpointId: String, val cause: Exception) : IdentityKeyResult()
+    }
+
+    /**
+     * Return an [IdentityKeyResult] for [endpointId]:
+     * - [IdentityKeyResult.NotFound] if the endpoint has never been seen.
+     * - [IdentityKeyResult.Found] with the decoded key on success.
+     * - [IdentityKeyResult.Corrupt] if the stored bytes fail to decode.
+     */
+    suspend fun getIdentityKey(endpointId: String): IdentityKeyResult {
+        val record = knownPeerDao.get(endpointId) ?: return IdentityKeyResult.NotFound
+        return try {
+            val bytes = Base64.getDecoder().decode(record.identityPublicKeyBase64)
+            val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(bytes))
+            IdentityKeyResult.Found(key)
+        } catch (e: Exception) {
+            IdentityKeyResult.Corrupt(endpointId, e)
+        }
     }
 
     /**
@@ -57,11 +82,4 @@ class KnownPeerRepository @Inject constructor(
 
     private fun encodePublicKey(key: PublicKey): String =
         Base64.getEncoder().encodeToString(key.encoded)
-
-    private fun decodePublicKey(base64: String): PublicKey? = try {
-        val bytes = Base64.getDecoder().decode(base64)
-        KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(bytes))
-    } catch (e: Exception) {
-        null
-    }
 }
