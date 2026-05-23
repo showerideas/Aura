@@ -365,7 +365,12 @@ class NearbyExchangeService : Service() {
 
         val discoveryOptions = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
         connectionsClient.startDiscovery(SERVICE_ID, endpointDiscoveryCallback, discoveryOptions)
-            .addOnSuccessListener { Timber.d("Discovery started") }
+            .addOnSuccessListener {
+                Timber.d("Discovery started")
+                // FIX-7: emit DISCOVERING once both advertising and discovery are
+                // active so the UI reflects the full dual-mode scan state.
+                updateSessionState(ExchangeSession.State.DISCOVERING)
+            }
             .addOnFailureListener { e -> Timber.e(e, "Discovery failed") }
     }
 
@@ -772,6 +777,10 @@ class NearbyExchangeService : Service() {
     }
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
+        // FIX-7: emit EXCHANGING on the receiving side too — profile data is
+        // inbound; we are between CONNECTING and COMPLETED right now.
+        updateSessionState(ExchangeSession.State.EXCHANGING)
+
         // PR-09: room-host decrypts with per-guest session key and keeps the room open.
         if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
             val ctx = peerCtxByEndpoint[endpointId]
@@ -873,6 +882,10 @@ class NearbyExchangeService : Service() {
     }
 
     private fun sendProfile(endpointId: String) {
+        // FIX-7: emit EXCHANGING now — we are about to encrypt and transmit
+        // the profile payload; CONNECTING → EXCHANGING is the correct transition.
+        updateSessionState(ExchangeSession.State.EXCHANGING)
+
         // PR-09: room-host uses per-guest key; other modes use the single sessionKey.
         val key: javax.crypto.SecretKey? =
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST)
@@ -911,9 +924,42 @@ class NearbyExchangeService : Service() {
      * PR-10: send the user's avatar JPEG as a STREAM payload, preceded by
      * a BYTES MSG_TYPE_AVATAR signal. Silently no-ops when no avatar is set,
      * the file is missing, empty, or exceeds [MAX_AVATAR_BYTES].
+     *
+     * FIX-9: handles both absolute file paths and content:// URIs. Previously
+     * [java.io.File] was constructed unconditionally from [avatarPath]; on a
+     * content:// URI that produces a path that never exists on disk, causing
+     * the avatar to be silently dropped with a "file missing" warning.
      */
     private fun sendAvatarIfPresent(endpointId: String, avatarPath: String) {
         if (avatarPath.isBlank()) return
+
+        // FIX-9: content:// URI — open via ContentResolver, not File.
+        if (avatarPath.startsWith("content://")) {
+            try {
+                val pfd = contentResolver.openFileDescriptor(
+                    android.net.Uri.parse(avatarPath), "r"
+                ) ?: run {
+                    Timber.w("Could not open content URI for avatar: $avatarPath")
+                    return
+                }
+                if (pfd.statSize > MAX_AVATAR_BYTES) {
+                    Timber.w("content:// avatar exceeds size limit (${pfd.statSize}B) — skipping")
+                    pfd.close()
+                    return
+                }
+                connectionsClient.sendPayload(
+                    endpointId, Payload.fromBytes(byteArrayOf(MSG_TYPE_AVATAR))
+                )
+                connectionsClient.sendPayload(endpointId, Payload.fromStream(pfd))
+                    .addOnSuccessListener { Timber.d("Avatar stream (content URI) sent to $endpointId") }
+                    .addOnFailureListener { e -> Timber.e(e, "Avatar content URI stream send failed") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to send avatar via content URI")
+            }
+            return
+        }
+
+        // Absolute file path — original logic unchanged.
         val file = java.io.File(avatarPath)
         if (!file.exists() || file.length() <= 0L) {
             Timber.w("Avatar path is set but file missing/empty: $avatarPath")
