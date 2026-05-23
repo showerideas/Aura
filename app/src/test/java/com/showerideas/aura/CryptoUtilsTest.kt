@@ -89,6 +89,41 @@ class CryptoUtilsTest {
     }
 
     // -------------------------------------------------------------------------
+    // FIX-1: HKDF-SHA256 after ECDH — NIST SP 800-56A compliance
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `derived key is 32 bytes`() {
+        val aliceKp = CryptoUtils.generateEphemeralECDHKeyPair()
+        val bobKp = CryptoUtils.generateEphemeralECDHKeyPair()
+        val aliceKey = CryptoUtils.deriveSharedAESKey(aliceKp.private, bobKp.public)
+        assertEquals(
+            "HKDF-derived AES key must be exactly 32 bytes for AES-256",
+            32, aliceKey.encoded.size
+        )
+    }
+
+    @Test
+    fun `raw ECDH bytes differ from HKDF-derived key`() {
+        // Verify HKDF is transforming the shared secret, not simply truncating it.
+        val aliceKp = CryptoUtils.generateEphemeralECDHKeyPair()
+        val bobKp = CryptoUtils.generateEphemeralECDHKeyPair()
+
+        // Derive the raw ECDH shared secret the old (insecure) way.
+        val ka = javax.crypto.KeyAgreement.getInstance("ECDH")
+        ka.init(aliceKp.private)
+        ka.doPhase(bobKp.public, true)
+        val rawSecret = ka.generateSecret()
+
+        val derivedKey = CryptoUtils.deriveSharedAESKey(aliceKp.private, bobKp.public)
+
+        assertFalse(
+            "HKDF output must differ from raw ECDH shared secret — KDF is not a no-op",
+            rawSecret.copyOf(32).contentEquals(derivedKey.encoded)
+        )
+    }
+
+    // -------------------------------------------------------------------------
     // PR-13: ECDSA challenge / response
     //
     // The Android Keystore path (getOrCreateDeviceIdentityKey) is unavailable

@@ -12,6 +12,7 @@ import java.security.Signature
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
 import javax.crypto.KeyGenerator
+import javax.crypto.Mac
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -53,15 +54,37 @@ object CryptoUtils {
 
     /**
      * Derive a shared 256-bit AES key from our private key and the peer's public key.
+     *
+     * NIST SP 800-56A compliance: raw ECDH output is never used directly as a key.
+     * HKDF-SHA256 (RFC 5869) is applied to the shared secret so the AES key is
+     * uniformly distributed and domain-separated from the raw EC point coordinates.
      */
     fun deriveSharedAESKey(ourPrivateKey: PrivateKey, peerPublicKey: PublicKey): SecretKey {
         val ka = KeyAgreement.getInstance("ECDH")
         ka.init(ourPrivateKey)
         ka.doPhase(peerPublicKey, true)
         val sharedSecret = ka.generateSecret()
-        // Use first 32 bytes of the shared secret as AES-256 key material
-        val keyBytes = sharedSecret.copyOf(32)
-        return SecretKeySpec(keyBytes, "AES")
+
+        val salt = "AURA-ECDH-v1".toByteArray(Charsets.UTF_8)
+        val info = "aes-256-gcm-session-key".toByteArray(Charsets.UTF_8)
+
+        // HKDF-Extract: PRK = HMAC-SHA256(salt, sharedSecret)
+        val hmacExtract = Mac.getInstance("HmacSHA256")
+        hmacExtract.init(SecretKeySpec(salt, "HmacSHA256"))
+        val prk = hmacExtract.doFinal(sharedSecret)
+
+        // HKDF-Expand: OKM = HMAC-SHA256(PRK, info || 0x01)  — one block, 32 bytes
+        val hmacExpand = Mac.getInstance("HmacSHA256")
+        hmacExpand.init(SecretKeySpec(prk, "HmacSHA256"))
+        hmacExpand.update(info)
+        hmacExpand.update(0x01.toByte())
+        val okm = hmacExpand.doFinal()  // 32 bytes
+
+        // Zero-fill sensitive intermediates before GC can observe them.
+        sharedSecret.fill(0)
+        prk.fill(0)
+
+        return SecretKeySpec(okm, "AES")
     }
 
     // -------------------------------------------------------------------------
