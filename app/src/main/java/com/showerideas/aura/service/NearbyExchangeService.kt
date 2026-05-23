@@ -592,6 +592,14 @@ class NearbyExchangeService : Service() {
                 val challenge = body.copyOfRange(sepIdx + 1, body.size)
                 val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
+                // FIX-5: key-hash blocklist check. Must happen BEFORE TOFU logic
+                // so a blocked device that reconnects with a fresh endpoint ID is
+                // still rejected as soon as its identity key is decoded.
+                if (blocklistRepository.isBlockedByKeyHash(peerIdentityKey)) {
+                    Timber.i("Rejected blocked identity key for endpoint $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
+
                 // FIX-4: sealed result distinguishes NotFound (first-use) from
                 // Corrupt (decode failure). Previously both returned null and were
                 // treated as first-use — a corrupt row would silently re-trust
@@ -786,11 +794,16 @@ class NearbyExchangeService : Service() {
                         }
                     }
                     val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
+                    // FIX-5: look up the peer's identity key hash from TOFU registry
+                    // so the "Block device" action can key on it, not the endpoint ID.
+                    val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
+                        as? KnownPeerRepository.IdentityKeyResult.Found)
+                        ?.key?.let { CryptoUtils.identityKeyHash(it) }
                     val contact = Contact.fromMap(
                         id = UUID.randomUUID().toString(),
                         map = cleanMap,
                         endpointId = endpointId
-                    )
+                    ).copy(identityKeyHash = keyHash)
                     contactRepository.save(contact)
                     _connectedCount.value = _connectedCount.value + 1
                     Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
@@ -828,11 +841,15 @@ class NearbyExchangeService : Service() {
                 // materialising a Contact — they're protocol metadata, not
                 // user-visible profile data.
                 val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
+                // FIX-5: attach identity key hash so "Block device" can use it.
+                val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
+                    as? KnownPeerRepository.IdentityKeyResult.Found)
+                    ?.key?.let { CryptoUtils.identityKeyHash(it) }
                 val contact = Contact.fromMap(
                     id = UUID.randomUUID().toString(),
                     map = cleanMap,
                     endpointId = endpointId
-                )
+                ).copy(identityKeyHash = keyHash)
                 contactRepository.save(contact)
 
                 val current = sessionState.value

@@ -20,10 +20,12 @@ import com.showerideas.aura.model.Profile
  *        Migration: [Migrations.MIGRATION_1_2].
  *  - v3: Adds KnownPeer for persisted TOFU endpoint-identity registry (FIX-2).
  *        Migration: [Migrations.MIGRATION_2_3].
+ *  - v4: Adds identityKeyHash column to blocked_endpoints and contacts (FIX-5).
+ *        Migration: [Migrations.MIGRATION_3_4].
  */
 @Database(
     entities = [Contact::class, Profile::class, BlockedEndpoint::class, KnownPeer::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

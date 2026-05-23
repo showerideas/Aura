@@ -137,6 +137,19 @@ object CryptoUtils {
         }.getOrDefault(false)
     }
 
+    /**
+     * FIX-5: stable, device-agnostic fingerprint of a peer's identity public key.
+     *
+     * SHA-256 over the X.509-encoded key bytes, Base64-encoded. Used as the
+     * blocklist key instead of the ephemeral Nearby endpoint ID so that a
+     * blocked device cannot bypass the block simply by reconnecting with a
+     * new session (which always gets a fresh endpoint ID).
+     */
+    fun identityKeyHash(publicKey: PublicKey): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        return java.util.Base64.getEncoder().encodeToString(digest.digest(publicKey.encoded))
+    }
+
     fun getOrCreateDeviceIdentityKey(): KeyPair {
         val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
         if (!ks.containsAlias(KEYSTORE_ALIAS_DEVICE_ID)) {
