@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.showerideas.aura.data.local.AppDatabase
 import com.showerideas.aura.data.local.BlockedEndpointDao
 import com.showerideas.aura.data.local.ContactDao
+import com.showerideas.aura.data.local.KnownPeerDao
 import com.showerideas.aura.data.local.Migrations
 import com.showerideas.aura.data.local.ProfileDao
 import dagger.Module
@@ -38,4 +39,9 @@ object DatabaseModule {
     @Provides
     fun provideBlockedEndpointDao(db: AppDatabase): BlockedEndpointDao =
         db.blockedEndpointDao()
+
+    /** FIX-2: TOFU peer-identity DAO. */
+    @Provides
+    fun provideKnownPeerDao(db: AppDatabase): KnownPeerDao =
+        db.knownPeerDao()
 }

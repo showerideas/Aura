@@ -16,6 +16,7 @@ import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
 import com.showerideas.aura.data.BlocklistRepository
 import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.data.KnownPeerRepository
 import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
@@ -32,6 +33,7 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -85,15 +87,10 @@ class NearbyExchangeService : Service() {
         private const val CHALLENGE_SEPARATOR: Byte = '|'.code.toByte()
         private const val MAX_AVATAR_BYTES: Long = 200_000L
 
-        /**
-         * PR-13: process-wide registry of {endpointId -> peer identity
-         * public key}. The first time we see a new endpoint we record
-         * its identity key here; on every subsequent session we hard-fail
-         * if the same endpoint presents a different key. This is the
-         * MITM endpoint-substitution detector.
-         */
-        private val peerIdentityRegistry: MutableMap<String, PublicKey> =
-            java.util.Collections.synchronizedMap(mutableMapOf())
+        // FIX-2: peerIdentityRegistry moved to KnownPeerRepository (Room-backed).
+        // The previous in-memory map was wiped on every service restart, allowing
+        // an attacker to force a restart to bypass TOFU endpoint-substitution
+        // detection. The persisted registry survives reboots and process deaths.
 
         // FIX-B: keep the mutable flow private so external callers (ViewModels)
         // cannot bypass the service's internal state machine. Public surface is
@@ -113,6 +110,16 @@ class NearbyExchangeService : Service() {
          * If no gesture pattern is stored, the UI is responsible for
          * confirming the unprotected exchange with the user and calling
          * [markGestureVerified] explicitly.
+         *
+         * NOTE (FIX-5): gestureVerified gates *session start*, not individual
+         * peer connections. In ROOM_HOST mode, the host's single gesture opens
+         * the room; all subsequent guests that join are accepted without
+         * re-verification. This is intentional by design — the host deliberately
+         * opens the room and controls when to close it via the UI.
+         * If per-guest verification is ever required, add a BiometricPrompt /
+         * gesture-replay dialog in RoomExchangeFragment for each onConnectionInitiated
+         * event in host mode (requires a pending-approval queue per endpoint).
+         * // DECISION(FIX-5): gesture verifies session start, not each peer — see git log
          */
         @Volatile
         var gestureVerified: Boolean = false
@@ -159,6 +166,8 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var contactRepository: ContactRepository
     /** PR-14: blocklist check on every incoming connection initiation. */
     @Inject lateinit var blocklistRepository: BlocklistRepository
+    /** FIX-2: persisted TOFU endpoint-identity registry. */
+    @Inject lateinit var knownPeerRepository: KnownPeerRepository
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -178,10 +187,10 @@ class NearbyExchangeService : Service() {
 
     // Per-session ephemeral ECDH state (peer-to-peer & room-guest modes).
     private var ourKeyPair: java.security.KeyPair? = null
-    private var sessionKey: javax.crypto.SecretKey? = null
-    private var connectedEndpoint: String? = null
-    private var peerPublicKey: PublicKey? = null
-    private var handshakeState: HandshakeState = HandshakeState.IDLE
+    @Volatile private var sessionKey: javax.crypto.SecretKey? = null
+    @Volatile private var connectedEndpoint: String? = null
+    @Volatile private var peerPublicKey: PublicKey? = null
+    @Volatile private var handshakeState: HandshakeState = HandshakeState.IDLE
 
     /**
      * PR-13: per-session challenge bookkeeping.
@@ -189,9 +198,13 @@ class NearbyExchangeService : Service() {
      *    the peer's signature against these on receipt of the response.
      *  - challengeVerifiedByEndpoint: latched true once the peer's response
      *    passes verification. ECDH key sending is gated behind this flag.
+     *
+     * FIX-2: ConcurrentHashMap / newKeySet() — Nearby callbacks and
+     * Dispatchers.IO coroutines both access these concurrently. Plain
+     * mutableMapOf/mutableSetOf are not thread-safe.
      */
-    private val pendingChallengeByEndpoint = mutableMapOf<String, ByteArray>()
-    private val challengeVerifiedByEndpoint = mutableSetOf<String>()
+    private val pendingChallengeByEndpoint = ConcurrentHashMap<String, ByteArray>()
+    private val challengeVerifiedByEndpoint: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     /** Active exchange mode for the in-flight session (PR-09). */
     private var currentMode: ExchangeSession.ExchangeMode =
@@ -207,7 +220,7 @@ class NearbyExchangeService : Service() {
         var sessionKey: javax.crypto.SecretKey? = null,
         var peerPub: PublicKey? = null
     )
-    private val peerCtxByEndpoint = mutableMapOf<String, PeerCtx>()
+    private val peerCtxByEndpoint = ConcurrentHashMap<String, PeerCtx>()
 
     // -------------------------------------------------------------------------
     // Service lifecycle
@@ -352,7 +365,12 @@ class NearbyExchangeService : Service() {
 
         val discoveryOptions = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
         connectionsClient.startDiscovery(SERVICE_ID, endpointDiscoveryCallback, discoveryOptions)
-            .addOnSuccessListener { Timber.d("Discovery started") }
+            .addOnSuccessListener {
+                Timber.d("Discovery started")
+                // FIX-7: emit DISCOVERING once both advertising and discovery are
+                // active so the UI reflects the full dual-mode scan state.
+                updateSessionState(ExchangeSession.State.DISCOVERING)
+            }
             .addOnFailureListener { e -> Timber.e(e, "Discovery failed") }
     }
 
@@ -360,28 +378,39 @@ class NearbyExchangeService : Service() {
     // Connection lifecycle callbacks
     // -------------------------------------------------------------------------
 
+    /**
+     * FIX-3: deferred-accept set. Endpoints are added here on
+     * onConnectionInitiated while the async blocklist check is in flight,
+     * and removed before accept/reject. If the peer disconnects while we
+     * are checking, onDisconnected removes the entry and the coroutine
+     * detects the missing key and returns early — preventing a dangling
+     * accept call to a dead endpoint.
+     */
+    private val pendingConnections: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Timber.d("Connection initiated from $endpointId (${info.endpointName})")
-            // PR-14: hard-reject blocked endpoints before any handshake.
-            // runBlocking is acceptable here — the DAO call is a single PK
-            // lookup on a local SQLite DB and we cannot return until we
-            // decide accept vs reject (Nearby's contract is synchronous).
-            val blocked = try {
-                kotlinx.coroutines.runBlocking {
+            // FIX-3: deferred-accept pattern — do NOT block Nearby's callback
+            // thread with Room I/O. On slow flash this was an ANR risk.
+            pendingConnections.add(endpointId)
+            scope.launch {
+                val blocked = try {
                     blocklistRepository.isBlocked(endpointId)
+                } catch (e: Exception) {
+                    Timber.w(e, "Blocklist lookup failed for $endpointId — defaulting to accept")
+                    false
                 }
-            } catch (e: Exception) {
-                Timber.w(e, "Blocklist lookup failed for $endpointId — defaulting to accept")
-                false
+                // Peer may have disconnected while we were checking — bail out.
+                if (!pendingConnections.remove(endpointId)) return@launch
+                if (blocked) {
+                    connectionsClient.rejectConnection(endpointId)
+                    Timber.i("Rejected blocked endpoint: $endpointId")
+                } else {
+                    // Auto-accept — AURA's security is at the gesture + ECDH layer
+                    connectionsClient.acceptConnection(endpointId, payloadCallback)
+                }
             }
-            if (blocked) {
-                connectionsClient.rejectConnection(endpointId)
-                Timber.i("Rejected blocked endpoint: $endpointId")
-                return
-            }
-            // Auto-accept — AURA's security is at the gesture + ECDH layer
-            connectionsClient.acceptConnection(endpointId, payloadCallback)
         }
 
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
@@ -389,8 +418,9 @@ class NearbyExchangeService : Service() {
                 Timber.i("Connected to $endpointId (mode=$currentMode)")
                 if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                     // Host keeps advertising; each guest tracks its own state.
+                    // FIX-4: topology is mode, stage stays CONNECTING→EXCHANGING.
                     peerCtxByEndpoint[endpointId] = PeerCtx()
-                    updateSessionState(ExchangeSession.State.ROOM_HOST)
+                    updateSessionState(ExchangeSession.State.CONNECTING)
                     // PR-13: identity challenge first; ECDH is gated behind
                     // a successful challenge response.
                     sendChallenge(endpointId)
@@ -398,11 +428,9 @@ class NearbyExchangeService : Service() {
                     connectedEndpoint = endpointId
                     connectionsClient.stopAdvertising()
                     connectionsClient.stopDiscovery()
-                    val nextState = if (currentMode == ExchangeSession.ExchangeMode.ROOM_GUEST)
-                        ExchangeSession.State.ROOM_GUEST
-                    else
-                        ExchangeSession.State.EXCHANGING
-                    updateSessionState(nextState)
+                    // FIX-4: both ROOM_GUEST and PEER_TO_PEER advance to CONNECTING here;
+                    // topology is expressed via session.mode == ExchangeMode.ROOM_GUEST.
+                    updateSessionState(ExchangeSession.State.CONNECTING)
                     // PR-13: identity challenge first.
                     sendChallenge(endpointId)
                 }
@@ -414,6 +442,9 @@ class NearbyExchangeService : Service() {
 
         override fun onDisconnected(endpointId: String) {
             Timber.d("Disconnected from $endpointId")
+            // FIX-3: cancel any in-flight deferred-accept for this endpoint
+            // so the coroutine does not attempt accept/reject on a dead conn.
+            pendingConnections.remove(endpointId)
             // FIX-C: if the peer dropped mid-avatar-stream, sweep any partial
             // tmp files created in cacheDir for this endpoint so we don't
             // leak storage. The tmp files are named avatar-incoming-*.jpg.
@@ -462,7 +493,9 @@ class NearbyExchangeService : Service() {
      * avatar STREAM with [MSG_TYPE_AVATAR]. Cleared once we've ingested
      * the STREAM (or dropped it for being oversized / missing contact).
      */
-    private val awaitingAvatarStream: MutableSet<String> = mutableSetOf()
+    // FIX-2: ConcurrentHashMap.newKeySet() — accessed from both Nearby
+    // payload callback thread and Dispatchers.IO coroutines concurrently.
+    private val awaitingAvatarStream: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
@@ -547,79 +580,114 @@ class NearbyExchangeService : Service() {
         }
     }
 
+    // FIX-3: payloadCallback.onPayloadReceived fires on Nearby's callback thread.
+    // Both handleIncomingChallenge and handleChallengeResponse do Room I/O via
+    // knownPeerRepository which is suspend. Wrapping in scope.launch moves the
+    // work off the callback thread — eliminating the previous runBlocking ANR risk.
+
     private fun handleIncomingChallenge(endpointId: String, body: ByteArray) {
-        try {
-            val sepIdx = body.indexOfFirst { it == CHALLENGE_SEPARATOR }
-            if (sepIdx <= 0 || sepIdx >= body.size - 1) {
-                Timber.w("Malformed challenge from $endpointId")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
-            val challenge = body.copyOfRange(sepIdx + 1, body.size)
-            val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
+        scope.launch {
+            try {
+                val sepIdx = body.indexOfFirst { it == CHALLENGE_SEPARATOR }
+                if (sepIdx <= 0 || sepIdx >= body.size - 1) {
+                    Timber.w("Malformed challenge from $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
+                val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
+                val challenge = body.copyOfRange(sepIdx + 1, body.size)
+                val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
-            // TOFU registry check: if this endpoint has been seen with a
-            // different identity key in this process, refuse to talk to it.
-            val known = peerIdentityRegistry[endpointId]
-            if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
-                Timber.e("Endpoint $endpointId presented a NEW identity key — possible MITM")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            if (known == null) peerIdentityRegistry[endpointId] = peerIdentityKey
+                // FIX-5: key-hash blocklist check. Must happen BEFORE TOFU logic
+                // so a blocked device that reconnects with a fresh endpoint ID is
+                // still rejected as soon as its identity key is decoded.
+                if (blocklistRepository.isBlockedByKeyHash(peerIdentityKey)) {
+                    Timber.i("Rejected blocked identity key for endpoint $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
 
-            // Sign the peer's challenge with our own device identity key.
-            val ourKey = CryptoUtils.getOrCreateDeviceIdentityKey()
-            val signature = CryptoUtils.signChallenge(ourKey.private, challenge)
-            val encodedOurPub = Base64.getEncoder().encodeToString(ourKey.public.encoded)
-            val response = byteArrayOf(MSG_TYPE_CHALLENGE_RESPONSE) +
-                encodedOurPub.toByteArray(Charsets.UTF_8) +
-                byteArrayOf(CHALLENGE_SEPARATOR) +
-                signature
-            connectionsClient.sendPayload(endpointId, Payload.fromBytes(response))
-                .addOnSuccessListener { Timber.d("Challenge response sent to $endpointId") }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to handle challenge from $endpointId")
-            terminateSession(ExchangeSession.State.ERROR)
+                // FIX-4: sealed result distinguishes NotFound (first-use) from
+                // Corrupt (decode failure). Previously both returned null and were
+                // treated as first-use — a corrupt row would silently re-trust
+                // an attacker's new key.
+                when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
+                    is KnownPeerRepository.IdentityKeyResult.Found -> {
+                        if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            Timber.e("MITM: $endpointId presented different identity key")
+                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                        }
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.NotFound -> {
+                        knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
+                        Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
+                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                    }
+                }
+
+                // Sign the peer's challenge with our own device identity key.
+                val ourKey = CryptoUtils.getOrCreateDeviceIdentityKey()
+                val signature = CryptoUtils.signChallenge(ourKey.private, challenge)
+                val encodedOurPub = Base64.getEncoder().encodeToString(ourKey.public.encoded)
+                val response = byteArrayOf(MSG_TYPE_CHALLENGE_RESPONSE) +
+                    encodedOurPub.toByteArray(Charsets.UTF_8) +
+                    byteArrayOf(CHALLENGE_SEPARATOR) +
+                    signature
+                connectionsClient.sendPayload(endpointId, Payload.fromBytes(response))
+                    .addOnSuccessListener { Timber.d("Challenge response sent to $endpointId") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to handle challenge from $endpointId")
+                terminateSession(ExchangeSession.State.ERROR)
+            }
         }
     }
 
     private fun handleChallengeResponse(endpointId: String, body: ByteArray) {
-        try {
-            val sepIdx = body.indexOfFirst { it == CHALLENGE_SEPARATOR }
-            if (sepIdx <= 0 || sepIdx >= body.size - 1) {
-                Timber.w("Malformed challenge response from $endpointId")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
-            val signature = body.copyOfRange(sepIdx + 1, body.size)
-            val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
-            val challenge = pendingChallengeByEndpoint[endpointId] ?: run {
-                Timber.e("No pending challenge for $endpointId")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            val ok = CryptoUtils.verifyChallenge(peerIdentityKey, challenge, signature)
-            if (!ok) {
-                Timber.e("Challenge verification failed for $endpointId — possible MITM")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            // Cross-check the identity key against the TOFU registry (the
-            // incoming-challenge path may have populated it on a separate
-            // frame). A mismatch here is the strongest MITM signal.
-            val known = peerIdentityRegistry[endpointId]
-            if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
-                Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
-                terminateSession(ExchangeSession.State.ERROR); return
-            }
-            if (known == null) peerIdentityRegistry[endpointId] = peerIdentityKey
+        scope.launch {
+            try {
+                val sepIdx = body.indexOfFirst { it == CHALLENGE_SEPARATOR }
+                if (sepIdx <= 0 || sepIdx >= body.size - 1) {
+                    Timber.w("Malformed challenge response from $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
+                val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
+                val signature = body.copyOfRange(sepIdx + 1, body.size)
+                val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
+                val challenge = pendingChallengeByEndpoint[endpointId] ?: run {
+                    Timber.e("No pending challenge for $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
+                val ok = CryptoUtils.verifyChallenge(peerIdentityKey, challenge, signature)
+                if (!ok) {
+                    Timber.e("Challenge verification failed for $endpointId — possible MITM")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
+                // FIX-4: same sealed-result pattern as handleIncomingChallenge.
+                when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
+                    is KnownPeerRepository.IdentityKeyResult.Found -> {
+                        if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
+                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                        }
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.NotFound -> {
+                        knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
+                        Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
+                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                    }
+                }
 
-            challengeVerifiedByEndpoint.add(endpointId)
-            pendingChallengeByEndpoint.remove(endpointId)
-            Timber.d("Challenge verified for $endpointId — advancing to ECDH")
-            // PR-13 gate: only now do we ship our ephemeral ECDH public key.
-            sendPublicKey(endpointId)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to verify challenge response from $endpointId")
-            terminateSession(ExchangeSession.State.ERROR)
+                challengeVerifiedByEndpoint.add(endpointId)
+                pendingChallengeByEndpoint.remove(endpointId)
+                Timber.d("Challenge verified for $endpointId — advancing to ECDH")
+                // PR-13 gate: only now do we ship our ephemeral ECDH public key.
+                sendPublicKey(endpointId)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to verify challenge response from $endpointId")
+                terminateSession(ExchangeSession.State.ERROR)
+            }
         }
     }
 
@@ -709,6 +777,10 @@ class NearbyExchangeService : Service() {
     }
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
+        // FIX-7: emit EXCHANGING on the receiving side too — profile data is
+        // inbound; we are between CONNECTING and COMPLETED right now.
+        updateSessionState(ExchangeSession.State.EXCHANGING)
+
         // PR-09: room-host decrypts with per-guest session key and keeps the room open.
         if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
             val ctx = peerCtxByEndpoint[endpointId]
@@ -731,11 +803,16 @@ class NearbyExchangeService : Service() {
                         }
                     }
                     val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
+                    // FIX-5: look up the peer's identity key hash from TOFU registry
+                    // so the "Block device" action can key on it, not the endpoint ID.
+                    val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
+                        as? KnownPeerRepository.IdentityKeyResult.Found)
+                        ?.key?.let { CryptoUtils.identityKeyHash(it) }
                     val contact = Contact.fromMap(
                         id = UUID.randomUUID().toString(),
                         map = cleanMap,
                         endpointId = endpointId
-                    )
+                    ).copy(identityKeyHash = keyHash)
                     contactRepository.save(contact)
                     _connectedCount.value = _connectedCount.value + 1
                     Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
@@ -773,11 +850,15 @@ class NearbyExchangeService : Service() {
                 // materialising a Contact — they're protocol metadata, not
                 // user-visible profile data.
                 val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
+                // FIX-5: attach identity key hash so "Block device" can use it.
+                val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
+                    as? KnownPeerRepository.IdentityKeyResult.Found)
+                    ?.key?.let { CryptoUtils.identityKeyHash(it) }
                 val contact = Contact.fromMap(
                     id = UUID.randomUUID().toString(),
                     map = cleanMap,
                     endpointId = endpointId
-                )
+                ).copy(identityKeyHash = keyHash)
                 contactRepository.save(contact)
 
                 val current = sessionState.value
@@ -801,6 +882,10 @@ class NearbyExchangeService : Service() {
     }
 
     private fun sendProfile(endpointId: String) {
+        // FIX-7: emit EXCHANGING now — we are about to encrypt and transmit
+        // the profile payload; CONNECTING → EXCHANGING is the correct transition.
+        updateSessionState(ExchangeSession.State.EXCHANGING)
+
         // PR-09: room-host uses per-guest key; other modes use the single sessionKey.
         val key: javax.crypto.SecretKey? =
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST)
@@ -839,9 +924,42 @@ class NearbyExchangeService : Service() {
      * PR-10: send the user's avatar JPEG as a STREAM payload, preceded by
      * a BYTES MSG_TYPE_AVATAR signal. Silently no-ops when no avatar is set,
      * the file is missing, empty, or exceeds [MAX_AVATAR_BYTES].
+     *
+     * FIX-9: handles both absolute file paths and content:// URIs. Previously
+     * [java.io.File] was constructed unconditionally from [avatarPath]; on a
+     * content:// URI that produces a path that never exists on disk, causing
+     * the avatar to be silently dropped with a "file missing" warning.
      */
     private fun sendAvatarIfPresent(endpointId: String, avatarPath: String) {
         if (avatarPath.isBlank()) return
+
+        // FIX-9: content:// URI — open via ContentResolver, not File.
+        if (avatarPath.startsWith("content://")) {
+            try {
+                val pfd = contentResolver.openFileDescriptor(
+                    android.net.Uri.parse(avatarPath), "r"
+                ) ?: run {
+                    Timber.w("Could not open content URI for avatar: $avatarPath")
+                    return
+                }
+                if (pfd.statSize > MAX_AVATAR_BYTES) {
+                    Timber.w("content:// avatar exceeds size limit (${pfd.statSize}B) — skipping")
+                    pfd.close()
+                    return
+                }
+                connectionsClient.sendPayload(
+                    endpointId, Payload.fromBytes(byteArrayOf(MSG_TYPE_AVATAR))
+                )
+                connectionsClient.sendPayload(endpointId, Payload.fromStream(pfd))
+                    .addOnSuccessListener { Timber.d("Avatar stream (content URI) sent to $endpointId") }
+                    .addOnFailureListener { e -> Timber.e(e, "Avatar content URI stream send failed") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to send avatar via content URI")
+            }
+            return
+        }
+
+        // Absolute file path — original logic unchanged.
         val file = java.io.File(avatarPath)
         if (!file.exists() || file.length() <= 0L) {
             Timber.w("Avatar path is set but file missing/empty: $avatarPath")
