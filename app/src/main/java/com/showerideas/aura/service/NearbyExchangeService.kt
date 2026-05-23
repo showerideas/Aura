@@ -23,6 +23,8 @@ import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.ui.MainActivity
 import com.showerideas.aura.utils.CryptoUtils
 import com.showerideas.aura.utils.PayloadValidator
+import com.showerideas.aura.utils.vibrateDouble
+import com.showerideas.aura.utils.vibrateShort
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -406,6 +408,7 @@ class NearbyExchangeService : Service() {
                 if (blocked) {
                     connectionsClient.rejectConnection(endpointId)
                     Timber.i("Rejected blocked endpoint: $endpointId")
+                    updateSessionState(ExchangeSession.State.ERROR, "Connection rejected: Device is blocked")
                 } else {
                     // Auto-accept — AURA's security is at the gesture + ECDH layer
                     connectionsClient.acceptConnection(endpointId, payloadCallback)
@@ -416,6 +419,7 @@ class NearbyExchangeService : Service() {
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
             if (result.status.isSuccess) {
                 Timber.i("Connected to $endpointId (mode=$currentMode)")
+                vibrateDouble() // Success haptic
                 if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                     // Host keeps advertising; each guest tracks its own state.
                     // FIX-4: topology is mode, stage stays CONNECTING→EXCHANGING.
@@ -436,7 +440,7 @@ class NearbyExchangeService : Service() {
                 }
             } else {
                 Timber.w("Connection to $endpointId failed: ${result.status.statusMessage}")
-                updateSessionState(ExchangeSession.State.ERROR)
+                updateSessionState(ExchangeSession.State.ERROR, result.status.statusMessage ?: "Connection failed")
             }
         }
 
@@ -868,6 +872,7 @@ class NearbyExchangeService : Service() {
                 )
                 broadcastState(sessionState.value)
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")
+                vibrateShort() // Success haptic
 
                 // Reset gate on success too.
                 gestureVerified = false
@@ -1081,9 +1086,9 @@ class NearbyExchangeService : Service() {
         return java.security.KeyFactory.getInstance("EC").generatePublic(spec)
     }
 
-    private fun updateSessionState(state: ExchangeSession.State) {
+    private fun updateSessionState(state: ExchangeSession.State, errorMessage: String? = null) {
         val current = sessionState.value
-        _sessionState.value = current?.copy(state = state)
+        _sessionState.value = current?.copy(state = state, errorMessage = errorMessage)
         broadcastState(sessionState.value)
         updateNotification(state.name)
     }
