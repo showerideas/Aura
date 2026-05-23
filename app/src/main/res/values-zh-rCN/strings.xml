@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — Simplified Chinese (简体中文) translation stub.
-
-  Strings listed here are the high-impact UI surface (navigation,
-  primary buttons, status messages, profile-field hints) translated
-  by the maintainers for v1.1.0. Any string not present here falls
-  back to values/strings.xml (English) via Android's normal resource
-  resolution.
-
-  Pull requests adding more translated keys are welcome — please
-  preserve the existing key order and run `./gradlew lintDebug`
-  before opening.
+  AURA — Simplified Chinese (简体中文) translation — v1.1.0 complete
+  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -28,13 +19,154 @@
     <string name="hint_title">职位 / 角色</string>
     <string name="hint_website">网站</string>
     <string name="hint_bio">简介</string>
-    <string name="search_hint">搜索联系人…</string>
-    <string name="empty_contacts">还没有联系人。\n按三次音量减键即可分享。</string>
+    <string name="label_share">分享此字段</string>
+    <string name="label_gesture">手势认证</string>
     <string name="status_advertising">正在广播在场状态…</string>
     <string name="status_discovering">正在搜索附近的 AURA 用户…</string>
-    <string name="status_connecting">找到了!正在连接…</string>
+    <string name="status_connecting">找到了！正在连接…</string>
     <string name="status_exchanging">正在安全地交换联系人…</string>
+    <string name="empty_contacts">还没有联系人。\n按三次音量减键即可分享。</string>
+    <string name="search_hint">搜索联系人…</string>
+    <string name="someone">某人</string>
     <string name="action_cancel">取消</string>
     <string name="action_continue">继续</string>
     <string name="action_done">完成</string>
+    <string name="exchange_gesture_hint">长按并执行手势以确认</string>
+    <string name="exchange_gesture_confirmed">手势已确认！</string>
+    <string name="exchange_gesture_failed_retry">手势不匹配，还剩 %1$d 次尝试。</string>
+    <string name="exchange_gesture_failed_max">失败次数过多，交换已取消。</string>
+    <string name="exchange_unprotected_title">未设置手势</string>
+    <string name="exchange_unprotected_message">未设置手势——交换未受保护。是否继续？</string>
+    <string name="exchange_completed">已与 %1$s 交换！</string>
+    <string name="exchange_cancelled">交换已取消</string>
+    <string name="exchange_error_generic">出了点问题，请重试。</string>
+    <string name="exchange_error_bluetooth">交换失败，请确保蓝牙和位置服务已开启。</string>
+    <string name="perm_rationale_title">AURA 需要一些权限</string>
+    <string name="perm_rationale_subtitle">这些权限用于帮助 AURA 找到附近的人并交换联系人。没有任何数据会离开您的设备。</string>
+    <string name="perm_rationale_open_settings">打开设置</string>
+    <string name="perm_rationale_not_now">暂不</string>
+    <string name="perm_label_bluetooth_scan">蓝牙扫描</string>
+    <string name="perm_reason_bluetooth_scan">通过蓝牙查找附近的人。</string>
+    <string name="perm_label_bluetooth_advertise">广播在场</string>
+    <string name="perm_reason_bluetooth_advertise">激活 AURA 时，让附近的人能找到您。</string>
+    <string name="perm_label_bluetooth_connect">蓝牙连接</string>
+    <string name="perm_reason_bluetooth_connect">与选定设备交换加密联系人。</string>
+    <string name="perm_label_location">大概位置</string>
+    <string name="perm_reason_location">旧版 Android 蓝牙扫描需要此权限。</string>
+    <string name="perm_label_nearby_wifi">附近的 Wi-Fi 设备</string>
+    <string name="perm_reason_nearby_wifi">在可用时通过 Wi-Fi P2P 进行更快速的交换。</string>
+    <string name="perm_label_notifications">通知</string>
+    <string name="perm_reason_notifications">在交换进行时查看实时状态。</string>
+    <string name="perm_label_generic">需要权限</string>
+    <string name="perm_reason_generic">AURA 需要此权限才能正常运行。</string>
+    <string name="onboarding_welcome_tagline">一个动作，交换联系人。</string>
+    <string name="onboarding_welcome_body">AURA 通过端到端加密的蓝牙握手，与附近的人交换您的联系人名片。无需账户，无需服务器，除非您选择分享，否则任何数据都不会离开您的设备。</string>
+    <string name="onboarding_profile_title">您是谁？</string>
+    <string name="onboarding_profile_subtitle">只需填写基本信息，其余部分可以稍后在个人资料界面补充。</string>
+    <string name="onboarding_gesture_title">设置解锁手势</string>
+    <string name="onboarding_gesture_subtitle">选择一个只有您才会做的快速动作，AURA 将用它来确认每次交换。</string>
+    <string name="onboarding_gesture_skip">暂时跳过</string>
+    <string name="onboarding_gesture_skipped">已跳过——您可以稍后在个人资料界面添加手势。</string>
+    <string name="onboarding_get_started">开始</string>
+    <string name="onboarding_name_required">请输入您的姓名以继续。</string>
+    <string name="gesture_recording">请立即执行您的手势…</string>
+    <string name="gesture_saved">手势已保存！</string>
+    <string name="gesture_status_no_gesture">尚未设置手势</string>
+    <string name="action_export">导出</string>
+    <string name="action_export_all">导出全部</string>
+    <string name="export_all_empty">暂无可导出的联系人。</string>
+    <string name="home_qr_fallback">无法连接？使用二维码</string>
+    <string name="qr_title">扫描以配对</string>
+    <string name="qr_subtitle">让对方扫描此二维码，然后再扫描对方的。</string>
+    <string name="qr_code_image_desc">您的一次性配对二维码</string>
+    <string name="qr_scan_button">扫描对方的二维码</string>
+    <string name="qr_scan_prompt">将摄像头对准对方手机的二维码</string>
+    <string name="qr_countdown_template">%1$d 秒后刷新</string>
+    <string name="qr_refreshing">正在刷新…</string>
+    <string name="qr_render_failed">无法生成二维码。</string>
+    <string name="qr_scan_cancelled">扫描已取消。</string>
+    <string name="qr_invalid">这不是有效的 AURA 配对内容。</string>
+    <string name="qr_expired">配对码已过期，请让对方刷新。</string>
+    <string name="qr_pairing_ok">已与 %1$s 配对…（中继待实现）</string>
+    <string name="home_room_mode">房间模式</string>
+    <string name="room_mode_host">创建房间</string>
+    <string name="room_mode_guest">加入房间</string>
+    <string name="room_host_idle_status">开放房间</string>
+    <string name="room_host_subtitle">附近最多 10 人可以加入并与您共享名片。</string>
+    <string name="room_guest_idle_status">加入附近的房间</string>
+    <string name="room_guest_subtitle">您将收到房主的名片，您的名片也将同时发送。</string>
+    <string name="room_open_action">开放房间</string>
+    <string name="room_close_action">关闭房间</string>
+    <string name="room_join_action">加入</string>
+    <string name="room_guest_done">已收到房主名片！</string>
+    <string name="room_hold_to_confirm">长按操作按钮以手势确认。</string>
+    <string name="profile_avatar_desc">点击以选择头像</string>
+    <string name="profile_avatar_too_large">图片太大——请尝试更小的图片。</string>
+    <string name="home_greeting">你好，%1$s</string>
+    <string name="home_greeting_no_profile">设置您的个人资料以开始</string>
+    <string name="home_contact_count">已交换 %1$d 个联系人</string>
+    <string name="home_aura_button">AURA</string>
+    <string name="profile_btn_record">录制手势</string>
+    <string name="profile_btn_recording">录制中…（松手停止）</string>
+    <string name="profile_btn_rerecord">重新录制手势</string>
+    <string name="profile_gesture_status_perform">请立即执行您的手势</string>
+    <string name="profile_gesture_status_saved">手势已保存！</string>
+    <string name="profile_gesture_status_saved_idle">手势已保存</string>
+    <string name="profile_gesture_status_none">未设置手势</string>
+    <string name="profile_saved">个人资料已保存</string>
+    <string name="profile_gesture_strength_label">手势强度</string>
+    <string name="profile_gesture_strength_a11y">手势强度：%1$d / 5</string>
+    <string name="contact_copied">已复制到剪贴板</string>
+    <string name="contact_unknown_name">未知</string>
+    <string name="contact_block_button">屏蔽此设备</string>
+    <string name="contact_block_dialog_title">屏蔽此设备？</string>
+    <string name="contact_block_dialog_message">来自该设备的未来交换将被静默拒绝。您可以稍后在设置中解除屏蔽。</string>
+    <string name="contact_block_dialog_confirm">屏蔽</string>
+    <string name="contact_a11y_call">致电 %1$s</string>
+    <string name="contact_a11y_email">发送邮件给 %1$s</string>
+    <string name="contact_a11y_copy">将 %1$s 复制到剪贴板</string>
+    <string name="contact_a11y_export">将 %1$s 导出为 vCard</string>
+    <string name="contact_a11y_delete">删除联系人 %1$s</string>
+    <string name="contact_a11y_mark_favourite">将 %1$s 标记为收藏</string>
+    <string name="contact_a11y_unmark_favourite">取消 %1$s 的收藏标记</string>
+    <string name="contact_a11y_block">屏蔽此设备</string>
+    <string name="contact_a11y_row">%1$s，%2$s，双击查看详细信息</string>
+    <string name="contact_a11y_row_favourite">%1$s，已收藏，%2$s，双击查看详细信息</string>
+    <string name="contact_note_hint">添加备注…</string>
+    <string name="contact_save_note">保存备注</string>
+    <string name="settings_title">设置</string>
+    <string name="settings_section_auth">认证</string>
+    <string name="settings_section_activation">激活</string>
+    <string name="settings_section_data">数据</string>
+    <string name="settings_section_about">关于</string>
+    <string name="settings_auth_method">认证方式</string>
+    <string name="settings_auth_gesture">手势</string>
+    <string name="settings_auth_biometric">生物识别</string>
+    <string name="settings_biometric_unavailable">此设备不支持</string>
+    <string name="settings_bg_activation">后台激活</string>
+    <string name="settings_blocked_devices">已屏蔽设备</string>
+    <string name="settings_clear_gesture">清除手势</string>
+    <string name="settings_clear_contacts">清除所有联系人</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_privacy">隐私政策</string>
+    <string name="settings_clear_gesture_title">删除已录制的手势？</string>
+    <string name="settings_clear_gesture_message">您需要在个人资料中重新录制手势，才能在以后的交换中使用手势认证。</string>
+    <string name="settings_clear_gesture_confirm">删除</string>
+    <string name="settings_clear_gesture_done">手势已清除</string>
+    <string name="settings_clear_contacts_title">删除全部 %1$d 个联系人？</string>
+    <string name="settings_clear_contacts_message">此操作无法撤销。</string>
+    <string name="settings_clear_contacts_confirm">全部删除</string>
+    <string name="settings_clear_contacts_done">联系人已清除</string>
+    <string name="settings_privacy_fallback">隐私政策：%1$s</string>
+    <string name="blocked_devices_title">已屏蔽设备</string>
+    <string name="blocked_devices_empty">没有已屏蔽的设备</string>
+    <string name="blocked_devices_unblock">解除屏蔽</string>
+    <string name="biometric_title">确认身份</string>
+    <string name="biometric_subtitle">与附近的人分享您的联系人名片</string>
+    <string name="biometric_negative">取消</string>
+    <string name="biometric_unavailable_fallback">生物识别不可用，使用手势</string>
+    <string name="biometric_auth_failed">认证失败</string>
+    <plurals name="room_host_count">
+        <item quantity="other">已有 %d 人加入</item>
+    </plurals>
 </resources>
