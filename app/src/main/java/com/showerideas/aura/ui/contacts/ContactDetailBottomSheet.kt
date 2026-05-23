@@ -155,8 +155,11 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                             .setMessage(com.showerideas.aura.R.string.contact_block_dialog_message)
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton(com.showerideas.aura.R.string.contact_block_dialog_confirm) { _, _ ->
+                                // FIX-5: pass identityKeyHash so the block keys on
+                                // stable identity, not the ephemeral endpoint ID.
                                 viewModel.blockEndpoint(
                                     contact.sourceEndpointId,
+                                    identityKeyHash = contact.identityKeyHash,
                                     note = contact.displayName
                                 )
                                 dismiss()

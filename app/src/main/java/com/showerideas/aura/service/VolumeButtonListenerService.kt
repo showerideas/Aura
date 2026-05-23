@@ -101,10 +101,31 @@ class VolumeButtonListenerService : Service() {
     private fun setupMediaSession() {
         mediaSession = android.media.session.MediaSession(this, "AuraVolumeListener")
         mediaSession.setCallback(mediaSessionCallback)
+
+        // Both flags deprecated since API 31. Suppressed rather than removed
+        // because removing them entirely would break API < 31 where the flags
+        // are still the routing mechanism.
+        @Suppress("DEPRECATION")
         mediaSession.setFlags(
             android.media.session.MediaSession.FLAG_HANDLES_MEDIA_BUTTONS or
                     android.media.session.MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
         )
+
+        // FIX-6: API 31+ routes media button events to sessions with an active
+        // PlaybackState rather than respecting FLAG_HANDLES_MEDIA_BUTTONS alone.
+        // STATE_PAUSED makes us eligible without implying audio is playing.
+        // Without this, triple-press silently stops working on Android 12+
+        // (targetSdk = 35).
+        val playbackState = android.media.session.PlaybackState.Builder()
+            .setState(
+                android.media.session.PlaybackState.STATE_PAUSED,
+                android.media.session.PlaybackState.PLAYBACK_POSITION_UNKNOWN,
+                0f
+            )
+            .setActions(android.media.session.PlaybackState.ACTION_PLAY_PAUSE)
+            .build()
+        mediaSession.setPlaybackState(playbackState)
+
         mediaSession.isActive = true
     }
 

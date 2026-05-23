@@ -19,5 +19,13 @@ data class BlockedEndpoint(
     @PrimaryKey val endpointId: String,
     val blockedAt: Long = System.currentTimeMillis(),
     /** Optional free-form note the user attaches at block time. */
-    val note: String = ""
+    val note: String = "",
+    /**
+     * FIX-5: SHA-256 hash of the peer's identity public key (Base64-encoded).
+     * Nullable for backward compat with existing rows (MIGRATION_3_4 adds
+     * the column with DEFAULT NULL). When non-null, the blocklist check in
+     * [com.showerideas.aura.service.NearbyExchangeService] uses this hash
+     * to reject the device even after it reconnects with a new endpoint ID.
+     */
+    val identityKeyHash: String? = null
 )

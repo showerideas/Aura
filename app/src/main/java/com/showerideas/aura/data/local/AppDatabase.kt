@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.showerideas.aura.model.BlockedEndpoint
 import com.showerideas.aura.model.Contact
+import com.showerideas.aura.model.KnownPeer
 import com.showerideas.aura.model.Profile
 
 /**
@@ -17,14 +18,19 @@ import com.showerideas.aura.model.Profile
  *  - v1: Contact + Profile (initial scaffold)
  *  - v2: Adds BlockedEndpoint for the endpoint blocklist (PR-14).
  *        Migration: [Migrations.MIGRATION_1_2].
+ *  - v3: Adds KnownPeer for persisted TOFU endpoint-identity registry (FIX-2).
+ *        Migration: [Migrations.MIGRATION_2_3].
+ *  - v4: Adds identityKeyHash column to blocked_endpoints and contacts (FIX-5).
+ *        Migration: [Migrations.MIGRATION_3_4].
  */
 @Database(
-    entities = [Contact::class, Profile::class, BlockedEndpoint::class],
-    version = 2,
+    entities = [Contact::class, Profile::class, BlockedEndpoint::class, KnownPeer::class],
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao
     abstract fun profileDao(): ProfileDao
     abstract fun blockedEndpointDao(): BlockedEndpointDao
+    abstract fun knownPeerDao(): KnownPeerDao
 }

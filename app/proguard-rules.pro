@@ -36,3 +36,7 @@
 # model.** rule above, but pinned here so future refactors of the umbrella
 # rule don't accidentally drop it).
 -keep class com.showerideas.aura.model.BlockedEndpoint { *; }
+
+# FIX-2: KnownPeer — persisted TOFU registry entity. Pinned for the same
+# reason as BlockedEndpoint; Room reflectively accesses field names.
+-keep class com.showerideas.aura.model.KnownPeer { *; }

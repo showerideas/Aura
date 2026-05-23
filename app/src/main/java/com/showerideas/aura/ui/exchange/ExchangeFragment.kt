@@ -207,12 +207,9 @@ class ExchangeFragment : Fragment() {
             }
             ExchangeSession.State.CANCELLED -> getString(R.string.exchange_cancelled) to false
             ExchangeSession.State.ERROR -> getString(R.string.exchange_error_generic) to false
-            // PR-09 added ROOM_HOST / ROOM_GUEST to the enum. Those flows live
-            // in RoomExchangeFragment and never reach this peer-to-peer screen
-            // — but the compiler requires every branch, so we surface them
-            // as a spinner-with-discovery state in the unlikely event they do.
-            ExchangeSession.State.ROOM_HOST -> getString(R.string.status_advertising) to true
-            ExchangeSession.State.ROOM_GUEST -> getString(R.string.status_discovering) to true
+            // FIX-4: ROOM_HOST / ROOM_GUEST removed from State enum. Room topology
+            // is now expressed via session.mode (ExchangeMode.ROOM_HOST / ROOM_GUEST).
+            // No dead branches needed — the when is now exhaustive over stage values only.
         }
 
         binding.tvStatus.text = statusText
