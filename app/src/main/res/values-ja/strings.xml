@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — Japanese (日本語) translation stub.
-
-  Strings listed here are the high-impact UI surface (navigation,
-  primary buttons, status messages, profile-field hints) translated
-  by the maintainers for v1.1.0. Any string not present here falls
-  back to values/strings.xml (English) via Android's normal resource
-  resolution.
-
-  Pull requests adding more translated keys are welcome — please
-  preserve the existing key order and run `./gradlew lintDebug`
-  before opening.
+  AURA — Japanese (日本語) translation — v1.1.0 complete
+  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -28,13 +19,154 @@
     <string name="hint_title">役職 / 役割</string>
     <string name="hint_website">ウェブサイト</string>
     <string name="hint_bio">自己紹介</string>
-    <string name="search_hint">連絡先を検索…</string>
-    <string name="empty_contacts">まだ連絡先がありません。\n音量下ボタンを3回押して共有しましょう。</string>
+    <string name="label_share">このフィールドを共有</string>
+    <string name="label_gesture">ジェスチャー認証</string>
     <string name="status_advertising">存在を通知中…</string>
     <string name="status_discovering">近くのAURAユーザーを検索中…</string>
-    <string name="status_connecting">見つかりました!接続中…</string>
+    <string name="status_connecting">見つかりました！接続中…</string>
     <string name="status_exchanging">連絡先を安全に交換中…</string>
+    <string name="empty_contacts">まだ連絡先がありません。\n音量下ボタンを3回押して共有しましょう。</string>
+    <string name="search_hint">連絡先を検索…</string>
+    <string name="someone">誰か</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_continue">続ける</string>
     <string name="action_done">完了</string>
+    <string name="exchange_gesture_hint">長押ししてジェスチャーを行い確認</string>
+    <string name="exchange_gesture_confirmed">ジェスチャーが確認されました！</string>
+    <string name="exchange_gesture_failed_retry">ジェスチャーが一致しませんでした。残り %1$d 回。</string>
+    <string name="exchange_gesture_failed_max">試行回数が多すぎます。交換をキャンセルしました。</string>
+    <string name="exchange_unprotected_title">ジェスチャー未設定</string>
+    <string name="exchange_unprotected_message">ジェスチャーが未設定です — 交換は保護されていません。続けますか？</string>
+    <string name="exchange_completed">%1$s と交換しました！</string>
+    <string name="exchange_cancelled">交換がキャンセルされました</string>
+    <string name="exchange_error_generic">問題が発生しました。もう一度お試しください。</string>
+    <string name="exchange_error_bluetooth">交換に失敗しました。BluetoothとGPS/位置情報がオンか確認してください。</string>
+    <string name="perm_rationale_title">AURAにいくつかの権限が必要です</string>
+    <string name="perm_rationale_subtitle">これにより、AURAが近くの人を見つけて連絡先を交換できます。デバイスから何も送信されません。</string>
+    <string name="perm_rationale_open_settings">設定を開く</string>
+    <string name="perm_rationale_not_now">後で</string>
+    <string name="perm_label_bluetooth_scan">Bluetoothスキャン</string>
+    <string name="perm_reason_bluetooth_scan">Bluetooth経由で近くの人を探すため。</string>
+    <string name="perm_label_bluetooth_advertise">存在を通知</string>
+    <string name="perm_reason_bluetooth_advertise">AURAを起動したときに近くの人があなたを見つけられるように。</string>
+    <string name="perm_label_bluetooth_connect">Bluetooth接続</string>
+    <string name="perm_reason_bluetooth_connect">選択したデバイスと暗号化された連絡先を交換するため。</string>
+    <string name="perm_label_location">おおよその位置情報</string>
+    <string name="perm_reason_location">古いAndroidバージョンではBluetoothスキャンに必要です。</string>
+    <string name="perm_label_nearby_wifi">近くのWi-Fiデバイス</string>
+    <string name="perm_reason_nearby_wifi">利用可能な場合、Wi-Fi P2Pで高速交換するため。</string>
+    <string name="perm_label_notifications">通知</string>
+    <string name="perm_reason_notifications">交換中のライブステータスを確認するため。</string>
+    <string name="perm_label_generic">権限が必要</string>
+    <string name="perm_reason_generic">AURAが正しく機能するためにこの権限が必要です。</string>
+    <string name="onboarding_welcome_tagline">ひとつのジェスチャーで連絡先を交換。</string>
+    <string name="onboarding_welcome_body">AURAはエンドツーエンド暗号化のBluetoothハンドシェイクを使って、近くの人と連絡先カードを交換します。アカウント不要、サーバー不要 — あなたが共有を選ばない限り、デバイスから何も送信されません。</string>
+    <string name="onboarding_profile_title">あなたは誰ですか？</string>
+    <string name="onboarding_profile_subtitle">必要最低限の情報だけで大丈夫。残りはプロフィール画面から追加できます。</string>
+    <string name="onboarding_gesture_title">解除ジェスチャーを設定</string>
+    <string name="onboarding_gesture_subtitle">自分だけが行う素早い動作を選んでください。AURAは毎回の交換確認にこれを使います。</string>
+    <string name="onboarding_gesture_skip">今はスキップ</string>
+    <string name="onboarding_gesture_skipped">スキップしました — ジェスチャーは後でプロフィール画面から追加できます。</string>
+    <string name="onboarding_get_started">始める</string>
+    <string name="onboarding_name_required">続けるにはお名前を入力してください。</string>
+    <string name="gesture_recording">今ジェスチャーを行ってください…</string>
+    <string name="gesture_saved">ジェスチャーを保存しました！</string>
+    <string name="gesture_status_no_gesture">まだジェスチャーが設定されていません</string>
+    <string name="action_export">エクスポート</string>
+    <string name="action_export_all">すべてエクスポート</string>
+    <string name="export_all_empty">エクスポートできる連絡先がありません。</string>
+    <string name="home_qr_fallback">接続できない場合はQRを使用</string>
+    <string name="qr_title">スキャンしてペアリング</string>
+    <string name="qr_subtitle">相手にこのコードをスキャンしてもらい、次に相手のコードをスキャンしてください。</string>
+    <string name="qr_code_image_desc">ワンタイムペアリングQRコード</string>
+    <string name="qr_scan_button">相手のQRをスキャン</string>
+    <string name="qr_scan_prompt">相手のスマートフォンのQRコードに向けてください</string>
+    <string name="qr_countdown_template">%1$d秒で更新</string>
+    <string name="qr_refreshing">更新中…</string>
+    <string name="qr_render_failed">QRコードを生成できませんでした。</string>
+    <string name="qr_scan_cancelled">スキャンをキャンセルしました。</string>
+    <string name="qr_invalid">これは有効なAURAペアリングコードではありません。</string>
+    <string name="qr_expired">このペアリングコードは期限切れです。相手に更新してもらってください。</string>
+    <string name="qr_pairing_ok">%1$s とペアリングしました… (リレー未実装)</string>
+    <string name="home_room_mode">ルームモード</string>
+    <string name="room_mode_host">ルームをホスト</string>
+    <string name="room_mode_guest">ルームに参加</string>
+    <string name="room_host_idle_status">ルームを開く</string>
+    <string name="room_host_subtitle">近くの最大10人が参加してあなたとカードを共有できます。</string>
+    <string name="room_guest_idle_status">近くのルームに参加</string>
+    <string name="room_guest_subtitle">ホストのカードを受け取ります。あなたのカードもお返しとして送信されます。</string>
+    <string name="room_open_action">ルームを開く</string>
+    <string name="room_close_action">ルームを閉じる</string>
+    <string name="room_join_action">参加</string>
+    <string name="room_guest_done">ホストのカードを受け取りました！</string>
+    <string name="room_hold_to_confirm">ジェスチャーで確認するにはアクションボタンを長押し。</string>
+    <string name="profile_avatar_desc">タップしてプロフィール写真を選択</string>
+    <string name="profile_avatar_too_large">画像が大きすぎます — より小さな画像を試してください。</string>
+    <string name="home_greeting">こんにちは、%1$s</string>
+    <string name="home_greeting_no_profile">始めるにはプロフィールを設定してください</string>
+    <string name="home_contact_count">%1$d 件の連絡先を交換</string>
+    <string name="home_aura_button">AURA</string>
+    <string name="profile_btn_record">ジェスチャーを記録</string>
+    <string name="profile_btn_recording">記録中… (離して停止)</string>
+    <string name="profile_btn_rerecord">ジェスチャーを再記録</string>
+    <string name="profile_gesture_status_perform">今ジェスチャーを行ってください</string>
+    <string name="profile_gesture_status_saved">ジェスチャーを保存しました！</string>
+    <string name="profile_gesture_status_saved_idle">ジェスチャー保存済み</string>
+    <string name="profile_gesture_status_none">ジェスチャー未設定</string>
+    <string name="profile_saved">プロフィールを保存しました</string>
+    <string name="profile_gesture_strength_label">ジェスチャー強度</string>
+    <string name="profile_gesture_strength_a11y">ジェスチャー強度: 5段階中%1$d</string>
+    <string name="contact_copied">クリップボードにコピーしました</string>
+    <string name="contact_unknown_name">不明</string>
+    <string name="contact_block_button">このデバイスをブロック</string>
+    <string name="contact_block_dialog_title">このデバイスをブロックしますか？</string>
+    <string name="contact_block_dialog_message">このデバイスからの将来の交換は無音で拒否されます。設定で後からブロックを解除できます。</string>
+    <string name="contact_block_dialog_confirm">ブロック</string>
+    <string name="contact_a11y_call">%1$s に電話</string>
+    <string name="contact_a11y_email">%1$s にメール</string>
+    <string name="contact_a11y_copy">%1$s をクリップボードにコピー</string>
+    <string name="contact_a11y_export">%1$s をvCardとしてエクスポート</string>
+    <string name="contact_a11y_delete">連絡先 %1$s を削除</string>
+    <string name="contact_a11y_mark_favourite">%1$s をお気に入りに追加</string>
+    <string name="contact_a11y_unmark_favourite">%1$s をお気に入りから削除</string>
+    <string name="contact_a11y_block">このデバイスをブロック</string>
+    <string name="contact_a11y_row">%1$s、%2$s、ダブルタップで詳細を表示</string>
+    <string name="contact_a11y_row_favourite">%1$s、お気に入り、%2$s、ダブルタップで詳細を表示</string>
+    <string name="contact_note_hint">メモを追加…</string>
+    <string name="contact_save_note">メモを保存</string>
+    <string name="settings_title">設定</string>
+    <string name="settings_section_auth">認証</string>
+    <string name="settings_section_activation">起動</string>
+    <string name="settings_section_data">データ</string>
+    <string name="settings_section_about">このアプリについて</string>
+    <string name="settings_auth_method">認証方法</string>
+    <string name="settings_auth_gesture">ジェスチャー</string>
+    <string name="settings_auth_biometric">生体認証</string>
+    <string name="settings_biometric_unavailable">このデバイスでは利用できません</string>
+    <string name="settings_bg_activation">バックグラウンド起動</string>
+    <string name="settings_blocked_devices">ブロックされたデバイス</string>
+    <string name="settings_clear_gesture">ジェスチャーを削除</string>
+    <string name="settings_clear_contacts">すべての連絡先を削除</string>
+    <string name="settings_version">バージョン</string>
+    <string name="settings_privacy">プライバシーポリシー</string>
+    <string name="settings_clear_gesture_title">記録されたジェスチャーを削除しますか？</string>
+    <string name="settings_clear_gesture_message">プロフィールで新しいジェスチャーを記録するまで、将来の交換でジェスチャー認証が使えません。</string>
+    <string name="settings_clear_gesture_confirm">削除</string>
+    <string name="settings_clear_gesture_done">ジェスチャーを削除しました</string>
+    <string name="settings_clear_contacts_title">%1$d 件の連絡先をすべて削除しますか？</string>
+    <string name="settings_clear_contacts_message">この操作は元に戻せません。</string>
+    <string name="settings_clear_contacts_confirm">すべて削除</string>
+    <string name="settings_clear_contacts_done">連絡先を削除しました</string>
+    <string name="settings_privacy_fallback">プライバシーポリシー: %1$s</string>
+    <string name="blocked_devices_title">ブロックされたデバイス</string>
+    <string name="blocked_devices_empty">ブロックされたデバイスはありません</string>
+    <string name="blocked_devices_unblock">ブロック解除</string>
+    <string name="biometric_title">本人確認</string>
+    <string name="biometric_subtitle">近くの人と連絡先カードを共有します</string>
+    <string name="biometric_negative">キャンセル</string>
+    <string name="biometric_unavailable_fallback">生体認証が使用できません。ジェスチャーを使用します</string>
+    <string name="biometric_auth_failed">認証に失敗しました</string>
+    <plurals name="room_host_count">
+        <item quantity="other">%d 人が参加しました</item>
+    </plurals>
 </resources>

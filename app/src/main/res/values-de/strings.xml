@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — German (Deutsch) translation stub.
-
-  Strings listed here are the high-impact UI surface (navigation,
-  primary buttons, status messages, profile-field hints) translated
-  by the maintainers for v1.1.0. Any string not present here falls
-  back to values/strings.xml (English) via Android's normal resource
-  resolution.
-
-  Pull requests adding more translated keys are welcome — please
-  preserve the existing key order and run `./gradlew lintDebug`
-  before opening.
+  AURA — German (Deutsch) translation — v1.1.0 complete
+  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -28,13 +19,155 @@
     <string name="hint_title">Position / Rolle</string>
     <string name="hint_website">Website</string>
     <string name="hint_bio">Biografie</string>
-    <string name="search_hint">Kontakte suchen…</string>
-    <string name="empty_contacts">Noch keine Kontakte.\nDreimal Lautstärke leiser drücken, um zu teilen.</string>
+    <string name="label_share">Dieses Feld teilen</string>
+    <string name="label_gesture">Gesten-Authentifizierung</string>
     <string name="status_advertising">Präsenz wird gesendet…</string>
     <string name="status_discovering">Suche nach AURA-Benutzern in der Nähe…</string>
     <string name="status_connecting">Jemanden gefunden! Verbindung wird hergestellt…</string>
     <string name="status_exchanging">Kontakt sicher austauschen…</string>
+    <string name="empty_contacts">Noch keine Kontakte.\nDreimal Lautstärke leiser drücken, um zu teilen.</string>
+    <string name="search_hint">Kontakte suchen…</string>
+    <string name="someone">jemand</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_continue">Weiter</string>
     <string name="action_done">Fertig</string>
+    <string name="exchange_gesture_hint">Halten und Geste ausführen, um zu bestätigen</string>
+    <string name="exchange_gesture_confirmed">Geste bestätigt!</string>
+    <string name="exchange_gesture_failed_retry">Geste nicht erkannt. Noch %1$d Versuch(e).</string>
+    <string name="exchange_gesture_failed_max">Zu viele fehlgeschlagene Versuche. Austausch abgebrochen.</string>
+    <string name="exchange_unprotected_title">Keine Geste festgelegt</string>
+    <string name="exchange_unprotected_message">Keine Geste festgelegt – Austausch ist ungeschützt. Fortfahren?</string>
+    <string name="exchange_completed">Mit %1$s ausgetauscht!</string>
+    <string name="exchange_cancelled">Austausch abgebrochen</string>
+    <string name="exchange_error_generic">Etwas ist schiefgelaufen. Erneut versuchen.</string>
+    <string name="exchange_error_bluetooth">Austausch fehlgeschlagen. Bitte Bluetooth und Standort aktivieren.</string>
+    <string name="perm_rationale_title">AURA benötigt einige Berechtigungen</string>
+    <string name="perm_rationale_subtitle">Diese ermöglichen es AURA, Kontakte mit Personen in der Nähe zu finden und auszutauschen. Nichts verlässt Ihr Gerät.</string>
+    <string name="perm_rationale_open_settings">Einstellungen öffnen</string>
+    <string name="perm_rationale_not_now">Nicht jetzt</string>
+    <string name="perm_label_bluetooth_scan">Bluetooth-Suche</string>
+    <string name="perm_reason_bluetooth_scan">Um Personen in der Nähe über Bluetooth zu finden.</string>
+    <string name="perm_label_bluetooth_advertise">Präsenz senden</string>
+    <string name="perm_reason_bluetooth_advertise">Damit andere in der Nähe Sie finden können, wenn Sie AURA aktivieren.</string>
+    <string name="perm_label_bluetooth_connect">Bluetooth-Verbindung</string>
+    <string name="perm_reason_bluetooth_connect">Um die verschlüsselte Kontaktinformation mit dem ausgewählten Gerät auszutauschen.</string>
+    <string name="perm_label_location">Ungefährer Standort</string>
+    <string name="perm_reason_location">Android benötigt dies für Bluetooth-Suche auf älteren Versionen.</string>
+    <string name="perm_label_nearby_wifi">WLAN-Geräte in der Nähe</string>
+    <string name="perm_reason_nearby_wifi">Für schnelleren Austausch über WLAN P2P, wenn verfügbar.</string>
+    <string name="perm_label_notifications">Benachrichtigungen</string>
+    <string name="perm_reason_notifications">Um den Live-Status während eines Austauschs anzuzeigen.</string>
+    <string name="perm_label_generic">Berechtigung erforderlich</string>
+    <string name="perm_reason_generic">AURA benötigt diese Berechtigung für die korrekte Funktion.</string>
+    <string name="onboarding_welcome_tagline">Kontakte mit einer Geste tauschen.</string>
+    <string name="onboarding_welcome_body">AURA tauscht Ihre Kontaktkarte mit Personen in der Nähe über einen Ende-zu-Ende-verschlüsselten Bluetooth-Handshake aus. Keine Konten, keine Server – nichts verlässt Ihr Gerät, ohne dass Sie es freigeben.</string>
+    <string name="onboarding_profile_title">Wer sind Sie?</string>
+    <string name="onboarding_profile_subtitle">Nur das Wesentliche. Den Rest können Sie später im Profil-Bildschirm ergänzen.</string>
+    <string name="onboarding_gesture_title">Entsperrgeste festlegen</string>
+    <string name="onboarding_gesture_subtitle">Wählen Sie eine schnelle Bewegung, die nur Sie kennen. AURA verwendet diese zur Bestätigung jedes Austauschs.</string>
+    <string name="onboarding_gesture_skip">Vorerst überspringen</string>
+    <string name="onboarding_gesture_skipped">Übersprungen – Sie können eine Geste später im Profil-Bildschirm hinzufügen.</string>
+    <string name="onboarding_get_started">Loslegen</string>
+    <string name="onboarding_name_required">Bitte geben Sie Ihren Namen ein, um fortzufahren.</string>
+    <string name="gesture_recording">Führen Sie jetzt Ihre Geste aus…</string>
+    <string name="gesture_saved">Geste gespeichert!</string>
+    <string name="gesture_status_no_gesture">Noch keine Geste festgelegt</string>
+    <string name="action_export">Exportieren</string>
+    <string name="action_export_all">Alle exportieren</string>
+    <string name="export_all_empty">Noch keine Kontakte zum Exportieren.</string>
+    <string name="home_qr_fallback">Keine Verbindung? QR verwenden</string>
+    <string name="qr_title">Zum Koppeln scannen</string>
+    <string name="qr_subtitle">Lassen Sie die andere Person diesen Code scannen und scannen Sie dann deren Code.</string>
+    <string name="qr_code_image_desc">Ihr Einmal-Kopplungs-QR-Code</string>
+    <string name="qr_scan_button">Deren QR scannen</string>
+    <string name="qr_scan_prompt">Kamera auf den QR-Code des anderen Telefons richten</string>
+    <string name="qr_countdown_template">Aktualisiert in %1$ds</string>
+    <string name="qr_refreshing">Wird aktualisiert…</string>
+    <string name="qr_render_failed">QR-Code konnte nicht gerendert werden.</string>
+    <string name="qr_scan_cancelled">Scan abgebrochen.</string>
+    <string name="qr_invalid">Dies ist kein gültiger AURA-Kopplungsinhalt.</string>
+    <string name="qr_expired">Dieser Kopplungscode ist abgelaufen. Bitten Sie die andere Person, ihn zu aktualisieren.</string>
+    <string name="qr_pairing_ok">Gekoppelt mit %1$s… (Weiterleitung ausstehend)</string>
+    <string name="home_room_mode">Raum-Modus</string>
+    <string name="room_mode_host">Raum hosten</string>
+    <string name="room_mode_guest">Raum beitreten</string>
+    <string name="room_host_idle_status">Raum öffnen</string>
+    <string name="room_host_subtitle">Bis zu 10 Personen in der Nähe können beitreten und ihre Karte mit Ihnen teilen.</string>
+    <string name="room_guest_idle_status">Einem Raum in der Nähe beitreten</string>
+    <string name="room_guest_subtitle">Sie erhalten die Karte des Gastgebers. Ihre Karte wird im Gegenzug gesendet.</string>
+    <string name="room_open_action">Raum öffnen</string>
+    <string name="room_close_action">Raum schließen</string>
+    <string name="room_join_action">Beitreten</string>
+    <string name="room_guest_done">Karte des Gastgebers erhalten!</string>
+    <string name="room_hold_to_confirm">Aktionsschaltfläche halten, um mit Ihrer Geste zu bestätigen.</string>
+    <string name="profile_avatar_desc">Tippen, um ein Profilfoto auszuwählen</string>
+    <string name="profile_avatar_too_large">Bild war zu groß – versuchen Sie ein kleineres Bild.</string>
+    <string name="home_greeting">Hey, %1$s</string>
+    <string name="home_greeting_no_profile">Richten Sie Ihr Profil ein, um zu beginnen</string>
+    <string name="home_contact_count">%1$d Kontakte ausgetauscht</string>
+    <string name="home_aura_button">AURA</string>
+    <string name="profile_btn_record">Geste aufnehmen</string>
+    <string name="profile_btn_recording">Aufnahme läuft… (loslassen zum Stoppen)</string>
+    <string name="profile_btn_rerecord">Geste neu aufnehmen</string>
+    <string name="profile_gesture_status_perform">Führen Sie jetzt Ihre Geste aus</string>
+    <string name="profile_gesture_status_saved">Geste gespeichert!</string>
+    <string name="profile_gesture_status_saved_idle">Geste gespeichert</string>
+    <string name="profile_gesture_status_none">Keine Geste festgelegt</string>
+    <string name="profile_saved">Profil gespeichert</string>
+    <string name="profile_gesture_strength_label">Gestenstärke</string>
+    <string name="profile_gesture_strength_a11y">Gestenstärke: %1$d von 5</string>
+    <string name="contact_copied">In Zwischenablage kopiert</string>
+    <string name="contact_unknown_name">Unbekannt</string>
+    <string name="contact_block_button">Dieses Gerät sperren</string>
+    <string name="contact_block_dialog_title">Dieses Gerät sperren?</string>
+    <string name="contact_block_dialog_message">Zukünftige Austausche von diesem Gerät werden stillschweigend abgelehnt. Sie können die Sperre in den Einstellungen aufheben.</string>
+    <string name="contact_block_dialog_confirm">Sperren</string>
+    <string name="contact_a11y_call">%1$s anrufen</string>
+    <string name="contact_a11y_email">%1$s eine E-Mail senden</string>
+    <string name="contact_a11y_copy">%1$s in Zwischenablage kopieren</string>
+    <string name="contact_a11y_export">%1$s als vCard exportieren</string>
+    <string name="contact_a11y_delete">Kontakt %1$s löschen</string>
+    <string name="contact_a11y_mark_favourite">%1$s als Favorit markieren</string>
+    <string name="contact_a11y_unmark_favourite">%1$s als Favorit entfernen</string>
+    <string name="contact_a11y_block">Dieses Gerät sperren</string>
+    <string name="contact_a11y_row">%1$s, %2$s, doppeltippen für Details</string>
+    <string name="contact_a11y_row_favourite">%1$s, Favorit, %2$s, doppeltippen für Details</string>
+    <string name="contact_note_hint">Notiz hinzufügen…</string>
+    <string name="contact_save_note">Notiz speichern</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_section_auth">Authentifizierung</string>
+    <string name="settings_section_activation">Aktivierung</string>
+    <string name="settings_section_data">Daten</string>
+    <string name="settings_section_about">Über</string>
+    <string name="settings_auth_method">Authentifizierungsmethode</string>
+    <string name="settings_auth_gesture">Geste</string>
+    <string name="settings_auth_biometric">Biometrie</string>
+    <string name="settings_biometric_unavailable">Auf diesem Gerät nicht verfügbar</string>
+    <string name="settings_bg_activation">Hintergrundaktivierung</string>
+    <string name="settings_blocked_devices">Gesperrte Geräte</string>
+    <string name="settings_clear_gesture">Geste löschen</string>
+    <string name="settings_clear_contacts">Alle Kontakte löschen</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_privacy">Datenschutzrichtlinie</string>
+    <string name="settings_clear_gesture_title">Aufgezeichnete Geste löschen?</string>
+    <string name="settings_clear_gesture_message">Sie müssen eine neue Geste im Profil aufnehmen, bevor ein zukünftiger Austausch die Gesten-Authentifizierung verwenden kann.</string>
+    <string name="settings_clear_gesture_confirm">Löschen</string>
+    <string name="settings_clear_gesture_done">Geste gelöscht</string>
+    <string name="settings_clear_contacts_title">Alle %1$d Kontakte löschen?</string>
+    <string name="settings_clear_contacts_message">Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="settings_clear_contacts_confirm">Alle löschen</string>
+    <string name="settings_clear_contacts_done">Kontakte gelöscht</string>
+    <string name="settings_privacy_fallback">Datenschutzrichtlinie: %1$s</string>
+    <string name="blocked_devices_title">Gesperrte Geräte</string>
+    <string name="blocked_devices_empty">Keine gesperrten Geräte</string>
+    <string name="blocked_devices_unblock">Entsperren</string>
+    <string name="biometric_title">Identität bestätigen</string>
+    <string name="biometric_subtitle">Teilen Sie Ihre Kontaktkarte mit der Person in der Nähe</string>
+    <string name="biometric_negative">Abbrechen</string>
+    <string name="biometric_unavailable_fallback">Biometrie nicht verfügbar, Geste wird verwendet</string>
+    <string name="biometric_auth_failed">Authentifizierung fehlgeschlagen</string>
+    <plurals name="room_host_count">
+        <item quantity="one">%d Person beigetreten</item>
+        <item quantity="other">%d Personen beigetreten</item>
+    </plurals>
 </resources>

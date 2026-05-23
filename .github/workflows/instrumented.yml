@@ -42,14 +42,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
-    # PR-39 lands the *infrastructure*: emulator boot, AVD cache,
-    # connectedDebugAndroidTest invocation, report upload. The actual
-    # instrumentation suite has 3 known-flaky tests (MigrationTest x2,
-    # ExchangeFlowEspressoTest x1) that need a follow-up to harden.
-    # Until then, this workflow reports its status but does NOT gate
-    # PR merges — ci.yml is still the required check. Flip this to
-    # `false` once the suite is green for two consecutive runs.
-    continue-on-error: true
+    # v1.2 fix: MigrationTest (×2) hardened with unique per-test DB names,
+    # @After teardown, closeWhenFinished, and try-finally on migrated.close().
+    # ExchangeFlowEspressoTest (×1) hardened with a waitForView polling helper
+    # that bridges the Espresso / Dispatchers.IO visibility gap.
+    # Suite confirmed green — this workflow now gates PR merges.
+    continue-on-error: false
 
     strategy:
       fail-fast: false
