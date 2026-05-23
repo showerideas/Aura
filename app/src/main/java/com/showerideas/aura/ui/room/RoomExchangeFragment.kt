@@ -13,6 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.showerideas.aura.R
+import com.showerideas.aura.auth.CameraHandEmbedder
+import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.databinding.FragmentRoomExchangeBinding
 import com.showerideas.aura.model.ExchangeSession
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,6 +52,10 @@ class RoomExchangeFragment : Fragment() {
     private var isHostMode: Boolean = true
     private var sessionRunning: Boolean = false
     private var failedGestureAttempts = 0
+    /** True once the gesture gate is successfully cleared (or bypassed). */
+    private var gestureGatePassed = false
+    /** Guards against double-firing on StateFlow replay after lifecycle re-entry. */
+    private var gestureValidated = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -69,32 +75,15 @@ class RoomExchangeFragment : Fragment() {
         }
         renderInitialState()
 
-        // Two paths through the action button (mirrors ExchangeFragment):
-        //   1. If a session is already running OR no gesture is stored, a
-        //      plain tap is the action (close-room / open-confirm dialog).
-        //   2. If a gesture is stored, press-and-hold the button to record;
-        //      releasing the button runs DTW + unlocks the service gate.
-        // We use an onTouchListener so press/release are unambiguously
-        // paired — the previous long-press + tap-again flow was fragile.
-        binding.btnRoomAction.setOnTouchListener { v, event ->
-            val useTouchGesture = !sessionRunning && viewModel.hasGesturePattern()
-            if (!useTouchGesture) {
-                if (event.action == android.view.MotionEvent.ACTION_UP) v.performClick()
-                return@setOnTouchListener false
-            }
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> {
-                    viewModel.startGestureRecording()
-                    binding.tvRoomStatus.setText(R.string.gesture_recording)
-                }
-                android.view.MotionEvent.ACTION_UP,
-                android.view.MotionEvent.ACTION_CANCEL -> onGestureReleased()
-            }
-            true
+        // Auth gate: camera if pattern stored, unprotected dialog otherwise.
+        if (viewModel.hasGesturePattern()) {
+            startGestureGate()
         }
+
         binding.btnRoomAction.setOnClickListener { onActionPressed() }
 
         binding.btnRoomCancel.setOnClickListener {
+            viewModel.stopGestureCamera()
             viewModel.closeRoom()
             findNavController().navigateUp()
         }
@@ -138,13 +127,103 @@ class RoomExchangeFragment : Fragment() {
         }
     }
 
-    /**
-     * Reached when a tap (rather than press-and-release) is the intended
-     * action: the session is already running (close), or no gesture
-     * pattern is stored (confirm-unprotected dialog). When a gesture IS
-     * stored, [setOnTouchListener] on the action button handles the
-     * record/validate cycle directly.
-     */
+    // -------------------------------------------------------------------------
+    // Camera gesture gate
+    // -------------------------------------------------------------------------
+
+    private fun startGestureGate() {
+        binding.gestureGateSection.visibility = View.VISIBLE
+        binding.btnRoomAction.isEnabled = false
+        viewModel.startGestureCamera(viewLifecycleOwner, binding.gesturePreviewRoom)
+        observeGestureState()
+    }
+
+    private fun observeGestureState() {
+        // Live gesture label + stability progress bar in the gate section
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.liveGestureState.collect { state ->
+                    binding.tvGestureGateStatus.text = when (state) {
+                        is CameraHandEmbedder.GestureState.NoHand -> {
+                            binding.pbGestureGateStability.progress = 0
+                            getString(R.string.gesture_no_hand)
+                        }
+                        is CameraHandEmbedder.GestureState.Detecting -> {
+                            binding.pbGestureGateStability.progress =
+                                (state.stability * 100).toInt()
+                            getString(
+                                R.string.gesture_detecting,
+                                state.gesture.emoji,
+                                state.gesture.displayName,
+                                (state.stability * 100).toInt()
+                            )
+                        }
+                        is CameraHandEmbedder.GestureState.Stable -> {
+                            binding.pbGestureGateStability.progress = 100
+                            getString(R.string.gesture_stable,
+                                state.gesture.emoji, state.gesture.displayName)
+                        }
+                        is CameraHandEmbedder.GestureState.ModelError -> {
+                            binding.pbGestureGateStability.progress = 0
+                            getString(R.string.gesture_model_error)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Auto-validate when a stable embedding is captured.
+        // gestureValidated prevents double-firing on lifecycle re-entry.
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.gestureRecordingState.collect { state ->
+                    when {
+                        state is GestureAuthManager.RecordingState.Complete && !gestureValidated ->
+                            onGestureComplete()
+                        state is GestureAuthManager.RecordingState.Error ->
+                            binding.tvGestureGateStatus.text = state.message
+                        else -> Unit
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onGestureComplete() {
+        gestureValidated = true
+        val matched = viewModel.validateGestureAndUnlockService()
+        if (matched) {
+            failedGestureAttempts = 0
+            gestureGatePassed = true
+            binding.gestureGateSection.visibility = View.GONE
+            binding.btnRoomAction.isEnabled = true
+            viewModel.stopGestureCamera()
+            launchSelectedMode()
+        } else {
+            gestureValidated = false
+            failedGestureAttempts++
+            val remaining = (MAX_GESTURE_ATTEMPTS - failedGestureAttempts).coerceAtLeast(0)
+            if (failedGestureAttempts >= MAX_GESTURE_ATTEMPTS) {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.exchange_gesture_failed_max,
+                    Toast.LENGTH_LONG
+                ).show()
+                viewModel.stopGestureCamera()
+                findNavController().navigateUp()
+            } else {
+                binding.pbGestureGateStability.progress = 0
+                binding.tvGestureGateStatus.text =
+                    getString(R.string.exchange_gesture_failed_retry, remaining)
+                viewModel.resetGestureCapture()
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Action button handler (session running OR no-pattern path)
+    // -------------------------------------------------------------------------
+
     private fun onActionPressed() {
         if (sessionRunning) {
             viewModel.closeRoom()
@@ -153,18 +232,13 @@ class RoomExchangeFragment : Fragment() {
             return
         }
 
-        if (viewModel.hasGesturePattern()) {
-            // A plain tap when a gesture is configured — nudge the user to
-            // press-and-hold instead. The touch listener owns the real path.
-            Toast.makeText(
-                requireContext(),
-                R.string.room_hold_to_confirm,
-                Toast.LENGTH_SHORT
-            ).show()
+        // Gesture gate already cleared — launch directly without the dialog.
+        if (gestureGatePassed) {
+            launchSelectedMode()
             return
         }
 
-        // No pattern stored — explicit confirmation.
+        // No pattern stored — explicit unprotected confirmation.
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.exchange_unprotected_title)
             .setMessage(R.string.exchange_unprotected_message)
@@ -175,29 +249,6 @@ class RoomExchangeFragment : Fragment() {
                 launchSelectedMode()
             }
             .show()
-    }
-
-    /** Invoked when the user releases a hold-to-record action button. */
-    private fun onGestureReleased() {
-        val matched = viewModel.validateGestureAndUnlockService()
-        if (matched) {
-            failedGestureAttempts = 0
-            launchSelectedMode()
-        } else {
-            failedGestureAttempts += 1
-            val remaining = (MAX_GESTURE_ATTEMPTS - failedGestureAttempts).coerceAtLeast(0)
-            if (failedGestureAttempts >= MAX_GESTURE_ATTEMPTS) {
-                Toast.makeText(
-                    requireContext(),
-                    R.string.exchange_gesture_failed_max,
-                    Toast.LENGTH_LONG
-                ).show()
-                findNavController().navigateUp()
-            } else {
-                binding.tvRoomStatus.text =
-                    getString(R.string.exchange_gesture_failed_retry, remaining)
-            }
-        }
     }
 
     private fun launchSelectedMode() {
@@ -219,6 +270,7 @@ class RoomExchangeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        viewModel.stopGestureCamera()
         super.onDestroyView()
         _binding = null
     }

@@ -1,13 +1,11 @@
 package com.showerideas.aura.ui.profile
 
-import android.animation.ObjectAnimator
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.CycleInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -19,7 +17,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.showerideas.aura.R
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.databinding.FragmentProfileBinding
-import com.showerideas.aura.model.GesturePattern
 import com.showerideas.aura.utils.AvatarUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -74,6 +71,18 @@ class ProfileFragment : Fragment() {
                     binding.etWebsite.setText(profile.website)
                     binding.etBio.setText(profile.bio)
 
+                    // Restore share-field checkboxes from the saved profile.
+                    // Without this, returning to the screen always shows the
+                    // layout defaults, so a save would silently clobber the
+                    // user's previously chosen share preferences.
+                    val shared = profile.shareFields.split(",").map { it.trim() }.toSet()
+                    binding.cbSharePhone.isChecked   = "phone"       in shared
+                    binding.cbShareEmail.isChecked   = "email"       in shared
+                    binding.cbShareCompany.isChecked = "company"     in shared
+                    binding.cbShareTitle.isChecked   = "title"       in shared
+                    binding.cbShareWebsite.isChecked = "website"     in shared
+                    binding.cbShareBio.isChecked     = "bio"         in shared
+
                     // PR-10: load avatar from disk if previously saved.
                     val avatar = AvatarUtils.userAvatarFile(requireContext())
                     AvatarUtils.loadBitmap(avatar)?.let { binding.ivAvatar.setImageBitmap(it) }
@@ -81,47 +90,45 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        // Gesture recording state
+        // Camera gesture enrollment state
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.gestureRecordingState.collect { state ->
                     when (state) {
                         is GestureAuthManager.RecordingState.Idle -> {
-                            binding.btnRecordGesture.text = getString(R.string.profile_btn_record)
+                            binding.btnRecordGesture.setText(R.string.profile_btn_record)
                             binding.gestureStatus.text =
                                 if (viewModel.hasGesturePattern)
                                     getString(R.string.profile_gesture_status_saved_idle)
                                 else
                                     getString(R.string.profile_gesture_status_none)
-                            // PR-11: hide and reset bars when not recording.
+                            binding.gesturePreviewProfile.visibility = View.GONE
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Recording -> {
-                            binding.btnRecordGesture.text =
-                                getString(R.string.profile_btn_recording)
+                            binding.btnRecordGesture.setText(R.string.profile_btn_recording)
                             binding.gestureStatus.text =
                                 getString(R.string.profile_gesture_status_perform)
-                            // PR-11: surface the bars while the user holds the button.
+                            binding.gesturePreviewProfile.visibility = View.VISIBLE
                             binding.gestureStrengthBars.visibility = View.VISIBLE
                             binding.tvVarianceLabel.visibility = View.VISIBLE
                         }
                         is GestureAuthManager.RecordingState.Complete -> {
                             viewModel.saveGesturePattern(state.pattern)
-                            binding.btnRecordGesture.text =
-                                getString(R.string.profile_btn_rerecord)
-                            binding.gestureStatus.text =
-                                getString(R.string.profile_gesture_status_saved)
+                            viewModel.stopGestureCamera()
+                            binding.btnRecordGesture.setText(R.string.profile_btn_rerecord)
+                            binding.gestureStatus.setText(R.string.gesture_saved_embedding)
+                            binding.gesturePreviewProfile.visibility = View.GONE
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Error -> {
                             binding.gestureStatus.text = state.message
-                            // PR-06: shake the record button so the failure
-                            // is also conveyed tactilely, not just textually.
-                            shakeView(binding.btnRecordGesture)
+                            viewModel.stopGestureCamera()
+                            binding.gesturePreviewProfile.visibility = View.GONE
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
@@ -131,31 +138,21 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        // PR-11: live-variance → strength bars. Separate collector so it can
-        // tick independently of the recording-state machine above.
+        // Stability → strength bars (0..1 from camera confidence, mapped to 0..5 bars)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.liveVariance.collect { variance ->
-                    val litCount = when {
-                        variance < 0.15f -> 0
-                        variance < 0.35f -> 1
-                        variance < 0.60f -> 2
-                        variance < 1.00f -> 3
-                        variance < 2.00f -> 4
-                        else             -> 5
-                    }
-                    paintStrengthBars(litCount)
+                viewModel.liveVariance.collect { confidence ->
+                    paintStrengthBars((confidence * 5).toInt().coerceIn(0, 5))
                 }
             }
         }
 
-        binding.btnRecordGesture.setOnTouchListener { _, event ->
-            when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> viewModel.startGestureRecording()
-                android.view.MotionEvent.ACTION_UP,
-                android.view.MotionEvent.ACTION_CANCEL -> viewModel.stopGestureRecording()
+        // Tap to start camera enrollment; camera stops automatically on Complete/Error
+        binding.btnRecordGesture.setOnClickListener {
+            if (viewModel.gestureRecordingState.value is GestureAuthManager.RecordingState.Idle ||
+                viewModel.gestureRecordingState.value is GestureAuthManager.RecordingState.Error) {
+                viewModel.startGestureCamera(viewLifecycleOwner, binding.gesturePreviewProfile)
             }
-            true
         }
 
         binding.btnSave.setOnClickListener { saveProfile() }
@@ -223,15 +220,8 @@ class ProfileFragment : Fragment() {
             getString(R.string.profile_gesture_strength_a11y, litCount)
     }
 
-    private fun shakeView(target: View) {
-        ObjectAnimator.ofFloat(target, "translationX", 0f, 24f).apply {
-            duration = 350
-            interpolator = CycleInterpolator(3f)
-            start()
-        }
-    }
-
     override fun onDestroyView() {
+        viewModel.stopGestureCamera()
         super.onDestroyView()
         _binding = null
     }

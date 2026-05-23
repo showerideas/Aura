@@ -42,6 +42,10 @@ class PermissionRationaleBottomSheet : BottomSheetDialogFragment() {
         private data class PermInfo(val labelRes: Int, val rationaleRes: Int)
 
         private fun infoFor(permission: String): PermInfo = when (permission) {
+            Manifest.permission.CAMERA -> PermInfo(
+                R.string.perm_label_camera,
+                R.string.perm_reason_camera
+            )
             Manifest.permission.BLUETOOTH_SCAN -> PermInfo(
                 R.string.perm_label_bluetooth_scan,
                 R.string.perm_reason_bluetooth_scan

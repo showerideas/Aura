@@ -52,7 +52,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Toggle favourite"
+            android:contentDescription="@string/contact_toggle_favourite_initial"
             android:src="@drawable/ic_star_border" />
     </LinearLayout>
 
@@ -74,7 +74,8 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="8dp">
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Phone  " android:textColor="@color/on_surface_secondary" android:textSize="13sp" />
+            android:text="@string/contact_label_phone" android:textColor="@color/on_surface_secondary"
+            android:textSize="13sp" android:layout_marginEnd="8dp" />
         <TextView android:id="@+id/tv_phone" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:textColor="@color/on_surface" android:textSize="14sp" />
     </LinearLayout>
@@ -82,7 +83,8 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="8dp">
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Email  " android:textColor="@color/on_surface_secondary" android:textSize="13sp" />
+            android:text="@string/contact_label_email" android:textColor="@color/on_surface_secondary"
+            android:textSize="13sp" android:layout_marginEnd="8dp" />
         <TextView android:id="@+id/tv_email" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:textColor="@color/on_surface" android:textSize="14sp" />
     </LinearLayout>
@@ -90,7 +92,8 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="8dp">
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Web    " android:textColor="@color/on_surface_secondary" android:textSize="13sp" />
+            android:text="@string/contact_label_website" android:textColor="@color/on_surface_secondary"
+            android:textSize="13sp" android:layout_marginEnd="8dp" />
         <TextView android:id="@+id/tv_website" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:textColor="@color/on_surface" android:textSize="14sp" />
     </LinearLayout>
@@ -141,7 +144,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="Call" />
+            android:text="@string/action_call" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_email"
@@ -149,7 +152,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="Email" />
+            android:text="@string/action_email_verb" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_copy"
@@ -157,7 +160,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="Copy" />
+            android:text="@string/action_copy" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_export"
@@ -172,7 +175,7 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Delete"
+            android:text="@string/action_delete"
             app:strokeColor="@color/error" />
 
     </LinearLayout>

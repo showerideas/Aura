@@ -34,12 +34,31 @@ object PayloadValidator {
     private val recentNonces: MutableSet<String> =
         Collections.synchronizedSet(mutableSetOf())
 
+    /**
+     * Prompt-6 / Issue-3: per-field maximum character lengths.
+     *
+     * A crafted peer can complete the challenge/response (or in a first-meet
+     * scenario substitute their own identity key via TOFU) and then send a
+     * profile whose fields contain millions of characters. The AES-GCM
+     * decryption and Gson parsing both operate on the full string, so
+     * allocating a 10 MB String is possible within the Nearby BYTES limit.
+     *
+     * These caps are enforced in [validateProfilePayload] on the user-visible
+     * fields. Internal fields (_ts, _nonce) are short by construction and are
+     * not capped here.
+     */
+    const val MAX_FIELD_LENGTH: Int = 500
+
+    /** Friendly field names for logging. */
+    private val CAPPED_FIELDS = setOf("displayName", "email", "phone", "note")
+
     sealed class ValidationResult {
         object Ok : ValidationResult()
         object MissingTimestamp : ValidationResult()
         data class StaleTimestamp(val deltaMs: Long) : ValidationResult()
         object MissingNonce : ValidationResult()
         object ReplayedNonce : ValidationResult()
+        data class FieldTooLong(val field: String, val length: Int) : ValidationResult()
     }
 
     /**
@@ -57,6 +76,14 @@ object PayloadValidator {
         val nonce = map["_nonce"] ?: return ValidationResult.MissingNonce
         // .add returns false if the nonce was already present -> replay.
         if (!recentNonces.add(nonce)) return ValidationResult.ReplayedNonce
+        // Prompt-6 / Issue-3: cap individual string fields to prevent a
+        // crafted peer from allocating unbounded heap via long field values.
+        for (field in CAPPED_FIELDS) {
+            val value = map[field] ?: continue
+            if (value.length > MAX_FIELD_LENGTH) {
+                return ValidationResult.FieldTooLong(field, value.length)
+            }
+        }
         return ValidationResult.Ok
     }
 

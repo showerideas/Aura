@@ -40,3 +40,34 @@
 # FIX-2: KnownPeer — persisted TOFU registry entity. Pinned for the same
 # reason as BlockedEndpoint; Room reflectively accesses field names.
 -keep class com.showerideas.aura.model.KnownPeer { *; }
+
+# ---------------------------------------------------------------------------
+# Prompt-5: MediaPipe Tasks Vision — GestureRecognizer
+#
+# MediaPipe loads its Task runner, inference engine, and result-parsing code
+# via JNI + reflection. R8 will strip ALL of these classes without explicit
+# -keep rules, causing a crash at the first gesture attempt on a release build.
+#
+# Rules cover:
+#   com.google.mediapipe.tasks.vision.**      — GestureRecognizer, result types
+#   com.google.mediapipe.tasks.core.**        — BaseOptions, TaskInfo, delegates
+#   com.google.mediapipe.framework.**         — MPImage, ImageBuilder, JNI wrappers
+#   com.google.mediapipe.tasks.components.**  — NormalizedLandmark, Category
+#
+# Verification command (run after assembleRelease):
+#   $ANDROID_HOME/tools/bin/apkanalyzer classes list app-release-unsigned.apk \
+#     | grep "mediapipe"
+# Expected: com.google.mediapipe.tasks.vision.gesturerecognizer.* present.
+# ---------------------------------------------------------------------------
+-keep class com.google.mediapipe.tasks.vision.** { *; }
+-keep class com.google.mediapipe.tasks.core.** { *; }
+-keep class com.google.mediapipe.framework.** { *; }
+-keep class com.google.mediapipe.tasks.components.** { *; }
+-keep class com.google.mediapipe.proto.** { *; }
+-keepclassmembers class com.google.mediapipe.** { *; }
+-dontwarn com.google.mediapipe.**
+
+# CameraX — ImageProxy / ImageAnalysis called from background threads;
+# some implementations use reflection to locate the image plane accessors.
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**

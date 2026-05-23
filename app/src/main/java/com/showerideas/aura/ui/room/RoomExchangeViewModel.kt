@@ -1,7 +1,10 @@
 package com.showerideas.aura.ui.room
 
 import android.content.Context
+import androidx.camera.view.PreviewView
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import com.showerideas.aura.auth.CameraHandEmbedder
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
@@ -11,16 +14,12 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 /**
- * ViewModel for the room-mode exchange screen. Forwards lifecycle events
- * to [NearbyExchangeService] and exposes its live state flows.
+ * ViewModel for the room-mode exchange screen.
  *
- * Auth flow mirrors [com.showerideas.aura.ui.exchange.ExchangeViewModel]:
- * the service's gesture gate must be unlocked via [markGestureVerified]
- * BEFORE any startRoom* call. The fragment is responsible for:
- *   1. Recording + validating the gesture via [validateGestureAndUnlockService]
- *      when a pattern is stored.
- *   2. Calling [proceedWithoutGesture] only after an explicit user
- *      confirmation when no pattern is stored.
+ * Auth mirrors [ExchangeViewModel]: the service gate must be unlocked via
+ * [validateGestureAndUnlockService] (or [proceedWithoutGesture]) before
+ * any startRoom* call.  The camera pipeline is started by the Fragment
+ * passing its view-lifecycle owner and [PreviewView] reference.
  */
 @HiltViewModel
 class RoomExchangeViewModel @Inject constructor(
@@ -29,22 +28,22 @@ class RoomExchangeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val sessionState: StateFlow<ExchangeSession?> = NearbyExchangeService.sessionState
-    val connectedCount: StateFlow<Int> = NearbyExchangeService.connectedCount
+    val connectedCount: StateFlow<Int>             = NearbyExchangeService.connectedCount
+
     val gestureRecordingState: StateFlow<GestureAuthManager.RecordingState> =
         gestureAuthManager.recordingState
 
+    val liveGestureState: StateFlow<CameraHandEmbedder.GestureState> =
+        gestureAuthManager.liveGestureState
+
     fun hasGesturePattern(): Boolean = gestureAuthManager.hasStoredPattern()
 
-    fun startGestureRecording() = gestureAuthManager.startRecording()
+    fun startGestureCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) =
+        gestureAuthManager.startCamera(lifecycleOwner, previewView)
 
-    /**
-     * Stop recording, run DTW against the stored pattern, and unlock the
-     * service gate iff the gesture matched.
-     *
-     * @return true when the gesture matched and the service gate is now open.
-     */
+    fun stopGestureCamera() = gestureAuthManager.stopCamera()
+
     fun validateGestureAndUnlockService(): Boolean {
-        gestureAuthManager.stopRecording()
         val state = gestureAuthManager.recordingState.value
         if (state is GestureAuthManager.RecordingState.Complete) {
             val ok = gestureAuthManager.match(state.pattern)
@@ -54,13 +53,11 @@ class RoomExchangeViewModel @Inject constructor(
         return false
     }
 
-    /**
-     * Called when the user explicitly acknowledges they want to proceed
-     * without any gesture protection. Opens the gate directly.
-     */
+    fun resetGestureCapture() = gestureAuthManager.resetGestureCapture()
+
     fun proceedWithoutGesture() = NearbyExchangeService.markGestureVerified()
 
-    fun startHost() = NearbyExchangeService.startRoomHost(context)
+    fun startHost()  = NearbyExchangeService.startRoomHost(context)
     fun startGuest() = NearbyExchangeService.startRoomGuest(context)
-    fun closeRoom() = NearbyExchangeService.stop(context)
+    fun closeRoom()  = NearbyExchangeService.stop(context)
 }

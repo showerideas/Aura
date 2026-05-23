@@ -41,9 +41,11 @@
     <!-- Vibration for gesture feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Camera — QR fallback scanner (PR-08). Marked not required so the
-         app still installs on devices without a camera; the QR fallback
-         path simply won't work in that case. -->
+    <!-- Camera — used for two purposes:
+         1. MediaPipe hand-gesture authentication (all exchange paths).
+         2. QR fallback scanner (PR-08).
+         Marked not required so the app installs on camera-less devices;
+         both features will degrade gracefully in that case. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera"

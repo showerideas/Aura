@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity() {
     private val requiredPermissions: Array<String>
         get() = buildList {
             add(Manifest.permission.ACCESS_FINE_LOCATION)
+            // CAMERA is a dangerous permission and must be requested at runtime.
+            // Used by CameraX + MediaPipe for gesture enrollment and authentication.
+            add(Manifest.permission.CAMERA)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 add(Manifest.permission.BLUETOOTH_SCAN)
                 add(Manifest.permission.BLUETOOTH_ADVERTISE)

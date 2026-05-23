@@ -195,6 +195,25 @@ class NearbyExchangeService : Service() {
     @Volatile private var handshakeState: HandshakeState = HandshakeState.IDLE
 
     /**
+     * Prompt-6 / Issue-1: TOCTOU guard for P2P connection requests.
+     * Set to true the moment we call requestConnection() so that a second
+     * onEndpointFound callback (from a different AURA user in range at the
+     * same time) cannot fire a second requestConnection and overwrite the
+     * per-session ECDH state mid-handshake.
+     * Reset to false in terminateSession() so the next session can connect.
+     */
+    @Volatile private var connectionRequested: Boolean = false
+
+    /**
+     * Prompt-6 / Issue-3: max encrypted profile payload bytes.
+     * Nearby Connections BYTES payloads are bounded by the protocol (~1 MB),
+     * but we enforce a tighter application-level cap to prevent Gson-parsing
+     * of maliciously large JSON sent by a rogue peer who completed the handshake.
+     * 64 KB is well above any realistic profile; bump if avatars move inline.
+     */
+    private val MAX_PROFILE_PAYLOAD_BYTES = 65_536
+
+    /**
      * PR-13: per-session challenge bookkeeping.
      *  - pendingChallengeByEndpoint: the 32 random bytes we sent; we verify
      *    the peer's signature against these on receipt of the response.
@@ -231,7 +250,7 @@ class NearbyExchangeService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildNotification("Starting exchange..."))
+        startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notif_starting)))
         // PR-15: kick off the periodic nonce-cache flush. Lifetime matches
         // the service: cancelled in onDestroy. The cache is shared across
         // sessions so the purge interval is much longer than a session.
@@ -330,6 +349,9 @@ class NearbyExchangeService : Service() {
 
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
+        // Prompt-6 / Issue-1: reset the connection-request flag so the next
+        // session can request a connection again.
+        connectionRequested = false
         // Reset handshake bookkeeping (PR-02).
         handshakeState = HandshakeState.IDLE
         peerPublicKey = null
@@ -457,6 +479,10 @@ class NearbyExchangeService : Service() {
                 // Room stays open if one guest drops; clear that guest's ctx.
                 peerCtxByEndpoint.remove(endpointId)
                 awaitingAvatarStream.remove(endpointId)
+                // Prompt-6 / Issue-2: also remove the stale challenge bytes so
+                // pendingChallengeByEndpoint doesn't accumulate 32-byte entries
+                // for guests who disconnect mid-handshake.
+                pendingChallengeByEndpoint.remove(endpointId)
                 return
             }
             if (sessionState.value?.state != ExchangeSession.State.COMPLETED) {
@@ -470,17 +496,27 @@ class NearbyExchangeService : Service() {
             Timber.d("Endpoint found: $endpointId (${info.endpointName}) (mode=$currentMode)")
             // Hosts only advertise; they don't initiate outgoing connections.
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) return
-            // Only request connection if we haven't connected yet
-            if (connectedEndpoint == null) {
-                connectionsClient.requestConnection(
-                    android.provider.Settings.Secure.getString(contentResolver, "bluetooth_name")
-                        ?: "AuraUser",
-                    endpointId,
-                    connectionLifecycleCallback
-                )
-                    .addOnSuccessListener { Timber.d("Connection request sent to $endpointId") }
-                    .addOnFailureListener { e -> Timber.e(e, "Failed to request connection") }
+            // Prompt-6 / Issue-1: atomically guard against the TOCTOU race where
+            // two onEndpointFound callbacks fire simultaneously (both see
+            // connectedEndpoint == null and both call requestConnection).
+            // connectionRequested is @Volatile and set here before any async work;
+            // it is reset in terminateSession() for the next session.
+            if (connectionRequested) {
+                Timber.d("Connection already requested — ignoring endpoint $endpointId")
+                return
             }
+            connectionRequested = true
+            connectionsClient.requestConnection(
+                android.provider.Settings.Secure.getString(contentResolver, "bluetooth_name")
+                    ?: "AuraUser",
+                endpointId,
+                connectionLifecycleCallback
+            )
+                .addOnSuccessListener { Timber.d("Connection request sent to $endpointId") }
+                .addOnFailureListener { e ->
+                    Timber.e(e, "Failed to request connection to $endpointId — resetting flag")
+                    connectionRequested = false
+                }
         }
 
         override fun onEndpointLost(endpointId: String) {
@@ -781,6 +817,17 @@ class NearbyExchangeService : Service() {
     }
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
+        // Prompt-6 / Issue-3: reject oversized payloads before decryption.
+        // Nearby Connections BYTES payloads are bounded by the protocol (~1 MB),
+        // but we tighten this to 64 KB — well above any legitimate profile —
+        // as a defence-in-depth guard against a crafted peer flooding the heap.
+        if (encryptedData.size > MAX_PROFILE_PAYLOAD_BYTES) {
+            Timber.w("Incoming profile from $endpointId exceeds size limit " +
+                "(${encryptedData.size} > $MAX_PROFILE_PAYLOAD_BYTES) — rejecting")
+            terminateSession(ExchangeSession.State.ERROR)
+            return
+        }
+
         // FIX-7: emit EXCHANGING on the receiving side too — profile data is
         // inbound; we are between CONNECTING and COMPLETED right now.
         updateSessionState(ExchangeSession.State.EXCHANGING)
@@ -1090,7 +1137,18 @@ class NearbyExchangeService : Service() {
         val current = sessionState.value
         _sessionState.value = current?.copy(state = state, errorMessage = errorMessage)
         broadcastState(sessionState.value)
-        updateNotification(state.name)
+        val statusText = when (state) {
+            ExchangeSession.State.ADVERTISING -> getString(R.string.status_advertising)
+            ExchangeSession.State.DISCOVERING -> getString(R.string.status_discovering)
+            ExchangeSession.State.CONNECTING  -> getString(R.string.status_connecting)
+            ExchangeSession.State.EXCHANGING  -> getString(R.string.status_exchanging)
+            ExchangeSession.State.COMPLETED   -> getString(R.string.exchange_completed,
+                current?.receivedContact?.displayName?.takeIf { it.isNotBlank() }
+                    ?: getString(R.string.someone))
+            ExchangeSession.State.CANCELLED   -> getString(R.string.exchange_cancelled)
+            ExchangeSession.State.ERROR       -> getString(R.string.exchange_error_generic)
+        }
+        updateNotification(statusText)
     }
 
     private fun broadcastState(session: ExchangeSession?) {
@@ -1103,9 +1161,9 @@ class NearbyExchangeService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "AURA Exchange",
+            getString(R.string.notif_channel_name),
             NotificationManager.IMPORTANCE_LOW
-        ).apply { description = "Active contact exchange in progress" }
+        ).apply { description = getString(R.string.notif_channel_desc) }
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
             .createNotificationChannel(channel)
     }
@@ -1115,7 +1173,7 @@ class NearbyExchangeService : Service() {
             this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("AURA Exchange")
+            .setContentTitle(getString(R.string.notif_title))
             .setContentText(status)
             .setSmallIcon(R.drawable.ic_aura_small)
             .setContentIntent(intent)

@@ -26,23 +26,26 @@
         android:textColor="@color/on_surface_secondary"
         android:textSize="14sp" />
 
+    <!-- Camera live preview — starts automatically on this page -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/gesture_preview_onboard"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="24dp"
+        android:clipToOutline="true"
+        android:background="@drawable/camera_preview_bg"
+        android:contentDescription="@string/gesture_camera_preview_desc" />
+
     <TextView
         android:id="@+id/tv_onboard_gesture_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:gravity="center"
-        android:text="@string/gesture_status_no_gesture"
+        android:accessibilityLiveRegion="polite"
+        android:text="@string/gesture_no_hand"
         android:textColor="@color/on_surface_secondary"
         android:textSize="13sp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_onboard_record"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_marginTop="16dp"
-        android:text="@string/btn_record_gesture"
-        app:backgroundTint="@color/aura_purple" />
 
     <TextView
         android:id="@+id/btn_onboard_skip"

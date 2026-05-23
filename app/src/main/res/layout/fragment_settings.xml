@@ -95,6 +95,39 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!--
+          Prompt-2: Reliability warning — shown only when bg activation is ON.
+          Surfaces the OEM-skin limitation honestly so users understand why
+          triple-press may not work on their specific device.
+        -->
+        <TextView
+            android:id="@+id/tv_volume_wake_warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:padding="12dp"
+            android:background="#1AFFAA00"
+            android:text="@string/settings_volume_wake_warning"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!--
+          Prompt-2: "Test triple-press now" — let the user verify
+          compatibility immediately. Shown only when bg activation is ON.
+        -->
+        <TextView
+            android:id="@+id/row_test_volume_press"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="14dp"
+            android:text="@string/settings_test_volume_press"
+            android:textColor="@color/aura_purple_light"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
         <View android:layout_width="match_parent" android:layout_height="1dp"
             android:layout_marginVertical="16dp" android:background="#222" />
 
