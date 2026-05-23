@@ -1,6 +1,7 @@
 package com.showerideas.aura.ui.onboarding
 
 import android.os.Bundle
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,6 +75,11 @@ class OnboardingFragment : Fragment() {
                 return@setOnClickListener
             }
             val email = emailField?.text?.toString()?.trim().orEmpty()
+            if (email.isNotBlank() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(requireContext(), "Please enter a valid email address", Toast.LENGTH_SHORT).show()
+                binding.pager.currentItem = 1
+                return@setOnClickListener
+            }
             viewModel.completeOnboarding(name, email)
         }
 

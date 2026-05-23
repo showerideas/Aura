@@ -223,11 +223,8 @@ class ExchangeFragment : Fragment() {
         }
 
         if (session.state == ExchangeSession.State.ERROR) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.exchange_error_bluetooth),
-                Toast.LENGTH_LONG
-            ).show()
+            val error = session.errorMessage ?: getString(R.string.exchange_error_generic)
+            Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
         }
     }
 
