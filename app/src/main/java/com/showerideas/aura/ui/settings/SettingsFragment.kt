@@ -33,10 +33,6 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
-    companion object {
-        private const val PRIVACY_POLICY_URL = "https://showerideas.app/aura/privacy"
-    }
-
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
@@ -148,11 +144,11 @@ class SettingsFragment : Fragment() {
         binding.tvVersion.text = BuildConfig.VERSION_NAME
         binding.rowPrivacy.setOnClickListener {
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.privacy_url))))
             } catch (e: Exception) {
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.settings_privacy_fallback, PRIVACY_POLICY_URL),
+                    getString(R.string.settings_privacy_fallback, getString(R.string.privacy_url)),
                     Toast.LENGTH_LONG
                 ).show()
             }

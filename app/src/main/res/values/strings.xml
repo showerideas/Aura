@@ -187,6 +187,9 @@
     <string name="settings_clear_contacts_confirm">Delete all</string>
     <string name="settings_clear_contacts_done">Contacts cleared</string>
     <string name="settings_privacy_fallback">Privacy policy: %1$s</string>
+    <!-- v1.3: live privacy policy URL — translatable="false" because URLs are
+         language-independent. All locale files fall back to this value. -->
+    <string name="privacy_url" translatable="false">https://showerideas.app/aura/privacy</string>
 
     <!-- PR-20: Blocked devices -->
     <string name="blocked_devices_title">Blocked devices</string>

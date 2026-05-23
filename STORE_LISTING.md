@@ -139,7 +139,7 @@ If Play Console insists on individual data-type answers:
 ## Submission checklist
 
 - [ ] Replace every **TODO** above.
-- [ ] Host `PRIVACY_POLICY.md` at https://showerideas.app/aura/privacy.
+- [x] ~~Host `PRIVACY_POLICY.md` at https://showerideas.app/aura/privacy.~~ ✅ Deployed via `gh-pages.yml` (v1.3.0).
 - [ ] Upload assets in Play Console.
 - [ ] Run `./gradlew assembleRelease` with the four `KEYSTORE_*` env vars set.
 - [ ] Upload signed AAB to the internal testing track first.
