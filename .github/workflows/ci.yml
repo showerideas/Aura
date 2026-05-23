@@ -1,25 +1,27 @@
-# PR-22: GitHub Actions CI for AURA.
+# PR-22 / v1.3: GitHub Actions CI for AURA.
 #
-# This is the only place the project is built end-to-end (sandbox builds
-# during development were skipped because the SDK download is impractical).
 # Every PR and every push to main runs:
 #
-#   1. testDebugUnitTest   — JVM tests (DTW, crypto, profile, payload
-#                             validator, vCard, etc.). Catches regressions
-#                             cheaply; ~1 minute on a clean runner.
-#   2. lintDebug           — Android Lint with the existing baseline. Will
-#                             fail CI on new issues but not on pre-existing
-#                             warnings.
-#   3. assembleRelease     — Full release build with R8 + resource shrinking
-#                             and the env-driven signing config from PR-22a.
-#                             KEYSTORE_* env vars are left blank, so Gradle
-#                             produces an unsigned release APK; this still
-#                             validates that ProGuard rules are correct and
-#                             every transitive dep survives shrinking.
+#   1. testDebugUnitTest   — JVM unit tests. ~1 minute on a clean runner.
+#   2. lintDebug           — Android Lint. Fails on new issues.
+#   3. assembleRelease     — Full release build (R8 + shrinking). KEYSTORE_*
+#                            env vars are blank in CI so an unsigned APK is
+#                            produced — validates ProGuard rules cheaply.
 #
-# androidTest (Espresso + Room) is NOT run in CI yet — that needs an
-# emulator job (`reactivecircus/android-emulator-runner`) which roughly
-# triples runtime. Track it as a follow-up.
+# On push to main only (gated on `build` passing):
+#   4. upload-to-play      — Builds a signed AAB (bundleRelease) using the
+#                            KEYSTORE_BASE64 / KEYSTORE_* secrets and uploads
+#                            to the Play Console internal track via
+#                            r0adkll/upload-google-play@v1. Skipped if
+#                            KEYSTORE_BASE64 is not configured.
+#                            Required repo secrets:
+#                              KEYSTORE_BASE64         base64-encoded .jks
+#                              KEYSTORE_STORE_PASSWORD
+#                              KEYSTORE_KEY_ALIAS
+#                              KEYSTORE_KEY_PASSWORD
+#                              GOOGLE_PLAY_JSON_KEY    Play service-account JSON
+#
+# androidTest runs in the parallel instrumented.yml workflow.
 name: CI
 
 on:
@@ -88,3 +90,63 @@ jobs:
             app/build/reports/lint-results-debug.xml
           if-no-files-found: ignore
           retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # upload-to-play: build a signed AAB and push to Play Console internal track.
+  #
+  # Runs only on push to main (not on pull_request) and only after `build`
+  # passes. Skipped gracefully when KEYSTORE_BASE64 is not configured — safe
+  # for forks and repos that haven't set up Play Console yet.
+  # ---------------------------------------------------------------------------
+  upload-to-play:
+    name: Upload signed AAB to Play Console (internal)
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Gate: push to main only — never run on PRs.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.KEYSTORE_BASE64 != ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # Decode the base64-encoded keystore secret to a temp file so that
+      # Gradle's signing config can reference it via KEYSTORE_PATH.
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.keystore
+
+      - name: Build signed release bundle (bundleRelease)
+        run: ./gradlew bundleRelease --stacktrace
+        env:
+          KEYSTORE_PATH: /tmp/release.keystore
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+
+      # Wipe the keystore from disk immediately after the build step so it
+      # doesn't linger in the runner's temp directory.
+      - name: Shred keystore temp file
+        if: always()
+        run: shred -u /tmp/release.keystore || true
+
+      - name: Upload signed AAB to Play Console internal track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          packageName: com.showerideas.aura
+          releaseFiles: app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed
+          # changesNotSentForReview must be true for internal track uploads via API.
+          changesNotSentForReview: true
