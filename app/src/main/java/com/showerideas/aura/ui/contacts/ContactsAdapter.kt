@@ -19,13 +19,17 @@ class ContactsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(contact: Contact) {
-            binding.tvName.text = contact.displayName.ifBlank { "Unknown" }
+            val ctx = binding.root.context
+            val displayName = contact.displayName.ifBlank {
+                ctx.getString(com.showerideas.aura.R.string.contact_unknown_name)
+            }
+            binding.tvName.text = displayName
             binding.tvSubtitle.text = when {
                 contact.title.isNotBlank() && contact.company.isNotBlank() ->
                     "${contact.title} @ ${contact.company}"
                 contact.email.isNotBlank() -> contact.email
                 contact.phone.isNotBlank() -> contact.phone
-                else -> "AURA contact"
+                else -> ctx.getString(com.showerideas.aura.R.string.contact_subtitle_aura)
             }
             binding.tvInitials.text = contact.displayName
                 .split(" ")
@@ -49,13 +53,19 @@ class ContactsAdapter(
             binding.ivFavouriteBadge.visibility =
                 if (contact.isFavorite) View.VISIBLE else View.GONE
 
-            // PR-17: synthesise a TalkBack-friendly description that
-            // includes the favourite state and tells the user the row is
-            // tappable. The interior TextViews remain unannotated to
-            // avoid double-announcement.
-            val favSuffix = if (contact.isFavorite) ", favourite" else ""
-            binding.root.contentDescription =
-                "${binding.tvName.text}$favSuffix, ${binding.tvSubtitle.text}, double tap to view details"
+            // PR-17: use the pre-translated string resources so TalkBack
+            // descriptions are localised rather than hardcoded English.
+            binding.root.contentDescription = if (contact.isFavorite) {
+                ctx.getString(
+                    com.showerideas.aura.R.string.contact_a11y_row_favourite,
+                    displayName, binding.tvSubtitle.text
+                )
+            } else {
+                ctx.getString(
+                    com.showerideas.aura.R.string.contact_a11y_row,
+                    displayName, binding.tvSubtitle.text
+                )
+            }
 
             binding.root.setOnClickListener { onContactClick(contact) }
         }

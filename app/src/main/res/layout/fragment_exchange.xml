@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/surface_variant"
+        android:background="@drawable/gesture_section_bg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -23,19 +23,38 @@
             android:id="@+id/tv_gesture_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Hold and perform your gesture to confirm"
+            android:text="@string/gesture_show_to_auth"
             android:textColor="@color/on_surface"
             android:textSize="16sp"
             android:gravity="center" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_confirm_gesture"
+        <!-- Camera live preview — auto-detects hand shape for authentication -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/gesture_preview"
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="200dp"
             android:layout_marginTop="12dp"
-            android:text="Hold to Gesture"
-            android:contentDescription="Hold to perform your authentication gesture"
-            app:backgroundTint="@color/aura_cyan_dark" />
+            android:clipToOutline="true"
+            android:background="@drawable/camera_preview_bg"
+            android:contentDescription="@string/gesture_camera_preview_desc" />
+
+        <!--
+          Stability progress bar: 0..100 as consecutive stable frames
+          accumulate. Wired to liveGestureState in ExchangeFragment.
+          importantForAccessibility=no — tv_gesture_status carries the
+          same information verbally for TalkBack users.
+        -->
+        <ProgressBar
+            android:id="@+id/pb_gesture_stability"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/aura_cyan"
+            android:progressBackgroundTint="@color/surface"
+            android:importantForAccessibility="no" />
 
         <TextView
             android:id="@+id/tv_gesture_status"
@@ -43,6 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
+            android:accessibilityLiveRegion="polite"
             android:textColor="@color/on_surface_secondary"
             android:textSize="13sp" />
     </LinearLayout>
@@ -81,7 +101,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="48dp"
-        android:text="Cancel"
+        android:text="@string/action_cancel"
+        android:contentDescription="@string/action_cancel"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

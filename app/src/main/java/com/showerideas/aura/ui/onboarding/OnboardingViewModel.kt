@@ -1,7 +1,10 @@
 package com.showerideas.aura.ui.onboarding
 
+import androidx.camera.view.PreviewView
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.showerideas.aura.auth.CameraHandEmbedder
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.data.ProfileRepository
@@ -25,20 +28,24 @@ class OnboardingViewModel @Inject constructor(
     val gestureRecordingState: StateFlow<GestureAuthManager.RecordingState> =
         gestureAuthManager.recordingState
 
-    fun startGestureRecording() = gestureAuthManager.startRecording()
-    fun stopGestureRecording() = gestureAuthManager.stopRecording()
+    /** Live camera state — drives gesture label + stability bar in the UI. */
+    val liveGestureState: StateFlow<CameraHandEmbedder.GestureState> =
+        gestureAuthManager.liveGestureState
+
+    fun startGestureCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) =
+        gestureAuthManager.startCamera(lifecycleOwner, previewView)
+
+    fun stopGestureCamera() = gestureAuthManager.stopCamera()
+
     fun saveGesturePattern(pattern: GesturePattern) = gestureAuthManager.savePattern(pattern)
 
-    /**
-     * Persist the mini-profile and mark onboarding as complete.
-     */
     fun completeOnboarding(name: String, email: String) {
         viewModelScope.launch {
             val existing = profileRepository.getOrCreate()
             profileRepository.update(
                 existing.copy(
                     displayName = name.trim(),
-                    email = email.trim()
+                    email       = email.trim()
                 )
             )
             onboardingPrefs.setOnboardingComplete(true)

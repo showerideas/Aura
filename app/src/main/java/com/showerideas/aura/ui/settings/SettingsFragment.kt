@@ -1,6 +1,9 @@
 package com.showerideas.aura.ui.settings
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,12 +24,15 @@ import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentSettingsBinding
 import com.showerideas.aura.service.VolumeButtonListenerService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * PR-19: top-level Settings screen. Surfaces:
  *  - Auth method radio group (gesture / biometric — PR-16).
  *  - Background-activation switch (drives [VolumeButtonListenerService]).
+ *  - Prompt-2: reliability warning banner + "Test triple-press now" row.
  *  - Data shortcuts: blocked devices (PR-14), clear gesture, clear all contacts.
  *  - About: version + privacy policy link.
  */
@@ -37,6 +43,13 @@ class SettingsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: SettingsViewModel by viewModels()
+
+    /**
+     * Prompt-2: ephemeral broadcast receiver registered during the 3-second
+     * "Test triple-press now" window. Unregistered immediately on receipt or
+     * when the window expires to avoid leaking a receiver.
+     */
+    private var volumeTestReceiver: BroadcastReceiver? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -88,6 +101,12 @@ class SettingsFragment : Fragment() {
                     if (binding.switchBgActivation.isChecked != enabled) {
                         binding.switchBgActivation.isChecked = enabled
                     }
+                    // Prompt-2: show / hide the reliability warning and test button
+                    // so users understand the OEM-skin limitation whenever the
+                    // feature is enabled.
+                    val warningVisibility = if (enabled) View.VISIBLE else View.GONE
+                    binding.tvVolumeWakeWarning.visibility = warningVisibility
+                    binding.rowTestVolumePress.visibility = warningVisibility
                 }
             }
         }
@@ -99,6 +118,60 @@ class SettingsFragment : Fragment() {
                 VolumeButtonListenerService.stop(requireContext())
             }
         }
+
+        // Prompt-2: "Test triple-press now" — open a 3-second window and
+        // register a one-shot receiver. Toast success/fail, then clean up.
+        binding.rowTestVolumePress.setOnClickListener {
+            startVolumeWakeTest()
+        }
+    }
+
+    /**
+     * Prompt-2: Opens a 3-second window during which the user triple-presses
+     * the volume-down button. A [BroadcastReceiver] listens for
+     * [VolumeButtonListenerService.ACTION_AURA_ACTIVATE]. On receipt a success
+     * Toast is shown. If 3 s elapses without a broadcast, a failure Toast is shown.
+     *
+     * This gives the user immediate, honest feedback about whether their device's
+     * OEM skin routes media buttons through to AURA's MediaSession.
+     */
+    private fun startVolumeWakeTest() {
+        // Unregister any stale receiver from a previous test that didn't clean up.
+        volumeTestReceiver?.let {
+            try { requireContext().unregisterReceiver(it) } catch (_: Exception) {}
+        }
+
+        Toast.makeText(requireContext(), R.string.settings_volume_test_listening, Toast.LENGTH_SHORT).show()
+        Timber.d("Volume wake test window open — listening for ACTION_AURA_ACTIVATE")
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Timber.i("Volume wake test: broadcast received — device is compatible")
+                Toast.makeText(requireContext(), R.string.settings_volume_test_success, Toast.LENGTH_LONG).show()
+                unregisterSelf()
+            }
+        }
+        volumeTestReceiver = receiver
+
+        val filter = IntentFilter(VolumeButtonListenerService.ACTION_AURA_ACTIVATE)
+        requireContext().registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+
+        // Close the window after 3 s regardless of whether we received the broadcast.
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay(3_000L)
+            val still = volumeTestReceiver
+            if (still != null) {
+                Timber.d("Volume wake test: timeout — broadcast not received")
+                Toast.makeText(requireContext(), R.string.settings_volume_test_fail, Toast.LENGTH_LONG).show()
+                try { requireContext().unregisterReceiver(still) } catch (_: Exception) {}
+                volumeTestReceiver = null
+            }
+        }
+    }
+
+    private fun BroadcastReceiver.unregisterSelf() {
+        volumeTestReceiver = null
+        try { requireContext().unregisterReceiver(this) } catch (_: Exception) {}
     }
 
     private fun wireDataSection() {
@@ -156,6 +229,11 @@ class SettingsFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        // Prompt-2: always clean up the test receiver when the fragment tears down
+        volumeTestReceiver?.let {
+            try { requireContext().unregisterReceiver(it) } catch (_: Exception) {}
+        }
+        volumeTestReceiver = null
         super.onDestroyView()
         _binding = null
     }

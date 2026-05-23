@@ -7,19 +7,12 @@
 #   3. assembleRelease     — Full release build (R8 + shrinking). KEYSTORE_*
 #                            env vars are blank in CI so an unsigned APK is
 #                            produced — validates ProGuard rules cheaply.
+#   4. check-no-internet   — Prompt-16: assert INTERNET permission absent.
+#   5. check-mediapipe-classes — Prompt-5: assert MediaPipe classes survived R8.
+#   6. check-apk-size      — Prompt-15: fail if APK exceeds size thresholds.
 #
 # On push to main only (gated on `build` passing):
-#   4. upload-to-play      — Builds a signed AAB (bundleRelease) using the
-#                            KEYSTORE_BASE64 / KEYSTORE_* secrets and uploads
-#                            to the Play Console internal track via
-#                            r0adkll/upload-google-play@v1. Skipped if
-#                            KEYSTORE_BASE64 is not configured.
-#                            Required repo secrets:
-#                              KEYSTORE_BASE64         base64-encoded .jks
-#                              KEYSTORE_STORE_PASSWORD
-#                              KEYSTORE_KEY_ALIAS
-#                              KEYSTORE_KEY_PASSWORD
-#                              GOOGLE_PLAY_JSON_KEY    Play service-account JSON
+#   7. upload-to-play      — Signs and uploads to Play Console internal track.
 #
 # androidTest runs in the parallel instrumented.yml workflow.
 name: CI
@@ -52,8 +45,21 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      # Prompt-5: Cache the MediaPipe gesture model so CI doesn't re-download
+      # 8 MB on every run. Cache key is the expected SHA-256 of the model file
+      # so a model update (different hash) automatically busts the cache.
+      - name: Cache MediaPipe gesture model
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/assets/gesture_recognizer.task
+          key: mediapipe-gesture-model-${{ vars.GESTURE_MODEL_SHA256 || 'latest' }}
+          restore-keys: |
+            mediapipe-gesture-model-
+
       - name: Unit tests (testDebugUnitTest)
         run: ./gradlew testDebugUnitTest --stacktrace
+        env:
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       - name: Android Lint (lintDebug)
         run: ./gradlew lintDebug --stacktrace
@@ -61,14 +67,61 @@ jobs:
       - name: Assemble release (assembleRelease)
         run: ./gradlew assembleRelease --stacktrace
         env:
-          # Intentionally blank in CI. The signing config in
-          # app/build.gradle.kts falls back to empty strings, and Gradle
-          # produces an unsigned release APK. Real release signing is
-          # done in the publishing pipeline with these populated.
           KEYSTORE_PATH: ""
           KEYSTORE_STORE_PASSWORD: ""
           KEYSTORE_KEY_ALIAS: ""
           KEYSTORE_KEY_PASSWORD: ""
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
+
+      # Prompt-16: assert INTERNET permission is NOT in the release APK.
+      # This guards against a transitive dependency accidentally adding it.
+      - name: Check no INTERNET permission in release APK
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          echo "Checking permissions in: $APK"
+          PERMS=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/aapt dump permissions "$APK")
+          echo "$PERMS"
+          if echo "$PERMS" | grep -q "android.permission.INTERNET"; then
+            echo "FAIL: android.permission.INTERNET found in release APK!"
+            echo "A transitive dependency may have added it. Run:"
+            echo "  ./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -i internet"
+            exit 1
+          fi
+          echo "PASS: No INTERNET permission in release APK."
+
+      # Prompt-5: assert MediaPipe classes survived R8. Without the -keep rules
+      # in proguard-rules.pro, R8 strips all com.google.mediapipe.** classes and
+      # the gesture recognizer crashes on first use.
+      - name: Check MediaPipe classes survived R8
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          CLASSES=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/apkanalyzer \
+            classes list "$APK" 2>/dev/null || true)
+          if ! echo "$CLASSES" | grep -q "com/google/mediapipe/tasks/vision"; then
+            echo "FAIL: com.google.mediapipe.tasks.vision.* not found in release APK!"
+            echo "R8 stripped MediaPipe classes. Check proguard-rules.pro MediaPipe section."
+            exit 1
+          fi
+          COUNT=$(echo "$CLASSES" | grep "mediapipe" | wc -l)
+          echo "PASS: Found $COUNT MediaPipe classes in release APK."
+
+      # Prompt-15: fail CI if the APK exceeds size thresholds.
+      # arm64-v8a: 30 MB. armeabi-v7a: 25 MB. (MediaPipe native libs ~10 MB each)
+      - name: Check APK size thresholds
+        run: |
+          for APK in app/build/outputs/apk/release/*.apk; do
+            SIZE_KB=$(du -k "$APK" | cut -f1)
+            SIZE_MB=$(echo "scale=1; $SIZE_KB / 1024" | bc)
+            echo "APK: $APK — ${SIZE_MB} MB (${SIZE_KB} KB)"
+            # Universal / arm64 threshold: 30 MB
+            MAX_KB=30720
+            if [ "$SIZE_KB" -gt "$MAX_KB" ]; then
+              echo "FAIL: APK size (${SIZE_MB} MB) exceeds ${MAX_KB} KB threshold!"
+              echo "Review recent dependency additions or ABI splits."
+              exit 1
+            fi
+            echo "PASS: APK size within threshold."
+          done
 
       - name: Upload unsigned release APK
         if: success()
@@ -93,10 +146,6 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # upload-to-play: build a signed AAB and push to Play Console internal track.
-  #
-  # Runs only on push to main (not on pull_request) and only after `build`
-  # passes. Skipped gracefully when KEYSTORE_BASE64 is not configured — safe
-  # for forks and repos that haven't set up Play Console yet.
   # ---------------------------------------------------------------------------
   upload-to-play:
     name: Upload signed AAB to Play Console (internal)
@@ -104,7 +153,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    # Gate: push to main only — never run on PRs.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.KEYSTORE_BASE64 != ''
 
     steps:
@@ -120,8 +168,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # Decode the base64-encoded keystore secret to a temp file so that
-      # Gradle's signing config can reference it via KEYSTORE_PATH.
+      - name: Cache MediaPipe gesture model
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/assets/gesture_recognizer.task
+          key: mediapipe-gesture-model-${{ vars.GESTURE_MODEL_SHA256 || 'latest' }}
+
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > /tmp/release.keystore
@@ -133,9 +185,8 @@ jobs:
           KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
           KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
-      # Wipe the keystore from disk immediately after the build step so it
-      # doesn't linger in the runner's temp directory.
       - name: Shred keystore temp file
         if: always()
         run: shred -u /tmp/release.keystore || true
@@ -148,5 +199,4 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
-          # changesNotSentForReview must be true for internal track uploads via API.
           changesNotSentForReview: true

@@ -132,36 +132,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Fields to share"
+            android:text="@string/profile_fields_to_share_header"
             android:textColor="@color/on_surface"
             android:textSize="16sp"
             android:textStyle="bold" />
 
         <CheckBox android:id="@+id/cb_share_phone" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Phone" android:checked="true"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_phone"
+            android:checked="true" android:textColor="@color/on_surface" />
         <CheckBox android:id="@+id/cb_share_email" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Email" android:checked="true"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_email"
+            android:checked="true" android:textColor="@color/on_surface" />
         <CheckBox android:id="@+id/cb_share_company" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Company" android:checked="true"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_company"
+            android:checked="true" android:textColor="@color/on_surface" />
         <CheckBox android:id="@+id/cb_share_title" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Title / Role" android:checked="true"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_title"
+            android:checked="true" android:textColor="@color/on_surface" />
         <CheckBox android:id="@+id/cb_share_website" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Website" android:checked="false"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_website"
+            android:checked="false" android:textColor="@color/on_surface" />
         <CheckBox android:id="@+id/cb_share_bio" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Bio" android:checked="false"
-            android:textColor="@color/on_surface" />
+            android:layout_height="wrap_content" android:text="@string/profile_share_bio"
+            android:checked="false" android:textColor="@color/on_surface" />
 
         <!-- Gesture section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Gesture Authentication"
+            android:text="@string/label_gesture"
             android:textColor="@color/on_surface"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -174,6 +174,17 @@
             android:text="@string/profile_gesture_status_none"
             android:textColor="@color/on_surface_secondary"
             android:textSize="13sp" />
+
+        <!-- Camera preview — visible while recording, gone otherwise -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/gesture_preview_profile"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="12dp"
+            android:clipToOutline="true"
+            android:background="@drawable/camera_preview_bg"
+            android:visibility="gone"
+            android:contentDescription="@string/gesture_camera_preview_desc" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_record_gesture"
@@ -242,7 +253,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="Save Profile"
+            android:text="@string/profile_btn_save_profile"
             app:backgroundTint="@color/aura_cyan_dark" />
 
     </LinearLayout>

@@ -1,17 +1,21 @@
 package com.showerideas.aura.model
 
 /**
- * Represents a recorded gesture pattern used to authenticate an exchange.
+ * Represents a recorded hand-gesture biometric pattern.
  *
- * A gesture is a sequence of [GestureEvent]s captured from the device
- * accelerometer/gyroscope during a time window. The pattern is stored as
- * a normalised feature vector for fuzzy matching — exact byte equality is
- * intentionally NOT required (people are not robots).
+ * The credential is a normalised 42-float MediaPipe landmark embedding
+ * (21 hand landmarks × x,y per point, centred on wrist, scaled by
+ * wrist→MCP distance).  Two people making the same named gesture produce
+ * different embeddings because their hand shapes differ — the gesture
+ * label is metadata only.
+ *
+ * Authentication is performed via cosine similarity; see
+ * [com.showerideas.aura.auth.GestureAuthManager.match].
  */
 data class GesturePattern(
     val id: String,
     val label: String = "default",
-    /** Normalised gesture feature vector (magnitude envelope, DTW-ready) */
+    /** Pose-invariant 42-float landmark embedding from [com.showerideas.aura.auth.CameraHandEmbedder]. */
     val featureVector: FloatArray = floatArrayOf(),
     val sampleCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis()
@@ -24,14 +28,3 @@ data class GesturePattern(
 
     override fun hashCode(): Int = 31 * id.hashCode() + featureVector.contentHashCode()
 }
-
-/** A single sensor reading within a gesture recording session. */
-data class GestureEvent(
-    val timestampNs: Long,
-    val ax: Float,  // Accelerometer X
-    val ay: Float,  // Accelerometer Y
-    val az: Float,  // Accelerometer Z
-    val gx: Float = 0f,  // Gyroscope X
-    val gy: Float = 0f,
-    val gz: Float = 0f
-)

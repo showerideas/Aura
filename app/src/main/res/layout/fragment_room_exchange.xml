@@ -32,6 +32,69 @@
             android:text="@string/room_mode_guest" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!--
+      Gesture gate — shown before the session launches when a pattern is
+      stored. Replaced by the normal status/action UI once auth passes.
+    -->
+    <LinearLayout
+        android:id="@+id/gesture_gate_section"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/gesture_section_bg"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/room_mode_toggle"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/gesture_show_to_auth"
+            android:textColor="@color/on_surface"
+            android:textSize="16sp" />
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/gesture_preview_room"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="12dp"
+            android:clipToOutline="true"
+            android:background="@drawable/camera_preview_bg"
+            android:contentDescription="@string/gesture_camera_preview_desc" />
+
+        <!--
+          Stability progress bar: 0..100 as consecutive stable frames accumulate.
+          Mirrors the equivalent bar in fragment_exchange.xml.
+          importantForAccessibility=no — tv_gesture_gate_status carries the
+          same information verbally for TalkBack users.
+        -->
+        <ProgressBar
+            android:id="@+id/pb_gesture_gate_stability"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/aura_cyan"
+            android:progressBackgroundTint="@color/surface"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/tv_gesture_gate_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/on_surface_secondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/tv_room_status"
         android:layout_width="0dp"
@@ -43,7 +106,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/room_mode_toggle" />
+        app:layout_constraintTop_toBottomOf="@id/gesture_gate_section" />
 
     <TextView
         android:id="@+id/tv_room_subtitle"

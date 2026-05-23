@@ -55,6 +55,8 @@
     <string name="perm_reason_location">Android requires this for Bluetooth scanning on older versions.</string>
     <string name="perm_label_nearby_wifi">Nearby Wi-Fi devices</string>
     <string name="perm_reason_nearby_wifi">For higher-speed exchange over Wi-Fi P2P when available.</string>
+    <string name="perm_label_camera">Camera</string>
+    <string name="perm_reason_camera">To read your hand gesture for secure exchange authentication.</string>
     <string name="perm_label_notifications">Notifications</string>
     <string name="perm_reason_notifications">So you see live status while an exchange is running.</string>
     <string name="perm_label_generic">Permission required</string>
@@ -71,6 +73,7 @@
     <string name="onboarding_gesture_skipped">Skipped — you can add a gesture later from the Profile screen.</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_name_required">Please enter your name to continue.</string>
+    <string name="onboarding_email_invalid">Please enter a valid email address.</string>
     <string name="gesture_recording">Perform your gesture now…</string>
     <string name="gesture_saved">Gesture saved!</string>
     <string name="gesture_status_no_gesture">No gesture set yet</string>
@@ -132,8 +135,16 @@
 
     <!-- PR-20: Profile -->
     <string name="profile_btn_record">Record Gesture</string>
-    <string name="profile_btn_recording">Recording… (release to stop)</string>
+    <string name="profile_btn_recording">Hold your gesture steady…</string>
     <string name="profile_btn_rerecord">Re-record Gesture</string>
+
+    <!-- Camera gesture auth strings -->
+    <string name="gesture_show_to_auth">Show your saved hand gesture to authenticate</string>
+    <string name="gesture_camera_preview_desc">Camera preview for gesture authentication</string>
+    <string name="gesture_no_hand">No hand detected — point camera at your hand</string>
+    <string name="gesture_detecting">%1$s %2$s — %3$d%% stable</string>
+    <string name="gesture_stable">%1$s %2$s — hold steady…</string>
+    <string name="gesture_saved_embedding">Hand shape saved — gesture authentication ready</string>
     <string name="profile_gesture_status_perform">Perform your gesture now</string>
     <string name="profile_gesture_status_saved">Gesture saved!</string>
     <string name="profile_gesture_status_saved_idle">Gesture saved</string>
@@ -191,6 +202,13 @@
          language-independent. All locale files fall back to this value. -->
     <string name="privacy_url" translatable="false">https://showerideas.app/aura/privacy</string>
 
+    <!-- Prompt-2: Volume-button reliability disclaimer -->
+    <string name="settings_volume_wake_warning">⚠ Triple-press volume works on Pixel and stock Android. It may not work on Samsung, Xiaomi, OPPO, or other custom Android builds due to OS-level key interception. Use the button below to check your device.</string>
+    <string name="settings_test_volume_press">Test triple-press now</string>
+    <string name="settings_volume_test_listening">Listening for 3 s — triple-press volume ▼</string>
+    <string name="settings_volume_test_success">✓ Triple-press detected — this device is compatible</string>
+    <string name="settings_volume_test_fail">✗ Triple-press not received — not supported on this device</string>
+
     <!-- PR-20: Blocked devices -->
     <string name="blocked_devices_title">Blocked devices</string>
     <string name="blocked_devices_empty">No blocked devices</string>
@@ -207,4 +225,46 @@
         <item quantity="one">%d person joined</item>
         <item quantity="other">%d people joined</item>
     </plurals>
+
+    <!-- ================================================================
+         Strings previously hardcoded in layouts — centralised here so
+         every locale gets a translation automatically.
+         ================================================================ -->
+
+    <!-- Home screen -->
+    <string name="home_activate_hint">Triple-press volume down or tap to share</string>
+
+    <!-- Profile screen — share-field section -->
+    <string name="profile_fields_to_share_header">Fields to share</string>
+    <string name="profile_share_phone">Phone</string>
+    <string name="profile_share_email">Email</string>
+    <string name="profile_share_company">Company</string>
+    <string name="profile_share_title">Title / Role</string>
+    <string name="profile_share_website">Website</string>
+    <string name="profile_share_bio">Bio</string>
+    <string name="profile_btn_save_profile">Save Profile</string>
+
+    <!-- Contacts screen -->
+    <string name="contacts_chip_favourites">★  Favourites</string>
+    <string name="contact_subtitle_aura">AURA contact</string>
+
+    <!-- Contact detail sheet -->
+    <string name="contact_label_phone">Phone</string>
+    <string name="contact_label_email">Email</string>
+    <string name="contact_label_website">Web</string>
+    <string name="action_call">Call</string>
+    <string name="action_email_verb">Email</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_delete">Delete</string>
+    <string name="contact_toggle_favourite_initial">Toggle favourite</string>
+
+    <!-- Gesture / camera -->
+    <string name="gesture_model_error">Camera model failed to load — try restarting the app.</string>
+    <string name="gesture_stability_desc">Gesture stability</string>
+
+    <!-- NearbyExchangeService foreground notification -->
+    <string name="notif_channel_name">AURA Exchange</string>
+    <string name="notif_channel_desc">Active contact exchange in progress</string>
+    <string name="notif_title">AURA Exchange</string>
+    <string name="notif_starting">Starting exchange\u2026</string>
 </resources>

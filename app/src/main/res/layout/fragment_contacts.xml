@@ -35,7 +35,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="4dp"
-        android:text="★  Favourites"
+        android:text="@string/contacts_chip_favourites"
         android:checkable="true"
         style="@style/Widget.MaterialComponents.Chip.Filter"
         app:layout_constraintStart_toStartOf="parent"

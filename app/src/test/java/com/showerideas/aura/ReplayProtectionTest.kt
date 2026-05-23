@@ -123,4 +123,60 @@ class ReplayProtectionTest {
         assertEquals("12345", map["_ts"])
         assertEquals("fixed", map["_nonce"])
     }
+
+    // -----------------------------------------------------------------------
+    // Prompt-6 / Issue-3: per-field length cap tests
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `field at exactly the cap limit is accepted`() {
+        val maxStr = "A".repeat(PayloadValidator.MAX_FIELD_LENGTH)
+        val map = mapOf(
+            "_ts" to now.toString(),
+            "_nonce" to UUID.randomUUID().toString(),
+            "displayName" to maxStr
+        )
+        assertEquals(ValidationResult.Ok, PayloadValidator.validateProfilePayload(map, now))
+    }
+
+    @Test
+    fun `displayName one character over the cap is rejected`() {
+        val tooLong = "A".repeat(PayloadValidator.MAX_FIELD_LENGTH + 1)
+        val map = mapOf(
+            "_ts" to now.toString(),
+            "_nonce" to UUID.randomUUID().toString(),
+            "displayName" to tooLong
+        )
+        val result = PayloadValidator.validateProfilePayload(map, now)
+        assertTrue("Expected FieldTooLong, got $result",
+            result is ValidationResult.FieldTooLong)
+        assertEquals("displayName", (result as ValidationResult.FieldTooLong).field)
+        assertEquals(tooLong.length, result.length)
+    }
+
+    @Test
+    fun `note field over the cap is rejected`() {
+        val tooLong = "x".repeat(PayloadValidator.MAX_FIELD_LENGTH + 1)
+        val map = mapOf(
+            "_ts" to now.toString(),
+            "_nonce" to UUID.randomUUID().toString(),
+            "note" to tooLong
+        )
+        assertTrue(
+            PayloadValidator.validateProfilePayload(map, now) is ValidationResult.FieldTooLong
+        )
+    }
+
+    @Test
+    fun `internal underscore fields are not capped by field-length check`() {
+        // _ts and _nonce are protocol fields; their content is validated by
+        // type (Long / UUID) not length. A 600-char value for an internal
+        // field would fail the toLong() or add-to-set step, not this check.
+        val map = mapOf(
+            "_ts" to now.toString(),
+            "_nonce" to UUID.randomUUID().toString(),
+            "displayName" to "short name"
+        )
+        assertEquals(ValidationResult.Ok, PayloadValidator.validateProfilePayload(map, now))
+    }
 }

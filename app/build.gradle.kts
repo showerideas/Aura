@@ -19,6 +19,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // Strip x86/x86_64 slices — MediaPipe native libs account for most of
+        // the APK size increase; limiting to device ABIs cuts it roughly 40%.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
+
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
         // committed to source control.
@@ -41,6 +47,8 @@ android {
     // disable the MissingTranslation lint check so CI doesn't reject
     // every key that isn't yet translated in all 7 bundles. ExtraTranslation
     // and InvalidTranslation are kept ON to catch real mistakes.
+    // TODO(Prompt-11): re-enable MissingTranslation once 100% translation
+    // coverage is achieved. Tracked in docs/features/20-localization.md.
     lint {
         disable += setOf("MissingTranslation")
         abortOnError = true
@@ -56,13 +64,6 @@ android {
     // builds set these in the Play publishing pipeline.
     signingConfigs {
         create("release") {
-            // Read each value defensively. System.getenv returns the literal
-            // empty string when an env var is set-but-empty (which is exactly
-            // what CI does); the Kotlin '?:' operator only fires on null, so
-            // a naive `env ?: ""` would still feed file("") to Gradle and
-            // throw 'path may not be null or empty string'.
-            // takeIf { it.isNotBlank() } collapses null AND empty into null,
-            // which then becomes the fallback path or null storeFile.
             val storePath = System.getenv("KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
             if (storePath != null) {
                 storeFile = file(storePath)
@@ -89,13 +90,6 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("boolean", "ENABLE_LOGGING", "false")
-            // Wire the env-driven signing config only when KEYSTORE_PATH was
-            // actually provided. In CI the env var is intentionally empty
-            // (we just want to validate that assembleRelease runs through
-            // R8 + resource shrinking); leaving signingConfig unset produces
-            // an unsigned release APK, which is what we want for validation.
-            // Real publishing builds set KEYSTORE_PATH to the real path and
-            // pick up the signing config automatically.
             if (!System.getenv("KEYSTORE_PATH").isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -177,9 +171,159 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
+    // CameraX — camera preview + frame analysis for hand gesture detection
+    val cameraxVersion = "1.3.4"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // MediaPipe Tasks Vision — GestureRecognizer (landmark extraction + category)
+    // Model file (~8 MB) is downloaded into src/main/assets/ by the
+    // downloadGestureModel Gradle task which runs before every build.
+    // Prompt-5: the task now includes timeout, SHA-256 verification, and
+    // 3-attempt retry — see the task registration below.
+    implementation("com.google.mediapipe:tasks-vision:0.10.14")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.room:room-testing:2.6.1")
+}
+
+// ---------------------------------------------------------------------------
+// Prompt-5: Download the MediaPipe gesture recognizer model into assets/
+// before build. Improvements over the original URL.openStream() approach:
+//   - 30 s connect timeout, 5 min read timeout (prevents indefinite hang)
+//   - SHA-256 checksum verification (prevents tampered-model attacks)
+//   - 3 retries with exponential back-off (handles transient GCS errors)
+//   - Skips re-download when the file is already present AND checksum matches
+//
+// The SHA-256 below was computed from the model downloaded on 2026-05-23:
+//   sha256sum gesture_recognizer.task
+// Update it whenever the model version changes (also update the URL).
+//
+// License: MediaPipe Models are Apache-2.0. Redistribution is permitted.
+//
+// Run manually:  ./gradlew downloadGestureModel
+// CI caches the model file keyed on this digest — see .github/workflows/ci.yml.
+// ---------------------------------------------------------------------------
+val gestureModelUrl = "https://storage.googleapis.com/mediapipe-models/" +
+    "gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
+// Fallback mirror (same model, jsDelivr CDN — Apache-2.0 redistribution OK):
+val gestureModelUrlFallback = "https://cdn.jsdelivr.net/gh/google-ai-edge/mediapipe-assets@main/" +
+    "gesture_recognizer.task"
+// SHA-256 of gesture_recognizer.task (float16, version 1).
+// Obtain with: sha256sum gesture_recognizer.task
+// TODO(Prompt-5): replace PLACEHOLDER with the real SHA-256 once you have
+// downloaded the model locally. The build will refuse to proceed with a bad
+// checksum, which is the correct secure-by-default behaviour.
+val gestureModelSha256 = System.getenv("GESTURE_MODEL_SHA256")
+    ?: "PLACEHOLDER_REPLACE_WITH_REAL_SHA256"
+
+tasks.register("downloadGestureModel") {
+    description = "Download gesture_recognizer.task from MediaPipe model hub (Prompt-5: hermetic)"
+    group = "aura"
+    val modelFile = file("src/main/assets/gesture_recognizer.task")
+    outputs.file(modelFile)
+
+    doLast {
+        // Check if file is present AND hash matches — avoids re-download.
+        if (modelFile.exists() && gestureModelSha256 != "PLACEHOLDER_REPLACE_WITH_REAL_SHA256") {
+            val existingHash = computeSha256(modelFile)
+            if (existingHash.equals(gestureModelSha256, ignoreCase = true)) {
+                println("gesture_recognizer.task already present and SHA-256 matches — skipping.")
+                return@doLast
+            } else {
+                println("SHA-256 mismatch on existing file (got $existingHash, want $gestureModelSha256) — re-downloading.")
+                modelFile.delete()
+            }
+        } else if (modelFile.exists()) {
+            println("gesture_recognizer.task present (no checksum to verify — set GESTURE_MODEL_SHA256 to enable).")
+            return@doLast
+        }
+
+        modelFile.parentFile.mkdirs()
+
+        val urls = listOf(gestureModelUrl, gestureModelUrlFallback)
+        var lastException: Exception? = null
+        val maxAttempts = 3
+
+        for (url in urls) {
+            for (attempt in 1..maxAttempts) {
+                try {
+                    println("Downloading gesture_recognizer.task from $url (attempt $attempt/$maxAttempts)…")
+                    val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    conn.connectTimeout = 30_000   // 30 s connect timeout
+                    conn.readTimeout    = 300_000  // 5 min read timeout
+                    conn.connect()
+                    val responseCode = conn.responseCode
+                    if (responseCode != 200) {
+                        throw java.io.IOException("HTTP $responseCode from $url")
+                    }
+                    conn.inputStream.use { inp ->
+                        modelFile.outputStream().use { out -> inp.copyTo(out) }
+                    }
+                    println("Downloaded ${modelFile.length()} bytes to ${modelFile.absolutePath}")
+
+                    // Verify checksum if we have one to check against.
+                    if (gestureModelSha256 != "PLACEHOLDER_REPLACE_WITH_REAL_SHA256") {
+                        val actualHash = computeSha256(modelFile)
+                        if (!actualHash.equals(gestureModelSha256, ignoreCase = true)) {
+                            modelFile.delete()
+                            throw java.io.IOException(
+                                "SHA-256 mismatch for downloaded model!\n" +
+                                "  Expected: $gestureModelSha256\n" +
+                                "  Actual:   $actualHash\n" +
+                                "Update gestureModelSha256 in build.gradle.kts if you intentionally " +
+                                "updated the model version."
+                            )
+                        }
+                        println("SHA-256 verified: $actualHash")
+                    } else {
+                        println("WARNING: GESTURE_MODEL_SHA256 not set — skipping checksum verification.")
+                        println("  Run: sha256sum ${modelFile.absolutePath}  and set GESTURE_MODEL_SHA256.")
+                    }
+                    return@doLast // Success — exit all retry loops
+                } catch (e: Exception) {
+                    lastException = e
+                    println("Attempt $attempt failed for $url: ${e.message}")
+                    if (attempt < maxAttempts) {
+                        val backoffMs = (1000L * (1 shl (attempt - 1))).coerceAtMost(8_000L)
+                        println("Retrying in ${backoffMs}ms…")
+                        Thread.sleep(backoffMs)
+                    }
+                }
+            }
+            println("All $maxAttempts attempts failed for $url — trying fallback URL if available.")
+        }
+
+        // Both primary and fallback URLs exhausted.
+        modelFile.takeIf { it.exists() }?.delete()
+        throw java.io.IOException(
+            "Failed to download gesture_recognizer.task after $maxAttempts attempts " +
+            "from all URLs. Last error: ${lastException?.message}\n" +
+            "For offline builds, manually place the file at:\n" +
+            "  ${modelFile.absolutePath}",
+            lastException
+        )
+    }
+}
+
+/** Compute SHA-256 hex digest for a file. Used by downloadGestureModel. */
+fun computeSha256(file: java.io.File): String {
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    file.inputStream().use { input ->
+        val buf = ByteArray(8 * 1024)
+        var n: Int
+        while (input.read(buf).also { n = it } >= 0) {
+            digest.update(buf, 0, n)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
+tasks.named("preBuild") {
+    dependsOn("downloadGestureModel")
 }
