@@ -26,7 +26,15 @@ data class Contact(
     val rssiAtExchange: Int = 0,
     val receivedAt: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
-    val notes: String = ""
+    val notes: String = "",
+    /**
+     * FIX-5: SHA-256 hash of the peer's identity public key (Base64-encoded),
+     * populated when the contact is saved in [NearbyExchangeService].
+     * Nullable for backward compat (MIGRATION_3_4 adds column DEFAULT NULL).
+     * Used by the "Block device" action so blocking keys on identity hash,
+     * not ephemeral endpoint ID.
+     */
+    val identityKeyHash: String? = null
 ) {
     companion object {
         fun fromMap(id: String, map: Map<String, String>, endpointId: String, rssi: Int = 0): Contact =

@@ -39,6 +39,41 @@ object Migrations {
         }
     }
 
+    /**
+     * FIX-2: add the `known_peers` table for the persisted TOFU endpoint-identity
+     * registry. Schema mirrors [com.showerideas.aura.model.KnownPeer] exactly.
+     */
+    val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS known_peers (
+                    endpointId TEXT NOT NULL PRIMARY KEY,
+                    identityPublicKeyBase64 TEXT NOT NULL,
+                    firstSeenAt INTEGER NOT NULL,
+                    lastSeenAt INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
+    /**
+     * FIX-5: add stable identity-key hash column to both `blocked_endpoints`
+     * and `contacts`. Both columns are nullable (DEFAULT NULL) so existing
+     * rows are unaffected and no backfill is required.
+     */
+    val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE blocked_endpoints ADD COLUMN identityKeyHash TEXT DEFAULT NULL"
+            )
+            db.execSQL(
+                "ALTER TABLE contacts ADD COLUMN identityKeyHash TEXT DEFAULT NULL"
+            )
+        }
+    }
+
     /** Ordered list of every migration the app knows about. */
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 }

@@ -56,16 +56,18 @@ class ContactDetailViewModel @Inject constructor(
     }
 
     /**
-     * PR-14: permanently block the Nearby endpoint that originally sent us
-     * this contact. The next time that endpoint initiates a connection,
-     * [com.showerideas.aura.service.NearbyExchangeService] will reject it
-     * before any handshake. No-op when the contact has no source endpoint
-     * recorded (e.g. legacy rows from before the field was populated).
+     * FIX-5: block this contact's device using stable identity key hash so
+     * the block survives reconnects with a fresh Nearby endpoint ID.
+     * Falls back to endpoint-ID-only block when hash is unavailable (e.g.
+     * legacy contacts saved before FIX-5 populated the field).
+     *
+     * No-op when both endpointId and identityKeyHash are absent (should not
+     * happen for contacts saved after PR-13).
      */
-    fun blockEndpoint(endpointId: String, note: String = "") {
-        if (endpointId.isBlank()) return
+    fun blockEndpoint(endpointId: String, identityKeyHash: String?, note: String = "") {
+        if (endpointId.isBlank() && identityKeyHash == null) return
         viewModelScope.launch {
-            blocklistRepository.block(endpointId, note)
+            blocklistRepository.blockByIdentity(endpointId, identityKeyHash, note)
         }
     }
 }
