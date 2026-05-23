@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — Korean (한국어) translation stub.
-
-  Strings listed here are the high-impact UI surface (navigation,
-  primary buttons, status messages, profile-field hints) translated
-  by the maintainers for v1.1.0. Any string not present here falls
-  back to values/strings.xml (English) via Android's normal resource
-  resolution.
-
-  Pull requests adding more translated keys are welcome — please
-  preserve the existing key order and run `./gradlew lintDebug`
-  before opening.
+  AURA — Korean (한국어) translation — v1.1.0 complete
+  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -28,13 +19,154 @@
     <string name="hint_title">직책 / 역할</string>
     <string name="hint_website">웹사이트</string>
     <string name="hint_bio">소개</string>
-    <string name="search_hint">연락처 검색…</string>
-    <string name="empty_contacts">아직 연락처가 없습니다.\n볼륨 다운을 3번 눌러 공유하세요.</string>
+    <string name="label_share">이 필드 공유</string>
+    <string name="label_gesture">제스처 인증</string>
     <string name="status_advertising">내 존재 알리는 중…</string>
     <string name="status_discovering">주변 AURA 사용자 검색 중…</string>
     <string name="status_connecting">찾았습니다! 연결 중…</string>
     <string name="status_exchanging">연락처를 안전하게 교환 중…</string>
+    <string name="empty_contacts">아직 연락처가 없습니다.\n볼륨 다운을 3번 눌러 공유하세요.</string>
+    <string name="search_hint">연락처 검색…</string>
+    <string name="someone">누군가</string>
     <string name="action_cancel">취소</string>
     <string name="action_continue">계속</string>
     <string name="action_done">완료</string>
+    <string name="exchange_gesture_hint">길게 눌러 제스처를 수행하여 확인</string>
+    <string name="exchange_gesture_confirmed">제스처 확인됨!</string>
+    <string name="exchange_gesture_failed_retry">제스처가 일치하지 않습니다. %1$d회 남았습니다.</string>
+    <string name="exchange_gesture_failed_max">시도 횟수 초과. 교환이 취소되었습니다.</string>
+    <string name="exchange_unprotected_title">제스처 미설정</string>
+    <string name="exchange_unprotected_message">제스처가 설정되지 않았습니다 — 교환이 보호되지 않습니다. 계속할까요?</string>
+    <string name="exchange_completed">%1$s(와)과 교환했습니다!</string>
+    <string name="exchange_cancelled">교환이 취소되었습니다</string>
+    <string name="exchange_error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
+    <string name="exchange_error_bluetooth">교환 실패. 블루투스와 위치 정보가 켜져 있는지 확인하세요.</string>
+    <string name="perm_rationale_title">AURA에 몇 가지 권한이 필요합니다</string>
+    <string name="perm_rationale_subtitle">이 권한들은 AURA가 주변 사람들을 찾고 연락처를 교환하는 데 필요합니다. 기기에서 아무것도 나가지 않습니다.</string>
+    <string name="perm_rationale_open_settings">설정 열기</string>
+    <string name="perm_rationale_not_now">나중에</string>
+    <string name="perm_label_bluetooth_scan">블루투스 스캔</string>
+    <string name="perm_reason_bluetooth_scan">블루투스로 주변 사람을 찾기 위해.</string>
+    <string name="perm_label_bluetooth_advertise">존재 알림</string>
+    <string name="perm_reason_bluetooth_advertise">AURA를 활성화할 때 주변 사람들이 나를 찾을 수 있도록.</string>
+    <string name="perm_label_bluetooth_connect">블루투스 연결</string>
+    <string name="perm_reason_bluetooth_connect">선택한 기기와 암호화된 연락처를 교환하기 위해.</string>
+    <string name="perm_label_location">대략적인 위치</string>
+    <string name="perm_reason_location">이전 Android 버전에서 블루투스 스캔에 필요합니다.</string>
+    <string name="perm_label_nearby_wifi">주변 Wi-Fi 기기</string>
+    <string name="perm_reason_nearby_wifi">가능할 때 Wi-Fi P2P로 빠른 교환을 위해.</string>
+    <string name="perm_label_notifications">알림</string>
+    <string name="perm_reason_notifications">교환 중 실시간 상태를 확인하기 위해.</string>
+    <string name="perm_label_generic">권한 필요</string>
+    <string name="perm_reason_generic">AURA가 올바르게 작동하려면 이 권한이 필요합니다.</string>
+    <string name="onboarding_welcome_tagline">동작 하나로 연락처를 교환하세요.</string>
+    <string name="onboarding_welcome_body">AURA는 종단간 암호화된 블루투스 핸드셰이크를 통해 주변 사람들과 연락처 카드를 교환합니다. 계정도, 서버도 없습니다 — 공유를 선택하기 전까지 기기에서 아무것도 나가지 않습니다.</string>
+    <string name="onboarding_profile_title">당신은 누구인가요?</string>
+    <string name="onboarding_profile_subtitle">꼭 필요한 것만. 나머지는 나중에 프로필 화면에서 추가할 수 있습니다.</string>
+    <string name="onboarding_gesture_title">잠금 해제 제스처 설정</string>
+    <string name="onboarding_gesture_subtitle">나만이 할 법한 빠른 동작을 선택하세요. AURA가 매 교환을 확인하는 데 사용합니다.</string>
+    <string name="onboarding_gesture_skip">지금은 건너뛰기</string>
+    <string name="onboarding_gesture_skipped">건너뜀 — 나중에 프로필 화면에서 제스처를 추가할 수 있습니다.</string>
+    <string name="onboarding_get_started">시작하기</string>
+    <string name="onboarding_name_required">계속하려면 이름을 입력하세요.</string>
+    <string name="gesture_recording">지금 제스처를 수행하세요…</string>
+    <string name="gesture_saved">제스처가 저장되었습니다!</string>
+    <string name="gesture_status_no_gesture">아직 제스처가 설정되지 않았습니다</string>
+    <string name="action_export">내보내기</string>
+    <string name="action_export_all">모두 내보내기</string>
+    <string name="export_all_empty">아직 내보낼 연락처가 없습니다.</string>
+    <string name="home_qr_fallback">연결이 안 되나요? QR 사용</string>
+    <string name="qr_title">스캔하여 페어링</string>
+    <string name="qr_subtitle">상대방에게 이 코드를 스캔하게 하고, 그 다음 상대방 코드를 스캔하세요.</string>
+    <string name="qr_code_image_desc">일회용 페어링 QR 코드</string>
+    <string name="qr_scan_button">상대방 QR 스캔</string>
+    <string name="qr_scan_prompt">상대방 스마트폰의 QR 코드를 향하게 하세요</string>
+    <string name="qr_countdown_template">%1$d초 후 갱신</string>
+    <string name="qr_refreshing">갱신 중…</string>
+    <string name="qr_render_failed">QR 코드를 생성할 수 없습니다.</string>
+    <string name="qr_scan_cancelled">스캔이 취소되었습니다.</string>
+    <string name="qr_invalid">유효한 AURA 페어링 코드가 아닙니다.</string>
+    <string name="qr_expired">페어링 코드가 만료되었습니다. 상대방에게 갱신을 요청하세요.</string>
+    <string name="qr_pairing_ok">%1$s(와)과 페어링했습니다… (릴레이 미구현)</string>
+    <string name="home_room_mode">룸 모드</string>
+    <string name="room_mode_host">룸 호스트</string>
+    <string name="room_mode_guest">룸 참가</string>
+    <string name="room_host_idle_status">룸 열기</string>
+    <string name="room_host_subtitle">주변 최대 10명이 참가하여 카드를 공유할 수 있습니다.</string>
+    <string name="room_guest_idle_status">주변 룸 참가</string>
+    <string name="room_guest_subtitle">호스트의 카드를 받습니다. 내 카드도 답례로 전송됩니다.</string>
+    <string name="room_open_action">룸 열기</string>
+    <string name="room_close_action">룸 닫기</string>
+    <string name="room_join_action">참가</string>
+    <string name="room_guest_done">호스트의 카드를 받았습니다!</string>
+    <string name="room_hold_to_confirm">제스처로 확인하려면 액션 버튼을 길게 누르세요.</string>
+    <string name="profile_avatar_desc">탭하여 프로필 사진 선택</string>
+    <string name="profile_avatar_too_large">이미지가 너무 큽니다 — 더 작은 이미지를 시도해 보세요.</string>
+    <string name="home_greeting">안녕하세요, %1$s</string>
+    <string name="home_greeting_no_profile">시작하려면 프로필을 설정하세요</string>
+    <string name="home_contact_count">%1$d개의 연락처 교환됨</string>
+    <string name="home_aura_button">AURA</string>
+    <string name="profile_btn_record">제스처 녹화</string>
+    <string name="profile_btn_recording">녹화 중… (멈추려면 손 떼기)</string>
+    <string name="profile_btn_rerecord">제스처 다시 녹화</string>
+    <string name="profile_gesture_status_perform">지금 제스처를 수행하세요</string>
+    <string name="profile_gesture_status_saved">제스처가 저장되었습니다!</string>
+    <string name="profile_gesture_status_saved_idle">제스처 저장됨</string>
+    <string name="profile_gesture_status_none">제스처 미설정</string>
+    <string name="profile_saved">프로필이 저장되었습니다</string>
+    <string name="profile_gesture_strength_label">제스처 강도</string>
+    <string name="profile_gesture_strength_a11y">제스처 강도: 5점 만점에 %1$d점</string>
+    <string name="contact_copied">클립보드에 복사되었습니다</string>
+    <string name="contact_unknown_name">알 수 없음</string>
+    <string name="contact_block_button">이 기기 차단</string>
+    <string name="contact_block_dialog_title">이 기기를 차단하시겠습니까?</string>
+    <string name="contact_block_dialog_message">이 기기에서 오는 향후 교환은 자동으로 거부됩니다. 나중에 설정에서 차단을 해제할 수 있습니다.</string>
+    <string name="contact_block_dialog_confirm">차단</string>
+    <string name="contact_a11y_call">%1$s에게 전화</string>
+    <string name="contact_a11y_email">%1$s에게 이메일</string>
+    <string name="contact_a11y_copy">%1$s을(를) 클립보드에 복사</string>
+    <string name="contact_a11y_export">%1$s을(를) vCard로 내보내기</string>
+    <string name="contact_a11y_delete">연락처 %1$s 삭제</string>
+    <string name="contact_a11y_mark_favourite">%1$s을(를) 즐겨찾기로 표시</string>
+    <string name="contact_a11y_unmark_favourite">%1$s 즐겨찾기 해제</string>
+    <string name="contact_a11y_block">이 기기 차단</string>
+    <string name="contact_a11y_row">%1$s, %2$s, 두 번 탭하여 세부 정보 보기</string>
+    <string name="contact_a11y_row_favourite">%1$s, 즐겨찾기, %2$s, 두 번 탭하여 세부 정보 보기</string>
+    <string name="contact_note_hint">메모 추가…</string>
+    <string name="contact_save_note">메모 저장</string>
+    <string name="settings_title">설정</string>
+    <string name="settings_section_auth">인증</string>
+    <string name="settings_section_activation">활성화</string>
+    <string name="settings_section_data">데이터</string>
+    <string name="settings_section_about">정보</string>
+    <string name="settings_auth_method">인증 방법</string>
+    <string name="settings_auth_gesture">제스처</string>
+    <string name="settings_auth_biometric">생체 인증</string>
+    <string name="settings_biometric_unavailable">이 기기에서 사용할 수 없습니다</string>
+    <string name="settings_bg_activation">백그라운드 활성화</string>
+    <string name="settings_blocked_devices">차단된 기기</string>
+    <string name="settings_clear_gesture">제스처 삭제</string>
+    <string name="settings_clear_contacts">모든 연락처 삭제</string>
+    <string name="settings_version">버전</string>
+    <string name="settings_privacy">개인정보 처리방침</string>
+    <string name="settings_clear_gesture_title">녹화된 제스처를 삭제하시겠습니까?</string>
+    <string name="settings_clear_gesture_message">향후 교환에서 제스처 인증을 사용하려면 프로필에서 새 제스처를 녹화해야 합니다.</string>
+    <string name="settings_clear_gesture_confirm">삭제</string>
+    <string name="settings_clear_gesture_done">제스처가 삭제되었습니다</string>
+    <string name="settings_clear_contacts_title">연락처 %1$d개를 모두 삭제하시겠습니까?</string>
+    <string name="settings_clear_contacts_message">이 작업은 되돌릴 수 없습니다.</string>
+    <string name="settings_clear_contacts_confirm">모두 삭제</string>
+    <string name="settings_clear_contacts_done">연락처가 삭제되었습니다</string>
+    <string name="settings_privacy_fallback">개인정보 처리방침: %1$s</string>
+    <string name="blocked_devices_title">차단된 기기</string>
+    <string name="blocked_devices_empty">차단된 기기 없음</string>
+    <string name="blocked_devices_unblock">차단 해제</string>
+    <string name="biometric_title">신원 확인</string>
+    <string name="biometric_subtitle">주변 사람과 연락처 카드를 공유합니다</string>
+    <string name="biometric_negative">취소</string>
+    <string name="biometric_unavailable_fallback">생체 인증 불가, 제스처 사용 중</string>
+    <string name="biometric_auth_failed">인증 실패</string>
+    <plurals name="room_host_count">
+        <item quantity="other">%d명 참가함</item>
+    </plurals>
 </resources>
