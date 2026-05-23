@@ -592,15 +592,24 @@ class NearbyExchangeService : Service() {
                 val challenge = body.copyOfRange(sepIdx + 1, body.size)
                 val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
-                // FIX-2/FIX-3: TOFU registry check — suspend call runs directly
-                // inside the coroutine; no runBlocking needed.
-                val known = knownPeerRepository.getIdentityKey(endpointId)
-                if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
-                    Timber.e("Endpoint $endpointId presented a NEW identity key — possible MITM")
-                    terminateSession(ExchangeSession.State.ERROR); return@launch
-                }
-                if (known == null) {
-                    knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                // FIX-4: sealed result distinguishes NotFound (first-use) from
+                // Corrupt (decode failure). Previously both returned null and were
+                // treated as first-use — a corrupt row would silently re-trust
+                // an attacker's new key.
+                when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
+                    is KnownPeerRepository.IdentityKeyResult.Found -> {
+                        if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            Timber.e("MITM: $endpointId presented different identity key")
+                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                        }
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.NotFound -> {
+                        knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
+                        Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
+                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                    }
                 }
 
                 // Sign the peer's challenge with our own device identity key.
@@ -640,15 +649,21 @@ class NearbyExchangeService : Service() {
                     Timber.e("Challenge verification failed for $endpointId — possible MITM")
                     terminateSession(ExchangeSession.State.ERROR); return@launch
                 }
-                // FIX-2/FIX-3: cross-check against the persisted TOFU registry — suspend
-                // call runs directly inside the coroutine; no runBlocking needed.
-                val known = knownPeerRepository.getIdentityKey(endpointId)
-                if (known != null && !known.encoded.contentEquals(peerIdentityKey.encoded)) {
-                    Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
-                    terminateSession(ExchangeSession.State.ERROR); return@launch
-                }
-                if (known == null) {
-                    knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                // FIX-4: same sealed-result pattern as handleIncomingChallenge.
+                when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
+                    is KnownPeerRepository.IdentityKeyResult.Found -> {
+                        if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
+                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                        }
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.NotFound -> {
+                        knownPeerRepository.upsertIdentityKey(endpointId, peerIdentityKey)
+                    }
+                    is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
+                        Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
+                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                    }
                 }
 
                 challengeVerifiedByEndpoint.add(endpointId)
