@@ -91,7 +91,7 @@ flowchart LR
     subgraph TODO["🛠️&nbsp;Roadmap"]
         direction TB
         g1["7&nbsp;translated<br/>values-xx/"]:::warn
-        g2["Emulator&nbsp;CI<br/>connectedTest"]:::warn
+        g2["Emulator&nbsp;CI<br/>connectedTest"]:::ok
         g3["Signed&nbsp;.aab<br/>→&nbsp;Play&nbsp;Console"]:::warn
         g4["Hosted<br/>privacy&nbsp;URL"]:::warn
     end
@@ -110,7 +110,7 @@ flowchart LR
 |:-:|---|---|---|
 | ~~1~~ | ~~Add a `LICENSE` file.~~ | ✅ **Shipped in #36** | — |
 | ~~2~~ | ~~Commit translated `values-xx/strings.xml`.~~ | ✅ **Shipped in #38** (stubs for HI, ES, FR, DE, JA, KO, ZH-CN — critical UI surface only; full coverage tracked separately) | — |
-| 3 | Add a `connectedAndroidTest` job using [`reactivecircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner) so the four instrumentation tests (`MigrationTest`, `ContactDaoTest`, `BlockedEndpointDaoTest`, `ExchangeFlowEspressoTest`) run on every PR | v1.2.0 | — |
+| ~~3~~ | ~~Add a `connectedAndroidTest` job using `reactivecircus/android-emulator-runner` so the four instrumentation tests run on every PR.~~ | ✅ **Shipped in v1.2.0** — `instrumented.yml` wired; `MigrationTest` (×2) hardened with unique DB names + `@After` teardown; `ExchangeFlowEspressoTest` (×1) hardened with `waitForView`; `continue-on-error` flipped to `false`. | — |
 | 4 | Host the privacy policy at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md` + `STORE_LISTING.md` | v1.3.0 | — |
 | 5 | Wire the release-signing pipeline to a real Play Console upload step using the same env-var contract | v1.3.0 | — |
 

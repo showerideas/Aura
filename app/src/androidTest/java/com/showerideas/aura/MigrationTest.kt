@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.showerideas.aura.data.local.AppDatabase
 import com.showerideas.aura.data.local.Migrations
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -16,21 +17,28 @@ import org.junit.runner.RunWith
 import java.io.IOException
 
 /**
- * Migration test harness — established at v1 so future schema bumps have a
- * working scaffold to extend. Right now there are no migrations to test
- * (we're at version 1), but this verifies:
- *   - the v1 schema file is exported to app/schemas
- *   - MigrationTestHelper can open it
- *   - Room can spin up a database against the latest schema
+ * Migration test harness — each test uses its own uniquely-named database so
+ * tests are fully isolated and can run in any order without file-lock conflicts.
  *
- * When a v1 → v2 migration is added, add a new test alongside [v1_schema_opens]
- * that calls `helper.runMigrationsAndValidate(TEST_DB, 2, true, MIGRATION_1_2)`.
+ * Isolation rules enforced here:
+ *   1. Each test has its own DB name constant (TEST_DB_SCHEMA / _1_2 / _2_3).
+ *   2. [tearDown] deletes all three DB files after every test so no version-
+ *      mismatch state leaks between runs (SQLite refuses downgrade, which is
+ *      how the flake manifested before this fix).
+ *   3. The real Room instance opened in [v1_schema_opens] is registered with
+ *      [helper] via [MigrationTestHelper.closeWhenFinished] instead of being
+ *      closed manually — this guarantees cleanup even if an assertion throws.
+ *   4. Migration tests wrap their [SupportSQLiteDatabase] in try-finally so
+ *      [close] always runs regardless of assertion outcome.
  */
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
 
     companion object {
-        private const val TEST_DB = "migration-test"
+        /** Unique DB names per test — prevents cross-test file-lock conflicts. */
+        private const val TEST_DB_SCHEMA = "migration-test-schema"
+        private const val TEST_DB_1_2    = "migration-test-1-to-2"
+        private const val TEST_DB_2_3    = "migration-test-2-to-3"
     }
 
     @get:Rule
@@ -39,29 +47,45 @@ class MigrationTest {
         AppDatabase::class.java
     )
 
+    /**
+     * Delete all test DB files after each test so that no leftover file at a
+     * higher schema version can prevent a subsequent test from re-creating the
+     * DB at an earlier version.
+     */
+    @After
+    fun tearDown() {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        for (name in listOf(TEST_DB_SCHEMA, TEST_DB_1_2, TEST_DB_2_3)) {
+            ctx.deleteDatabase(name)
+        }
+    }
+
     @Test
     @Throws(IOException::class)
     fun v1_schema_opens() {
         // Create a fresh v1 database from the exported schema and close it.
-        helper.createDatabase(TEST_DB, 1).apply { close() }
+        helper.createDatabase(TEST_DB_SCHEMA, 1).apply { close() }
 
         // Reopen via the real Room build; if migrations weren't wired
         // correctly Room would throw IllegalStateException here.
+        // closeWhenFinished registers the database with the Rule so cleanup
+        // is guaranteed even when assertions throw.
         val db = Room.databaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
             AppDatabase::class.java,
-            TEST_DB
+            TEST_DB_SCHEMA
         )
             .openHelperFactory(FrameworkSQLiteOpenHelperFactory())
             .addMigrations(*Migrations.ALL)
+            .allowMainThreadQueries()
             .build()
+        helper.closeWhenFinished(db)
         assertNotNull(db.contactDao())
         assertNotNull(db.profileDao())
-        db.close()
     }
 
     /**
-     * PR-14: validate the 1→ 2 migration. Inserts a sample contact at v1,
+     * PR-14: validate the 1→2 migration. Inserts a sample contact at v1,
      * runs the migration, and asserts:
      *   - existing rows survive untouched (no data loss)
      *   - the new blocked_endpoints table is now usable
@@ -70,7 +94,7 @@ class MigrationTest {
     @Throws(IOException::class)
     fun migrate_1_to_2_preserves_data_and_creates_blocked_endpoints() {
         // Seed a v1 database with one contact.
-        helper.createDatabase(TEST_DB, 1).use { v1 ->
+        helper.createDatabase(TEST_DB_1_2, 1).use { v1 ->
             v1.execSQL(
                 """
                 INSERT INTO contacts (
@@ -88,28 +112,30 @@ class MigrationTest {
         // Run the migration in isolation and let Room validate the
         // resulting schema against the exported v2 JSON.
         val migrated = helper.runMigrationsAndValidate(
-            TEST_DB, 2, true, Migrations.MIGRATION_1_2
+            TEST_DB_1_2, 2, true, Migrations.MIGRATION_1_2
         )
-
-        // Existing row preserved.
-        migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c1'").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals(1, c.getInt(0))
+        try {
+            // Existing row preserved.
+            migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c1'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(1, c.getInt(0))
+            }
+            // New table exists and is empty.
+            migrated.query("SELECT COUNT(*) FROM blocked_endpoints").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(0, c.getInt(0))
+            }
+            // And it accepts inserts.
+            migrated.execSQL(
+                "INSERT INTO blocked_endpoints (endpointId, blockedAt, note) VALUES ('ep-2', 1, '')"
+            )
+            migrated.query("SELECT note FROM blocked_endpoints WHERE endpointId = 'ep-2'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("", c.getString(0))
+            }
+        } finally {
+            migrated.close()
         }
-        // New table exists and is empty.
-        migrated.query("SELECT COUNT(*) FROM blocked_endpoints").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals(0, c.getInt(0))
-        }
-        // And it accepts inserts.
-        migrated.execSQL(
-            "INSERT INTO blocked_endpoints (endpointId, blockedAt, note) VALUES ('ep-2', 1, '')"
-        )
-        migrated.query("SELECT note FROM blocked_endpoints WHERE endpointId = 'ep-2'").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals("", c.getString(0))
-        }
-        migrated.close()
     }
 
     /**
@@ -123,7 +149,7 @@ class MigrationTest {
     @Throws(IOException::class)
     fun migrate_2_to_3_preserves_data_and_creates_known_peers() {
         // Build a v2 database with seed data in both existing tables.
-        helper.createDatabase(TEST_DB, 2).use { v2 ->
+        helper.createDatabase(TEST_DB_2_3, 2).use { v2 ->
             v2.execSQL(
                 """
                 INSERT INTO contacts (
@@ -143,34 +169,36 @@ class MigrationTest {
 
         // Run MIGRATION_2_3 and let Room validate the resulting schema.
         val migrated = helper.runMigrationsAndValidate(
-            TEST_DB, 3, true, Migrations.MIGRATION_2_3
+            TEST_DB_2_3, 3, true, Migrations.MIGRATION_2_3
         )
-
-        // Existing contacts row preserved.
-        migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c2'").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals(1, c.getInt(0))
+        try {
+            // Existing contacts row preserved.
+            migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c2'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(1, c.getInt(0))
+            }
+            // Existing blocked_endpoints row preserved.
+            migrated.query("SELECT note FROM blocked_endpoints WHERE endpointId = 'ep-bad'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("spammer", c.getString(0))
+            }
+            // New known_peers table exists, starts empty, and accepts inserts.
+            migrated.query("SELECT COUNT(*) FROM known_peers").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(0, c.getInt(0))
+            }
+            migrated.execSQL(
+                """
+                INSERT INTO known_peers (endpointId, identityPublicKeyBase64, firstSeenAt, lastSeenAt)
+                VALUES ('ep-tofu', 'dGVzdA==', 1000, 2000)
+                """.trimIndent()
+            )
+            migrated.query("SELECT identityPublicKeyBase64 FROM known_peers WHERE endpointId = 'ep-tofu'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("dGVzdA==", c.getString(0))
+            }
+        } finally {
+            migrated.close()
         }
-        // Existing blocked_endpoints row preserved.
-        migrated.query("SELECT note FROM blocked_endpoints WHERE endpointId = 'ep-bad'").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals("spammer", c.getString(0))
-        }
-        // New known_peers table exists, starts empty, and accepts inserts.
-        migrated.query("SELECT COUNT(*) FROM known_peers").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals(0, c.getInt(0))
-        }
-        migrated.execSQL(
-            """
-            INSERT INTO known_peers (endpointId, identityPublicKeyBase64, firstSeenAt, lastSeenAt)
-            VALUES ('ep-tofu', 'dGVzdA==', 1000, 2000)
-            """.trimIndent()
-        )
-        migrated.query("SELECT identityPublicKeyBase64 FROM known_peers WHERE endpointId = 'ep-tofu'").use { c ->
-            assertTrue(c.moveToFirst())
-            assertEquals("dGVzdA==", c.getString(0))
-        }
-        migrated.close()
     }
 }
