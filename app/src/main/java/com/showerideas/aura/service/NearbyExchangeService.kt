@@ -33,6 +33,7 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -186,10 +187,10 @@ class NearbyExchangeService : Service() {
 
     // Per-session ephemeral ECDH state (peer-to-peer & room-guest modes).
     private var ourKeyPair: java.security.KeyPair? = null
-    private var sessionKey: javax.crypto.SecretKey? = null
-    private var connectedEndpoint: String? = null
-    private var peerPublicKey: PublicKey? = null
-    private var handshakeState: HandshakeState = HandshakeState.IDLE
+    @Volatile private var sessionKey: javax.crypto.SecretKey? = null
+    @Volatile private var connectedEndpoint: String? = null
+    @Volatile private var peerPublicKey: PublicKey? = null
+    @Volatile private var handshakeState: HandshakeState = HandshakeState.IDLE
 
     /**
      * PR-13: per-session challenge bookkeeping.
@@ -197,9 +198,13 @@ class NearbyExchangeService : Service() {
      *    the peer's signature against these on receipt of the response.
      *  - challengeVerifiedByEndpoint: latched true once the peer's response
      *    passes verification. ECDH key sending is gated behind this flag.
+     *
+     * FIX-2: ConcurrentHashMap / newKeySet() — Nearby callbacks and
+     * Dispatchers.IO coroutines both access these concurrently. Plain
+     * mutableMapOf/mutableSetOf are not thread-safe.
      */
-    private val pendingChallengeByEndpoint = mutableMapOf<String, ByteArray>()
-    private val challengeVerifiedByEndpoint = mutableSetOf<String>()
+    private val pendingChallengeByEndpoint = ConcurrentHashMap<String, ByteArray>()
+    private val challengeVerifiedByEndpoint: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     /** Active exchange mode for the in-flight session (PR-09). */
     private var currentMode: ExchangeSession.ExchangeMode =
@@ -215,7 +220,7 @@ class NearbyExchangeService : Service() {
         var sessionKey: javax.crypto.SecretKey? = null,
         var peerPub: PublicKey? = null
     )
-    private val peerCtxByEndpoint = mutableMapOf<String, PeerCtx>()
+    private val peerCtxByEndpoint = ConcurrentHashMap<String, PeerCtx>()
 
     // -------------------------------------------------------------------------
     // Service lifecycle
@@ -469,7 +474,9 @@ class NearbyExchangeService : Service() {
      * avatar STREAM with [MSG_TYPE_AVATAR]. Cleared once we've ingested
      * the STREAM (or dropped it for being oversized / missing contact).
      */
-    private val awaitingAvatarStream: MutableSet<String> = mutableSetOf()
+    // FIX-2: ConcurrentHashMap.newKeySet() — accessed from both Nearby
+    // payload callback thread and Dispatchers.IO coroutines concurrently.
+    private val awaitingAvatarStream: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
