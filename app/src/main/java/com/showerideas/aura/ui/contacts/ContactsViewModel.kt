@@ -39,7 +39,12 @@ class ContactsViewModel @Inject constructor(
                     list.filter {
                         it.displayName.contains(query, ignoreCase = true) ||
                             it.email.contains(query, ignoreCase = true) ||
-                            it.phone.contains(query, ignoreCase = true)
+                            it.phone.contains(query, ignoreCase = true) ||
+                            it.company.contains(query, ignoreCase = true) ||
+                            it.title.contains(query, ignoreCase = true) ||
+                            it.notes.contains(query, ignoreCase = true) ||
+                            it.bio.contains(query, ignoreCase = true) ||
+                            it.website.contains(query, ignoreCase = true)
                     }
                 }
                 query.isBlank() -> contactRepository.allContacts

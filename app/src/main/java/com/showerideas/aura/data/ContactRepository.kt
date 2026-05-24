@@ -11,6 +11,13 @@ class ContactRepository @Inject constructor(
     private val contactDao: ContactDao
 ) {
     val allContacts: Flow<List<Contact>> = contactDao.observeAll()
+
+    /**
+     * Alias for [allContacts] — used by [com.showerideas.aura.utils.IdentityRotationDetector]
+     * and other callers that prefer the shorter property name.
+     */
+    val contacts: Flow<List<Contact>> get() = allContacts
+
     val favorites: Flow<List<Contact>> = contactDao.observeFavorites()
 
     fun search(query: String): Flow<List<Contact>> = contactDao.search(query)

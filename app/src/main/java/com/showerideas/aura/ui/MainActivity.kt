@@ -21,7 +21,9 @@ import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
 import com.showerideas.aura.service.NearbyExchangeService
+import com.showerideas.aura.service.NfcExchangeHelper
 import com.showerideas.aura.service.VolumeButtonListenerService
+import com.showerideas.aura.utils.CryptoUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -95,6 +97,34 @@ class MainActivity : AppCompatActivity() {
         setupNavigation()
         checkAndRequestPermissions()
         registerActivationReceiver()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Generate a fresh ephemeral ECDH keypair for this foreground session
+        // and store it in the service companion so NfcExchangeHelper can advertise
+        // our public key over NFC.  A new pair is generated on every onResume so
+        // we never reuse keys across sessions.
+        val kp = CryptoUtils.generateEphemeralECDHKeyPair()
+        NearbyExchangeService.nfcLocalKeyPair = kp
+        NfcExchangeHelper.enable(this, kp.public, java.util.UUID.randomUUID().toString())
+    }
+
+    override fun onPause() {
+        NfcExchangeHelper.disable(this)
+        super.onPause()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val bootstrap = NfcExchangeHelper.handleIntent(intent) ?: return
+        Timber.i("NFC tap received — peerSession=${bootstrap.peerSessionUuid}")
+        NearbyExchangeService.pendingNfcBootstrap = bootstrap
+        // Navigate to the exchange screen so the user can complete the tap-to-pair flow.
+        if (navController.currentDestination?.id != R.id.exchangeFragment) {
+            navController.navigate(R.id.exchangeFragment)
+        }
     }
 
     override fun onDestroy() {

@@ -93,4 +93,56 @@ object AvatarUtils {
             null
         }
     }
+
+    /**
+     * Load the avatar bitmap for a contact, falling back to an identicon when no
+     * photo is available.
+     *
+     * Resolution order:
+     *  1. Photo saved to [peerAvatarFile] (real photo from exchange).
+     *  2. [IdenticonGenerator] bitmap derived from [identityKeyHash] (or [contactId]
+     *     if the identity hash is null — e.g. legacy contacts before FIX-5).
+     *
+     * The returned bitmap is always non-null: every contact has a visual identity.
+     *
+     * @param context        Android context.
+     * @param contactId      Contact UUID (fallback seed if identityKeyHash is null).
+     * @param identityKeyHash SHA-256 Base64 fingerprint — preferred seed for identicon.
+     * @param size           Desired pixel dimension (square). Defaults to [MAX_DIMENSION].
+     */
+    fun loadOrGenerateAvatar(
+        context: Context,
+        contactId: String,
+        identityKeyHash: String?,
+        size: Int = MAX_DIMENSION
+    ): Bitmap {
+        val photoFile = peerAvatarFile(context, contactId)
+        val photo = loadBitmap(photoFile)
+        if (photo != null) return photo
+
+        // Generate identicon from the most stable seed available
+        val seed = identityKeyHash?.takeIf { it.isNotBlank() } ?: contactId
+        Timber.d("Avatar: generating identicon for contact $contactId (seed=${seed.take(12)}…)")
+        return IdenticonGenerator.generate(seed, size)
+    }
+
+    /**
+     * Load the user's own avatar, falling back to an identicon seeded from [selfSeed]
+     * (typically the device identity key hash).
+     *
+     * @param context   Android context.
+     * @param selfSeed  Seed for identicon — e.g. CryptoUtils.identityKeyHash(pubKey).
+     * @param size      Desired pixel dimension (square). Defaults to [MAX_DIMENSION].
+     */
+    fun loadOrGenerateSelfAvatar(
+        context: Context,
+        selfSeed: String,
+        size: Int = MAX_DIMENSION
+    ): Bitmap {
+        val photo = loadBitmap(userAvatarFile(context))
+        if (photo != null) return photo
+
+        Timber.d("Avatar: generating self-identicon (seed=${selfSeed.take(12)}…)")
+        return IdenticonGenerator.generate(selfSeed, size)
+    }
 }

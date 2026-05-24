@@ -199,14 +199,25 @@ class OnboardingFragment : Fragment() {
             }
         }
 
-        // Auto-save on first stable embedding
+        // Auto-save on first stable embedding; surface errors (e.g. liveness failures)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.gestureRecordingState.collect { state ->
-                    if (state is GestureAuthManager.RecordingState.Complete) {
-                        viewModel.saveGesturePattern(state.pattern)
-                        viewModel.stopGestureCamera()
-                        statusTv.setText(R.string.gesture_saved_embedding)
+                    when (state) {
+                        is GestureAuthManager.RecordingState.Complete -> {
+                            viewModel.saveGesturePattern(state.pattern)
+                            viewModel.stopGestureCamera()
+                            statusTv.setText(R.string.gesture_saved_embedding)
+                        }
+                        is GestureAuthManager.RecordingState.Error -> {
+                            // Show the error (e.g. "Liveness check failed — please use a live hand")
+                            // then reset the pipeline so the user can try again without restarting
+                            // the camera. The 2 s pause gives them time to read the message.
+                            statusTv.text = state.message
+                            kotlinx.coroutines.delay(2_000)
+                            viewModel.resetGestureCapture()
+                        }
+                        else -> { /* Idle / Recording — driven by liveGestureState above */ }
                     }
                 }
             }

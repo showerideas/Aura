@@ -15,15 +15,24 @@ data class ExchangeSession(
     val connectedEndpointId: String? = null,
     val receivedContact: Contact? = null,
     val errorMessage: String? = null,
-    val startedAt: Long = System.currentTimeMillis()
+    val startedAt: Long = System.currentTimeMillis(),
+    /**
+     * Short Authentication String for first-meet MITM protection.
+     * Both peers display this 6-digit code; users verbally confirm they match
+     * before the profile payload is transmitted. Non-null only while the session
+     * is in [State.VERIFYING]. Derived via SHA-256 over both ephemeral ECDH public
+     * keys — a MITM who substitutes their own key produces a different code.
+     */
+    val sasPin: String? = null
 ) {
     enum class State {
-        // FIX-7: State flow (all states are now emitted at the correct point):
-        //   ADVERTISING → DISCOVERING → CONNECTING → EXCHANGING → COMPLETED | CANCELLED | ERROR
+        // State flow (all states emitted at the correct point):
+        //   ADVERTISING → DISCOVERING → CONNECTING → VERIFYING → EXCHANGING → COMPLETED | CANCELLED | ERROR
         //
         //   ADVERTISING:  emitted when startAdvertisingAndDiscovery() begins.
         //   DISCOVERING:  emitted after both startAdvertising AND startDiscovery succeed.
         //   CONNECTING:   emitted in onConnectionResult on success.
+        //   VERIFYING:    emitted after ECDH — user must confirm SAS before profile is sent.
         //   EXCHANGING:   emitted at the start of sendProfile() and handleIncomingProfile().
         //   COMPLETED:    emitted when contact is saved and session succeeds.
         //   CANCELLED:    emitted on user cancel or session timeout.
@@ -35,7 +44,13 @@ data class ExchangeSession(
         DISCOVERING,
         /** Negotiating connection with a peer */
         CONNECTING,
-        /** Authenticated — currently exchanging profile data */
+        /**
+         * ECDH handshake complete — waiting for the user to verify the SAS PIN
+         * with their peer before the profile payload is transmitted.
+         * [ExchangeSession.sasPin] holds the 6-digit code to display.
+         */
+        VERIFYING,
+        /** SAS confirmed — currently exchanging profile data */
         EXCHANGING,
         /** Exchange completed successfully */
         COMPLETED,

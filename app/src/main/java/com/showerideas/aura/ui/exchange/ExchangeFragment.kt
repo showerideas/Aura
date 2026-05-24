@@ -16,6 +16,7 @@ import com.showerideas.aura.R
 import com.showerideas.aura.auth.BiometricAuthHelper
 import com.showerideas.aura.auth.CameraHandEmbedder
 import com.showerideas.aura.auth.GestureAuthManager
+import com.showerideas.aura.auth.LivenessGuard
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentExchangeBinding
 import com.showerideas.aura.model.ExchangeSession
@@ -54,6 +55,8 @@ class ExchangeFragment : Fragment() {
      * success or final failure — we no longer want to act on another emission.
      */
     private var gestureValidated = false
+    /** Ensures the SAS dialog is shown at most once per session. */
+    private var sasDialogShown = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -151,6 +154,25 @@ class ExchangeFragment : Fragment() {
                 }
             }
         }
+
+        // Real-time liveness indicator — the gesture hint text gains a small
+        // emoji badge so the user can see the anti-spoofing guard is active.
+        // We update tvGestureHint (the static "hold your gesture" label)
+        // rather than tvGestureStatus to avoid clobbering dynamic detection text.
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.livenessResult.collect { result ->
+                    val badge = when (result) {
+                        is LivenessGuard.Result.Collecting -> getString(R.string.gesture_show_to_auth)
+                        is LivenessGuard.Result.Live       ->
+                            getString(R.string.gesture_show_to_auth) + "  \uD83D\uDFE2"   // 🟢
+                        is LivenessGuard.Result.Spoof      ->
+                            getString(R.string.gesture_show_to_auth) + "  \u26A0\uFE0F"   // ⚠️
+                    }
+                    binding.tvGestureHint.text = badge
+                }
+            }
+        }
     }
 
     private fun onGestureComplete() {
@@ -244,6 +266,7 @@ class ExchangeFragment : Fragment() {
             ExchangeSession.State.ADVERTISING -> getString(R.string.status_advertising) to true
             ExchangeSession.State.DISCOVERING -> getString(R.string.status_discovering) to true
             ExchangeSession.State.CONNECTING  -> getString(R.string.status_connecting)  to true
+            ExchangeSession.State.VERIFYING   -> getString(R.string.status_verifying)   to false
             ExchangeSession.State.EXCHANGING  -> getString(R.string.status_exchanging)  to true
             ExchangeSession.State.COMPLETED   -> {
                 val name = session.receivedContact?.displayName?.takeIf { it.isNotBlank() }
@@ -256,6 +279,15 @@ class ExchangeFragment : Fragment() {
         binding.tvStatus.text = statusText
         binding.progressBar.visibility = if (showProgress) View.VISIBLE else View.GONE
 
+        // Show SAS verification dialog exactly once when VERIFYING state is reached.
+        if (session.state == ExchangeSession.State.VERIFYING &&
+            session.sasPin != null &&
+            !sasDialogShown
+        ) {
+            sasDialogShown = true
+            showSasDialog(session.sasPin)
+        }
+
         if (session.state == ExchangeSession.State.COMPLETED) {
             binding.btnCancel.setText(R.string.action_done)
             binding.btnCancel.setOnClickListener {
@@ -266,6 +298,32 @@ class ExchangeFragment : Fragment() {
             val error = session.errorMessage ?: getString(R.string.exchange_error_generic)
             Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
         }
+    }
+
+    /**
+     * Display the SAS (Short Authentication String) verification dialog.
+     *
+     * Both parties see the same 6-digit PIN derived from their ephemeral ECDH keys.
+     * If a MITM substituted their own key, the PINs will differ.
+     *
+     * Security: this is an out-of-band verbal comparison. The user must confirm
+     * the codes match WITH THEIR PEER IN PERSON before pressing "Match ✓".
+     * Pressing "Mismatch" aborts the session with an error — no profile data is
+     * transmitted to either party.
+     */
+    private fun showSasDialog(pin: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.sas_dialog_title))
+            .setMessage(getString(R.string.sas_dialog_message, pin))
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
+                viewModel.confirmSas()
+            }
+            .setNegativeButton(getString(R.string.sas_dialog_mismatch)) { _, _ ->
+                viewModel.abortSas()
+                findNavController().navigateUp()
+            }
+            .show()
     }
 
     override fun onDestroyView() {

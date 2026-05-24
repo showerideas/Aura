@@ -22,7 +22,10 @@ import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.ui.MainActivity
 import com.showerideas.aura.utils.CryptoUtils
+import com.showerideas.aura.utils.DoubleRatchetState
+import com.showerideas.aura.utils.IdentityRotationDetector
 import com.showerideas.aura.utils.PayloadValidator
+import com.showerideas.aura.utils.SasVerifier
 import com.showerideas.aura.utils.vibrateDouble
 import com.showerideas.aura.utils.vibrateShort
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,6 +70,10 @@ class NearbyExchangeService : Service() {
         const val ACTION_START_ROOM_GUEST = "com.showerideas.aura.nearby.START_ROOM_GUEST"
         const val ACTION_STATE_UPDATE = "com.showerideas.aura.nearby.STATE_UPDATE"
         const val EXTRA_STATE = "extra_state"
+        // SAS verification actions — sent from ExchangeFragment once the user
+        // has confirmed (or denied) that the 6-digit SAS PIN matches their peer.
+        const val ACTION_CONFIRM_SAS = "com.showerideas.aura.nearby.CONFIRM_SAS"
+        const val ACTION_ABORT_SAS   = "com.showerideas.aura.nearby.ABORT_SAS"
 
         private const val SERVICE_ID = "com.showerideas.aura"
         private const val CHANNEL_ID = "aura_exchange_channel"
@@ -104,6 +111,30 @@ class NearbyExchangeService : Service() {
         private val _connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
         val connectedCount: StateFlow<Int> = _connectedCount.asStateFlow()
 
+        // -----------------------------------------------------------------------
+        // NFC bootstrap (tap-to-pair) integration.
+        //
+        // MainActivity writes [nfcLocalKeyPair] in onResume so NfcExchangeHelper
+        // can advertise our ephemeral ECDH public key over NFC.  When the peer taps,
+        // MainActivity stores their key bootstrap here before navigating to
+        // ExchangeFragment. The service reads these on session start to pre-seed
+        // the ECDH handshake, skipping the Nearby Connections key-exchange round trip.
+        //
+        // Both fields are @Volatile so MainActivity (UI thread) and the service
+        // coroutine (IO thread) see consistent values without locking.
+        // -----------------------------------------------------------------------
+
+        /** Ephemeral ECDH keypair generated in onResume, advertised over NFC. */
+        @Volatile var nfcLocalKeyPair: java.security.KeyPair? = null
+
+        /**
+         * Peer's key bootstrap received from an NFC tap.
+         * Non-null signals that the next session should skip the MSG_TYPE_PUBLIC_KEY
+         * exchange and derive the session key directly from the NFC-exchanged keys.
+         * Cleared to null at the start of each session once consumed.
+         */
+        @Volatile var pendingNfcBootstrap: NfcExchangeHelper.NfcBootstrap? = null
+
         /**
          * Gate flag — the exchange service refuses to advance past
          * [startSession] until the UI/auth layer flips this to true via
@@ -135,6 +166,29 @@ class NearbyExchangeService : Service() {
         fun markGestureVerified() {
             gestureVerified = true
             Timber.d("Gesture verified — exchange gate opened")
+        }
+
+        /**
+         * Called by [com.showerideas.aura.ui.exchange.ExchangeFragment] when the user
+         * taps "Confirm" on the SAS verification dialog — both parties see the same
+         * 6-digit PIN and agree it matches. The service then calls [sendProfile] to
+         * complete the exchange.
+         */
+        fun confirmSas(context: Context) {
+            context.startService(Intent(context, NearbyExchangeService::class.java).apply {
+                action = ACTION_CONFIRM_SAS
+            })
+        }
+
+        /**
+         * Called by [com.showerideas.aura.ui.exchange.ExchangeFragment] when the user
+         * taps "Mismatch" on the SAS dialog — the PINs do not agree, indicating a
+         * possible MITM. The service terminates the session with an error.
+         */
+        fun abortSas(context: Context) {
+            context.startService(Intent(context, NearbyExchangeService::class.java).apply {
+                action = ACTION_ABORT_SAS
+            })
         }
 
         fun start(context: Context) {
@@ -170,6 +224,8 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var blocklistRepository: BlocklistRepository
     /** FIX-2: persisted TOFU endpoint-identity registry. */
     @Inject lateinit var knownPeerRepository: KnownPeerRepository
+    /** Cross-session identity-key rotation detector — warns when a returning peer presents a new key. */
+    @Inject lateinit var identityRotationDetector: IdentityRotationDetector
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -193,6 +249,16 @@ class NearbyExchangeService : Service() {
     @Volatile private var connectedEndpoint: String? = null
     @Volatile private var peerPublicKey: PublicKey? = null
     @Volatile private var handshakeState: HandshakeState = HandshakeState.IDLE
+
+    // DoubleRatchet states for per-message key derivation. Directionally separated:
+    // sendRatchet is seeded from "aura-init-send" (or "aura-init-recv" for responder)
+    // so the two peers never encrypt with the same chain key in the same direction.
+    @Volatile private var sendRatchet: DoubleRatchetState? = null
+    @Volatile private var recvRatchet: DoubleRatchetState? = null
+
+    // SAS verification gate: holds the endpoint ID whose sendProfile() call is
+    // pending until the user confirms the SAS PIN. Null when not waiting.
+    @Volatile private var pendingSasEndpointId: String? = null
 
     /**
      * Prompt-6 / Issue-1: TOCTOU guard for P2P connection requests.
@@ -239,7 +305,11 @@ class NearbyExchangeService : Service() {
     private data class PeerCtx(
         var handshake: HandshakeState = HandshakeState.IDLE,
         var sessionKey: javax.crypto.SecretKey? = null,
-        var peerPub: PublicKey? = null
+        var peerPub: PublicKey? = null,
+        // Per-guest ratchets (room-host mode). Host is always the "responder",
+        // so it uses "aura-init-recv" for send and "aura-init-send" for recv.
+        var sendRatchet: DoubleRatchetState? = null,
+        var recvRatchet: DoubleRatchetState? = null
     )
     private val peerCtxByEndpoint = ConcurrentHashMap<String, PeerCtx>()
 
@@ -268,6 +338,25 @@ class NearbyExchangeService : Service() {
             ACTION_START_ROOM_HOST -> startSession(ExchangeSession.ExchangeMode.ROOM_HOST)
             ACTION_START_ROOM_GUEST -> startSession(ExchangeSession.ExchangeMode.ROOM_GUEST)
             ACTION_STOP -> terminateSession(ExchangeSession.State.CANCELLED)
+            ACTION_CONFIRM_SAS -> {
+                // User confirmed the SAS PIN matches — proceed with profile exchange.
+                val ep = pendingSasEndpointId
+                if (ep != null) {
+                    Timber.i("SAS confirmed by user — sending profile to $ep")
+                    pendingSasEndpointId = null
+                    sendProfile(ep)
+                } else {
+                    Timber.w("ACTION_CONFIRM_SAS received but no pending SAS endpoint")
+                }
+            }
+            ACTION_ABORT_SAS -> {
+                Timber.w("SAS mismatch reported by user — aborting exchange (possible MITM)")
+                pendingSasEndpointId = null
+                terminateSession(
+                    ExchangeSession.State.ERROR,
+                    "Security check failed. The codes didn't match — possible MITM attack."
+                )
+            }
         }
         return START_NOT_STICKY
     }
@@ -313,7 +402,39 @@ class NearbyExchangeService : Service() {
 
         sessionId = UUID.randomUUID().toString()
         currentMode = mode
-        ourKeyPair = CryptoUtils.generateEphemeralECDHKeyPair()
+
+        // NFC bootstrap: if MainActivity performed a tap-to-pair, reuse the
+        // keypair that was already advertised over NFC so both sides derive the
+        // same session key.  Clear the companion fields immediately so a stale
+        // bootstrap is never reused by a later session.
+        val nfcBootstrap = pendingNfcBootstrap.also { pendingNfcBootstrap = null }
+        ourKeyPair = nfcLocalKeyPair?.also { nfcLocalKeyPair = null }
+            ?: CryptoUtils.generateEphemeralECDHKeyPair()
+
+        if (nfcBootstrap != null) {
+            Timber.i("NFC bootstrap present for session $sessionId — skipping Nearby key exchange")
+            // Pre-seed peer public key so handleIncomingPublicKey becomes a no-op
+            // when the peer's Nearby key-exchange message arrives.  Both peers
+            // will still complete the ECDSA challenge/response phase normally.
+            runCatching {
+                val kf = java.security.KeyFactory.getInstance("EC")
+                peerPublicKey = kf.generatePublic(
+                    java.security.spec.X509EncodedKeySpec(nfcBootstrap.peerPublicKeyBytes)
+                )
+                sessionKey = CryptoUtils.deriveSharedAESKey(ourKeyPair!!.private, peerPublicKey!!)
+                // NFC scanner is the "responder" by convention.
+                val (sr, rr) = initDirectionalRatchets(sessionKey!!, isInitiator = false)
+                sendRatchet = sr; recvRatchet = rr
+                handshakeState = HandshakeState.COMPLETE
+                Timber.d("NFC-derived session key ready (peerSession=${nfcBootstrap.peerSessionUuid})")
+            }.onFailure {
+                Timber.e(it, "Failed to decode NFC peer key — falling back to Nearby key exchange")
+                peerPublicKey = null
+                sessionKey = null
+                handshakeState = HandshakeState.IDLE
+            }
+        }
+
         _connectedCount.value = 0
         peerCtxByEndpoint.clear()
 
@@ -337,14 +458,30 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    private fun terminateSession(endState: ExchangeSession.State) {
+    /**
+     * End the current session with [endState].
+     *
+     * @param endState     The terminal state (COMPLETED / CANCELLED / ERROR).
+     * @param errorMessage Optional human-readable reason surfaced to the UI.
+     *   When null and endState == ERROR, any message already in [sessionState]
+     *   is preserved so a prior [updateSessionState] call is not clobbered.
+     */
+    private fun terminateSession(
+        endState: ExchangeSession.State,
+        errorMessage: String? = null
+    ) {
         timeoutJob?.cancel()
         connectionsClient.stopAllEndpoints()
         connectionsClient.stopAdvertising()
         connectionsClient.stopDiscovery()
 
         val current = sessionState.value
-        _sessionState.value = current?.copy(state = endState)
+        // Preserve a previously-set errorMessage when no new one is supplied, so
+        // calling updateSessionState(ERROR, "reason") followed by terminateSession(ERROR)
+        // does not clobber the message with null.
+        val finalMessage = errorMessage
+            ?: if (endState == ExchangeSession.State.ERROR) current?.errorMessage else null
+        _sessionState.value = current?.copy(state = endState, errorMessage = finalMessage)
         broadcastState(sessionState.value)
 
         // Reset the gate so the next exchange must re-authenticate.
@@ -356,6 +493,10 @@ class NearbyExchangeService : Service() {
         handshakeState = HandshakeState.IDLE
         peerPublicKey = null
         sessionKey = null
+        // Clear ratchet state and any pending SAS gate.
+        sendRatchet = null
+        recvRatchet = null
+        pendingSasEndpointId = null
         // PR-13: drop per-session challenge bookkeeping. The process-wide
         // peerIdentityRegistry is intentionally preserved across sessions
         // — that's the trust-on-first-use anchor.
@@ -642,7 +783,9 @@ class NearbyExchangeService : Service() {
                 // still rejected as soon as its identity key is decoded.
                 if (blocklistRepository.isBlockedByKeyHash(peerIdentityKey)) {
                     Timber.i("Rejected blocked identity key for endpoint $endpointId")
-                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                    terminateSession(ExchangeSession.State.ERROR,
+                        "This device is blocked. Exchange rejected.")
+                    return@launch
                 }
 
                 // FIX-4: sealed result distinguishes NotFound (first-use) from
@@ -653,7 +796,9 @@ class NearbyExchangeService : Service() {
                     is KnownPeerRepository.IdentityKeyResult.Found -> {
                         if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
                             Timber.e("MITM: $endpointId presented different identity key")
-                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                            terminateSession(ExchangeSession.State.ERROR,
+                                "Security alert: This device's identity has changed. Possible man-in-the-middle attack — exchange rejected.")
+                            return@launch
                         }
                     }
                     is KnownPeerRepository.IdentityKeyResult.NotFound -> {
@@ -661,7 +806,9 @@ class NearbyExchangeService : Service() {
                     }
                     is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
                         Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
-                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                        terminateSession(ExchangeSession.State.ERROR,
+                            "Peer identity record is corrupt. Exchange aborted for your safety.")
+                        return@launch
                     }
                 }
 
@@ -700,14 +847,18 @@ class NearbyExchangeService : Service() {
                 val ok = CryptoUtils.verifyChallenge(peerIdentityKey, challenge, signature)
                 if (!ok) {
                     Timber.e("Challenge verification failed for $endpointId — possible MITM")
-                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                    terminateSession(ExchangeSession.State.ERROR,
+                        "Security alert: Authentication failed — possible man-in-the-middle attack.")
+                    return@launch
                 }
                 // FIX-4: same sealed-result pattern as handleIncomingChallenge.
                 when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
                     is KnownPeerRepository.IdentityKeyResult.Found -> {
                         if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
                             Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
-                            terminateSession(ExchangeSession.State.ERROR); return@launch
+                            terminateSession(ExchangeSession.State.ERROR,
+                                "Security alert: Peer identity mismatch detected. Exchange aborted.")
+                            return@launch
                         }
                     }
                     is KnownPeerRepository.IdentityKeyResult.NotFound -> {
@@ -715,7 +866,9 @@ class NearbyExchangeService : Service() {
                     }
                     is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
                         Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
-                        terminateSession(ExchangeSession.State.ERROR); return@launch
+                        terminateSession(ExchangeSession.State.ERROR,
+                            "Peer identity record is corrupt. Exchange aborted for your safety.")
+                        return@launch
                     }
                 }
 
@@ -768,6 +921,9 @@ class NearbyExchangeService : Service() {
                 when (ctx.handshake) {
                     HandshakeState.KEY_SENT -> {
                         ctx.sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                        // Room host is always the responder (isInitiator=false).
+                        val (sr, rr) = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = false)
+                        ctx.sendRatchet = sr; ctx.recvRatchet = rr
                         ctx.handshake = HandshakeState.COMPLETE
                         sendProfile(endpointId)
                     }
@@ -775,6 +931,8 @@ class NearbyExchangeService : Service() {
                         ctx.handshake = HandshakeState.KEY_RECEIVED
                         sendPublicKey(endpointId)
                         ctx.sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                        val (sr, rr) = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = false)
+                        ctx.sendRatchet = sr; ctx.recvRatchet = rr
                         ctx.handshake = HandshakeState.COMPLETE
                         sendProfile(endpointId)
                     }
@@ -787,24 +945,24 @@ class NearbyExchangeService : Service() {
 
             when (handshakeState) {
                 HandshakeState.KEY_SENT -> {
-                    // We sent first — peer's reply has now arrived. Derive the
-                    // session key and ship the profile.
+                    // We sent first = we are the ECDH initiator.
                     sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    val (sr, rr) = initDirectionalRatchets(sessionKey!!, isInitiator = true)
+                    sendRatchet = sr; recvRatchet = rr
                     handshakeState = HandshakeState.COMPLETE
-                    Timber.d("Handshake COMPLETE (we sent first)")
-                    sendProfile(endpointId)
+                    Timber.d("Handshake COMPLETE (we sent first = initiator)")
+                    showSasAndAwaitConfirmation(endpointId)
                 }
                 HandshakeState.IDLE -> {
-                    // Peer's key beat ours to the wire. Store it, send ours,
-                    // then derive the session key. We deliberately set state
-                    // to KEY_RECEIVED first so sendPublicKey() will not
-                    // overwrite the order tracking.
+                    // Peer's key beat ours to the wire = we are the responder.
                     handshakeState = HandshakeState.KEY_RECEIVED
                     sendPublicKey(endpointId)
                     sessionKey = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    val (sr, rr) = initDirectionalRatchets(sessionKey!!, isInitiator = false)
+                    sendRatchet = sr; recvRatchet = rr
                     handshakeState = HandshakeState.COMPLETE
-                    Timber.d("Handshake COMPLETE (peer sent first)")
-                    sendProfile(endpointId)
+                    Timber.d("Handshake COMPLETE (peer sent first = responder)")
+                    showSasAndAwaitConfirmation(endpointId)
                 }
                 HandshakeState.KEY_RECEIVED, HandshakeState.COMPLETE -> {
                     Timber.w("Duplicate or out-of-order public key (state=$handshakeState) — ignoring")
@@ -815,6 +973,63 @@ class NearbyExchangeService : Service() {
             terminateSession(ExchangeSession.State.ERROR)
         }
     }
+
+    // -------------------------------------------------------------------------
+    // SAS / ratchet helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Derive directional [DoubleRatchetState] seeds from the ECDH session key.
+     *
+     * Both peers start with the same [key] but the labels are mirrored:
+     *
+     * | Role      | sendLabel         | recvLabel         |
+     * |-----------|-------------------|-------------------|
+     * | Initiator | "aura-init-send"  | "aura-init-recv"  |
+     * | Responder | "aura-init-recv"  | "aura-init-send"  |
+     *
+     * This guarantees that initiator.send and responder.recv use the same sub-key
+     * (and vice-versa), while the two directions are cryptographically independent.
+     *
+     * @return (sendRatchet, recvRatchet)
+     */
+    private fun initDirectionalRatchets(
+        key: javax.crypto.SecretKey,
+        isInitiator: Boolean
+    ): Pair<DoubleRatchetState, DoubleRatchetState> {
+        val sendLabel = if (isInitiator) "aura-init-send" else "aura-init-recv"
+        val recvLabel = if (isInitiator) "aura-init-recv" else "aura-init-send"
+        val sr = CryptoUtils.newRatchet(CryptoUtils.deriveSubkey(key, sendLabel))
+        val rr = CryptoUtils.newRatchet(CryptoUtils.deriveSubkey(key, recvLabel))
+        Timber.d("Ratchets initialised (initiator=$isInitiator)")
+        return sr to rr
+    }
+
+    /**
+     * After ECDH completes, compute the SAS PIN from both ephemeral public keys,
+     * transition to [ExchangeSession.State.VERIFYING], and park the endpoint ID
+     * in [pendingSasEndpointId]. The exchange will remain gated here until the user
+     * sends [ACTION_CONFIRM_SAS] or [ACTION_ABORT_SAS].
+     *
+     * Room-host mode skips SAS — the host deliberately opened the room for everyone
+     * and verifying a PIN with each guest is not practical in a group scenario.
+     */
+    private fun showSasAndAwaitConfirmation(endpointId: String) {
+        val our  = ourKeyPair?.public  ?: return
+        val peer = peerPublicKey       ?: return
+        val pin  = SasVerifier.derive(our, peer)
+        Timber.i("SAS PIN $pin derived for $endpointId — awaiting UI confirmation")
+        pendingSasEndpointId = endpointId
+        val current = sessionState.value
+        _sessionState.value = current?.copy(
+            state  = ExchangeSession.State.VERIFYING,
+            sasPin = pin
+        )
+        broadcastState(sessionState.value)
+        updateNotification(getString(R.string.status_verifying))
+    }
+
+    // -------------------------------------------------------------------------
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
         // Prompt-6 / Issue-3: reject oversized payloads before decryption.
@@ -841,7 +1056,11 @@ class NearbyExchangeService : Service() {
             }
             scope.launch {
                 try {
-                    val decrypted = CryptoUtils.decrypt(rkey, encryptedData)
+                    val roomRatchet = ctx?.recvRatchet
+                    val decrypted = if (roomRatchet != null)
+                        CryptoUtils.ratchetDecrypt(roomRatchet, encryptedData)
+                    else
+                        CryptoUtils.decrypt(rkey, encryptedData)
                     val mapType = object : TypeToken<Map<String, String>>() {}.type
                     val profileMap: Map<String, String> =
                         gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
@@ -880,7 +1099,11 @@ class NearbyExchangeService : Service() {
         }
         scope.launch {
             try {
-                val decrypted = CryptoUtils.decrypt(key, encryptedData)
+                val p2pRatchet = recvRatchet
+                val decrypted = if (p2pRatchet != null)
+                    CryptoUtils.ratchetDecrypt(p2pRatchet, encryptedData)
+                else
+                    CryptoUtils.decrypt(key, encryptedData)
                 val mapType = object : TypeToken<Map<String, String>>() {}.type
                 val profileMap: Map<String, String> =
                     gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
@@ -910,12 +1133,32 @@ class NearbyExchangeService : Service() {
                     map = cleanMap,
                     endpointId = endpointId
                 ).copy(identityKeyHash = keyHash)
+
+                // Cross-session TOFU key-rotation check. Logs a prominent warning if this
+                // returning peer now presents a different identity key — could indicate app
+                // reinstall, device change, or MITM key substitution. The exchange still
+                // completes; the session warning text surfaces to the UI via errorMessage.
+                val sessionWarning: String? = if (keyHash != null) {
+                    when (val rotation = identityRotationDetector.check(contact.displayName, keyHash)) {
+                        is IdentityRotationDetector.RotationEvent.KeyRotated -> {
+                            Timber.w("Identity key rotation for '${contact.displayName}':\n${rotation.shortDiff}")
+                            "Identity key changed for ${contact.displayName}. " +
+                                "Verify this is really them (was: …${rotation.storedHash.take(8)})."
+                        }
+                        else -> {
+                            Timber.d("Identity check passed for '${contact.displayName}'")
+                            null
+                        }
+                    }
+                } else null
+
                 contactRepository.save(contact)
 
                 val current = sessionState.value
                 _sessionState.value = current?.copy(
                     state = ExchangeSession.State.COMPLETED,
-                    receivedContact = contact
+                    receivedContact = contact,
+                    errorMessage = sessionWarning
                 )
                 broadcastState(sessionState.value)
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")
@@ -961,7 +1204,18 @@ class NearbyExchangeService : Service() {
             val stamped = profile.toShareableMap().toMutableMap()
             PayloadValidator.stampOutgoingProfile(stamped)
             val profileJson = gson.toJson(stamped)
-            val encrypted = CryptoUtils.encrypt(key, profileJson.toByteArray(Charsets.UTF_8))
+            // Use the directional ratchet for forward secrecy when available.
+            // Falls back to bare sessionKey encrypt for legacy NFC path where
+            // ratchets are initialised but a second call could occur unexpectedly.
+            val ratchet: DoubleRatchetState? =
+                if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST)
+                    peerCtxByEndpoint[endpointId]?.sendRatchet
+                else
+                    sendRatchet
+            val encrypted = if (ratchet != null)
+                CryptoUtils.ratchetEncrypt(ratchet, profileJson.toByteArray(Charsets.UTF_8))
+            else
+                CryptoUtils.encrypt(key, profileJson.toByteArray(Charsets.UTF_8))
             val payload = byteArrayOf(MSG_TYPE_PROFILE) + encrypted
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
                 .addOnSuccessListener { Timber.d("Encrypted profile sent to $endpointId") }
@@ -1141,6 +1395,7 @@ class NearbyExchangeService : Service() {
             ExchangeSession.State.ADVERTISING -> getString(R.string.status_advertising)
             ExchangeSession.State.DISCOVERING -> getString(R.string.status_discovering)
             ExchangeSession.State.CONNECTING  -> getString(R.string.status_connecting)
+            ExchangeSession.State.VERIFYING   -> getString(R.string.status_verifying)
             ExchangeSession.State.EXCHANGING  -> getString(R.string.status_exchanging)
             ExchangeSession.State.COMPLETED   -> getString(R.string.exchange_completed,
                 current?.receivedContact?.displayName?.takeIf { it.isNotBlank() }

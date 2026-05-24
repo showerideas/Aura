@@ -16,6 +16,8 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// LivenessGuard is in the same package (com.showerideas.aura.auth)
+
 /**
  * Manages hand-gesture authentication for AURA exchanges.
  *
@@ -52,6 +54,23 @@ class GestureAuthManager @Inject constructor(
          */
         private const val EXPECTED_EMBEDDING_SIZE = CameraHandEmbedder.EMBEDDING_SIZE
     }
+
+    // -------------------------------------------------------------------------
+    // Liveness guard — anti-spoofing (photo / video replay attack defence)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Tracks frame-to-frame embedding drift to detect static sources (photos/videos).
+     * Reset on every camera start/stop and after each failed attempt.
+     */
+    val livenessGuard = LivenessGuard()
+
+    /**
+     * Exposes the last liveness result so the UI can show a "Liveness check failed"
+     * warning when a spoof is detected rather than a generic auth error.
+     */
+    private val _livenessResult = MutableStateFlow<LivenessGuard.Result>(LivenessGuard.Result.Collecting)
+    val livenessResult: StateFlow<LivenessGuard.Result> = _livenessResult
 
     // -------------------------------------------------------------------------
     // Public state
@@ -120,16 +139,36 @@ class GestureAuthManager @Inject constructor(
                     is CameraHandEmbedder.GestureState.Detecting -> {
                         _recordingState.value = RecordingState.Recording
                         _liveVariance.value = state.stability
+                        // Feed liveness guard on every detecting frame
+                        val liveness = livenessGuard.feed(state.embedding)
+                        _livenessResult.value = liveness
+                        if (liveness is LivenessGuard.Result.Spoof) {
+                            Timber.w("LivenessGuard: static source detected (drift=${liveness.meanDrift})")
+                        }
                     }
                     is CameraHandEmbedder.GestureState.Stable -> {
-                        _liveVariance.value = 1f
-                        val pattern = GesturePattern(
-                            id            = UUID.randomUUID().toString(),
-                            label         = state.gesture.displayName,
-                            featureVector = state.embedding,
-                            sampleCount   = state.embedding.size
-                        )
-                        _recordingState.value = RecordingState.Complete(pattern)
+                        // Feed liveness guard one final time before accepting the stable frame
+                        val liveness = livenessGuard.feed(state.embedding)
+                        _livenessResult.value = liveness
+
+                        if (liveness is LivenessGuard.Result.Spoof) {
+                            // Reject — static source detected. Emit Error so the UI
+                            // can show a specific "Liveness check failed" message.
+                            Timber.w("LivenessGuard: stable frame rejected — static source (drift=${liveness.meanDrift})")
+                            _liveVariance.value = 0f
+                            _recordingState.value = RecordingState.Error(
+                                "Liveness check failed — please use a live hand"
+                            )
+                        } else {
+                            _liveVariance.value = 1f
+                            val pattern = GesturePattern(
+                                id            = UUID.randomUUID().toString(),
+                                label         = state.gesture.displayName,
+                                featureVector = state.embedding,
+                                sampleCount   = state.embedding.size
+                            )
+                            _recordingState.value = RecordingState.Complete(pattern)
+                        }
                     }
                     is CameraHandEmbedder.GestureState.ModelError -> {
                         // Propagate the model failure as a RecordingState.Error so
@@ -169,6 +208,8 @@ class GestureAuthManager @Inject constructor(
     fun stopCamera() {
         _recordingState.value = RecordingState.Idle
         _liveVariance.value = 0f
+        livenessGuard.reset()
+        _livenessResult.value = LivenessGuard.Result.Collecting
         cameraEmbedder.stop()
         Timber.d("Camera gesture pipeline stopped")
     }
@@ -180,6 +221,8 @@ class GestureAuthManager @Inject constructor(
      */
     fun resetGestureCapture() {
         cameraEmbedder.resetConsecutive()
+        livenessGuard.reset()
+        _livenessResult.value = LivenessGuard.Result.Collecting
         if (_recordingState.value !is RecordingState.Idle) {
             _recordingState.value = RecordingState.Recording
         }

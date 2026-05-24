@@ -173,6 +173,77 @@ object CryptoUtils {
         return java.util.Base64.getEncoder().encodeToString(digest.digest(publicKey.encoded))
     }
 
+    // -------------------------------------------------------------------------
+    // Sub-key derivation (directional key separation)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Derive a domain-separated 256-bit AES sub-key from an existing [SecretKey].
+     *
+     * Used to create *directional* ratchet seeds so that the initiator's send key
+     * and the responder's send key are cryptographically independent even though
+     * both are derived from the same ECDH session key:
+     *
+     * ```
+     * sendRatchetSeed = deriveSubkey(sessionKey, "aura-init-send")
+     * recvRatchetSeed = deriveSubkey(sessionKey, "aura-init-recv")
+     * ```
+     *
+     * The peer uses the symmetric labelling:
+     * - Their sendRatchet = our recvRatchet seed  ("aura-init-recv")
+     * - Their recvRatchet = our sendRatchet seed  ("aura-init-send")
+     *
+     * This gives forward secrecy at the per-message level within a session, and
+     * ensures profile payloads travelling in opposite directions use different keys.
+     */
+    fun deriveSubkey(key: SecretKey, label: String): SecretKey {
+        val hmac = Mac.getInstance("HmacSHA256")
+        hmac.init(key)
+        hmac.update(label.toByteArray(Charsets.UTF_8))
+        return SecretKeySpec(hmac.doFinal(), "AES")
+    }
+
+    // -------------------------------------------------------------------------
+    // Double Ratchet helpers (thin wrappers — main logic in DoubleRatchetState)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a new [DoubleRatchetState] seeded from an ECDH-derived session key.
+     *
+     * Convenience so callers don't need to import [DoubleRatchetState] separately.
+     *
+     * Usage:
+     * ```kotlin
+     * val sessionKey = deriveSharedAESKey(myPrivateKey, peerPublicKey)
+     * val ratchet    = CryptoUtils.newRatchet(sessionKey)
+     * val msgKey     = ratchet.nextMessageKey()          // per-payload key
+     * val cipher     = encrypt(msgKey, plaintext)        // send this
+     * ```
+     */
+    fun newRatchet(sessionKey: SecretKey): DoubleRatchetState =
+        DoubleRatchetState.from(sessionKey)
+
+    /**
+     * Encrypt [plaintext] using a fresh ratchet key derived from [ratchet].
+     *
+     * Convenience combination of [DoubleRatchetState.nextMessageKey] + [encrypt].
+     * Returns IV + ciphertext blob (same format as [encrypt]).
+     */
+    fun ratchetEncrypt(ratchet: DoubleRatchetState, plaintext: ByteArray): ByteArray =
+        encrypt(ratchet.nextMessageKey(), plaintext)
+
+    /**
+     * Decrypt a blob produced by [ratchetEncrypt] using a fresh key from [ratchet].
+     *
+     * The receiver's ratchet must be in the same step as the sender's.
+     */
+    fun ratchetDecrypt(ratchet: DoubleRatchetState, blob: ByteArray): ByteArray =
+        decrypt(ratchet.nextMessageKey(), blob)
+
+    // -------------------------------------------------------------------------
+    // Android Keystore — long-lived device identity
+    // -------------------------------------------------------------------------
+
     fun getOrCreateDeviceIdentityKey(): KeyPair {
         val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
         if (!ks.containsAlias(KEYSTORE_ALIAS_DEVICE_ID)) {
