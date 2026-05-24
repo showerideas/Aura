@@ -349,6 +349,7 @@ class NearbyExchangeService : Service() {
                 // User confirmed the SAS PIN matches — proceed with profile exchange.
                 val ep = pendingSasEndpointId
                 if (ep != null) {
+                    scope.launch { auditRepository.logSasEvent(confirmed = true, channel = ExchangeAuditEntry.CHANNEL_NEARBY) }
                     Timber.i("SAS confirmed by user — sending profile to $ep")
                     pendingSasEndpointId = null
                     sendProfile(ep)
