@@ -260,5 +260,15 @@
             android:text="@string/profile_btn_save_profile"
             app:backgroundTint="@color/aura_cyan_dark" />
 
+        <!-- Share card link (Phase 6.8) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_share_card"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/action_share_card"
+            app:strokeColor="@color/aura_cyan_dark" />
+
     </LinearLayout>
 </ScrollView>

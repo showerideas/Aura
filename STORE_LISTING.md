@@ -37,10 +37,10 @@ Source-of-truth for the Play Console submission. Update the placeholders marked 
 > • **Faster than typing a number.** A real exchange takes about two seconds.
 > • **No business cards.** No more pockets full of card-stock you'll throw out.
 > • **No "find me on LinkedIn" awkwardness.** AURA gives the other person *your* fields, the way *you* curated them.
-> • **Works in airplane mode.** It is fully offline — designed for conferences, weddings, networking events, and signal-dead venues.
+> • **Works in airplane mode.** Bluetooth and Wi-Fi P2P paths are fully offline — designed for conferences, weddings, networking events, and signal-dead venues. An optional QR relay path uses the internet only when Bluetooth and Wi-Fi P2P are unavailable; it sees only end-to-end encrypted ciphertext and no plaintext ever leaves your device.
 >
 > **Built for privacy**
-> • No outbound network calls. Ever.
+> • No plaintext ever leaves your device. The optional QR relay transmits only AES-256-GCM ciphertext; the relay server is stateless and sees nothing readable.
 > • No account creation. No email or phone number required.
 > • Your profile data lives only in your phone's encrypted app storage.
 > • Your gesture is stored as an encrypted feature vector — the original recording is discarded.

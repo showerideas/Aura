@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.showerideas.aura.databinding.ItemBlockedEndpointBinding
 import com.showerideas.aura.model.BlockedEndpoint
+import com.showerideas.aura.utils.IdenticonGenerator
 import java.text.DateFormat
 import java.util.Date
 
@@ -34,6 +35,11 @@ class BlockedDevicesAdapter(
             binding.tvBlockedAt.text =
                 DateFormat.getDateTimeInstance().format(Date(item.blockedAt))
             binding.btnUnblock.setOnClickListener { onUnblock(item) }
+
+            // Phase 6.9 — identicon derived from identity-key hash when
+            // available, falling back to the ephemeral endpoint ID.
+            val seed = item.identityKeyHash ?: item.endpointId
+            binding.ivIdenticon.setImageBitmap(IdenticonGenerator.generate(seed, size = 192))
         }
     }
 

@@ -70,6 +70,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
         tools:targetApi="33" />
 
+    <!-- NFC HCE — AURA can act as an NFC card (AuraHceService). required=false
+         keeps the app installable on NFC-less devices. -->
+    <uses-feature
+        android:name="android.hardware.nfc.hce"
+        android:required="false" />
+
     <!-- Hardware features -->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -122,6 +128,26 @@
             android:name=".service.NearbyExchangeService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <!--
+          NFC Host Card Emulation (Phase 6.1) — lets AURA respond as an NFC
+          card when another AURA device taps it.  The proprietary AID
+          F0415552410001 is in the "other" category so it never conflicts with
+          payment apps.  requireDeviceUnlock="false" allows tap-exchange even
+          from the lock screen (the gesture-auth gate is still enforced in-app).
+        -->
+        <service
+            android:name=".service.AuraHceService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/aura_apdu_service" />
+        </service>
 
         <!--
           Accessibility-service-based volume button listener (opt-in).

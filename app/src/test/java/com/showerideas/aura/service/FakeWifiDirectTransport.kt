@@ -77,8 +77,9 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
         peer.onEndpointFound?.invoke(localName, localName)
 
         // Simulate connection (this = GO, peer = client — lexicographic rule)
-        this.onConnected?.invoke(peer.localName, peer.localName, isIncoming = true)
-        peer.onConnected?.invoke(localName, localName, isIncoming = false)
+        // Named arguments are not allowed on function-type invocations; use positional.
+        this.onConnected?.invoke(peer.localName, peer.localName, true)
+        peer.onConnected?.invoke(localName, localName, false)
     }
 
     /**

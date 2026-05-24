@@ -23,7 +23,14 @@ data class ExchangeSession(
      * is in [State.VERIFYING]. Derived via SHA-256 over both ephemeral ECDH public
      * keys — a MITM who substitutes their own key produces a different code.
      */
-    val sasPin: String? = null
+    val sasPin: String? = null,
+    /**
+     * Non-null when state == [State.COMPLETED] and the peer was a returning contact
+     * whose visible fields changed since the last exchange. The UI should show
+     * [com.showerideas.aura.ui.contacts.ContactMergeBottomSheet] to let the user
+     * review what changed (Phase 6.3 / Phase 6.7).
+     */
+    val mergeEvent: MergeEvent? = null
 ) {
     enum class State {
         // State flow (all states emitted at the correct point):

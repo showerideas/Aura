@@ -11,6 +11,7 @@ import com.showerideas.aura.BuildConfig
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.Contact
+import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.network.RelayClient
 import com.showerideas.aura.utils.CryptoUtils
 import com.showerideas.aura.utils.SasVerifier
@@ -75,8 +76,13 @@ class QRExchangeViewModel @Inject constructor(
     val secondsRemaining: StateFlow<Int> = _secondsRemaining.asStateFlow()
 
     sealed class PairingResult {
-        /** Full exchange succeeded -- [contact] has been persisted to Room. */
-        data class Success(val contact: Contact) : PairingResult()
+        /**
+         * Full exchange succeeded — [contact] has been persisted to Room.
+         * [mergeEvent] is non-null when the contact was a returning peer whose
+         * visible fields changed; the Fragment should show [ContactMergeBottomSheet]
+         * (Phase 6.3 / Phase 6.7).
+         */
+        data class Success(val contact: Contact, val mergeEvent: MergeEvent? = null) : PairingResult()
         /**
          * Peer profile received and decrypted. The Fragment should show a SAS
          * dialog displaying [sasPin]; call [confirmSas] or [abortSas] to resolve.
@@ -284,9 +290,11 @@ class QRExchangeViewModel @Inject constructor(
             }
             pendingContact = null
             try {
-                contactRepository.saveDeduped(contact)
+                // saveDeduped returns a MergeEvent when the peer is a returning contact
+                // with changed fields — pass it to the Fragment so it can show the merge UI.
+                val mergeEvent = contactRepository.saveDeduped(contact)
                 Timber.i("QR exchange complete (SAS confirmed) -- contact saved: %s", contact.displayName)
-                _pairingResult.value = PairingResult.Success(contact)
+                _pairingResult.value = PairingResult.Success(contact, mergeEvent)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to save contact after SAS confirmation")
                 _pairingResult.value = PairingResult.Error(e.message ?: "save failed")
@@ -308,6 +316,17 @@ class QRExchangeViewModel @Inject constructor(
     }
 
     fun consumePairingResult() { _pairingResult.value = null }
+
+    /**
+     * Apply per-field [selections] chosen by the user in the merge bottom sheet.
+     * Called from [QRExchangeFragment] after the user reviews a [PairingResult.Success]
+     * that included a non-null [MergeEvent] (Phase 6.3 / 6.7).
+     */
+    fun applyMergeSelections(base: Contact, selections: Map<String, String>) {
+        viewModelScope.launch {
+            contactRepository.applyMergeSelections(base, selections)
+        }
+    }
 
     private fun decodeEC256PublicKey(encoded: ByteArray): PublicKey {
         val spec = java.security.spec.X509EncodedKeySpec(encoded)

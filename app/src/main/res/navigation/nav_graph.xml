@@ -52,7 +52,11 @@
     <fragment
         android:id="@+id/contactsFragment"
         android:name="com.showerideas.aura.ui.contacts.ContactsFragment"
-        android:label="Contacts" />
+        android:label="Contacts">
+        <action
+            android:id="@+id/action_contacts_to_audit"
+            app:destination="@id/auditFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/exchangeFragment"
@@ -64,7 +68,7 @@
             app:popUpTo="@id/homeFragment" />
     </fragment>
 
-    <!-- PR-19: Settings + Blocked devices destinations. -->
+    <!-- Settings + Blocked devices + Security destinations -->
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.showerideas.aura.ui.settings.SettingsFragment"
@@ -72,11 +76,20 @@
         <action
             android:id="@+id/action_settings_to_blocked_devices"
             app:destination="@id/blockedDevicesFragment" />
+        <action
+            android:id="@+id/action_settings_to_audit"
+            app:destination="@id/auditFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/blockedDevicesFragment"
         android:name="com.showerideas.aura.ui.settings.BlockedDevicesFragment"
         android:label="Blocked devices" />
+
+    <!-- Phase 6.6: Exchange audit log screen -->
+    <fragment
+        android:id="@+id/auditFragment"
+        android:name="com.showerideas.aura.ui.audit.AuditFragment"
+        android:label="Exchange history" />
 
 </navigation>

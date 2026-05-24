@@ -240,4 +240,58 @@
         <item quantity="one">%1$s envió una nueva tarjeta. 1 campo cambió.</item>
         <item quantity="other">%1$s envió una nueva tarjeta. %2$d campos cambiaron.</item>
     </plurals>
+
+    <!-- Selector de perfil (Phase 6.4) -->
+    <string name="profile_type_personal">Personal</string>
+    <string name="profile_type_work">Trabajo</string>
+    <string name="profile_type_custom">Personalizado</string>
+    <string name="profile_switcher_title">Perfil activo</string>
+    <string name="profile_switcher_hint">Toca para cambiar tu tarjeta activa</string>
+    <string name="profile_add">Añadir perfil</string>
+    <string name="profile_add_work">Añadir perfil de trabajo</string>
+    <string name="profile_delete">Eliminar perfil</string>
+    <string name="profile_delete_confirm_title">¿Eliminar este perfil?</string>
+    <string name="profile_delete_confirm_message">El perfil se eliminará permanentemente. Tus contactos no se verán afectados.</string>
+    <string name="profile_set_active">Establecer como activo</string>
+    <string name="profile_active">Activo</string>
+    <string name="profile_card_hint">Esta tarjeta se compartirá en tu próximo intercambio</string>
+
+    <!-- Rotación de clave — Ajustes > Seguridad (Phase 6.5) -->
+    <string name="settings_section_security">Seguridad</string>
+    <string name="settings_rotate_key">Rotar clave de identidad</string>
+    <string name="settings_rotate_key_subtitle">Genera una nueva clave de firma. Los contactos conocidos se enterarán de la rotación en tu próximo intercambio.</string>
+    <string name="settings_rotate_key_confirm_title">¿Rotar tu clave de identidad?</string>
+    <string name="settings_rotate_key_confirm_message">Se generará una nueva clave. Tus contactos existentes no se verán afectados, pero los pares verán una nueva clave en tu próximo intercambio.</string>
+    <string name="settings_rotate_key_done">Clave de identidad rotada</string>
+    <string name="settings_rotate_key_error">Error al rotar la clave — inténtalo de nuevo</string>
+
+    <!-- Historial de intercambios (Phase 6.6) -->
+    <string name="settings_exchange_history">Historial de intercambios</string>
+    <string name="audit_title">Historial de intercambios</string>
+    <string name="audit_empty">Todavía no se han registrado intercambios</string>
+    <string name="audit_outcome_success">Intercambiado</string>
+    <string name="audit_outcome_failed">Fallido</string>
+    <string name="audit_outcome_blocked">Bloqueado</string>
+    <string name="audit_outcome_spoof">Suplantación detectada</string>
+    <string name="audit_outcome_timeout">Tiempo de espera agotado</string>
+    <string name="audit_outcome_sas_confirmed">SAS confirmado</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">Sala (anfitrión)</string>
+    <string name="audit_channel_room_guest">Sala (invitado)</string>
+    <string name="audit_peer_unknown">Par desconocido</string>
+    <string name="audit_export_csv">Exportar registro</string>
+    <string name="audit_export_done">Registro guardado en Descargas</string>
+    <string name="audit_clear">Borrar registro</string>
+    <string name="audit_clear_confirm_title">¿Borrar el historial de intercambios?</string>
+    <string name="audit_clear_confirm_message">Todo el historial de intercambios se eliminará permanentemente.</string>
+    <string name="audit_clear_done">Historial de intercambios borrado</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">Identicon de seguridad &#x2013; huella visual de esta sesión de intercambio</string>
+    <string name="sas_code_desc">Código de seguridad</string>
+    <string name="sas_dialog_instruction">Usted y su contacto deben ver el mismo código e identicon</string>
+    <string name="action_share_card">Compartir enlace de tarjeta</string>
+    <string name="share_card_chooser_title">Compartir tu tarjeta AURA</string>
+    <string name="share_card_text">Aquí está mi tarjeta AURA: %1$s</string>
 </resources>

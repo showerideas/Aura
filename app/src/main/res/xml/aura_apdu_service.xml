@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NFC Host Card Emulation (HCE) APDU service descriptor for AURA.
+
+  Registers the proprietary AID F0415552410001:
+    F0         = proprietary AID range (no conflict with payment AIDs)
+    41 55 52 41 = "AURA" in ASCII
+    00 01       = version 1
+
+  category="other" ensures AURA never conflicts with payment HCE apps
+  (which use category="payment"). Android routes only AURA-AID taps to
+  this service — payment taps are unaffected.
+
+  requireDeviceUnlock="false" allows the bootstrap tap while the screen is on
+  but the device is locked — so users can exchange at a conference without
+  unlocking both phones first.
+-->
+<host-apdu-service
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/app_name"
+    android:requireDeviceUnlock="false">
+
+    <aid-group
+        android:description="@string/app_name"
+        android:category="other">
+        <aid-filter android:name="F0415552410001" />
+    </aid-group>
+
+</host-apdu-service>

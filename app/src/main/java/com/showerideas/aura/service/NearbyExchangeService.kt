@@ -23,6 +23,7 @@ import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.ExchangeAuditEntry
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
+import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.ui.MainActivity
 import com.showerideas.aura.utils.CryptoUtils
 import com.showerideas.aura.utils.DoubleRatchetState
@@ -1273,13 +1274,16 @@ class NearbyExchangeService : Service() {
                 } else null
 
                 // saveDeduped: returning peers get their card updated in-place, not duplicated.
-                contactRepository.saveDeduped(contact)
+                // The returned MergeEvent (non-null when visible fields changed) is surfaced
+                // to the UI via ExchangeSession so the user can review what changed (Phase 6.3/6.7).
+                val mergeEvent: MergeEvent? = contactRepository.saveDeduped(contact)
 
                 val current = sessionState.value
                 _sessionState.value = current?.copy(
                     state = ExchangeSession.State.COMPLETED,
                     receivedContact = contact,
-                    errorMessage = sessionWarning
+                    errorMessage = sessionWarning,
+                    mergeEvent = mergeEvent
                 )
                 broadcastState(sessionState.value)
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")

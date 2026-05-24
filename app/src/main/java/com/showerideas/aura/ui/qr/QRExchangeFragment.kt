@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -16,6 +18,8 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentQrExchangeBinding
+import com.showerideas.aura.ui.contacts.ContactMergeBottomSheet
+import com.showerideas.aura.utils.IdenticonGenerator
 import dagger.hilt.android.AndroidEntryPoint
 import android.view.HapticFeedbackConstants
 import kotlinx.coroutines.Job
@@ -140,6 +144,13 @@ class QRExchangeFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
                 viewModel.consumePairingResult()
+                // Show merge review sheet if a returning contact updated their card (Phase 6.3/6.7).
+                val mergeEvent = result.mergeEvent
+                if (mergeEvent != null && mergeEvent.hasChanges) {
+                    ContactMergeBottomSheet.newInstance(mergeEvent) { selections ->
+                        viewModel.applyMergeSelections(mergeEvent.preserved, selections)
+                    }.show(childFragmentManager, ContactMergeBottomSheet.TAG)
+                }
                 findNavController().navigateUp()
             }
             is QRExchangeViewModel.PairingResult.RelayTimeout -> {
@@ -184,13 +195,29 @@ class QRExchangeFragment : Fragment() {
      * is pressed within 30 s the session is aborted — the pending contact is
      * discarded without being saved.
      */
+    /**
+     * Custom SAS dialog with identicon + accessible code display (Phase 5.3 / 6.9).
+     * Both parties derive the same identicon from the SAS pin — provides a secondary
+     * visual verification channel alongside the 6-digit code.
+     */
     private fun showSasDialog(pin: String) {
         // Haptic pulse — draws attention in noisy environments.
         binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
+        // Inflate custom view with identicon + accessible code display.
+        val dialogView = layoutInflater.inflate(R.layout.dialog_sas_verification, null)
+        val identicon = IdenticonGenerator.generate(pin, size = 256)
+        dialogView.findViewById<ImageView>(R.id.iv_sas_identicon).setImageBitmap(identicon)
+        val tvCode = dialogView.findViewById<TextView>(R.id.tv_sas_code)
+        tvCode.text = pin
+        tvCode.contentDescription = getString(R.string.sas_code_desc) + " " +
+            pin.toCharArray().joinToString(" ")
+        dialogView.findViewById<TextView>(R.id.tv_sas_instruction)
+            .text = getString(R.string.sas_dialog_instruction)
+
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.sas_dialog_title))
-            .setMessage(getString(R.string.sas_dialog_message, pin))
+            .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
                 sasTimeoutJob?.cancel()

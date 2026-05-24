@@ -3,10 +3,11 @@ package com.showerideas.aura.ui.exchange
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import timber.log.Timber
-import android.view.View
-import timber.log.TimberGroup
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import timber.log.Timber
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -22,7 +23,10 @@ import com.showerideas.aura.auth.LivenessGuard
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentExchangeBinding
 import com.showerideas.aura.model.ExchangeSession
+import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.service.NearbyExchangeService
+import com.showerideas.aura.ui.contacts.ContactMergeBottomSheet
+import com.showerideas.aura.utils.IdenticonGenerator
 import dagger.hilt.android.AndroidEntryPoint
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -59,6 +63,8 @@ class ExchangeFragment : Fragment() {
     private var serviceStarted = false
     /** Coroutine job that auto-aborts the SAS dialog after 30 s of inaction. */
     private var sasTimeoutJob: Job? = null
+    /** Guard: show the merge review sheet at most once per completed session. */
+    private var mergeSheetShown = false
     /**
      * Guard against the StateFlow replaying Complete after lifecycle transitions
      * (e.g. user briefly backgrounds the app). Once we've handled the result —
@@ -315,6 +321,14 @@ class ExchangeFragment : Fragment() {
             binding.btnCancel.setOnClickListener {
                 findNavController().navigate(R.id.action_exchange_to_contacts)
             }
+            // Show merge review sheet when a returning contact updated their card (Phase 6.3/6.7).
+            val mergeEvent: MergeEvent? = session.mergeEvent
+            if (mergeEvent != null && mergeEvent.hasChanges && !mergeSheetShown) {
+                mergeSheetShown = true
+                ContactMergeBottomSheet.newInstance(mergeEvent) { selections ->
+                    viewModel.applyMergeSelections(mergeEvent.preserved, selections)
+                }.show(childFragmentManager, ContactMergeBottomSheet.TAG)
+            }
         }
         if (session.state == ExchangeSession.State.ERROR) {
             val error = session.errorMessage ?: getString(R.string.exchange_error_generic)
@@ -340,13 +354,35 @@ class ExchangeFragment : Fragment() {
      * noisy environments. If neither button is pressed within 30 s the dialog is
      * dismissed and the session is aborted as a precaution.
      */
+    /**
+     * Display the SAS verification dialog with:
+     * - An identicon generated from the SAS pin (both parties see the same identicon)
+     * - A large, accessible, monospace code display (accessibilityLiveRegion=polite)
+     * - A 30-second auto-abort countdown
+     * - Haptic feedback on appearance
+     *
+     * Both visual channels (6-digit code AND identicon) must match for the exchange
+     * to be considered verified — provides defence-in-depth against MITM.
+     */
     private fun showSasDialog(pin: String) {
         // Haptic pulse to draw attention.
         binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
+        // Inflate custom view with identicon + accessible code display.
+        val dialogView = layoutInflater.inflate(R.layout.dialog_sas_verification, null)
+        val identicon = IdenticonGenerator.generate(pin, size = 256)
+        dialogView.findViewById<ImageView>(R.id.iv_sas_identicon).setImageBitmap(identicon)
+        val tvCode = dialogView.findViewById<TextView>(R.id.tv_sas_code)
+        tvCode.text = pin
+        // TalkBack reads "Security code 1 2 3 4 5 6" so each digit is pronounced separately.
+        tvCode.contentDescription = getString(R.string.sas_code_desc) + " " +
+            pin.toCharArray().joinToString(" ")
+        dialogView.findViewById<TextView>(R.id.tv_sas_instruction)
+            .text = getString(R.string.sas_dialog_instruction)
+
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.sas_dialog_title))
-            .setMessage(getString(R.string.sas_dialog_message, pin))
+            .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
                 sasTimeoutJob?.cancel()

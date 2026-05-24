@@ -240,4 +240,58 @@
         <item quantity="one">%1$s hat eine neue Karte geschickt. 1 Feld geändert.</item>
         <item quantity="other">%1$s hat eine neue Karte geschickt. %2$d Felder geändert.</item>
     </plurals>
+
+    <!-- Profilwechsler (Phase 6.4) -->
+    <string name="profile_type_personal">Privat</string>
+    <string name="profile_type_work">Arbeit</string>
+    <string name="profile_type_custom">Benutzerdefiniert</string>
+    <string name="profile_switcher_title">Aktives Profil</string>
+    <string name="profile_switcher_hint">Tippen zum Wechseln der aktiven Karte</string>
+    <string name="profile_add">Profil hinzufügen</string>
+    <string name="profile_add_work">Arbeitsprofil hinzufügen</string>
+    <string name="profile_delete">Profil löschen</string>
+    <string name="profile_delete_confirm_title">Dieses Profil löschen?</string>
+    <string name="profile_delete_confirm_message">Das Profil wird dauerhaft entfernt. Ihre Kontakte bleiben erhalten.</string>
+    <string name="profile_set_active">Als aktiv setzen</string>
+    <string name="profile_active">Aktiv</string>
+    <string name="profile_card_hint">Diese Karte wird beim nächsten Austausch geteilt</string>
+
+    <!-- Schlüsselrotation — Einstellungen > Sicherheit (Phase 6.5) -->
+    <string name="settings_section_security">Sicherheit</string>
+    <string name="settings_rotate_key">Identitätsschlüssel rotieren</string>
+    <string name="settings_rotate_key_subtitle">Neuen Signaturschlüssel generieren. Bekannte Kontakte erfahren von der Rotation beim nächsten Austausch.</string>
+    <string name="settings_rotate_key_confirm_title">Identitätsschlüssel rotieren?</string>
+    <string name="settings_rotate_key_confirm_message">Ein neuer Schlüssel wird generiert. Bestehende Kontakte bleiben erhalten, Kontakte sehen beim nächsten Austausch einen neuen Schlüssel.</string>
+    <string name="settings_rotate_key_done">Identitätsschlüssel rotiert</string>
+    <string name="settings_rotate_key_error">Schlüsselrotation fehlgeschlagen – bitte erneut versuchen</string>
+
+    <!-- Austauschoverlauf (Phase 6.6) -->
+    <string name="settings_exchange_history">Austauschoverlauf</string>
+    <string name="audit_title">Austauschoverlauf</string>
+    <string name="audit_empty">Noch kein Austausch aufgezeichnet</string>
+    <string name="audit_outcome_success">Ausgetauscht</string>
+    <string name="audit_outcome_failed">Fehlgeschlagen</string>
+    <string name="audit_outcome_blocked">Blockiert</string>
+    <string name="audit_outcome_spoof">Fälschung erkannt</string>
+    <string name="audit_outcome_timeout">Zeitüberschreitung</string>
+    <string name="audit_outcome_sas_confirmed">SAS bestätigt</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">Raum (Gastgeber)</string>
+    <string name="audit_channel_room_guest">Raum (Gast)</string>
+    <string name="audit_peer_unknown">Unbekannter Peer</string>
+    <string name="audit_export_csv">Protokoll exportieren</string>
+    <string name="audit_export_done">Protokoll in Downloads gespeichert</string>
+    <string name="audit_clear">Protokoll löschen</string>
+    <string name="audit_clear_confirm_title">Austauschoverlauf löschen?</string>
+    <string name="audit_clear_confirm_message">Der gesamte Austauschoverlauf wird dauerhaft gelöscht.</string>
+    <string name="audit_clear_done">Austauschoverlauf gelöscht</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">Sicherheits-Identicon &#x2013; visueller Fingerabdruck dieser Austauschsitzung</string>
+    <string name="sas_code_desc">Sicherheitscode</string>
+    <string name="sas_dialog_instruction">Sie und Ihr Kontakt müssen denselben Code und dasselbe Identicon sehen</string>
+    <string name="action_share_card">Karten-Link teilen</string>
+    <string name="share_card_chooser_title">AURA-Karte teilen</string>
+    <string name="share_card_text">Hier ist meine AURA-Karte: %1$s</string>
 </resources>
