@@ -93,6 +93,31 @@ class ExchangeAuditRepository @Inject constructor(
         )
     )
 
+
+    /**
+     * Log a SAS (Short Authentication String) confirmation or rejection event.
+     *
+     * This is a separate entry from the final exchange outcome — it records
+     * the precise moment the user made their verbal code comparison decision,
+     * independent of whether the profile exchange that follows succeeds.
+     *
+     * [confirmed] = true  → "Match ✓" pressed — user verified codes match.
+     * [confirmed] = false → "Mismatch" pressed or timed out — possible MITM.
+     */
+    suspend fun logSasEvent(
+        confirmed: Boolean,
+        peerIdentityKeyHash: String? = null,
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY
+    ) = auditDao.insert(
+        ExchangeAuditEntry(
+            id = UUID.randomUUID().toString(),
+            peerIdentityKeyHash = peerIdentityKeyHash,
+            outcome = if (confirmed) "SAS_CONFIRMED" else ExchangeAuditEntry.OUTCOME_FAILED,
+            errorCode = if (confirmed) null else ExchangeAuditEntry.ERR_SAS_MISMATCH,
+            channel = channel
+        )
+    )
+
     suspend fun countFailuresForPeer(hash: String, windowMs: Long = 3_600_000L): Int =
         auditDao.countFailuresForPeer(hash, System.currentTimeMillis() - windowMs)
 
