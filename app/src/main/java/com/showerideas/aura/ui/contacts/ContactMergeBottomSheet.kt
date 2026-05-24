@@ -13,12 +13,6 @@ import com.showerideas.aura.R
 import com.showerideas.aura.databinding.BottomSheetContactMergeBinding
 import com.showerideas.aura.model.ContactFieldDiff
 import com.showerideas.aura.model.MergeEvent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Bottom sheet displayed after a contact update is detected via deduplication.
