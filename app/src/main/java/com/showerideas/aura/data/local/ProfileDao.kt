@@ -17,11 +17,13 @@ import kotlinx.coroutines.flow.Flow
  * Exactly one row must have `is_active = 1` at all times; [setActive] enforces
  * this atomically inside a `@Transaction`.
  *
- * ## Why abstract class, not interface?
- * Room + Kotlin 2.0 / KAPT can miscompile `@Transaction` on concrete default
- * methods in Kotlin interfaces (the generated stub doesn't always handle Kotlin
- * coroutine suspension correctly). Using an abstract class is the pattern Room
- * officially documents for @Transaction methods with business logic.
+ * ## Why abstract class + open @Transaction method?
+ * Room + Kotlin 2.0 / KAPT requires two things for `@Transaction` suspend methods:
+ * 1. The DAO must be an abstract class (not an interface) — KAPT generates `final`
+ *    stubs for interface default methods, which Room rejects.
+ * 2. The concrete `@Transaction` method must be marked `open` — Kotlin abstract-class
+ *    methods are `final` by default, and KAPT emits `public final` in the Java stub,
+ *    which Room's annotation processor also rejects with "must not be final".
  */
 @Dao
 abstract class ProfileDao {
@@ -66,7 +68,7 @@ abstract class ProfileDao {
      * profile is active between the two writes.
      */
     @Transaction
-    suspend fun setActive(id: String) {
+    open suspend fun setActive(id: String) {
         clearActive()
         activate(id)
     }
