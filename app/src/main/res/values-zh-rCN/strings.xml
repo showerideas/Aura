@@ -219,4 +219,9 @@
     <string name="settings_volume_test_success">✓ 检测到三次按键 — 此设备兼容</string>
     <string name="settings_volume_wake_warning">⚠ 三次按音量键在 Pixel 和原生 Android 上有效。由于操作系统级别的按键拦截，在三星、小米、OPPO 或其他定制 Android 版本上可能无效。请使用下方按钮检查您的设备。</string>
     <string name="status_verifying">与联系人核对代码…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">在所有 Android 设备上启用可靠的三次按音量键激活，包括三星、MIUI 和 ColorOS。AURA 永远不读取其他应用的内容。</string>
+    <string name="settings_accessibility_mode">辅助功能模式（推荐）</string>
+    <string name="settings_accessibility_enabled">已开启 — 在所有设备上均可运行 ✓</string>
+    <string name="settings_accessibility_disabled">点击在辅助功能设置中开启</string>
 </resources>
