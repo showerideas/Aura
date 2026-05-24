@@ -226,4 +226,7 @@
     <string name="settings_accessibility_mode">Barrierefreiheitsmodus (empfohlen)</string>
     <string name="settings_accessibility_enabled">Aktiv — funktioniert auf allen Geräten ✓</string>
     <string name="settings_accessibility_disabled">Tippen, um in den Eingabehilfen zu aktivieren</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC-Tipp aktiv – schnellerer Schlüsselaustausch</string>
+    <string name="exchange_nfc_active_desc">Dieser Austausch wurde per NFC-Tipp gestartet – der ECDH-Handshake ist vorbelegt</string>
 </resources>
