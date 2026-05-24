@@ -89,6 +89,7 @@
     <string name="qr_expired">Ese código de vinculación ha caducado. Pide a la otra persona que lo actualice.</string>
     <string name="qr_pairing_ok">Contacto guardado: %1$s</string>
     <string name="qr_relay_timeout">El otro teléfono no respondió a tiempo. Inténtalo de nuevo.</string>
+    <string name="qr_sas_mismatch_abort">El código de seguridad no coincide — intercambio cancelado. No se guardó ningún contacto.</string>
     <string name="home_room_mode">Modo sala</string>
     <string name="room_mode_host">Alojar una sala</string>
     <string name="room_mode_guest">Unirse a una sala</string>
