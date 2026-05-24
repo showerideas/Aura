@@ -220,4 +220,9 @@
     <string name="settings_volume_test_success">✓ Triple pulsación detectada — este dispositivo es compatible</string>
     <string name="settings_volume_wake_warning">⚠ La pulsación triple del volumen funciona en Pixel y Android estándar. Puede no funcionar en Samsung, Xiaomi, OPPO u otras versiones personalizadas de Android por la interceptación de teclas a nivel del SO. Usa el botón de abajo para verificar tu dispositivo.</string>
     <string name="status_verifying">Verificar el código con tu contacto…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">Habilita la activación confiable con triple presën de volumen en todos los dispositivos Android, incluidos Samsung, MIUI y ColorOS. AURA nunca lee contenido de otras apps.</string>
+    <string name="settings_accessibility_mode">Modo de accesibilidad (recomendado)</string>
+    <string name="settings_accessibility_enabled">Activo — funciona en todos los dispositivos ✓</string>
+    <string name="settings_accessibility_disabled">Toca para activar en Configuración de accesibilidad</string>
 </resources>
