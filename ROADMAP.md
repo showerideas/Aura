@@ -12,13 +12,14 @@
 |---|---|
 | Codebase | Production-ready on `main` — v1.1.0 tagged and released |
 | Security audit | Wave 3 complete — all findings resolved (A1–A15) |
-| Localization | 209 strings × 7 languages (DE, ES, FR, HI, JA, KO, ZH-CN) — **100% coverage, CI-enforced** |
-| Test suite | Unit: 18 files · 184 methods · Instrumented: 12 files · 51 methods · 0 failures |
+| Localization | 262 strings × 7 languages (DE, ES, FR, HI, JA, KO, ZH-CN) — **100% coverage, CI-enforced** |
+| Test suite | Unit: 22 files · 259 methods · Instrumented: 12 files · 51 methods · 0 failures |
 | CI pipeline | Green — unit + JaCoCo (40% branch floor) + lint + `assembleRelease` + APK size gate + MediaPipe class check |
 | Play Store pipeline | `upload-to-play` wired in `ci.yml` — blocked only on `GOOGLE_PLAY_JSON_KEY` secret |
 | Privacy policy | Hosted via GitHub Pages at `https://showerideas.github.io/Aura/privacy` |
-| AUDIT.md | All items reviewed — Wave 3 complete, Phase 2 + 3 + 4 complete |
+| AUDIT.md | All items reviewed — Wave 3 complete, Phase 2 + 3 + 4 + 6.1–6.6 complete |
 | QR relay | Implemented — AES-256-GCM encrypted profile POST/GET over HTTPS relay |
+| Room DB | v7 — profile_type/is_active/custom_label (v6) + rotation_certificate (v7) |
 | **Primary blocker to Play Store** | **`GOOGLE_PLAY_JSON_KEY` secret + Play Console app listing assets (icon, screenshots, feature graphic)** |
 
 ---
@@ -369,7 +370,13 @@ A pure Wi-Fi Direct transport removes the GMS dependency and enables F-Droid dis
 
 ---
 
-### 6.4 Multiple Profiles — Personal / Work (v2.2)
+### 6.4 Multiple Profiles — Personal / Work (v2.2) ✅
+
+> **Complete as of 2026-05-24.**
+> Room DB v6 migration adds `profile_type`, `is_active`, `custom_label`.
+> `ProfileSwitcherBottomSheet` + `ProfileSwitcherAdapter` wired into HomeFragment.
+> `ProfileRepository` fully multi-profile with atomic `setActive()` transaction.
+> 18 new JVM unit tests in `MultiProfileTest.kt`.
 
 **Why:** Power users want to share a different card in professional vs. personal contexts
 without switching apps or editing their profile each time.
@@ -390,7 +397,16 @@ without switching apps or editing their profile each time.
 
 ---
 
-### 6.5 Key Rotation (v2.2)
+### 6.5 Key Rotation (v2.2) ✅
+
+> **Complete as of 2026-05-24.**
+> `CryptoUtils.rotateDeviceIdentityKey()` generates new EC key pair and signs it with old private key.
+> `RotationCertificate` data class carries old key, new key, signature, and timestamp.
+> `KnownPeer.rotationCertificate: ByteArray?` added with Room DB v7 migration.
+> Settings → Security section wired with confirmation dialog in `SettingsFragment`.
+> `SettingsViewModel.rotateIdentityKey()` runs on `Dispatchers.IO`.
+> 12 new JVM unit tests in `KeyRotationTest.kt`.
+> Deferred: persisting/broadcasting rotation certificate to peers at next exchange (Phase 6.5.2).
 
 **Why:** Long-lived Keystore identity keys have no expiry. If a device is compromised or sold,
 the identity key should be invalidatable.
@@ -412,7 +428,15 @@ the identity key should be invalidatable.
 
 ---
 
-### 6.6 Exchange Audit Log UI (v2.2)
+### 6.6 Exchange Audit Log UI (v2.2) ✅
+
+> **Complete as of 2026-05-24.**
+> `AuditFragment` + `AuditViewModel` + `AuditAdapter` implemented.
+> Accessible from Contacts overflow menu and Settings → Security → Exchange history.
+> Color-coded outcome chips (cyan=success, red=failed/spoof, gray=others).
+> CSV export to Downloads folder via `AuditViewModel.exportToCsv()`.
+> Empty state text, MaterialToolbar with navigation icon, overflow menu for export/clear.
+> Navigation wired in `nav_graph.xml` from both `contactsFragment` and `settingsFragment`.
 
 **Why:** The `ExchangeAuditLog` Room table exists but has no UI. Users have no visibility into
 their exchange history.

@@ -5,17 +5,22 @@ import androidx.lifecycle.viewModelScope
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.utils.CryptoUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * backing ViewModel for the Settings screen. Centralises all the
- * app-wide knobs that previously lived only in code or inside other
- * screens.
+ * Backing ViewModel for the Settings screen. Centralises all app-wide knobs.
+ *
+ * Phase 6.5 addition: [rotateIdentityKey] — generates a new Android Keystore
+ * identity key and produces a rotation certificate for known peers.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -48,4 +53,32 @@ class SettingsViewModel @Inject constructor(
     }
 
     suspend fun contactCount(): Int = contactRepository.count()
+
+    // -------------------------------------------------------------------------
+    // Phase 6.5: Identity key rotation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Rotate the device identity key in Android Keystore.
+     *
+     * Runs on [Dispatchers.IO] — Keystore ops must not block the main thread.
+     * Returns `true` on success, `false` if the rotation failed (UI shows error toast).
+     *
+     * The [CryptoUtils.RotationCertificate] produced here is logged;
+     * in Phase 6.5.2 it will be stored in [KnownPeer.rotationCertificate] and
+     * broadcast to known peers on next exchange.
+     */
+    suspend fun rotateIdentityKey(): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val cert = CryptoUtils.rotateDeviceIdentityKey()
+            Timber.i(
+                "Identity key rotated at ${cert.rotatedAtMs}. " +
+                "New key: ${cert.newPublicKeyBytes.size} bytes, " +
+                "Cert sig: ${cert.signatureBytes.size} bytes"
+            )
+            // TODO (Phase 6.5.2): persist cert to KnownPeerRepository + broadcast on next exchange
+        }.onFailure { e ->
+            Timber.e(e, "Identity key rotation failed")
+        }.isSuccess
+    }
 }

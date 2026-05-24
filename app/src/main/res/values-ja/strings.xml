@@ -238,4 +238,51 @@
     <plurals name="merge_subtitle">
         <item quantity="other">%1$s が新しいカードを送りました。%2$d 件のフィールドが変更されました。</item>
     </plurals>
+
+    <!-- プロフィール切り替え (Phase 6.4) -->
+    <string name="profile_type_personal">個人</string>
+    <string name="profile_type_work">仕事</string>
+    <string name="profile_type_custom">カスタム</string>
+    <string name="profile_switcher_title">アクティブプロフィール</string>
+    <string name="profile_switcher_hint">タップしてアクティブカードを切り替え</string>
+    <string name="profile_add">プロフィールを追加</string>
+    <string name="profile_add_work">仕事プロフィールを追加</string>
+    <string name="profile_delete">プロフィールを削除</string>
+    <string name="profile_delete_confirm_title">このプロフィールを削除しますか？</string>
+    <string name="profile_delete_confirm_message">このプロフィールは完全に削除されます。連絡先には影響しません。</string>
+    <string name="profile_set_active">アクティブに設定</string>
+    <string name="profile_active">アクティブ</string>
+    <string name="profile_card_hint">このカードは次回の交換で共有されます</string>
+
+    <!-- キーローテーション — 設定 > セキュリティ (Phase 6.5) -->
+    <string name="settings_section_security">セキュリティ</string>
+    <string name="settings_rotate_key">IDキーをローテート</string>
+    <string name="settings_rotate_key_subtitle">新しい署名キーを生成します。既知のピアは次回の交換時にローテーションを認識します。</string>
+    <string name="settings_rotate_key_confirm_title">IDキーをローテートしますか？</string>
+    <string name="settings_rotate_key_confirm_message">新しいキーが生成されます。既存の連絡先には影響しませんが、ピアは次回の交換時に新しいキーを確認します。</string>
+    <string name="settings_rotate_key_done">IDキーをローテートしました</string>
+    <string name="settings_rotate_key_error">キーのローテートに失敗しました — 再試行してください</string>
+
+    <!-- 交換履歴 (Phase 6.6) -->
+    <string name="settings_exchange_history">交換履歴</string>
+    <string name="audit_title">交換履歴</string>
+    <string name="audit_empty">まだ交換の記録はありません</string>
+    <string name="audit_outcome_success">交換済み</string>
+    <string name="audit_outcome_failed">失敗</string>
+    <string name="audit_outcome_blocked">ブロック済み</string>
+    <string name="audit_outcome_spoof">スプーフィングを検出</string>
+    <string name="audit_outcome_timeout">タイムアウト</string>
+    <string name="audit_outcome_sas_confirmed">SAS確認済み</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">ルーム（ホスト）</string>
+    <string name="audit_channel_room_guest">ルーム（ゲスト）</string>
+    <string name="audit_peer_unknown">不明なピア</string>
+    <string name="audit_export_csv">ログをエクスポート</string>
+    <string name="audit_export_done">ログをダウンロードに保存しました</string>
+    <string name="audit_clear">ログを消去</string>
+    <string name="audit_clear_confirm_title">交換履歴を消去しますか？</string>
+    <string name="audit_clear_confirm_message">すべての交換履歴が完全に削除されます。</string>
+    <string name="audit_clear_done">交換履歴を消去しました</string>
 </resources>

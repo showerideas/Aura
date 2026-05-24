@@ -1,6 +1,7 @@
 package com.showerideas.aura.utils
 
 import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.model.KnownPeer
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import javax.inject.Inject
@@ -153,5 +154,22 @@ class IdentityRotationDetector @Inject constructor(
         } else {
             RotationEvent.FirstContact
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Companion — pure static helpers (JVM-unit-testable, no coroutine needed)
+    // -------------------------------------------------------------------------
+
+    companion object {
+        /**
+         * Returns true if the peer's stored Base64 public key differs from
+         * [incomingBase64Key], indicating a potential key rotation or substitution.
+         *
+         * This is a side-effect-free equality check — callers use it for early
+         * filtering before the full suspend [check] / [checkByStoredHash] calls.
+         * Testable in JVM unit tests without any Android or coroutine dependencies.
+         */
+        fun hasKeyChanged(peer: KnownPeer, incomingBase64Key: String): Boolean =
+            peer.identityPublicKeyBase64 != incomingBase64Key
     }
 }

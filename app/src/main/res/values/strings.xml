@@ -302,4 +302,51 @@
         <item quantity="one">%1$s sent a new card. 1 field changed.</item>
         <item quantity="other">%1$s sent a new card. %2$d fields changed.</item>
     </plurals>
+
+    <!-- Profile switcher (Phase 6.4) -->
+    <string name="profile_type_personal">Personal</string>
+    <string name="profile_type_work">Work</string>
+    <string name="profile_type_custom">Custom</string>
+    <string name="profile_switcher_title">Active profile</string>
+    <string name="profile_switcher_hint">Tap to switch your active card</string>
+    <string name="profile_add">Add profile</string>
+    <string name="profile_add_work">Add Work profile</string>
+    <string name="profile_delete">Delete profile</string>
+    <string name="profile_delete_confirm_title">Delete this profile?</string>
+    <string name="profile_delete_confirm_message">This will remove the profile permanently. Your contacts are not affected.</string>
+    <string name="profile_set_active">Set as active</string>
+    <string name="profile_active">Active</string>
+    <string name="profile_card_hint">This card will be shared on your next exchange</string>
+
+    <!-- Key rotation — Settings > Security (Phase 6.5) -->
+    <string name="settings_section_security">Security</string>
+    <string name="settings_rotate_key">Rotate identity key</string>
+    <string name="settings_rotate_key_subtitle">Generate a new signing key. Known peers will learn of the rotation at your next exchange.</string>
+    <string name="settings_rotate_key_confirm_title">Rotate your identity key?</string>
+    <string name="settings_rotate_key_confirm_message">A new key will be generated. Your existing contacts are not affected, but peers will see a new key on your next exchange.</string>
+    <string name="settings_rotate_key_done">Identity key rotated</string>
+    <string name="settings_rotate_key_error">Key rotation failed — please try again</string>
+
+    <!-- Exchange history — Settings + Audit screen (Phase 6.6) -->
+    <string name="settings_exchange_history">Exchange history</string>
+    <string name="audit_title">Exchange history</string>
+    <string name="audit_empty">No exchanges recorded yet</string>
+    <string name="audit_outcome_success">Exchanged</string>
+    <string name="audit_outcome_failed">Failed</string>
+    <string name="audit_outcome_blocked">Blocked</string>
+    <string name="audit_outcome_spoof">Spoof detected</string>
+    <string name="audit_outcome_timeout">Timed out</string>
+    <string name="audit_outcome_sas_confirmed">SAS confirmed</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">Room (host)</string>
+    <string name="audit_channel_room_guest">Room (guest)</string>
+    <string name="audit_peer_unknown">Unknown peer</string>
+    <string name="audit_export_csv">Export log</string>
+    <string name="audit_export_done">Log saved to Downloads</string>
+    <string name="audit_clear">Clear log</string>
+    <string name="audit_clear_confirm_title">Clear exchange history?</string>
+    <string name="audit_clear_confirm_message">All exchange history will be permanently deleted.</string>
+    <string name="audit_clear_done">Exchange history cleared</string>
 </resources>

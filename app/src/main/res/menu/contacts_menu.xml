@@ -5,4 +5,9 @@
         android:id="@+id/action_export_all"
         android:title="@string/action_export_all"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_exchange_history"
+        android:title="@string/settings_exchange_history"
+        app:showAsAction="never" />
 </menu>

@@ -17,13 +17,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * After adding a new migration, append it to [ALL]. The corresponding
  * JSON schema export under `app/schemas/<dbName>/<version>.json` is
  * required to be committed so Room can verify the upgrade.
+ *
+ * Version history:
+ *  v1 → v2: blocked_endpoints table
+ *  v2 → v3: known_peers table
+ *  v3 → v4: identityKeyHash columns on blocked_endpoints + contacts
+ *  v4 → v5: exchange_audit_log table
+ *  v5 → v6: profile_type, is_active, custom_label columns on profile
+ *  v6 → v7: rotation_certificate column on known_peers (Phase 6.5)
  */
 object Migrations {
 
     /**
-     * add the `blocked_endpoints` table. Schema mirrors the
-     * [com.showerideas.aura.model.BlockedEndpoint] entity exactly so the
-     * post-migration database is bit-identical to a fresh v2 install.
+     * v2: Add the `blocked_endpoints` table. Schema mirrors the
+     * [com.showerideas.aura.model.BlockedEndpoint] entity exactly.
      */
     val MIGRATION_1_2: Migration = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -40,7 +47,7 @@ object Migrations {
     }
 
     /**
-     * add the `known_peers` table for the persisted TOFU endpoint-identity
+     * v3: Add the `known_peers` table for the persisted TOFU endpoint-identity
      * registry. Schema mirrors [com.showerideas.aura.model.KnownPeer] exactly.
      */
     val MIGRATION_2_3: Migration = object : Migration(2, 3) {
@@ -59,7 +66,7 @@ object Migrations {
     }
 
     /**
-     * add stable identity-key hash column to both `blocked_endpoints`
+     * v4: Add stable identity-key hash column to both `blocked_endpoints`
      * and `contacts`. Both columns are nullable (DEFAULT NULL) so existing
      * rows are unaffected and no backfill is required.
      */
@@ -80,8 +87,7 @@ object Migrations {
      * Stores only: id, timestampMs, peerIdentityKeyHash (nullable), direction,
      * outcome, errorCode (nullable), channel. No plaintext PII.
      */
-    val MIGRATION_4_5,
-        MIGRATION_5_6: Migration = object : Migration(4, 5) {
+    val MIGRATION_4_5: Migration = object : Migration(4, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """
@@ -98,8 +104,6 @@ object Migrations {
             )
         }
     }
-
-    /** Ordered list of every migration the app knows about. */
 
     /**
      * v6: Multiple profiles — add profile_type, is_active, and custom_label
@@ -126,6 +130,31 @@ object Migrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
-        MIGRATION_5_6)
+    /**
+     * v7: Key rotation — add rotation_certificate column to `known_peers`.
+     *
+     * Stores the raw DER bytes of a key-rotation certificate: the new public
+     * key signed by the old private key. Null for peers that have never
+     * rotated their identity key.
+     *
+     * Room maps `ByteArray?` to BLOB natively; no TypeConverter needed.
+     * DEFAULT NULL so existing rows are unaffected.
+     */
+    val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE known_peers ADD COLUMN rotation_certificate BLOB DEFAULT NULL"
+            )
+        }
+    }
+
+    /** Ordered list of every migration — passed to Room.databaseBuilder. */
+    val ALL: Array<Migration> = arrayOf(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6,
+        MIGRATION_6_7
+    )
 }

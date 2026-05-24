@@ -65,6 +65,7 @@ class SettingsFragment : Fragment() {
         wireAuthSection()
         wireActivationSection()
         wireAccessibilitySection()
+        wireSecuritySection()
         wireDataSection()
         wireAboutSection()
     }
@@ -206,6 +207,37 @@ class SettingsFragment : Fragment() {
                 else com.showerideas.aura.R.color.on_surface_secondary
             )
         )
+    }
+
+    // -------------------------------------------------------------------------
+    // Security section — key rotation + exchange history (Phase 6.5 / 6.6)
+    // -------------------------------------------------------------------------
+
+    private fun wireSecuritySection() {
+        // Key rotation row
+        binding.rowRotateKey.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.settings_rotate_key_confirm_title)
+                .setMessage(R.string.settings_rotate_key_confirm_message)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.settings_rotate_key) { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val success = viewModel.rotateIdentityKey()
+                        Toast.makeText(
+                            requireContext(),
+                            if (success) R.string.settings_rotate_key_done
+                            else R.string.settings_rotate_key_error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                .show()
+        }
+
+        // Exchange history row
+        binding.rowExchangeHistory.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_audit)
+        }
     }
 
     private fun wireDataSection() {

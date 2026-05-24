@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentHomeBinding
 import com.showerideas.aura.model.ExchangeSession
+import com.showerideas.aura.model.ProfileType
 import com.showerideas.aura.service.NearbyExchangeService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -71,8 +72,23 @@ class HomeFragment : Fragment() {
                     } else {
                         getString(R.string.home_greeting_no_profile)
                     }
+                    // Update the profile chip with the active profile type label
+                    val typeLabel = when (profile?.profileType) {
+                        ProfileType.WORK   -> getString(R.string.profile_type_work)
+                        ProfileType.CUSTOM -> profile.customLabel.ifBlank {
+                            getString(R.string.profile_type_custom)
+                        }
+                        else               -> getString(R.string.profile_type_personal)
+                    }
+                    binding.chipActiveProfile.text = typeLabel
                 }
             }
+        }
+
+        // Profile chip tap → open profile switcher bottom sheet
+        binding.chipActiveProfile.setOnClickListener {
+            ProfileSwitcherBottomSheet()
+                .show(childFragmentManager, ProfileSwitcherBottomSheet.TAG)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

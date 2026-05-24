@@ -238,4 +238,51 @@
     <plurals name="merge_subtitle">
         <item quantity="other">%1$s 发送了一张新名片。%2$d 个字段已更改。</item>
     </plurals>
+
+    <!-- 档案切换器 (Phase 6.4) -->
+    <string name="profile_type_personal">个人</string>
+    <string name="profile_type_work">工作</string>
+    <string name="profile_type_custom">自定义</string>
+    <string name="profile_switcher_title">当前档案</string>
+    <string name="profile_switcher_hint">点击切换当前名片</string>
+    <string name="profile_add">添加档案</string>
+    <string name="profile_add_work">添加工作档案</string>
+    <string name="profile_delete">删除档案</string>
+    <string name="profile_delete_confirm_title">删除此档案？</string>
+    <string name="profile_delete_confirm_message">该档案将被永久删除。您的联系人不受影响。</string>
+    <string name="profile_set_active">设为当前</string>
+    <string name="profile_active">当前</string>
+    <string name="profile_card_hint">此名片将在下次交换时共享</string>
+
+    <!-- 密钥轮换 — 设置 > 安全 (Phase 6.5) -->
+    <string name="settings_section_security">安全</string>
+    <string name="settings_rotate_key">轮换身份密钥</string>
+    <string name="settings_rotate_key_subtitle">生成新的签名密钥。已知联系人将在下次交换时得知轮换情况。</string>
+    <string name="settings_rotate_key_confirm_title">轮换身份密钥？</string>
+    <string name="settings_rotate_key_confirm_message">将生成新密钥。您现有的联系人不受影响，但对方将在下次交换时看到新密钥。</string>
+    <string name="settings_rotate_key_done">身份密钥已轮换</string>
+    <string name="settings_rotate_key_error">密钥轮换失败 — 请重试</string>
+
+    <!-- 交换历史 (Phase 6.6) -->
+    <string name="settings_exchange_history">交换历史</string>
+    <string name="audit_title">交换历史</string>
+    <string name="audit_empty">暂无交换记录</string>
+    <string name="audit_outcome_success">已交换</string>
+    <string name="audit_outcome_failed">失败</string>
+    <string name="audit_outcome_blocked">已屏蔽</string>
+    <string name="audit_outcome_spoof">检测到欺骗</string>
+    <string name="audit_outcome_timeout">超时</string>
+    <string name="audit_outcome_sas_confirmed">SAS已确认</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">房间（主持人）</string>
+    <string name="audit_channel_room_guest">房间（嘉宾）</string>
+    <string name="audit_peer_unknown">未知对等方</string>
+    <string name="audit_export_csv">导出日志</string>
+    <string name="audit_export_done">日志已保存至下载</string>
+    <string name="audit_clear">清除日志</string>
+    <string name="audit_clear_confirm_title">清除交换历史？</string>
+    <string name="audit_clear_confirm_message">所有交换历史将被永久删除。</string>
+    <string name="audit_clear_done">交换历史已清除</string>
 </resources>

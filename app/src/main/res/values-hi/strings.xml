@@ -240,4 +240,51 @@
         <item quantity="one">%1$s ने एक नया कार्ड भेजा। 1 फ़ील्ड बदला।</item>
         <item quantity="other">%1$s ने एक नया कार्ड भेजा। %2$d फ़ील्ड बदले।</item>
     </plurals>
+
+    <!-- प्रोफ़ाइल स्विचर (Phase 6.4) -->
+    <string name="profile_type_personal">व्यक्तिगत</string>
+    <string name="profile_type_work">कार्य</string>
+    <string name="profile_type_custom">कस्टम</string>
+    <string name="profile_switcher_title">सक्रिय प्रोफ़ाइल</string>
+    <string name="profile_switcher_hint">सक्रिय कार्ड बदलने के लिए टैप करें</string>
+    <string name="profile_add">प्रोफ़ाइल जोड़ें</string>
+    <string name="profile_add_work">कार्य प्रोफ़ाइल जोड़ें</string>
+    <string name="profile_delete">प्रोफ़ाइल हटाएं</string>
+    <string name="profile_delete_confirm_title">यह प्रोफ़ाइल हटाएं?</string>
+    <string name="profile_delete_confirm_message">यह प्रोफ़ाइल स्थायी रूप से हटा दी जाएगी। आपके संपर्क प्रभावित नहीं होंगे।</string>
+    <string name="profile_set_active">सक्रिय के रूप में सेट करें</string>
+    <string name="profile_active">सक्रिय</string>
+    <string name="profile_card_hint">यह कार्ड आपके अगले आदान-प्रदान में साझा किया जाएगा</string>
+
+    <!-- कुंजी रोटेशन — सेटिंग्स > सुरक्षा (Phase 6.5) -->
+    <string name="settings_section_security">सुरक्षा</string>
+    <string name="settings_rotate_key">पहचान कुंजी बदलें</string>
+    <string name="settings_rotate_key_subtitle">एक नई हस्ताक्षर कुंजी उत्पन्न करें। ज्ञात पीयर अगले आदान-प्रदान पर परिवर्तन के बारे में जानेंगे।</string>
+    <string name="settings_rotate_key_confirm_title">अपनी पहचान कुंजी बदलें?</string>
+    <string name="settings_rotate_key_confirm_message">एक नई कुंजी उत्पन्न की जाएगी। आपके मौजूदा संपर्क प्रभावित नहीं होंगे, लेकिन पीयर अगले आदान-प्रदान में एक नई कुंजी देखेंगे।</string>
+    <string name="settings_rotate_key_done">पहचान कुंजी बदली गई</string>
+    <string name="settings_rotate_key_error">कुंजी बदलने में विफल — पुनः प्रयास करें</string>
+
+    <!-- आदान-प्रदान इतिहास (Phase 6.6) -->
+    <string name="settings_exchange_history">आदान-प्रदान इतिहास</string>
+    <string name="audit_title">आदान-प्रदान इतिहास</string>
+    <string name="audit_empty">अभी तक कोई आदान-प्रदान दर्ज नहीं हुआ</string>
+    <string name="audit_outcome_success">आदान-प्रदान हुआ</string>
+    <string name="audit_outcome_failed">विफल</string>
+    <string name="audit_outcome_blocked">अवरुद्ध</string>
+    <string name="audit_outcome_spoof">धोखाधड़ी का पता चला</string>
+    <string name="audit_outcome_timeout">समय समाप्त</string>
+    <string name="audit_outcome_sas_confirmed">SAS पुष्टि हुई</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">रूम (होस्ट)</string>
+    <string name="audit_channel_room_guest">रूम (अतिथि)</string>
+    <string name="audit_peer_unknown">अज्ञात पीयर</string>
+    <string name="audit_export_csv">लॉग निर्यात करें</string>
+    <string name="audit_export_done">लॉग डाउनलोड में सहेजा गया</string>
+    <string name="audit_clear">लॉग साफ़ करें</string>
+    <string name="audit_clear_confirm_title">आदान-प्रदान इतिहास साफ़ करें?</string>
+    <string name="audit_clear_confirm_message">सभी आदान-प्रदान इतिहास स्थायी रूप से हटा दिया जाएगा।</string>
+    <string name="audit_clear_done">आदान-प्रदान इतिहास साफ़ हो गया</string>
 </resources>

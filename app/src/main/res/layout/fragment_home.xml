@@ -29,6 +29,24 @@
         app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
 
     <!--
+      Phase 6.4: Profile switcher chip — shows current active profile type.
+      Tap opens ProfileSwitcherBottomSheet to switch between Personal / Work cards.
+    -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chip_active_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@string/profile_switcher_hint"
+        android:text="@string/profile_type_personal"
+        android:textSize="13sp"
+        app:chipBackgroundColor="@color/surface_variant"
+        app:chipStrokeColor="@color/aura_purple"
+        app:chipStrokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
+
+    <!--
       PR-18: pulsing activate button. The FrameLayout holds two layers:
         - pulse_ring  decorative ring animated by HomeFragment (scale + alpha).
         - btn_activate  the actual tappable AURA button on top.

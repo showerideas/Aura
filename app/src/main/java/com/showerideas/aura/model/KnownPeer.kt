@@ -1,5 +1,6 @@
 package com.showerideas.aura.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -25,5 +26,15 @@ data class KnownPeer(
     /** Base64-encoded X.509 SubjectPublicKeyInfo bytes of the peer's device identity public key. */
     val identityPublicKeyBase64: String,
     val firstSeenAt: Long = System.currentTimeMillis(),
-    val lastSeenAt: Long = System.currentTimeMillis()
+    val lastSeenAt: Long = System.currentTimeMillis(),
+    /**
+     * Raw DER bytes of a key-rotation certificate — the peer's new identity
+     * public key signed by their old identity private key. Null if the peer
+     * has never performed a key rotation.
+     *
+     * Added in DB v7 (MIGRATION_6_7). Room stores ByteArray? as BLOB natively.
+     * Verified by [IdentityRotationDetector] on next exchange.
+     */
+    @ColumnInfo(name = "rotation_certificate")
+    val rotationCertificate: ByteArray? = null
 )
