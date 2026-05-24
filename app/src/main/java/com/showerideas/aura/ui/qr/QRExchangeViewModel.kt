@@ -13,6 +13,7 @@ import com.showerideas.aura.data.ProfileRepository
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.network.RelayClient
 import com.showerideas.aura.utils.CryptoUtils
+import com.showerideas.aura.utils.SasVerifier
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,9 +39,19 @@ import javax.inject.Inject
  *  - One ephemeral ECDH keypair per 60-second QR cycle (re-rolled on expiry).
  *  - The rendered QR bitmap and countdown timer.
  *  - The full relay exchange flow:
- *      1. Parse peer QR → ECDH → AES-256 session key.
- *      2. Encrypt local profile → POST to our relay slot.
- *      3. Poll peer's relay slot → decrypt → save as Contact.
+ *      1. Parse peer QR -> ECDH -> AES-256 session key.
+ *      2. Encrypt local profile -> POST to our relay slot.
+ *      3. Poll peer's relay slot -> decrypt -> hold in memory.
+ *      4. Derive SAS from both ephemeral public keys -- show for MITM check.
+ *      5. User confirms SAS match -> save contact to Room.
+ *
+ * ## SAS verification on QR path
+ * The Nearby path shows a SAS dialog mid-exchange (State.VERIFYING). The QR
+ * path mirrors this: after decrypting the peer's profile but before saving it
+ * to Room, [PairingResult.AwaitingSasConfirmation] is emitted. The Fragment
+ * shows an AlertDialog; the user verbally compares the 6-digit code with their
+ * peer. Confirming saves the contact; a mismatch discards the pending contact
+ * without persisting anything -- protecting against relay-based MITM attacks.
  */
 @HiltViewModel
 class QRExchangeViewModel @Inject constructor(
@@ -50,9 +61,9 @@ class QRExchangeViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        const val QR_EXPIRY_MS              = 60_000L
-        const val QR_PAYLOAD_VERSION        = 1
-        private const val QR_SIZE_PX        = 800
+        const val QR_EXPIRY_MS               = 60_000L
+        const val QR_PAYLOAD_VERSION         = 1
+        private const val QR_SIZE_PX         = 800
         private const val RELAY_POLL_TIMEOUT_MS  = 30_000L
         private const val RELAY_POLL_INTERVAL_MS = 2_000L
     }
@@ -64,13 +75,19 @@ class QRExchangeViewModel @Inject constructor(
     val secondsRemaining: StateFlow<Int> = _secondsRemaining.asStateFlow()
 
     sealed class PairingResult {
-        /** Full exchange succeeded — [contact] has been persisted to Room. */
+        /** Full exchange succeeded -- [contact] has been persisted to Room. */
         data class Success(val contact: Contact) : PairingResult()
+        /**
+         * Peer profile received and decrypted. The Fragment should show a SAS
+         * dialog displaying [sasPin]; call [confirmSas] or [abortSas] to resolve.
+         * The contact is NOT saved until [confirmSas] is called.
+         */
+        data class AwaitingSasConfirmation(val sasPin: String) : PairingResult()
         /** Peer QR payload was malformed or missing required fields. */
         object Invalid : PairingResult()
         /** Peer QR timestamp is older than [QR_EXPIRY_MS]. */
         object Expired : PairingResult()
-        /** Local keypair was cleared before the scan completed (shouldn't happen). */
+        /** Local keypair was cleared before the scan completed (should not happen). */
         object MissingLocalKey : PairingResult()
         /** Peer never posted their profile to the relay within the poll window. */
         object RelayTimeout : PairingResult()
@@ -83,6 +100,12 @@ class QRExchangeViewModel @Inject constructor(
 
     @Volatile private var ourKeyPair: KeyPair? = null
     @Volatile private var localEndpoint: String = UUID.randomUUID().toString()
+
+    /**
+     * Decrypted peer contact held between [AwaitingSasConfirmation] emission
+     * and [confirmSas]. Cleared on [abortSas] or [onCleared].
+     */
+    @Volatile private var pendingContact: Contact? = null
 
     private var countdownJob: Job? = null
 
@@ -129,7 +152,7 @@ class QRExchangeViewModel @Inject constructor(
 
     /**
      * Called when the ZXing scanner returns a result. Kicks off the full relay
-     * exchange on a coroutine — UI should show a loading indicator while
+     * exchange on a coroutine -- UI should show a loading indicator while
      * [pairingResult] is null after this call.
      */
     fun onPeerScanned(peerJson: String) {
@@ -140,7 +163,7 @@ class QRExchangeViewModel @Inject constructor(
 
     private suspend fun pairWithPeer(rawJson: String): PairingResult {
         return try {
-            // ── Step 1: parse the peer's QR payload ──────────────────────────
+            // Step 1: parse the peer's QR payload
             val obj = JSONObject(rawJson)
             val peerPubKeyB64 = obj.optString("pubkey")
             val peerEndpoint  = obj.optString("endpoint")
@@ -149,16 +172,16 @@ class QRExchangeViewModel @Inject constructor(
             if (peerPubKeyB64.isEmpty() || peerEndpoint.isEmpty()) return PairingResult.Invalid
             if (ts > 0 && System.currentTimeMillis() - ts > QR_EXPIRY_MS) return PairingResult.Expired
 
-            // ── Step 2: ECDH → AES-256 session key ───────────────────────────
-            val ourPriv      = ourKeyPair?.private ?: return PairingResult.MissingLocalKey
+            // Step 2: ECDH -> AES-256 session key
+            val ourKp        = ourKeyPair ?: return PairingResult.MissingLocalKey
             val peerKeyBytes = Base64.getDecoder().decode(peerPubKeyB64)
             val peerPubKey   = decodeEC256PublicKey(peerKeyBytes)
-            val sharedKey: SecretKey = CryptoUtils.deriveSharedAESKey(ourPriv, peerPubKey)
-            Timber.i("QR ECDH — AES-256 derived (peer endpoint=%s)", peerEndpoint)
+            val sharedKey: SecretKey = CryptoUtils.deriveSharedAESKey(ourKp.private, peerPubKey)
+            Timber.i("QR ECDH -- AES-256 derived (peer endpoint=%s)", peerEndpoint)
 
-            // ── Step 3: serialize + encrypt local profile ─────────────────────
-            val profile      = profileRepository.getOrCreate()
-            val profileJson  = JSONObject(profile.toShareableMap()).toString()
+            // Step 3: serialize + encrypt local profile
+            val profile       = profileRepository.getOrCreate()
+            val profileJson   = JSONObject(profile.toShareableMap()).toString()
             val encryptedOurs = CryptoUtils.encrypt(
                 sharedKey,
                 profileJson.toByteArray(Charsets.UTF_8)
@@ -166,18 +189,15 @@ class QRExchangeViewModel @Inject constructor(
 
             val baseUrl = BuildConfig.RELAY_BASE_URL
 
-            // ── Steps 4 + 5: POST ours + poll for theirs (IO thread) ──────────
+            // Steps 4+5: POST ours + poll for theirs (IO thread)
             withContext(Dispatchers.IO) {
-                // POST our encrypted profile to our own slot in the background.
-                // We don't block the poll on its completion — both operations
-                // race independently so the peer's poll can start immediately.
+                // POST in background so the peer's poll can start immediately.
                 launch {
                     val ok = relayClient.postSlot(baseUrl, localEndpoint, encryptedOurs)
-                    if (!ok) Timber.w("QR relay POST to slot/%s failed — peer may miss our profile", localEndpoint)
+                    if (!ok) Timber.w("QR relay POST to slot/%s failed", localEndpoint)
                 }
-
-                // Poll for the peer's profile; decrypt + save on success.
-                pollForSlot(baseUrl, peerEndpoint, sharedKey)
+                // Poll for peer's profile; decrypt + hold (do NOT save yet).
+                pollAndDecrypt(baseUrl, peerEndpoint, sharedKey, ourKp.public, peerPubKey)
             } ?: PairingResult.RelayTimeout
 
         } catch (e: Exception) {
@@ -188,21 +208,24 @@ class QRExchangeViewModel @Inject constructor(
 
     /**
      * Polls the relay at [peerEndpoint] until encrypted bytes arrive or the
-     * [RELAY_POLL_TIMEOUT_MS] window closes. Returns a [PairingResult] on
-     * receipt (decrypt + save) or null on timeout.
+     * [RELAY_POLL_TIMEOUT_MS] window closes. On receipt, decrypts the contact,
+     * holds it in [pendingContact], derives the SAS, and returns
+     * [PairingResult.AwaitingSasConfirmation] -- the contact is NOT persisted yet.
      *
      * Must be called from [Dispatchers.IO].
      */
-    private suspend fun pollForSlot(
+    private suspend fun pollAndDecrypt(
         baseUrl: String,
         peerEndpoint: String,
-        sharedKey: SecretKey
+        sharedKey: SecretKey,
+        ourPubKey: PublicKey,
+        peerPubKey: PublicKey
     ): PairingResult? {
         val deadline = System.currentTimeMillis() + RELAY_POLL_TIMEOUT_MS
         while (System.currentTimeMillis() < deadline) {
             val bytes = relayClient.getSlot(baseUrl, peerEndpoint)
             if (bytes != null && bytes.isNotEmpty()) {
-                return decryptAndSave(bytes, sharedKey, peerEndpoint)
+                return decryptAndHold(bytes, sharedKey, peerEndpoint, ourPubKey, peerPubKey)
             }
             delay(RELAY_POLL_INTERVAL_MS)
         }
@@ -210,11 +233,20 @@ class QRExchangeViewModel @Inject constructor(
         return null
     }
 
-    /** Decrypt [encryptedBytes] with [sharedKey], parse the profile, persist as Contact. */
-    private suspend fun decryptAndSave(
+    /**
+     * Decrypts [encryptedBytes] with [sharedKey], parses the contact, stores it in
+     * [pendingContact], derives the SAS from both ephemeral public keys, and returns
+     * [PairingResult.AwaitingSasConfirmation].
+     *
+     * The contact is intentionally NOT saved to Room here -- [confirmSas] does that
+     * once the user verifies the SAS matches the peer's display.
+     */
+    private fun decryptAndHold(
         encryptedBytes: ByteArray,
         sharedKey: SecretKey,
-        peerEndpoint: String
+        peerEndpoint: String,
+        ourPubKey: PublicKey,
+        peerPubKey: PublicKey
     ): PairingResult {
         return try {
             val plaintext = CryptoUtils.decrypt(sharedKey, encryptedBytes)
@@ -227,13 +259,52 @@ class QRExchangeViewModel @Inject constructor(
                 map        = peerMap,
                 endpointId = peerEndpoint
             )
-            contactRepository.saveDeduped(contact)
-            Timber.i("QR exchange complete — contact saved: %s", contact.displayName)
-            PairingResult.Success(contact)
+            // Hold in memory -- only persisted after the user confirms the SAS.
+            pendingContact = contact
+
+            val sasPin = SasVerifier.derive(ourPubKey, peerPubKey)
+            Timber.i("QR SAS derived: %s -- awaiting user confirmation", sasPin)
+            PairingResult.AwaitingSasConfirmation(sasPin)
         } catch (e: Exception) {
-            Timber.e(e, "QR decrypt/save failed")
+            Timber.e(e, "QR decrypt/hold failed")
             PairingResult.Error(e.message ?: "decrypt failed")
         }
+    }
+
+    /**
+     * Called by the Fragment when the user confirms the SAS matches their peer's display.
+     * Persists [pendingContact] to Room and emits [PairingResult.Success].
+     */
+    fun confirmSas() {
+        viewModelScope.launch {
+            val contact = pendingContact
+            if (contact == null) {
+                Timber.w("confirmSas called but pendingContact is null -- ignoring")
+                return@launch
+            }
+            pendingContact = null
+            try {
+                contactRepository.saveDeduped(contact)
+                Timber.i("QR exchange complete (SAS confirmed) -- contact saved: %s", contact.displayName)
+                _pairingResult.value = PairingResult.Success(contact)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to save contact after SAS confirmation")
+                _pairingResult.value = PairingResult.Error(e.message ?: "save failed")
+            }
+        }
+    }
+
+    /**
+     * Called by the Fragment when the user reports the SAS does not match their peer.
+     * Discards [pendingContact] without saving and emits [PairingResult.Error].
+     *
+     * A MITM who substitutes their own ephemeral key produces a different SAS --
+     * aborting here ensures no attacker-controlled contact data is persisted.
+     */
+    fun abortSas() {
+        pendingContact = null
+        Timber.w("QR SAS mismatch reported -- exchange aborted, pendingContact discarded")
+        _pairingResult.value = PairingResult.Error("SAS mismatch -- possible MITM detected")
     }
 
     fun consumePairingResult() { _pairingResult.value = null }
@@ -246,7 +317,7 @@ class QRExchangeViewModel @Inject constructor(
     override fun onCleared() {
         countdownJob?.cancel()
         countdownJob = null
+        pendingContact = null
         super.onCleared()
     }
 }
-

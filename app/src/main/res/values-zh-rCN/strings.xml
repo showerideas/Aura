@@ -89,6 +89,7 @@
     <string name="qr_expired">配对码已过期，请让对方刷新。</string>
     <string name="qr_pairing_ok">联系人已保存：%1$s</string>
     <string name="qr_relay_timeout">对方手机未能及时响应。请重试。</string>
+    <string name="qr_sas_mismatch_abort">安全码不匹配 — 交换已中止。未保存任何联系人。</string>
     <string name="home_room_mode">房间模式</string>
     <string name="room_mode_host">创建房间</string>
     <string name="room_mode_guest">加入房间</string>

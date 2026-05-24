@@ -89,6 +89,7 @@
     <string name="qr_expired">Ce code d\'association a expiré. Demandez à l\'autre personne de l\'actualiser.</string>
     <string name="qr_pairing_ok">Contact enregistré : %1$s</string>
     <string name="qr_relay_timeout">L\'autre téléphone n\'a pas répondu à temps. Réessayez.</string>
+    <string name="qr_sas_mismatch_abort">Le code de sécurité ne correspond pas — échange annulé. Aucun contact enregistré.</string>
     <string name="home_room_mode">Mode salle</string>
     <string name="room_mode_host">Héberger une salle</string>
     <string name="room_mode_guest">Rejoindre une salle</string>

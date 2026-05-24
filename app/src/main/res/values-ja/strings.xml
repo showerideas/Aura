@@ -89,6 +89,7 @@
     <string name="qr_expired">このペアリングコードは期限切れです。相手に更新してもらってください。</string>
     <string name="qr_pairing_ok">連絡先を保存しました: %1$s</string>
     <string name="qr_relay_timeout">相手の端末が時間内に応答しませんでした。もう一度お試しください。</string>
+    <string name="qr_sas_mismatch_abort">セキュリティコードが一致しません — 交換を中止しました。連絡先は保存されていません。</string>
     <string name="home_room_mode">ルームモード</string>
     <string name="room_mode_host">ルームをホスト</string>
     <string name="room_mode_guest">ルームに参加</string>

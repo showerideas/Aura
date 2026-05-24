@@ -89,6 +89,7 @@
     <string name="qr_expired">Dieser Kopplungscode ist abgelaufen. Bitten Sie die andere Person, ihn zu aktualisieren.</string>
     <string name="qr_pairing_ok">Kontakt gespeichert: %1$s</string>
     <string name="qr_relay_timeout">Das andere Gerät hat nicht rechtzeitig geantwortet. Bitte erneut versuchen.</string>
+    <string name="qr_sas_mismatch_abort">Sicherheitscode stimmt nicht überein – Austausch abgebrochen. Kein Kontakt gespeichert.</string>
     <string name="home_room_mode">Raum-Modus</string>
     <string name="room_mode_host">Raum hosten</string>
     <string name="room_mode_guest">Raum beitreten</string>
