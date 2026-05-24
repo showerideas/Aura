@@ -278,9 +278,9 @@ The `nav_graph.xml` lives at [`app/src/main/res/navigation/nav_graph.xml`](../ap
 
 A single `DatabaseModule` (`@InstallIn(SingletonComponent::class)`) provides:
 
-- `AppDatabase` (Room) — built with `Migrations.MIGRATION_1_2` registered.
-- Each DAO (`ContactDao`, `ProfileDao`, `BlockedEndpointDao`) is provided from the singleton database.
-- `GestureAuthManager`, `BiometricAuthHelper`, and the three repositories (`ContactRepository`, `ProfileRepository`, `BlocklistRepository`) are constructor-`@Inject`ed.
+- `AppDatabase` (Room v5) — built with all four migrations registered (`MIGRATION_1_2` through `MIGRATION_4_5`).
+- Each DAO (`ContactDao`, `ProfileDao`, `BlockedEndpointDao`, `KnownPeerDao`, `ExchangeAuditDao`) is provided from the singleton database.
+- `GestureAuthManager`, `BiometricAuthHelper`, and the five repositories (`ContactRepository`, `ProfileRepository`, `BlocklistRepository`, `KnownPeerRepository`, `ExchangeAuditRepository`) are constructor-`@Inject`ed.
 
 ViewModels use `@HiltViewModel`. The `AuraApplication` class is annotated `@HiltAndroidApp`.
 
