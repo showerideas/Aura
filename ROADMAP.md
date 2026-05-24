@@ -259,7 +259,7 @@ Once the signed AAB is uploaded via CI:
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Package map, threading model, dependency rules |
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, crypto decisions, NIST SP 800-56A compliance |
 | [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md) | Step-by-step sequence diagram for a complete exchange |
-| [`docs/GESTURE_AUTH.md`](docs/GESTURE_AUTH.md) | DTW matcher design, variance scoring, lockout policy |
+| [`docs/GESTURE_AUTH.md`](docs/GESTURE_AUTH.md) | CameraX + MediaPipe pipeline, 42-float embedding, cosine-similarity matching, stability gate |
 | [`STORE_LISTING.md`](STORE_LISTING.md) | Play Store copy — short description, full description, keywords |
 | [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) | Privacy policy source (hosted via GitHub Pages) |
 | [`SECURITY.md`](SECURITY.md) | Responsible disclosure policy |

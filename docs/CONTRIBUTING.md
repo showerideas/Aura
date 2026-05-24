@@ -54,7 +54,7 @@ A PR cannot be merged until **all three** Gradle gates pass on GitHub Actions:
 
 | Gate | Command | Why |
 |---|---|---|
-| Unit tests | `./gradlew testDebugUnitTest` | Catches DTW / crypto / payload regressions cheaply. |
+| Unit tests | `./gradlew testDebugUnitTest` | Catches gesture-matching / crypto / payload regressions cheaply. |
 | Lint | `./gradlew lintDebug` | Stops new warnings; pre-existing ones are silenced by the baseline. |
 | Release assembly | `./gradlew assembleRelease` | Validates ProGuard rules and R8 against every transitive dep. CI leaves the signing env vars blank → unsigned APK. |
 
@@ -101,7 +101,7 @@ If your PR touches:
 ## 7. Reporting bugs / vulnerabilities
 
 - **Functional bug** → open an issue, include device model + Android version + redacted logcat.
-- **Security issue** → **do not** open a public issue. Email `security@showerideas.app` or open a private GitHub Security Advisory.
+- **Security issue** → **do not** open a public issue. Open a private [GitHub Security Advisory](https://github.com/showerideas/Aura/security/advisories/new).
 
 ---
 

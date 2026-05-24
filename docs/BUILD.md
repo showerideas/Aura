@@ -39,7 +39,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 |---|---|
 | `./gradlew assembleDebug` | Debug APK (`.debug` app-id suffix, `-debug` versionName suffix) |
 | `./gradlew assembleRelease` | Release APK (R8 + resource shrinking). Unsigned unless `KEYSTORE_PATH` is set. |
-| `./gradlew testDebugUnitTest` | JVM unit tests (DTW, crypto, profile, payload validator, vCard, replay protection) |
+| `./gradlew testDebugUnitTest` | JVM unit tests (gesture embedding, crypto, profile, payload validator, vCard, replay protection, SAS verifier) |
 | `./gradlew lintDebug` | Android Lint against the existing baseline |
 | `./gradlew connectedAndroidTest` | Espresso + Room migration + DAO tests on a connected device |
 | `./gradlew :app:dependencies` | Resolve & print the dependency tree |

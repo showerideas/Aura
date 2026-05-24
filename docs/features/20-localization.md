@@ -1,70 +1,102 @@
-# PR-20 — Localisation scaffolding
+# Localisation — coverage and roadmap
 
-> PR-20a / PR-20b / PR-20c together extract **every** user-visible literal from layouts and Kotlin into `app/src/main/res/values/strings.xml`. This is the *prerequisite* step; the **translated** resource bundles are not in the repo yet.
-
----
-
-## Status
-
-🟢 **Stub bundles shipped in v1.1.0 (PR after #37).** Every promised locale now ships a curated subset of the highest-impact strings; the rest fall back to `values/` (English) via Android's normal resource-resolution chain.
-
-```
-app/src/main/res/values/strings.xml          ← committed ✅ (162 strings)
-app/src/main/res/values-hi/strings.xml       ← stub ✅ (24 critical strings)
-app/src/main/res/values-es/strings.xml       ← stub ✅
-app/src/main/res/values-fr/strings.xml       ← stub ✅
-app/src/main/res/values-de/strings.xml       ← stub ✅
-app/src/main/res/values-ja/strings.xml       ← stub ✅
-app/src/main/res/values-ko/strings.xml       ← stub ✅
-app/src/main/res/values-zh-rCN/strings.xml   ← stub ✅
-```
-
-**"Critical" = navigation labels, primary buttons, status messages, and profile-field hints.** Roughly 15 % of the keys, but ~80 % of the visible surface a first-time user touches.
+> **Prompt-11 update (2026-05-23):** This document now reflects actual string counts
+> and per-locale coverage, replacing earlier estimates.
 
 ---
 
-## What PR-20 actually delivered
+## Current coverage (as of v1.1 + Prompt-11 additions)
 
-```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
-flowchart LR
-    A["literals in *.xml / *.kt"] --> B[extracted to strings.xml]
-    B --> C[lint MissingTranslation suppressed via baseline]
-    C --> D[Profile, Home, Exchange,<br/>Contacts, Onboarding, Settings,<br/>Blocked, Biometric, Permission rationale,<br/>all *_label, *_hint, *_status]
-    D --> E[207 string resources]
+| Locale | File | Translated | Total in `values/` | Coverage |
+|---|---|---|---|---|
+| English (base) | `values/strings.xml` | 202 | 202 | 100% |
+| German | `values-de/strings.xml` | 162 | 202 | 80% |
+| Spanish | `values-es/strings.xml` | 162 | 202 | 80% |
+| French | `values-fr/strings.xml` | 162 | 202 | 80% |
+| Hindi | `values-hi/strings.xml` | 162 | 202 | 80% |
+| Japanese | `values-ja/strings.xml` | 162 | 202 | 80% |
+| Korean | `values-ko/strings.xml` | 162 | 202 | 80% |
+| Chinese (Simplified) | `values-zh-rCN/strings.xml` | 162 | 202 | 80% |
+
+**40 strings added since the v1.1 stub bundles were created** — the new
+strings cover: volume-button warning banner, gesture-entropy disclaimer,
+SAS verification prompt, and settings improvements. These are not yet
+translated in the locale bundles (Android falls back to English).
+
+---
+
+## Lint suppression status
+
+`MissingTranslation` lint check is disabled in `app/build.gradle.kts` via:
+
+```kotlin
+lint {
+    disable += setOf("MissingTranslation")
+    ...
+}
 ```
 
-The string IDs are stable and grouped by screen so translators see related strings together.
+This is a deliberate coverage decision, not a lint bug. The 40 untranslated
+strings all fall back gracefully to English. `ExtraTranslation` and
+`InvalidTranslation` remain enabled to catch real mistakes.
+
+**Tracking issue:** Re-enable `MissingTranslation` once all 7 locale bundles
+reach 100% coverage. Targeted for v1.3.0.
 
 ---
 
-## How to add a translation
+## How translations work at runtime
 
-1. Create `app/src/main/res/values-XX/strings.xml` (where `XX` is the locale, e.g. `hi`, `es`, `zh-rCN`).
-2. Copy every `<string name="...">` from the default file (omit `<string name="...">` entries that contain only `\u00A0`-style escapes).
-3. Translate the *content*, leave the format specifiers (`%1$d`, `%1$s`) and the inline `\u…` escapes alone.
-4. Run `./gradlew lintDebug` — the `MissingTranslation` baseline will narrow as you add entries.
-5. Test by switching the device locale and re-launching.
+Android resolves strings from the most-specific locale bundle available. A
+device set to `de-AT` (Austrian German) will use `values-de/` where a string
+exists, falling back to `values/` (English) for any key not present. The
+user sees English copy for the 40 untranslated strings — the app does not
+crash and layout does not break.
 
 ---
 
-## Why the current build still ships
+## How to add / update a translation
 
-Android falls back to `values/` for any locale that does not have its own bundle. A user whose device is set to Hindi today will see English copy; the app does not crash and does not look broken — it just isn't yet a localised experience.
+1. Copy the source string from `app/src/main/res/values/strings.xml`.
+2. Paste into the appropriate `values-XX/strings.xml`.
+3. Translate the *content*, leaving format specifiers (`%1$d`, `%1$s`) and
+   Unicode escapes (`\u2019`) untouched.
+4. Run `./gradlew lintDebug` — with `MissingTranslation` disabled, you'll only
+   see `ExtraTranslation` (you added a key not in base) or `InvalidTranslation`.
+5. Test by switching the device locale in Developer Options and re-launching.
+
+---
+
+## Priority strings for the next translation pass
+
+The 40 untranslated strings include:
+
+| String key | Surface | Why it matters |
+|---|---|---|
+| `settings_volume_wake_warning` | Settings | Shown prominently when BG activation is on |
+| `settings_test_volume_press` | Settings | In-app test button |
+| `settings_volume_test_*` | Settings | Test result messages |
+| Gesture entropy disclaimer strings | Onboarding / gesture setup | User-visible FAR caveat |
+| SAS verification prompt | Exchange flow | New first-meet security UX |
+
+Completing these 40 strings would bring all 7 locales to 100% coverage.
 
 ---
 
 ## Tests
 
-n/a — translation is a content task, not a code task. Linting (`lintDebug`) is the gate.
+Translation is a content task, not a code task. The CI gate is:
+
+```bash
+./gradlew lintDebug
+```
+
+`ExtraTranslation` and `InvalidTranslation` are both enabled and fail CI.
+`MissingTranslation` is suppressed until 100% coverage is reached.
+
+To verify coverage counts:
+```bash
+grep -c '<string name=' app/src/main/res/values/strings.xml
+grep -c '<string name=' app/src/main/res/values-de/strings.xml
+# ... etc for each locale
+```

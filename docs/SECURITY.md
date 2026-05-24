@@ -153,6 +153,6 @@ Both phones display the same number. A MITM who substitutes their own key produc
 
 ## 7. Audit / disclosure
 
-If you find a security issue please **do not** open a public issue. Email `security@showerideas.app` (or open a private GitHub Security Advisory on this repo) with a description and ideally a reproduction. We will acknowledge within 72 hours.
+If you find a security issue please **do not** open a public issue. Open a private [GitHub Security Advisory](https://github.com/showerideas/Aura/security/advisories/new) with a description and ideally a reproduction. We will acknowledge within 72 hours.
 
 Until v1.0.0 ships in the Play Store there is no formal CVE process; we will note any fixes in the relevant release notes and credit reporters who wish to be named.

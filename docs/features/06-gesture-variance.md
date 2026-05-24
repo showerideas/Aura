@@ -1,6 +1,6 @@
 # PR-06 — Gesture variance gate
 
-> A user can record an essentially-flat motion (phone on a table, finger sliding) and the DTW matcher would happily accept any other flat motion as a match — because after z-normalisation both become near-zero vectors. PR-06 rejects low-variance feature vectors at **record** *and* **match** time.
+> A user can record an essentially-flat hand pose and the cosine-similarity matcher would give a high score to any other near-zero embedding — because all flat 42-float vectors collapse toward the same direction. PR-06 rejects low-variance feature vectors at **record** *and* **match** time.
 
 ---
 
@@ -20,7 +20,7 @@
   'clusterBorder':'#CBD5E1'
 },'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
-    R[Raw magnitude<br/>samples] --> V["variance σ² = mean((xᵢ - x̄)²)"]
+    R[42-float landmark<br/>embedding] --> V["variance σ² = mean((xᵢ - x̄)²)"]
     V --> T{"σ² ≥ τ_min?"}
     T -- no --> X[Reject:<br/>"too flat — try a bigger motion"]
     T -- yes --> A[Accept]
