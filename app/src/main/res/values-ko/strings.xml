@@ -228,4 +228,14 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC 탭 활성 — 빠른 키 교환</string>
     <string name="exchange_nfc_active_desc">이 교환은 NFC 탭으로 시작되었습니다 — ECDH 핸드셰이크가 사전 설정되었습니다</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">카드가 업데이트됨</string>
+    <string name="merge_action_accept">변경 사항 수락</string>
+    <string name="merge_action_revert">모두 되돌리기</string>
+    <string name="merge_field_toggle_desc">%1$s의 새 값을 유지할지 전환</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s이(가) 새 카드를 보냈습니다. %2$d개 항목이 변경되었습니다.</item>
+    </plurals>
 </resources>
