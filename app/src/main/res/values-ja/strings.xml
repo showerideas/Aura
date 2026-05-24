@@ -228,4 +228,14 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFCタップ有効 — 高速鍵交換</string>
     <string name="exchange_nfc_active_desc">この交換はNFCタップで開始されました — ECDHハンドシェイクが事前設定済みです</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">カードが更新されました</string>
+    <string name="merge_action_accept">変更を承認</string>
+    <string name="merge_action_revert">すべて元に戻す</string>
+    <string name="merge_field_toggle_desc">%1$s の新しい値を保持するかどうかを切り替える</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s が新しいカードを送りました。%2$d 件のフィールドが変更されました。</item>
+    </plurals>
 </resources>
