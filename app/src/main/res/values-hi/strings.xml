@@ -226,4 +226,7 @@
     <string name="settings_accessibility_mode">अभिगम्यता मोड (अनुशंसित)</string>
     <string name="settings_accessibility_enabled">सक्रिय — सभी डिवाइसेस पर काम करता है ✓</string>
     <string name="settings_accessibility_disabled">अभिगम्यता सेटिंग्स में सक्षम करने के लिए टैप करें</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC टैप सक्रिय — तेज़ कुंजी विनिमय</string>
+    <string name="exchange_nfc_active_desc">यह आदान-प्रदान NFC टैप के माध्यम से प्रारंभ हुआ — ECDH हैंडशेक पूर्व-सीडेड है</string>
 </resources>
