@@ -22,7 +22,6 @@ import com.showerideas.aura.utils.AvatarUtils
 import com.showerideas.aura.utils.shareVCard
 import com.showerideas.aura.utils.toVCard
 import com.showerideas.aura.utils.toast
-import java.io.File
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -65,16 +64,16 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         getString(com.showerideas.aura.R.string.contact_unknown_name)
                     }
 
-                    // PR-10: show the peer's avatar bitmap when present.
-                    val avatarBitmap = contact.avatarUri
-                        .takeIf { it.isNotBlank() }
-                        ?.let { AvatarUtils.loadBitmap(File(it)) }
-                    if (avatarBitmap != null) {
-                        binding.ivAvatar.setImageBitmap(avatarBitmap)
-                        binding.ivAvatar.visibility = View.VISIBLE
-                    } else {
-                        binding.ivAvatar.visibility = View.GONE
-                    }
+                    // PR-10 + identicon: always show an avatar — prefer the saved
+                    // photo, then fall back to a deterministic identicon so every
+                    // contact has a visual identity even without a profile photo.
+                    val avatarBitmap = AvatarUtils.loadOrGenerateAvatar(
+                        context   = requireContext(),
+                        contactId = contact.id,
+                        identityKeyHash = contact.identityKeyHash
+                    )
+                    binding.ivAvatar.setImageBitmap(avatarBitmap)
+                    binding.ivAvatar.visibility = View.VISIBLE
                     binding.tvTitle.text = buildString {
                         if (contact.title.isNotBlank()) append(contact.title)
                         if (contact.title.isNotBlank() && contact.company.isNotBlank()) append(" @ ")

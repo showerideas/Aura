@@ -52,7 +52,7 @@ class ContactsAdapter(
                 // Generate a deterministic identicon from the identity key hash (preferred)
                 // or the contact UUID (legacy fallback for contacts without a key hash).
                 val seed = contact.identityKeyHash?.takeIf { it.isNotBlank() } ?: contact.id
-                val identicon = IdenticonGenerator.generate(seed, sizePx = 96)
+                val identicon = IdenticonGenerator.generate(seed, size = 96)
                 binding.ivAvatar.setImageBitmap(identicon)
                 binding.ivAvatar.visibility = View.VISIBLE
                 binding.tvInitials.text = ""   // identicon replaces the text initials

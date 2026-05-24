@@ -16,8 +16,10 @@ import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
 import com.showerideas.aura.data.BlocklistRepository
 import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.data.ExchangeAuditRepository
 import com.showerideas.aura.data.KnownPeerRepository
 import com.showerideas.aura.data.ProfileRepository
+import com.showerideas.aura.model.ExchangeAuditEntry
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.ui.MainActivity
@@ -226,6 +228,8 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var knownPeerRepository: KnownPeerRepository
     /** Cross-session identity-key rotation detector — warns when a returning peer presents a new key. */
     @Inject lateinit var identityRotationDetector: IdentityRotationDetector
+    /** Privacy-preserving exchange audit log — records outcomes without PII. */
+    @Inject lateinit var auditRepository: ExchangeAuditRepository
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -259,6 +263,23 @@ class NearbyExchangeService : Service() {
     // SAS verification gate: holds the endpoint ID whose sendProfile() call is
     // pending until the user confirms the SAS PIN. Null when not waiting.
     @Volatile private var pendingSasEndpointId: String? = null
+
+    // -------------------------------------------------------------------------
+    // Audit log — per-session tracking (no PII)
+    // -------------------------------------------------------------------------
+
+    /**
+     * SHA-256 hash of the peer's identity key — captured after challenge/response
+     * succeeds, used to tag audit log entries without storing PII.
+     * Null if the session ended before the peer's identity was established.
+     */
+    @Volatile private var sessionPeerKeyHash: String? = null
+
+    /**
+     * Exchange channel for audit purposes. Derived from [currentMode] and the
+     * NFC bootstrap flag at session start. Never contains user-visible text.
+     */
+    @Volatile private var sessionChannel: String = "NEARBY"
 
     /**
      * Prompt-6 / Issue-1: TOCTOU guard for P2P connection requests.
@@ -354,7 +375,8 @@ class NearbyExchangeService : Service() {
                 pendingSasEndpointId = null
                 terminateSession(
                     ExchangeSession.State.ERROR,
-                    "Security check failed. The codes didn't match — possible MITM attack."
+                    "Security check failed. The codes didn't match — possible MITM attack.",
+                    auditErrorCode = ExchangeAuditEntry.ERR_SAS_MISMATCH
                 )
             }
         }
@@ -402,6 +424,14 @@ class NearbyExchangeService : Service() {
 
         sessionId = UUID.randomUUID().toString()
         currentMode = mode
+        sessionPeerKeyHash = null
+        sessionChannel = when (mode) {
+            ExchangeSession.ExchangeMode.ROOM_HOST   -> "ROOM_HOST"
+            ExchangeSession.ExchangeMode.ROOM_GUEST  -> "ROOM_GUEST"
+            ExchangeSession.ExchangeMode.PEER_TO_PEER -> "NEARBY"
+        }
+        // Prune the audit log once per session start (background, best-effort).
+        scope.launch { auditRepository.pruneOldEntries() }
 
         // NFC bootstrap: if MainActivity performed a tap-to-pair, reuse the
         // keypair that was already advertised over NFC so both sides derive the
@@ -412,6 +442,7 @@ class NearbyExchangeService : Service() {
             ?: CryptoUtils.generateEphemeralECDHKeyPair()
 
         if (nfcBootstrap != null) {
+            sessionChannel = "NFC"
             Timber.i("NFC bootstrap present for session $sessionId — skipping Nearby key exchange")
             // Pre-seed peer public key so handleIncomingPublicKey becomes a no-op
             // when the peer's Nearby key-exchange message arrives.  Both peers
@@ -454,21 +485,32 @@ class NearbyExchangeService : Service() {
         timeoutJob = scope.launch {
             delay(timeoutMs)
             Timber.w("Session timed out (mode=$mode)")
-            terminateSession(ExchangeSession.State.CANCELLED)
+            terminateSession(
+                ExchangeSession.State.CANCELLED,
+                auditOutcome = ExchangeAuditEntry.OUTCOME_TIMEOUT
+            )
         }
     }
 
     /**
      * End the current session with [endState].
      *
-     * @param endState     The terminal state (COMPLETED / CANCELLED / ERROR).
-     * @param errorMessage Optional human-readable reason surfaced to the UI.
+     * @param endState       The terminal state (COMPLETED / CANCELLED / ERROR).
+     * @param errorMessage   Optional human-readable reason surfaced to the UI.
      *   When null and endState == ERROR, any message already in [sessionState]
      *   is preserved so a prior [updateSessionState] call is not clobbered.
+     * @param auditOutcome   Explicit audit outcome override. When null:
+     *   COMPLETED → SUCCESS, ERROR → FAILED, CANCELLED → not logged (user cancel).
+     *   Use [ExchangeAuditEntry.OUTCOME_TIMEOUT] / [ExchangeAuditEntry.OUTCOME_BLOCKED]
+     *   for those specific cases.
+     * @param auditErrorCode Short machine-readable error code for FAILED outcomes
+     *   (e.g. [ExchangeAuditEntry.ERR_MITM_DETECTED], [ExchangeAuditEntry.ERR_SAS_MISMATCH]).
      */
     private fun terminateSession(
         endState: ExchangeSession.State,
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        auditOutcome: String? = null,
+        auditErrorCode: String? = null
     ) {
         timeoutJob?.cancel()
         connectionsClient.stopAllEndpoints()
@@ -484,6 +526,32 @@ class NearbyExchangeService : Service() {
         _sessionState.value = current?.copy(state = endState, errorMessage = finalMessage)
         broadcastState(sessionState.value)
 
+        // -----------------------------------------------------------------------
+        // Audit log — record the outcome before zeroing per-session state.
+        // -----------------------------------------------------------------------
+        val capturedHash    = sessionPeerKeyHash
+        val capturedChannel = sessionChannel
+        val outcomeToLog    = auditOutcome ?: when (endState) {
+            ExchangeSession.State.COMPLETED -> ExchangeAuditEntry.OUTCOME_SUCCESS
+            ExchangeSession.State.ERROR     -> ExchangeAuditEntry.OUTCOME_FAILED
+            ExchangeSession.State.CANCELLED -> null   // user-initiated cancel — skip
+            else -> null
+        }
+        if (outcomeToLog != null) {
+            scope.launch {
+                when (outcomeToLog) {
+                    ExchangeAuditEntry.OUTCOME_SUCCESS ->
+                        auditRepository.logSuccess(capturedHash, capturedChannel)
+                    ExchangeAuditEntry.OUTCOME_TIMEOUT ->
+                        auditRepository.logTimeout(capturedHash, capturedChannel)
+                    ExchangeAuditEntry.OUTCOME_BLOCKED ->
+                        auditRepository.logBlocked(capturedHash, capturedChannel)
+                    else ->  // FAILED and any custom outcomes
+                        auditRepository.logFailure(capturedHash, auditErrorCode, capturedChannel)
+                }
+            }
+        }
+
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
         // Prompt-6 / Issue-1: reset the connection-request flag so the next
@@ -497,6 +565,9 @@ class NearbyExchangeService : Service() {
         sendRatchet = null
         recvRatchet = null
         pendingSasEndpointId = null
+        // Reset audit-log session tracking.
+        sessionPeerKeyHash = null
+        sessionChannel = "NEARBY"
         // PR-13: drop per-session challenge bookkeeping. The process-wide
         // peerIdentityRegistry is intentionally preserved across sessions
         // — that's the trust-on-first-use anchor.
@@ -571,7 +642,11 @@ class NearbyExchangeService : Service() {
                 if (blocked) {
                     connectionsClient.rejectConnection(endpointId)
                     Timber.i("Rejected blocked endpoint: $endpointId")
-                    updateSessionState(ExchangeSession.State.ERROR, "Connection rejected: Device is blocked")
+                    terminateSession(
+                        ExchangeSession.State.ERROR,
+                        "Connection rejected: Device is blocked",
+                        auditOutcome  = ExchangeAuditEntry.OUTCOME_BLOCKED
+                    )
                 } else {
                     // Auto-accept — AURA's security is at the gesture + ECDH layer
                     connectionsClient.acceptConnection(endpointId, payloadCallback)
@@ -782,9 +857,13 @@ class NearbyExchangeService : Service() {
                 // so a blocked device that reconnects with a fresh endpoint ID is
                 // still rejected as soon as its identity key is decoded.
                 if (blocklistRepository.isBlockedByKeyHash(peerIdentityKey)) {
+                    sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                     Timber.i("Rejected blocked identity key for endpoint $endpointId")
-                    terminateSession(ExchangeSession.State.ERROR,
-                        "This device is blocked. Exchange rejected.")
+                    terminateSession(
+                        ExchangeSession.State.ERROR,
+                        "This device is blocked. Exchange rejected.",
+                        auditOutcome = ExchangeAuditEntry.OUTCOME_BLOCKED
+                    )
                     return@launch
                 }
 
@@ -795,9 +874,13 @@ class NearbyExchangeService : Service() {
                 when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
                     is KnownPeerRepository.IdentityKeyResult.Found -> {
                         if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                             Timber.e("MITM: $endpointId presented different identity key")
-                            terminateSession(ExchangeSession.State.ERROR,
-                                "Security alert: This device's identity has changed. Possible man-in-the-middle attack — exchange rejected.")
+                            terminateSession(
+                                ExchangeSession.State.ERROR,
+                                "Security alert: This device's identity has changed. Possible man-in-the-middle attack — exchange rejected.",
+                                auditErrorCode = ExchangeAuditEntry.ERR_MITM_DETECTED
+                            )
                             return@launch
                         }
                     }
@@ -806,8 +889,11 @@ class NearbyExchangeService : Service() {
                     }
                     is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
                         Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
-                        terminateSession(ExchangeSession.State.ERROR,
-                            "Peer identity record is corrupt. Exchange aborted for your safety.")
+                        terminateSession(
+                            ExchangeSession.State.ERROR,
+                            "Peer identity record is corrupt. Exchange aborted for your safety.",
+                            auditErrorCode = ExchangeAuditEntry.ERR_CRYPTO_ERROR
+                        )
                         return@launch
                     }
                 }
@@ -846,18 +932,26 @@ class NearbyExchangeService : Service() {
                 }
                 val ok = CryptoUtils.verifyChallenge(peerIdentityKey, challenge, signature)
                 if (!ok) {
+                    sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                     Timber.e("Challenge verification failed for $endpointId — possible MITM")
-                    terminateSession(ExchangeSession.State.ERROR,
-                        "Security alert: Authentication failed — possible man-in-the-middle attack.")
+                    terminateSession(
+                        ExchangeSession.State.ERROR,
+                        "Security alert: Authentication failed — possible man-in-the-middle attack.",
+                        auditErrorCode = ExchangeAuditEntry.ERR_MITM_DETECTED
+                    )
                     return@launch
                 }
                 // FIX-4: same sealed-result pattern as handleIncomingChallenge.
                 when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
                     is KnownPeerRepository.IdentityKeyResult.Found -> {
                         if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
+                            sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                             Timber.e("Endpoint $endpointId identity mismatch on response — aborting")
-                            terminateSession(ExchangeSession.State.ERROR,
-                                "Security alert: Peer identity mismatch detected. Exchange aborted.")
+                            terminateSession(
+                                ExchangeSession.State.ERROR,
+                                "Security alert: Peer identity mismatch detected. Exchange aborted.",
+                                auditErrorCode = ExchangeAuditEntry.ERR_MITM_DETECTED
+                            )
                             return@launch
                         }
                     }
@@ -866,12 +960,17 @@ class NearbyExchangeService : Service() {
                     }
                     is KnownPeerRepository.IdentityKeyResult.Corrupt -> {
                         Timber.e(result.cause, "Corrupt TOFU record for ${result.endpointId} — aborting")
-                        terminateSession(ExchangeSession.State.ERROR,
-                            "Peer identity record is corrupt. Exchange aborted for your safety.")
+                        terminateSession(
+                            ExchangeSession.State.ERROR,
+                            "Peer identity record is corrupt. Exchange aborted for your safety.",
+                            auditErrorCode = ExchangeAuditEntry.ERR_CRYPTO_ERROR
+                        )
                         return@launch
                     }
                 }
 
+                // Capture the peer identity hash for audit logging (set before advancing).
+                sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                 challengeVerifiedByEndpoint.add(endpointId)
                 pendingChallengeByEndpoint.remove(endpointId)
                 Timber.d("Challenge verified for $endpointId — advancing to ECDH")
@@ -1083,9 +1182,13 @@ class NearbyExchangeService : Service() {
                         map = cleanMap,
                         endpointId = endpointId
                     ).copy(identityKeyHash = keyHash)
-                    contactRepository.save(contact)
+                    // saveDeduped: if we already know this identity key, update in-place
+                    // rather than creating a duplicate room-mode contact.
+                    contactRepository.saveDeduped(contact)
                     _connectedCount.value = _connectedCount.value + 1
                     Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
+                    // Log per-guest success without closing the room session.
+                    auditRepository.logSuccess(peerIdentityKeyHash = keyHash, channel = "ROOM_HOST")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to process room-guest profile")
                 }
@@ -1116,7 +1219,10 @@ class NearbyExchangeService : Service() {
                     is PayloadValidator.ValidationResult.Ok -> { /* continue */ }
                     else -> {
                         Timber.w("Profile payload rejected: $r (endpoint=$endpointId)")
-                        terminateSession(ExchangeSession.State.ERROR)
+                        terminateSession(
+                            ExchangeSession.State.ERROR,
+                            auditErrorCode = ExchangeAuditEntry.ERR_PAYLOAD_INVALID
+                        )
                         return@launch
                     }
                 }
@@ -1152,7 +1258,8 @@ class NearbyExchangeService : Service() {
                     }
                 } else null
 
-                contactRepository.save(contact)
+                // saveDeduped: returning peers get their card updated in-place, not duplicated.
+                contactRepository.saveDeduped(contact)
 
                 val current = sessionState.value
                 _sessionState.value = current?.copy(
@@ -1164,8 +1271,13 @@ class NearbyExchangeService : Service() {
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")
                 vibrateShort() // Success haptic
 
+                // Audit: log the successful P2P exchange without PII.
+                val auditHash = keyHash ?: sessionPeerKeyHash
+                auditRepository.logSuccess(peerIdentityKeyHash = auditHash, channel = sessionChannel)
+
                 // Reset gate on success too.
                 gestureVerified = false
+                sessionPeerKeyHash = null
 
                 delay(500)
                 stopSelf()

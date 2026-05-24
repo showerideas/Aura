@@ -104,6 +104,7 @@
     <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
     <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
     <string name="qr_pairing_ok">Paired with %1$s… (relay TODO)</string>
+    <string name="qr_unencrypted_warning">QR fallback: public key exchange only. Profile is not transmitted — use BLE or NFC for full end-to-end encryption.</string>
 
     <!-- Room exchange (PR-09) -->
     <string name="home_room_mode">Room mode</string>
@@ -156,6 +157,8 @@
     <string name="profile_gesture_status_saved">Gesture saved!</string>
     <string name="profile_gesture_status_saved_idle">Gesture saved</string>
     <string name="profile_gesture_status_none">No gesture set</string>
+    <!-- Sequence mode: step 1 captured, waiting for the user to perform step 2 -->
+    <string name="profile_gesture_status_step2">Step 1 saved — now perform your second gesture</string>
     <string name="profile_saved">Profile saved</string>
     <string name="profile_gesture_strength_label">gesture strength</string>
     <string name="profile_gesture_strength_a11y">Gesture strength: %1$d out of 5</string>
