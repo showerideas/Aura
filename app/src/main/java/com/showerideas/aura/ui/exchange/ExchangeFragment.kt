@@ -82,6 +82,14 @@ class ExchangeFragment : Fragment() {
             else                             -> startGestureGate()
         }
 
+        // NFC bootstrap indicator — show the chip if MainActivity set a pending
+        // NFC bootstrap before navigating here. The bootstrap is consumed by
+        // NearbyExchangeService.startSession() so we snapshot it before the
+        // service has a chance to clear it.
+        val nfcBootstrapActive = NearbyExchangeService.pendingNfcBootstrap != null
+        binding.chipNfcActive.visibility =
+            if (nfcBootstrapActive) View.VISIBLE else View.GONE
+
         binding.btnCancel.setOnClickListener {
             viewModel.cancelExchange()
             findNavController().navigateUp()
