@@ -47,7 +47,7 @@ class RoomExchangeViewModel @Inject constructor(
         val state = gestureAuthManager.recordingState.value
         if (state is GestureAuthManager.RecordingState.Complete) {
             val ok = gestureAuthManager.match(state.pattern)
-            if (ok) NearbyExchangeService.markGestureVerified()
+            if (ok) NearbyExchangeService.markGestureVerified(context)
             return ok
         }
         return false
@@ -55,7 +55,7 @@ class RoomExchangeViewModel @Inject constructor(
 
     fun resetGestureCapture() = gestureAuthManager.resetGestureCapture()
 
-    fun proceedWithoutGesture() = NearbyExchangeService.markGestureVerified()
+    fun proceedWithoutGesture() = NearbyExchangeService.markGestureVerified(context)
 
     fun startHost()  = NearbyExchangeService.startRoomHost(context)
     fun startGuest() = NearbyExchangeService.startRoomGuest(context)

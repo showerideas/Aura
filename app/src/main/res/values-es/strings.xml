@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — Spanish (Español) translation — v1.1.0 complete
-  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
+  AURA — Spanish (Español) translation — v1.3.0 complete
+  All 209 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -87,7 +87,7 @@
     <string name="qr_scan_cancelled">Escaneo cancelado.</string>
     <string name="qr_invalid">Ese código no es un payload válido de vinculación AURA.</string>
     <string name="qr_expired">Ese código de vinculación ha caducado. Pide a la otra persona que lo actualice.</string>
-    <string name="qr_pairing_ok">Vinculado con %1$s… (retransmisión pendiente)</string>
+    <string name="qr_pairing_ok">Clave intercambiada con %1$s — usa BLE o NFC para completar el intercambio.</string>
     <string name="home_room_mode">Modo sala</string>
     <string name="room_mode_host">Alojar una sala</string>
     <string name="room_mode_guest">Unirse a una sala</string>
@@ -170,4 +170,53 @@
         <item quantity="one">%d persona se unió</item>
         <item quantity="other">%d personas se unieron</item>
     </plurals>
+
+    <!-- v1.3 translations -->
+    <string name="action_call">Llamar</string>
+    <string name="action_copy">Copiar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_email_verb">Correo</string>
+    <string name="contact_label_email">Correo</string>
+    <string name="contact_label_phone">Teléfono</string>
+    <string name="contact_label_website">Web</string>
+    <string name="contact_subtitle_aura">Contacto AURA</string>
+    <string name="contact_toggle_favourite_initial">Alternar favorito</string>
+    <string name="contacts_chip_favourites">★  Favoritos</string>
+    <string name="gesture_camera_preview_desc">Vista previa de cámara para autenticación por gestos</string>
+    <string name="gesture_detecting">%1$s %2$s — %3$d %% estable</string>
+    <string name="gesture_model_error">No se pudo cargar el modelo de cámara. Reinicia la app.</string>
+    <string name="gesture_no_hand">No se detectó mano — apunta la cámara a tu mano</string>
+    <string name="gesture_saved_embedding">Forma de mano guardada — autenticación por gesto lista</string>
+    <string name="gesture_show_to_auth">Muestra tu gesto de mano guardado para autenticarte</string>
+    <string name="gesture_stability_desc">Estabilidad del gesto</string>
+    <string name="gesture_stable">%1$s %2$s — mantén firme…</string>
+    <string name="home_activate_hint">Pulsa tres veces el volumen o toca para compartir</string>
+    <string name="notif_channel_desc">Intercambio de contactos activo en curso</string>
+    <string name="notif_channel_name">Intercambio AURA</string>
+    <string name="notif_starting">Iniciando intercambio…</string>
+    <string name="notif_title">Intercambio AURA</string>
+    <string name="onboarding_email_invalid">Por favor introduce una dirección de correo válida.</string>
+    <string name="perm_label_camera">Cámara</string>
+    <string name="perm_reason_camera">Para leer tu gesto de mano para la autenticación de intercambio seguro.</string>
+    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
+    <string name="profile_btn_save_profile">Guardar perfil</string>
+    <string name="profile_fields_to_share_header">Campos a compartir</string>
+    <string name="profile_gesture_status_step2">Paso 1 guardado — ahora realiza tu segundo gesto</string>
+    <string name="profile_share_bio">Bio</string>
+    <string name="profile_share_company">Empresa</string>
+    <string name="profile_share_email">Correo</string>
+    <string name="profile_share_phone">Teléfono</string>
+    <string name="profile_share_title">Título / Función</string>
+    <string name="profile_share_website">Sitio web</string>
+    <string name="qr_unencrypted_warning">Alternativa QR: solo intercambio de clave pública. El perfil no se transmite — usa BLE o NFC para cifrado completo de extremo a extremo.</string>
+    <string name="sas_dialog_confirm">Coincide ✓</string>
+    <string name="sas_dialog_message">Tú y tu contacto deberían ver el mismo código de 6 dígitos.\n\nTu código: %1$s\n\nPide a tu contacto que lea su código en voz alta. Si coinciden, pulsa \'Coincide\'.</string>
+    <string name="sas_dialog_mismatch">No coincide — cancelar</string>
+    <string name="sas_dialog_title">Verificar código de seguridad</string>
+    <string name="settings_test_volume_press">Probar triple pulsación ahora</string>
+    <string name="settings_volume_test_fail">✗ Triple pulsación no detectada — no compatible con este dispositivo</string>
+    <string name="settings_volume_test_listening">Escuchando 3 s — presiona el volumen ▼ tres veces</string>
+    <string name="settings_volume_test_success">✓ Triple pulsación detectada — este dispositivo es compatible</string>
+    <string name="settings_volume_wake_warning">⚠ La pulsación triple del volumen funciona en Pixel y Android estándar. Puede no funcionar en Samsung, Xiaomi, OPPO u otras versiones personalizadas de Android por la interceptación de teclas a nivel del SO. Usa el botón de abajo para verificar tu dispositivo.</string>
+    <string name="status_verifying">Verificar el código con tu contacto…</string>
 </resources>

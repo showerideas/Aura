@@ -103,7 +103,7 @@
     <string name="qr_scan_cancelled">Scan cancelled.</string>
     <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
     <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
-    <string name="qr_pairing_ok">Paired with %1$s… (relay TODO)</string>
+    <string name="qr_pairing_ok">Key bootstrapped with %1$s — tap BLE or NFC to complete the exchange.</string>
     <string name="qr_unencrypted_warning">QR fallback: public key exchange only. Profile is not transmitted — use BLE or NFC for full end-to-end encryption.</string>
 
     <!-- Room exchange (PR-09) -->

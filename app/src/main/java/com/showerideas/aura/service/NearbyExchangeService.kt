@@ -14,6 +14,7 @@ import com.google.android.gms.nearby.connection.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
+import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.BlocklistRepository
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.data.ExchangeAuditRepository
