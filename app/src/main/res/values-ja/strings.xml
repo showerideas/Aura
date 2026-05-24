@@ -197,7 +197,6 @@
     <string name="onboarding_email_invalid">有効なメールアドレスを入力してください。</string>
     <string name="perm_label_camera">カメラ</string>
     <string name="perm_reason_camera">安全な交換認証のために手のジェスチャーを読み取るため。</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">プロフィールを保存</string>
     <string name="profile_fields_to_share_header">共有するフィールド</string>
     <string name="profile_gesture_status_step2">ステップ1保存済み — 次のジェスチャーを実行してください</string>

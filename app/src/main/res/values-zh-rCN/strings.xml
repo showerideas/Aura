@@ -197,7 +197,6 @@
     <string name="onboarding_email_invalid">请输入有效的电子邮件地址。</string>
     <string name="perm_label_camera">摄像头</string>
     <string name="perm_reason_camera">用于读取手势以进行安全交换认证。</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">保存个人资料</string>
     <string name="profile_fields_to_share_header">要共享的字段</string>
     <string name="profile_gesture_status_step2">步骤1已保存 — 现在请执行第二个手势</string>

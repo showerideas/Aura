@@ -198,7 +198,6 @@
     <string name="onboarding_email_invalid">Por favor introduce una dirección de correo válida.</string>
     <string name="perm_label_camera">Cámara</string>
     <string name="perm_reason_camera">Para leer tu gesto de mano para la autenticación de intercambio seguro.</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">Guardar perfil</string>
     <string name="profile_fields_to_share_header">Campos a compartir</string>
     <string name="profile_gesture_status_step2">Paso 1 guardado — ahora realiza tu segundo gesto</string>

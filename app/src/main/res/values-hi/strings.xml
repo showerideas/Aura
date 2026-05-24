@@ -198,7 +198,6 @@
     <string name="onboarding_email_invalid">कृपया एक वैध ईमेल पता दर्ज करें।</string>
     <string name="perm_label_camera">कैमरा</string>
     <string name="perm_reason_camera">सुरक्षित विनिमय प्रमाणीकरण के लिए आपके हाथ जेस्चर को पढ़ने के लिए।</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">प्रोफ़ाइल सहेजें</string>
     <string name="profile_fields_to_share_header">साझा करने योग्य फ़ील्ड</string>
     <string name="profile_gesture_status_step2">चरण 1 सहेजा गया — अब अपना दूसरा जेस्चर करें</string>
