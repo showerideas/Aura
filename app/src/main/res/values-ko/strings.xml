@@ -225,4 +225,7 @@
     <string name="settings_accessibility_mode">접근성 모드 (권장)</string>
     <string name="settings_accessibility_enabled">활성화됨 — 모든 기기에서 작동합니다 ✓</string>
     <string name="settings_accessibility_disabled">접근성 설정에서 활성화하려면 탭하세요</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC 탭 활성 — 빠른 키 교환</string>
+    <string name="exchange_nfc_active_desc">이 교환은 NFC 탭으로 시작되었습니다 — ECDH 핸드셰이크가 사전 설정되었습니다</string>
 </resources>
