@@ -80,7 +80,8 @@ object Migrations {
      * Stores only: id, timestampMs, peerIdentityKeyHash (nullable), direction,
      * outcome, errorCode (nullable), channel. No plaintext PII.
      */
-    val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    val MIGRATION_4_5,
+        MIGRATION_5_6: Migration = object : Migration(4, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """
@@ -99,5 +100,32 @@ object Migrations {
     }
 
     /** Ordered list of every migration the app knows about. */
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+
+    /**
+     * v6: Multiple profiles — add profile_type, is_active, and custom_label
+     * columns to the `profile` table.
+     *
+     * - `profile_type TEXT NOT NULL DEFAULT 'PERSONAL'` — preserves the existing
+     *   single-profile as Personal; new profiles default to PERSONAL.
+     * - `is_active INTEGER NOT NULL DEFAULT 1` — the first (and previously only)
+     *   profile row is active by default.
+     * - `custom_label TEXT NOT NULL DEFAULT ''` — user-supplied label for
+     *   ProfileType.CUSTOM (unused until Phase 6.4.3).
+     */
+    val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE profile ADD COLUMN profile_type TEXT NOT NULL DEFAULT 'PERSONAL'"
+            )
+            db.execSQL(
+                "ALTER TABLE profile ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1"
+            )
+            db.execSQL(
+                "ALTER TABLE profile ADD COLUMN custom_label TEXT NOT NULL DEFAULT ''"
+            )
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
+        MIGRATION_5_6)
 }
