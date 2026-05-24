@@ -39,6 +39,12 @@ class OnboardingViewModel @Inject constructor(
 
     fun saveGesturePattern(pattern: GesturePattern) = gestureAuthManager.savePattern(pattern)
 
+    /**
+     * Reset the gesture capture pipeline after a failed attempt (e.g. liveness
+     * spoof rejection) so the user can try again without restarting the camera.
+     */
+    fun resetGestureCapture() = gestureAuthManager.resetGestureCapture()
+
     fun completeOnboarding(name: String, email: String) {
         viewModelScope.launch {
             val existing = profileRepository.getOrCreate()

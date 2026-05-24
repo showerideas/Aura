@@ -20,6 +20,7 @@
     <string name="status_advertising">Broadcasting presence\u2026</string>
     <string name="status_discovering">Looking for nearby AURA users\u2026</string>
     <string name="status_connecting">Found someone! Connecting\u2026</string>
+    <string name="status_verifying">Verify the code with your contact\u2026</string>
     <string name="status_exchanging">Exchanging contact info securely\u2026</string>
     <string name="empty_contacts">No contacts yet.\nTriple-press volume down to share.</string>
     <string name="search_hint">Search contacts\u2026</string>
@@ -39,6 +40,12 @@
     <string name="exchange_cancelled">Exchange cancelled</string>
     <string name="exchange_error_generic">Something went wrong. Try again.</string>
     <string name="exchange_error_bluetooth">Exchange failed. Make sure Bluetooth and location are on.</string>
+
+    <!-- SAS (Short Authentication String) verification dialog — Prompt-8 UI integration -->
+    <string name="sas_dialog_title">Verify Security Code</string>
+    <string name="sas_dialog_message">Both you and your contact should see the same 6-digit code.\n\nYour code: %1$s\n\nAsk your contact to read their code aloud. If the codes match, tap \'Match\'.</string>
+    <string name="sas_dialog_confirm">Match ✓</string>
+    <string name="sas_dialog_mismatch">Mismatch — abort</string>
 
     <!-- Permission rationale (PR-03) -->
     <string name="perm_rationale_title">AURA needs a few permissions</string>

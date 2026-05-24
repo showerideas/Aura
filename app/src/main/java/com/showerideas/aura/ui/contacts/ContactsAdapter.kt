@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.showerideas.aura.databinding.ItemContactBinding
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.utils.AvatarUtils
+import com.showerideas.aura.utils.IdenticonGenerator
 import java.io.File
 
 class ContactsAdapter(
@@ -38,15 +39,23 @@ class ContactsAdapter(
                 .joinToString("")
                 .ifBlank { "?" }
 
-            // PR-10: prefer the saved photo when present; fall back to initials.
+            // PR-10 + identicon: prefer saved photo → identicon from identity key hash → initials.
+            // IdenticonGenerator always returns a non-null Bitmap, so every contact has a
+            // visually distinct identity even before they've exchanged an avatar photo.
             val avatarPath = contact.avatarUri
-            val bitmap = if (avatarPath.isNotBlank()) AvatarUtils.loadBitmap(File(avatarPath)) else null
-            if (bitmap != null) {
-                binding.ivAvatar.setImageBitmap(bitmap)
+            val photoBitmap = if (avatarPath.isNotBlank()) AvatarUtils.loadBitmap(File(avatarPath)) else null
+            if (photoBitmap != null) {
+                binding.ivAvatar.setImageBitmap(photoBitmap)
                 binding.ivAvatar.visibility = View.VISIBLE
+                binding.tvInitials.text = ""   // photo covers the initials slot
             } else {
-                binding.ivAvatar.setImageDrawable(null)
-                binding.ivAvatar.visibility = View.GONE
+                // Generate a deterministic identicon from the identity key hash (preferred)
+                // or the contact UUID (legacy fallback for contacts without a key hash).
+                val seed = contact.identityKeyHash?.takeIf { it.isNotBlank() } ?: contact.id
+                val identicon = IdenticonGenerator.generate(seed, sizePx = 96)
+                binding.ivAvatar.setImageBitmap(identicon)
+                binding.ivAvatar.visibility = View.VISIBLE
+                binding.tvInitials.text = ""   // identicon replaces the text initials
             }
 
             // PR-12: small star badge next to the name when isFavorite=true.

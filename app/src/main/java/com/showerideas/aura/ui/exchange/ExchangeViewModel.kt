@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.showerideas.aura.auth.CameraHandEmbedder
 import com.showerideas.aura.auth.GestureAuthManager
+import com.showerideas.aura.auth.LivenessGuard
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
@@ -32,6 +33,15 @@ class ExchangeViewModel @Inject constructor(
     /** Live camera state — drives gesture name + stability indicator in the UI. */
     val liveGestureState: StateFlow<CameraHandEmbedder.GestureState> =
         gestureAuthManager.liveGestureState
+
+    /**
+     * Real-time liveness result from [LivenessGuard]. Collecting this flow allows
+     * the UI to show a "Live ✓" or "Spoof detected ⚠" badge during gesture recording.
+     * Spoof rejections are also surfaced via [gestureRecordingState] (RecordingState.Error)
+     * — this flow provides the immediate per-frame signal for progress indication.
+     */
+    val livenessResult: StateFlow<LivenessGuard.Result> =
+        gestureAuthManager.livenessResult
 
     val authMethod: StateFlow<String> = authPreferences.authMethod
         .stateIn(viewModelScope, SharingStarted.Eagerly, AuthPreferences.DEFAULT_METHOD)
@@ -60,4 +70,16 @@ class ExchangeViewModel @Inject constructor(
     fun markExchangeVerified() = NearbyExchangeService.markGestureVerified()
 
     fun hasGesturePattern(): Boolean = gestureAuthManager.hasStoredPattern()
+
+    /**
+     * SAS PIN confirmed — the user and their peer see the same code.
+     * Sends [NearbyExchangeService.ACTION_CONFIRM_SAS] to ungate [sendProfile].
+     */
+    fun confirmSas() = NearbyExchangeService.confirmSas(context)
+
+    /**
+     * SAS PIN mismatch — user reports the codes differ (possible MITM).
+     * Terminates the session with an error via [NearbyExchangeService.ACTION_ABORT_SAS].
+     */
+    fun abortSas() = NearbyExchangeService.abortSas(context)
 }

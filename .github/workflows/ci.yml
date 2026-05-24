@@ -95,7 +95,7 @@ jobs:
         run: |
           APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
           echo "Checking permissions in: $APK"
-          PERMS=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/aapt dump permissions "$APK")
+          PERMS=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -rV | head -1)/aapt dump permissions "$APK")
           echo "$PERMS"
           if echo "$PERMS" | grep -q "android.permission.INTERNET"; then
             echo "FAIL: android.permission.INTERNET found in release APK!"
@@ -111,8 +111,8 @@ jobs:
       - name: Check MediaPipe classes survived R8
         run: |
           APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          CLASSES=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/apkanalyzer \
-            classes list "$APK" 2>/dev/null || true)
+          CLASSES=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -rV | head -1)/apkanalyzer \
+            classes list "$APK")
           if ! echo "$CLASSES" | grep -q "com/google/mediapipe/tasks/vision"; then
             echo "FAIL: com.google.mediapipe.tasks.vision.* not found in release APK!"
             echo "R8 stripped MediaPipe classes. Check proguard-rules.pro MediaPipe section."

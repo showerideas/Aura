@@ -16,7 +16,17 @@ interface ContactDao {
     @Query("SELECT * FROM contacts WHERE isFavorite = 1 ORDER BY receivedAt DESC")
     fun observeFavorites(): Flow<List<Contact>>
 
-    @Query("SELECT * FROM contacts WHERE displayName LIKE '%' || :query || '%' OR email LIKE '%' || :query || '%' OR phone LIKE '%' || :query || '%'")
+    @Query("""
+        SELECT * FROM contacts WHERE
+            displayName LIKE '%' || :query || '%' OR
+            email       LIKE '%' || :query || '%' OR
+            phone       LIKE '%' || :query || '%' OR
+            company     LIKE '%' || :query || '%' OR
+            title       LIKE '%' || :query || '%' OR
+            notes       LIKE '%' || :query || '%' OR
+            bio         LIKE '%' || :query || '%' OR
+            website     LIKE '%' || :query || '%'
+    """)
     fun search(query: String): Flow<List<Contact>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

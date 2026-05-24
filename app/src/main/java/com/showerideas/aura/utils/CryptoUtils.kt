@@ -174,6 +174,36 @@ object CryptoUtils {
     }
 
     // -------------------------------------------------------------------------
+    // Sub-key derivation (directional key separation)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Derive a domain-separated 256-bit AES sub-key from an existing [SecretKey].
+     *
+     * Used to create *directional* ratchet seeds so that the initiator's send key
+     * and the responder's send key are cryptographically independent even though
+     * both are derived from the same ECDH session key:
+     *
+     * ```
+     * sendRatchetSeed = deriveSubkey(sessionKey, "aura-init-send")
+     * recvRatchetSeed = deriveSubkey(sessionKey, "aura-init-recv")
+     * ```
+     *
+     * The peer uses the symmetric labelling:
+     * - Their sendRatchet = our recvRatchet seed  ("aura-init-recv")
+     * - Their recvRatchet = our sendRatchet seed  ("aura-init-send")
+     *
+     * This gives forward secrecy at the per-message level within a session, and
+     * ensures profile payloads travelling in opposite directions use different keys.
+     */
+    fun deriveSubkey(key: SecretKey, label: String): SecretKey {
+        val hmac = Mac.getInstance("HmacSHA256")
+        hmac.init(key)
+        hmac.update(label.toByteArray(Charsets.UTF_8))
+        return SecretKeySpec(hmac.doFinal(), "AES")
+    }
+
+    // -------------------------------------------------------------------------
     // Double Ratchet helpers (thin wrappers — main logic in DoubleRatchetState)
     // -------------------------------------------------------------------------
 
