@@ -74,8 +74,11 @@ class NearbyExchangeService : Service() {
         const val EXTRA_STATE = "extra_state"
         // SAS verification actions — sent from ExchangeFragment once the user
         // has confirmed (or denied) that the 6-digit SAS PIN matches their peer.
-        const val ACTION_CONFIRM_SAS = "com.showerideas.aura.nearby.CONFIRM_SAS"
-        const val ACTION_ABORT_SAS   = "com.showerideas.aura.nearby.ABORT_SAS"
+        const val ACTION_CONFIRM_SAS     = "com.showerideas.aura.nearby.CONFIRM_SAS"
+        const val ACTION_ABORT_SAS       = "com.showerideas.aura.nearby.ABORT_SAS"
+        // Issue-50: explicit Intent action to open the gesture gate on the
+        // *service instance* rather than via a static companion-object field.
+        const val ACTION_GESTURE_VERIFIED = "com.showerideas.aura.nearby.GESTURE_VERIFIED"
 
         private const val SERVICE_ID = "com.showerideas.aura"
         private const val CHANNEL_ID = "aura_exchange_channel"
@@ -138,36 +141,20 @@ class NearbyExchangeService : Service() {
         @Volatile var pendingNfcBootstrap: NfcExchangeHelper.NfcBootstrap? = null
 
         /**
-         * Gate flag — the exchange service refuses to advance past
-         * [startSession] until the UI/auth layer flips this to true via
-         * [markGestureVerified]. Reset to false at the end of every session.
-         *
-         * If no gesture pattern is stored, the UI is responsible for
-         * confirming the unprotected exchange with the user and calling
-         * [markGestureVerified] explicitly.
-         *
-         * NOTE (FIX-5): gestureVerified gates *session start*, not individual
-         * peer connections. In ROOM_HOST mode, the host's single gesture opens
-         * the room; all subsequent guests that join are accepted without
-         * re-verification. This is intentional by design — the host deliberately
-         * opens the room and controls when to close it via the UI.
-         * If per-guest verification is ever required, add a BiometricPrompt /
-         * gesture-replay dialog in RoomExchangeFragment for each onConnectionInitiated
-         * event in host mode (requires a pending-approval queue per endpoint).
-         * // DECISION(FIX-5): gesture verifies session start, not each peer — see git log
-         */
-        @Volatile
-        var gestureVerified: Boolean = false
-            private set
-
-        /**
          * Called by [com.showerideas.aura.ui.exchange.ExchangeViewModel]
-         * after a successful gesture match (or biometric / acknowledged
-         * skip when no pattern is set).
+         * after a successful gesture match (or biometric / acknowledged skip
+         * when no pattern is set).
+         *
+         * Issue-50: previously set a static companion-object @Volatile field,
+         * which is JVM-class-level and therefore shared between the personal
+         * and work Android profiles on the same device.  Now sends an explicit
+         * Intent so the gate is set on the *service instance*, whose lifecycle
+         * is per-process and whose backing DataStore is per-user-profile on disk.
          */
-        fun markGestureVerified() {
-            gestureVerified = true
-            Timber.d("Gesture verified — exchange gate opened")
+        fun markGestureVerified(context: Context) {
+            context.startService(Intent(context, NearbyExchangeService::class.java).apply {
+                action = ACTION_GESTURE_VERIFIED
+            })
         }
 
         /**
@@ -230,6 +217,20 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var identityRotationDetector: IdentityRotationDetector
     /** Privacy-preserving exchange audit log — records outcomes without PII. */
     @Inject lateinit var auditRepository: ExchangeAuditRepository
+    /** Issue-50: per-profile DataStore for the gesture gate flag. */
+    @Inject lateinit var authPreferences: AuthPreferences
+
+    /**
+     * Issue-50: per-instance gesture gate flag.  Mirrors the DataStore value
+     * for a fast synchronous check in [startSession].  Set via
+     * [ACTION_GESTURE_VERIFIED]; cleared in [terminateSession].
+     *
+     * NOTE: gates *session start*, not individual peer connections.  In
+     * ROOM_HOST mode the host's single gesture opens the room; subsequent
+     * guests are accepted without re-verification (intentional by design —
+     * the host deliberately opened the room and controls when to close it).
+     */
+    @Volatile private var gestureVerified: Boolean = false
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val connectionsClient by lazy { Nearby.getConnectionsClient(this) }
@@ -279,7 +280,7 @@ class NearbyExchangeService : Service() {
      * Exchange channel for audit purposes. Derived from [currentMode] and the
      * NFC bootstrap flag at session start. Never contains user-visible text.
      */
-    @Volatile private var sessionChannel: String = "NEARBY"
+    @Volatile private var sessionChannel: String = ExchangeAuditEntry.CHANNEL_NEARBY
 
     /**
      * Prompt-6 / Issue-1: TOCTOU guard for P2P connection requests.
@@ -379,6 +380,12 @@ class NearbyExchangeService : Service() {
                     auditErrorCode = ExchangeAuditEntry.ERR_SAS_MISMATCH
                 )
             }
+            // Issue-50: gate opened via per-instance Intent rather than static field write.
+            ACTION_GESTURE_VERIFIED -> {
+                gestureVerified = true
+                scope.launch { authPreferences.setGestureGateOpen(true) }
+                Timber.d("Gesture gate opened for this service instance")
+            }
         }
         return START_NOT_STICKY
     }
@@ -426,9 +433,9 @@ class NearbyExchangeService : Service() {
         currentMode = mode
         sessionPeerKeyHash = null
         sessionChannel = when (mode) {
-            ExchangeSession.ExchangeMode.ROOM_HOST   -> "ROOM_HOST"
-            ExchangeSession.ExchangeMode.ROOM_GUEST  -> "ROOM_GUEST"
-            ExchangeSession.ExchangeMode.PEER_TO_PEER -> "NEARBY"
+            ExchangeSession.ExchangeMode.ROOM_HOST    -> ExchangeAuditEntry.CHANNEL_ROOM_HOST
+            ExchangeSession.ExchangeMode.ROOM_GUEST   -> ExchangeAuditEntry.CHANNEL_ROOM_GUEST
+            ExchangeSession.ExchangeMode.PEER_TO_PEER -> ExchangeAuditEntry.CHANNEL_NEARBY
         }
         // Prune the audit log once per session start (background, best-effort).
         scope.launch { auditRepository.pruneOldEntries() }
@@ -442,7 +449,7 @@ class NearbyExchangeService : Service() {
             ?: CryptoUtils.generateEphemeralECDHKeyPair()
 
         if (nfcBootstrap != null) {
-            sessionChannel = "NFC"
+            sessionChannel = ExchangeAuditEntry.CHANNEL_NFC
             Timber.i("NFC bootstrap present for session $sessionId — skipping Nearby key exchange")
             // Pre-seed peer public key so handleIncomingPublicKey becomes a no-op
             // when the peer's Nearby key-exchange message arrives.  Both peers
@@ -554,6 +561,7 @@ class NearbyExchangeService : Service() {
 
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
+        scope.launch { authPreferences.setGestureGateOpen(false) }
         // Prompt-6 / Issue-1: reset the connection-request flag so the next
         // session can request a connection again.
         connectionRequested = false
@@ -567,7 +575,7 @@ class NearbyExchangeService : Service() {
         pendingSasEndpointId = null
         // Reset audit-log session tracking.
         sessionPeerKeyHash = null
-        sessionChannel = "NEARBY"
+        sessionChannel = ExchangeAuditEntry.CHANNEL_NEARBY
         // PR-13: drop per-session challenge bookkeeping. The process-wide
         // peerIdentityRegistry is intentionally preserved across sessions
         // — that's the trust-on-first-use anchor.
@@ -1188,7 +1196,7 @@ class NearbyExchangeService : Service() {
                     _connectedCount.value = _connectedCount.value + 1
                     Timber.i("Room host saved guest contact: ${contact.displayName} (total=${connectedCount.value})")
                     // Log per-guest success without closing the room session.
-                    auditRepository.logSuccess(peerIdentityKeyHash = keyHash, channel = "ROOM_HOST")
+                    auditRepository.logSuccess(peerIdentityKeyHash = keyHash, channel = ExchangeAuditEntry.CHANNEL_ROOM_HOST)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to process room-guest profile")
                 }
@@ -1277,6 +1285,7 @@ class NearbyExchangeService : Service() {
 
                 // Reset gate on success too.
                 gestureVerified = false
+                scope.launch { authPreferences.setGestureGateOpen(false) }
                 sessionPeerKeyHash = null
 
                 delay(500)

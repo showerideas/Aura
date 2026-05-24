@@ -14,9 +14,9 @@ import javax.inject.Singleton
  * [OnboardingPreferences] so the rest of the codebase doesn't have to
  * juggle DataStore plumbing directly.
  *
- * Reuses the same `aura_prefs` DataStore instance as onboarding (declared
- * here via [authPrefsDataStore] which is the same underlying file —
- * preferencesDataStore() is idempotent per Context + name).
+ * Uses a separate `aura_auth_prefs` DataStore file from the onboarding
+ * DataStore (`aura_prefs`). Auth and onboarding flags are intentionally
+ * kept in distinct files so they can be cleared independently.
  */
 private val Context.authPrefsDataStore by preferencesDataStore(name = "aura_auth_prefs")
 
@@ -56,5 +56,28 @@ class AuthPreferences @Inject constructor(
         context.authPrefsDataStore.edit {
             it[DataStoreKeys.BG_ACTIVATION_ENABLED] = enabled
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Issue-50: gesture-gate DataStore binding.
+    //
+    // The gate flag used to live in NearbyExchangeService's companion object
+    // (a JVM static), shared across all instances in the same process.  On a
+    // device running AURA in both a personal and a work Android profile the
+    // two profiles share the same APK class-loader and therefore the same
+    // static fields — a verified gesture in profile A would silently open the
+    // gate in profile B.
+    //
+    // Each Android user profile gets its own DataStore file on disk, so
+    // storing the gate here makes the flag physically per-profile.
+    // -----------------------------------------------------------------------
+
+    /** Emits true while the current exchange session's gesture gate is open. */
+    val gestureGateOpen: Flow<Boolean> = context.authPrefsDataStore.data
+        .map { it[DataStoreKeys.GESTURE_GATE_OPEN] ?: false }
+
+    /** Open or close the per-profile gesture gate. */
+    suspend fun setGestureGateOpen(open: Boolean) {
+        context.authPrefsDataStore.edit { it[DataStoreKeys.GESTURE_GATE_OPEN] = open }
     }
 }

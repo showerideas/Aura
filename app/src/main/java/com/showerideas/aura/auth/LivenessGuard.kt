@@ -14,8 +14,8 @@ import kotlin.math.sqrt
  * ## The Defence
  * A real live hand, even when held as still as possible, exhibits involuntary
  * micro-tremors (physiological tremor, ~4–12 Hz, 1–5 mm amplitude). These
- * manifest as small but detectable frame-to-frame landmark drift in the 42-float
- * embedding space.
+ * manifest as small but detectable frame-to-frame landmark drift in the 63-float
+ * embedding space (21 landmarks × x,y,z).
  *
  * A static image or pre-recorded video produces an embedding sequence where every
  * frame is identical (or differs only by quantisation noise, < 0.001 L2). This

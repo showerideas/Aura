@@ -282,6 +282,7 @@ class WireProtocolTest {
 
     @Test
     fun `all user-visible fields at exactly the cap are accepted`() {
+        // Covers all 7 keys from Profile.toShareableMap() — each at exactly 500 chars.
         val max = "X".repeat(500)
         val map = mapOf(
             "_ts" to now.toString(),
@@ -289,7 +290,10 @@ class WireProtocolTest {
             "displayName" to max,
             "email" to max,
             "phone" to max,
-            "note" to max,
+            "company" to max,
+            "title" to max,
+            "website" to max,
+            "bio" to max,
         )
         assertEquals(PayloadValidator.ValidationResult.Ok,
             PayloadValidator.validateProfilePayload(map, now))

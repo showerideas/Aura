@@ -29,7 +29,7 @@ class ExchangeAuditRepository @Inject constructor(
 
     suspend fun logSuccess(
         peerIdentityKeyHash: String?,
-        channel: String = "NEARBY",
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY,
         direction: String = ExchangeAuditEntry.DIR_BOTH
     ) = auditDao.insert(
         ExchangeAuditEntry(
@@ -44,7 +44,7 @@ class ExchangeAuditRepository @Inject constructor(
     suspend fun logFailure(
         peerIdentityKeyHash: String? = null,
         errorCode: String? = null,
-        channel: String = "NEARBY"
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY
     ) = auditDao.insert(
         ExchangeAuditEntry(
             id = UUID.randomUUID().toString(),
@@ -57,7 +57,7 @@ class ExchangeAuditRepository @Inject constructor(
 
     suspend fun logBlocked(
         peerIdentityKeyHash: String? = null,
-        channel: String = "NEARBY"
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY
     ) = auditDao.insert(
         ExchangeAuditEntry(
             id = UUID.randomUUID().toString(),
@@ -70,7 +70,7 @@ class ExchangeAuditRepository @Inject constructor(
     suspend fun logSpoofDetected(
         peerIdentityKeyHash: String? = null,
         errorCode: String = ExchangeAuditEntry.ERR_LIVENESS_FAIL,
-        channel: String = "NEARBY"
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY
     ) = auditDao.insert(
         ExchangeAuditEntry(
             id = UUID.randomUUID().toString(),
@@ -83,7 +83,7 @@ class ExchangeAuditRepository @Inject constructor(
 
     suspend fun logTimeout(
         peerIdentityKeyHash: String? = null,
-        channel: String = "NEARBY"
+        channel: String = ExchangeAuditEntry.CHANNEL_NEARBY
     ) = auditDao.insert(
         ExchangeAuditEntry(
             id = UUID.randomUUID().toString(),

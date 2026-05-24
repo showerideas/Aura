@@ -55,10 +55,14 @@ data class ExchangeAuditEntry(
      */
     val errorCode: String? = null,
     /**
-     * Exchange channel used.
-     * "NEARBY_BLE", "NEARBY_WIFI", "NFC", "QR", "ROOM_HOST", "ROOM_GUEST".
+     * Exchange channel used. Use the [CHANNEL_*][companion] constants.
+     * "NEARBY"     — Nearby Connections (BLE + Wi-Fi P2P, transport auto-selected).
+     * "NFC"        — tap-to-pair NFC key bootstrap followed by Nearby.
+     * "QR"         — QR code scan + relay POST (stub path).
+     * "ROOM_HOST"  — multi-peer room session, this device was the host.
+     * "ROOM_GUEST" — multi-peer room session, this device was a guest.
      */
-    val channel: String = "NEARBY"
+    val channel: String = CHANNEL_NEARBY
 ) {
     companion object {
         // Outcome constants — use these rather than raw strings
@@ -80,5 +84,12 @@ data class ExchangeAuditEntry(
         const val ERR_PAYLOAD_INVALID = "PAYLOAD_INVALID"
         const val ERR_CRYPTO_ERROR    = "CRYPTO_ERROR"
         const val ERR_SAS_MISMATCH    = "SAS_MISMATCH"
+
+        // Channel constants — use these rather than raw strings
+        const val CHANNEL_NEARBY     = "NEARBY"
+        const val CHANNEL_NFC        = "NFC"
+        const val CHANNEL_QR         = "QR"
+        const val CHANNEL_ROOM_HOST  = "ROOM_HOST"
+        const val CHANNEL_ROOM_GUEST = "ROOM_GUEST"
     }
 }
