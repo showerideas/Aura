@@ -228,4 +228,14 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC 点触有效 — 更快的密钥交换</string>
     <string name="exchange_nfc_active_desc">此次交换通过 NFC 点触发起 — ECDH 握手已预置</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">名片已更新</string>
+    <string name="merge_action_accept">接受更改</string>
+    <string name="merge_action_revert">全部还原</string>
+    <string name="merge_field_toggle_desc">切换是否保留 %1$s 的新值</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s 发送了一张新名片。%2$d 个字段已更改。</item>
+    </plurals>
 </resources>
