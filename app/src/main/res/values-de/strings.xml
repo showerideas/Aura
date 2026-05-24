@@ -102,6 +102,7 @@
     <string name="room_join_action">Beitreten</string>
     <string name="room_guest_done">Karte des Gastgebers erhalten!</string>
     <string name="room_hold_to_confirm">Aktionsschaltfläche halten, um mit Ihrer Geste zu bestätigen.</string>
+    <string name="profile_change_avatar_desc">Profilfoto ändern</string>
     <string name="profile_avatar_desc">Tippen, um ein Profilfoto auszuwählen</string>
     <string name="profile_avatar_too_large">Bild war zu groß – versuchen Sie ein kleineres Bild.</string>
     <string name="home_greeting">Hey, %1$s</string>
