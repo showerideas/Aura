@@ -13,9 +13,12 @@ import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +29,36 @@ class ExchangeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val sessionState: StateFlow<ExchangeSession?> = NearbyExchangeService.sessionState
+
+    /**
+     * True once the SAS verification dialog has been shown for the current
+     * VERIFYING session state. Stored in the ViewModel so it survives
+     * configuration changes (rotation, theme switch, etc.) — previously this
+     * was a fragment instance variable which reset to false on every recreation,
+     * causing the SAS dialog to be shown twice to the user.
+     *
+     * Auto-reset to false whenever the session leaves the VERIFYING state so
+     * the next session starts with a clean slate. Consumed by the Fragment via
+     * [sasDialogShown] and marked via [onSasDialogShown].
+     */
+    private val _sasDialogShown = MutableStateFlow(false)
+    val sasDialogShown: StateFlow<Boolean> = _sasDialogShown.asStateFlow()
+
+    /** Call once when the SAS dialog is shown to prevent duplicate display. */
+    fun onSasDialogShown() {
+        _sasDialogShown.value = true
+    }
+
+    init {
+        // Auto-reset the SAS guard whenever the session moves away from VERIFYING.
+        viewModelScope.launch {
+            sessionState.collect { session ->
+                if (session?.state != ExchangeSession.State.VERIFYING) {
+                    _sasDialogShown.value = false
+                }
+            }
+        }
+    }
 
     val gestureRecordingState: StateFlow<GestureAuthManager.RecordingState> =
         gestureAuthManager.recordingState

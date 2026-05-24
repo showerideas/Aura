@@ -41,17 +41,11 @@ android {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
-    // PR-38 (translation stubs): we ship curated values-XX/ bundles that
-    // intentionally translate only the highest-impact UI surface; all
-    // other keys fall back to values/ (English) via Android's normal
-    // resource resolution. This is a *deliberate* coverage decision —
-    // disable the MissingTranslation lint check so CI doesn't reject
-    // every key that isn't yet translated in all 7 bundles. ExtraTranslation
-    // and InvalidTranslation are kept ON to catch real mistakes.
-    // TODO(Prompt-11): re-enable MissingTranslation once 100% translation
-    // coverage is achieved. Tracked in docs/features/20-localization.md.
+    // Issue-51: all 7 locale bundles (de, es, fr, hi, ja, ko, zh-rCN) are now
+    // at 209/209 strings — 100% coverage. MissingTranslation is re-enabled so
+    // any future key added to values/strings.xml without a matching entry in
+    // every locale immediately fails lint/CI.
     lint {
-        disable += setOf("MissingTranslation")
         abortOnError = true
         warningsAsErrors = false
         checkReleaseBuilds = true

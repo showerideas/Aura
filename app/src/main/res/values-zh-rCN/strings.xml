@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — Simplified Chinese (简体中文) translation — v1.1.0 complete
-  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
+  AURA — Simplified Chinese (简体中文) translation — v1.3.0 complete
+  All 209 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -87,7 +87,7 @@
     <string name="qr_scan_cancelled">扫描已取消。</string>
     <string name="qr_invalid">这不是有效的 AURA 配对内容。</string>
     <string name="qr_expired">配对码已过期，请让对方刷新。</string>
-    <string name="qr_pairing_ok">已与 %1$s 配对…（中继待实现）</string>
+    <string name="qr_pairing_ok">已与 %1$s 完成密钥交换 — 使用 BLE 或 NFC 完成交换。</string>
     <string name="home_room_mode">房间模式</string>
     <string name="room_mode_host">创建房间</string>
     <string name="room_mode_guest">加入房间</string>
@@ -169,4 +169,53 @@
     <plurals name="room_host_count">
         <item quantity="other">已有 %d 人加入</item>
     </plurals>
+
+    <!-- v1.3 translations -->
+    <string name="action_call">拨打</string>
+    <string name="action_copy">复制</string>
+    <string name="action_delete">删除</string>
+    <string name="action_email_verb">发邮件</string>
+    <string name="contact_label_email">邮箱</string>
+    <string name="contact_label_phone">电话</string>
+    <string name="contact_label_website">网站</string>
+    <string name="contact_subtitle_aura">AURA 联系人</string>
+    <string name="contact_toggle_favourite_initial">切换收藏</string>
+    <string name="contacts_chip_favourites">★  收藏</string>
+    <string name="gesture_camera_preview_desc">手势认证摄像头预览</string>
+    <string name="gesture_detecting">%1$s %2$s — %3$d %% 稳定</string>
+    <string name="gesture_model_error">摄像头模型加载失败 — 请重启应用。</string>
+    <string name="gesture_no_hand">未检测到手 — 请将摄像头对准手部</string>
+    <string name="gesture_saved_embedding">手部形态已保存 — 手势认证就绪</string>
+    <string name="gesture_show_to_auth">展示您保存的手势以进行认证</string>
+    <string name="gesture_stability_desc">手势稳定性</string>
+    <string name="gesture_stable">%1$s %2$s — 保持稳定…</string>
+    <string name="home_activate_hint">三次按音量减键或点击以共享</string>
+    <string name="notif_channel_desc">正在进行联系人交换</string>
+    <string name="notif_channel_name">AURA 交换</string>
+    <string name="notif_starting">正在启动交换…</string>
+    <string name="notif_title">AURA 交换</string>
+    <string name="onboarding_email_invalid">请输入有效的电子邮件地址。</string>
+    <string name="perm_label_camera">摄像头</string>
+    <string name="perm_reason_camera">用于读取手势以进行安全交换认证。</string>
+    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
+    <string name="profile_btn_save_profile">保存个人资料</string>
+    <string name="profile_fields_to_share_header">要共享的字段</string>
+    <string name="profile_gesture_status_step2">步骤1已保存 — 现在请执行第二个手势</string>
+    <string name="profile_share_bio">简介</string>
+    <string name="profile_share_company">公司</string>
+    <string name="profile_share_email">邮箱</string>
+    <string name="profile_share_phone">电话</string>
+    <string name="profile_share_title">职称 / 角色</string>
+    <string name="profile_share_website">网站</string>
+    <string name="qr_unencrypted_warning">QR 备用：仅公钥交换。配置文件不传输 — 使用 BLE 或 NFC 进行完整的端到端加密。</string>
+    <string name="sas_dialog_confirm">匹配 ✓</string>
+    <string name="sas_dialog_message">您和您的联系人应该看到相同的6位数代码。\n\n您的代码: %1$s\n\n请联系人大声读出其代码。如果代码匹配，请点击\'匹配\'。</string>
+    <string name="sas_dialog_mismatch">不匹配 — 中止</string>
+    <string name="sas_dialog_title">验证安全码</string>
+    <string name="settings_test_volume_press">立即测试三次按键</string>
+    <string name="settings_volume_test_fail">✗ 未收到三次按键 — 此设备不支持</string>
+    <string name="settings_volume_test_listening">正在监听 3 秒 — 三次按音量 ▼</string>
+    <string name="settings_volume_test_success">✓ 检测到三次按键 — 此设备兼容</string>
+    <string name="settings_volume_wake_warning">⚠ 三次按音量键在 Pixel 和原生 Android 上有效。由于操作系统级别的按键拦截，在三星、小米、OPPO 或其他定制 Android 版本上可能无效。请使用下方按钮检查您的设备。</string>
+    <string name="status_verifying">与联系人核对代码…</string>
 </resources>

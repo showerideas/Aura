@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AURA — French (Français) translation — v1.1.0 complete
-  All 162 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
+  AURA — French (Français) translation — v1.3.0 complete
+  All 209 keys present. Run `./gradlew lintDebug` — zero MissingTranslation required.
 -->
 <resources>
     <string name="app_name">Aura</string>
@@ -87,7 +87,7 @@
     <string name="qr_scan_cancelled">Scan annulé.</string>
     <string name="qr_invalid">Ce code n\'est pas un payload d\'association AURA valide.</string>
     <string name="qr_expired">Ce code d\'association a expiré. Demandez à l\'autre personne de l\'actualiser.</string>
-    <string name="qr_pairing_ok">Associé avec %1$s… (relais à venir)</string>
+    <string name="qr_pairing_ok">Clé échangée avec %1$s — utilise BLE ou NFC pour finaliser l\'échange.</string>
     <string name="home_room_mode">Mode salle</string>
     <string name="room_mode_host">Héberger une salle</string>
     <string name="room_mode_guest">Rejoindre une salle</string>
@@ -170,4 +170,53 @@
         <item quantity="one">%d personne a rejoint</item>
         <item quantity="other">%d personnes ont rejoint</item>
     </plurals>
+
+    <!-- v1.3 translations -->
+    <string name="action_call">Appeler</string>
+    <string name="action_copy">Copier</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_email_verb">E-mail</string>
+    <string name="contact_label_email">E-mail</string>
+    <string name="contact_label_phone">Téléphone</string>
+    <string name="contact_label_website">Site web</string>
+    <string name="contact_subtitle_aura">Contact AURA</string>
+    <string name="contact_toggle_favourite_initial">Basculer le favori</string>
+    <string name="contacts_chip_favourites">★  Favoris</string>
+    <string name="gesture_camera_preview_desc">Aperçu de la caméra pour l\'authentification par geste</string>
+    <string name="gesture_detecting">%1$s %2$s — %3$d %% stable</string>
+    <string name="gesture_model_error">Le modèle de caméra n\'a pas pu être chargé. Redémarre l\'app.</string>
+    <string name="gesture_no_hand">Aucune main détectée — pointe la caméra vers ta main</string>
+    <string name="gesture_saved_embedding">Forme de la main sauvegardée — authentification par geste prête</string>
+    <string name="gesture_show_to_auth">Montre ton geste de main sauvegardé pour t\'authentifier</string>
+    <string name="gesture_stability_desc">Stabilité du geste</string>
+    <string name="gesture_stable">%1$s %2$s — tiens stable…</string>
+    <string name="home_activate_hint">Appuie trois fois sur le volume ou appuie pour partager</string>
+    <string name="notif_channel_desc">Échange de contacts en cours</string>
+    <string name="notif_channel_name">Échange AURA</string>
+    <string name="notif_starting">Démarrage de l\'échange…</string>
+    <string name="notif_title">Échange AURA</string>
+    <string name="onboarding_email_invalid">Veuillez saisir une adresse e-mail valide.</string>
+    <string name="perm_label_camera">Caméra</string>
+    <string name="perm_reason_camera">Pour lire ton geste de main pour l\'authentification d\'échange sécurisée.</string>
+    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
+    <string name="profile_btn_save_profile">Enregistrer le profil</string>
+    <string name="profile_fields_to_share_header">Champs à partager</string>
+    <string name="profile_gesture_status_step2">Étape 1 sauvegardée — maintenant effectue ton deuxième geste</string>
+    <string name="profile_share_bio">Bio</string>
+    <string name="profile_share_company">Entreprise</string>
+    <string name="profile_share_email">E-mail</string>
+    <string name="profile_share_phone">Téléphone</string>
+    <string name="profile_share_title">Titre / Rôle</string>
+    <string name="profile_share_website">Site web</string>
+    <string name="qr_unencrypted_warning">Repli QR: échange de clé publique uniquement. Le profil n\'est pas transmis — utilise BLE ou NFC pour le chiffrement de bout en bout.</string>
+    <string name="sas_dialog_confirm">Correspondance ✓</string>
+    <string name="sas_dialog_message">Toi et ton contact devriez voir le même code à 6 chiffres.\n\nTon code: %1$s\n\nDemande à ton contact de lire son code à voix haute. Si les codes correspondent, appuie sur \'Correspondance\'.</string>
+    <string name="sas_dialog_mismatch">Non-correspondance — annuler</string>
+    <string name="sas_dialog_title">Vérifier le code de sécurité</string>
+    <string name="settings_test_volume_press">Tester le triple appui maintenant</string>
+    <string name="settings_volume_test_fail">✗ Triple appui non reçu — non pris en charge sur cet appareil</string>
+    <string name="settings_volume_test_listening">Écoute 3 s — triple appui sur volume ▼</string>
+    <string name="settings_volume_test_success">✓ Triple appui détecté — cet appareil est compatible</string>
+    <string name="settings_volume_wake_warning">⚠ Le triple appui sur le volume fonctionne sur Pixel et Android standard. Il peut ne pas fonctionner sur Samsung, Xiaomi, OPPO ou d\'autres versions personnalisées d\'Android en raison de l\'interception des touches au niveau du système. Utilise le bouton ci-dessous pour vérifier ton appareil.</string>
+    <string name="status_verifying">Vérifier le code avec ton contact…</string>
 </resources>

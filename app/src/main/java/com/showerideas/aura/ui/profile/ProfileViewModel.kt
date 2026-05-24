@@ -82,7 +82,20 @@ class ProfileViewModel @Inject constructor(
 
     fun stopGestureCamera() = gestureAuthManager.stopCamera()
 
-    fun saveGesturePattern(pattern: GesturePattern) = gestureAuthManager.savePattern(pattern)
+    /**
+     * Add [pattern] to the multi-sample enrollment centroid accumulator and
+     * persist the updated centroid. Previously called [GestureAuthManager.savePattern]
+     * directly (single-sample), which bypassed centroid averaging. Each call to
+     * [GestureAuthManager.addEnrollmentSample] accumulates up to
+     * [GestureAuthManager.MAX_ENROLLMENT_SAMPLES] embeddings and recomputes the
+     * average, so every "Re-record" press in ProfileFragment improves accuracy.
+     *
+     * @return sample count now stored (1 .. [GestureAuthManager.MAX_ENROLLMENT_SAMPLES]).
+     */
+    fun addEnrollmentSample(pattern: GesturePattern): Int =
+        gestureAuthManager.addEnrollmentSample(pattern)
+
+    fun enrolledSampleCount(): Int = gestureAuthManager.enrolledSampleCount()
 
     fun clearGesturePattern() = gestureAuthManager.clearPattern()
 

@@ -205,9 +205,13 @@ class OnboardingFragment : Fragment() {
                 viewModel.gestureRecordingState.collect { state ->
                     when (state) {
                         is GestureAuthManager.RecordingState.Complete -> {
-                            viewModel.saveGesturePattern(state.pattern)
+                            // addEnrollmentSample accumulates up to MAX_ENROLLMENT_SAMPLES
+                            // raw embeddings and recomputes the centroid each time, giving
+                            // better FAR/FRR than a single-sample savePattern() call.
+                            val count = viewModel.addEnrollmentSample(state.pattern)
+                            val max   = GestureAuthManager.MAX_ENROLLMENT_SAMPLES
                             viewModel.stopGestureCamera()
-                            statusTv.setText(R.string.gesture_saved_embedding)
+                            statusTv.text = "${getString(R.string.gesture_saved_embedding)} ($count/$max)"
                         }
                         is GestureAuthManager.RecordingState.Error -> {
                             // Show the error (e.g. "Liveness check failed — please use a live hand")
