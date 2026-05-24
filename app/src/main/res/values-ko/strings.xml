@@ -89,6 +89,7 @@
     <string name="qr_expired">페어링 코드가 만료되었습니다. 상대방에게 갱신을 요청하세요.</string>
     <string name="qr_pairing_ok">연락처 저장됨: %1$s</string>
     <string name="qr_relay_timeout">상대방 기기가 시간 내에 응답하지 않았습니다. 다시 시도하세요.</string>
+    <string name="qr_sas_mismatch_abort">보안 코드가 일치하지 않습니다 — 교환이 중단되었습니다. 연락처가 저장되지 않았습니다.</string>
     <string name="home_room_mode">룸 모드</string>
     <string name="room_mode_host">룸 호스트</string>
     <string name="room_mode_guest">룸 참가</string>
