@@ -99,6 +99,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- NFC tap-to-exchange — routes AURA NFC taps to MainActivity
+                 when the app is not in the foreground. While in the foreground,
+                 NfcExchangeHelper.enable() registers a higher-priority foreground
+                 dispatch that intercepts taps before this filter fires. Both paths
+                 converge in onNewIntent → NfcExchangeHelper.handleIntent(). -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.aura.key-bootstrap" />
+            </intent-filter>
         </activity>
 
         <!-- Volume Button Foreground Service -->
