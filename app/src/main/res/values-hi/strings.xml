@@ -220,4 +220,9 @@
     <string name="settings_volume_test_success">✓ ट्रिपल-प्रेस मिला — यह डिवाइस संगत है</string>
     <string name="settings_volume_wake_warning">⚠ ट्रिपल-प्रेस वॉल्यूम Pixel और स्टॉक Android पर काम करता है। OS-स्तर की कुंजी अवरोधन के कारण Samsung, Xiaomi, OPPO या अन्य कस्टम Android बिल्ड पर काम नहीं कर सकता। अपने डिवाइस की जाँच करने के लिए नीचे बटन का उपयोग करें।</string>
     <string name="status_verifying">अपने संपर्क के साथ कोड सत्यापित करें…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">सभी Android डिवाइसेस पर वॉल्यूम त्रिपल-प्रेस सक्रियकरण सक्षम करता है। AURA कभी अन्य एप्स की सामग्री नहीं पढ़ता।</string>
+    <string name="settings_accessibility_mode">अभिगम्यता मोड (अनुशंसित)</string>
+    <string name="settings_accessibility_enabled">सक्रिय — सभी डिवाइसेस पर काम करता है ✓</string>
+    <string name="settings_accessibility_disabled">अभिगम्यता सेटिंग्स में सक्षम करने के लिए टैप करें</string>
 </resources>
