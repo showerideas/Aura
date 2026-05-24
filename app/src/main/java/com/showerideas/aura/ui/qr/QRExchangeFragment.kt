@@ -17,7 +17,11 @@ import com.journeyapps.barcodescanner.ScanOptions
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentQrExchangeBinding
 import dagger.hilt.android.AndroidEntryPoint
+import android.view.HapticFeedbackConstants
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * Fallback exchange path for environments where BLE / Wi-Fi P2P is blocked
@@ -51,6 +55,12 @@ class QRExchangeFragment : Fragment() {
      * is still the active state. Reset on each new scan.
      */
     private var sasDialogShown = false
+    /** Auto-aborts the SAS dialog after 30 s of inaction. */
+    private var sasTimeoutJob: Job? = null
+
+    companion object {
+        private const val SAS_DIALOG_TIMEOUT_MS = 30_000L
+    }
 
     private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
         val contents = result.contents
@@ -167,22 +177,46 @@ class QRExchangeFragment : Fragment() {
      * the relay layer. Confirming saves the contact to Room; reporting a mismatch
      * discards the pending contact without persisting anything.
      */
+    /**
+     * Display the SAS verification dialog with a 30-second auto-abort countdown.
+     *
+     * Haptic feedback is fired immediately to draw attention. If neither button
+     * is pressed within 30 s the session is aborted — the pending contact is
+     * discarded without being saved.
+     */
     private fun showSasDialog(pin: String) {
-        AlertDialog.Builder(requireContext())
+        // Haptic pulse — draws attention in noisy environments.
+        binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.sas_dialog_title))
             .setMessage(getString(R.string.sas_dialog_message, pin))
             .setCancelable(false)
             .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
+                sasTimeoutJob?.cancel()
                 viewModel.confirmSas()
             }
             .setNegativeButton(getString(R.string.sas_dialog_mismatch)) { _, _ ->
+                sasTimeoutJob?.cancel()
                 viewModel.abortSas()
                 viewModel.consumePairingResult()
             }
             .show()
+
+        // 30-second auto-abort — prevents indefinite VERIFYING state.
+        sasTimeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(SAS_DIALOG_TIMEOUT_MS)
+            if (dialog.isShowing) {
+                Timber.w("QR SAS dialog timed out — auto-aborting")
+                dialog.dismiss()
+                viewModel.abortSas()
+                viewModel.consumePairingResult()
+            }
+        }
     }
 
     override fun onDestroyView() {
+        sasTimeoutJob?.cancel()
         super.onDestroyView()
         _binding = null
     }
