@@ -213,6 +213,9 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // org.json stubs in android.jar throw RuntimeException("Stub!") in JVM unit tests.
+    // This real implementation overrides the stub so JSONObject works in QRSasPipelineTest.
+    testImplementation("org.json:json:20231013")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.room:room-testing:2.6.1")
