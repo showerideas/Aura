@@ -89,6 +89,7 @@
     <string name="qr_expired">यह युग्मन कोड समाप्त हो गया। दूसरे व्यक्ति से रिफ्रेश करने को कहें।</string>
     <string name="qr_pairing_ok">संपर्क सहेजा गया: %1$s</string>
     <string name="qr_relay_timeout">दूसरे फ़ोन ने समय पर जवाब नहीं दिया। फिर से कोशिश करें।</string>
+    <string name="qr_sas_mismatch_abort">सुरक्षा कोड मेल नहीं खाता — एक्सचेंज रद्द। कोई संपर्क सहेजा नहीं गया।</string>
     <string name="home_room_mode">रूम मोड</string>
     <string name="room_mode_host">रूम होस्ट करें</string>
     <string name="room_mode_guest">रूम में शामिल हों</string>
