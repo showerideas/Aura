@@ -22,6 +22,11 @@ import com.showerideas.aura.databinding.FragmentExchangeBinding
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
 import dagger.hilt.android.AndroidEntryPoint
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.view.HapticFeedbackConstants
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -40,6 +45,7 @@ class ExchangeFragment : Fragment() {
 
     companion object {
         private const val MAX_GESTURE_ATTEMPTS = 3
+        private const val SAS_DIALOG_TIMEOUT_MS = 30_000L
     }
 
     private var _binding: FragmentExchangeBinding? = null
@@ -49,6 +55,8 @@ class ExchangeFragment : Fragment() {
 
     private var failedAttempts = 0
     private var serviceStarted = false
+    /** Coroutine job that auto-aborts the SAS dialog after 30 s of inaction. */
+    private var sasTimeoutJob: Job? = null
     /**
      * Guard against the StateFlow replaying Complete after lifecycle transitions
      * (e.g. user briefly backgrounds the app). Once we've handled the result —
@@ -315,22 +323,47 @@ class ExchangeFragment : Fragment() {
      * Pressing "Mismatch" aborts the session with an error — no profile data is
      * transmitted to either party.
      */
+    /**
+     * Display the SAS verification dialog with a 30-second auto-abort countdown.
+     *
+     * Haptic feedback is fired immediately to draw the user's attention even in
+     * noisy environments. If neither button is pressed within 30 s the dialog is
+     * dismissed and the session is aborted as a precaution.
+     */
     private fun showSasDialog(pin: String) {
-        AlertDialog.Builder(requireContext())
+        // Haptic pulse to draw attention.
+        binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.sas_dialog_title))
             .setMessage(getString(R.string.sas_dialog_message, pin))
             .setCancelable(false)
             .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
+                sasTimeoutJob?.cancel()
                 viewModel.confirmSas()
             }
             .setNegativeButton(getString(R.string.sas_dialog_mismatch)) { _, _ ->
+                sasTimeoutJob?.cancel()
                 viewModel.abortSas()
                 findNavController().navigateUp()
             }
             .show()
+
+        // 30-second auto-abort — if user walks away without confirming,
+        // abort the session rather than leaving it in a limbo VERIFYING state.
+        sasTimeoutJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(SAS_DIALOG_TIMEOUT_MS)
+            if (dialog.isShowing) {
+                Timber.w("SAS dialog timed out after ${SAS_DIALOG_TIMEOUT_MS / 1000}s — auto-aborting")
+                dialog.dismiss()
+                viewModel.abortSas()
+                findNavController().navigateUp()
+            }
+        }
     }
 
     override fun onDestroyView() {
+        sasTimeoutJob?.cancel()
         viewModel.stopGestureCamera()
         super.onDestroyView()
         _binding = null
