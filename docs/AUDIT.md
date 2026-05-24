@@ -14,14 +14,14 @@
 
 | # | Claim | Status | Evidence |
 |---|---|---|---|
-| H1 | "Offline-first — no server, no cloud sync, no account required" | 🟢 | Manifest has no `INTERNET` permission; `network_security_config.xml` forbids cleartext; no HTTP client deps in `libs.versions.toml`. |
+| H1 | "Offline-first — no server, no cloud sync, no account required" | 🟡 | Core BLE/Wi-Fi-P2P exchange paths are fully offline. `INTERNET` permission is declared for the optional QR relay path (`RelayClient.kt`); all relay traffic is AES-256-GCM ciphertext over HTTPS. No account, no analytics, no cloud sync. `network_security_config.xml` forbids cleartext. |
 | H2 | "Triple-press volume ↓ activates AURA" | 🟢 | `VolumeButtonListenerService` listens to media-button events and emits `ACTION_ACTIVATE` after three vol-down presses. |
 | H3 | "Perform your recorded gesture" | 🟢 | `GestureAuthManager` + CameraX + MediaPipe GestureRecognizer (21 landmarks, cosine similarity ≥ 0.88). The gesture is an ergonomic gate (30–70% FAR for same-gesture cross-person pairs, documented); the real security anchor is the ECDSA identity key. See [docs/GESTURE_AUTH.md](GESTURE_AUTH.md). |
 | H4 | "Nearby Connections P2P link forms" | 🟢 | `play-services-nearby:19.1.0` wired through `NearbyExchangeService`. |
 | H5 | "ECDH key exchange (ephemeral per session)" | 🟢 | `CryptoUtils.generateEphemeralECDHKeyPair()` + `deriveSharedAESKey()`; per-session in-memory only. |
 | H6 | "AES-256-GCM payload" | 🟢 | `CryptoUtils.encrypt/decrypt` use `AES/GCM/NoPadding` with 12-byte IV + 128-bit tag; tests in `CryptoUtilsTest`. |
 | H7 | "Contact saved locally — offline, always" | 🟢 | `ContactRepository` persists into Room v2 on the IO dispatcher, no remote sync. |
-| H8 | "Built for privacy: no outbound network calls. Ever." | 🟢 | Verified by grep — no `HttpURLConnection`, no OkHttp / Retrofit dependency, no analytics SDK. |
+| H8 | "Built for privacy: no outbound network calls. Ever." | 🟡 | **Updated claim:** BLE/Wi-Fi-P2P exchange paths have zero outbound calls. The QR relay path (`RelayClient.kt`) uses `HttpURLConnection` over HTTPS to POST/GET AES-256-GCM ciphertext to an ephemeral relay slot — no plaintext profile data transits the network. No analytics SDK, no OkHttp/Retrofit, no third-party telemetry. |
 | H9 | "Endpoint blocklist" | 🟢 | `BlockedEndpointDao`, blocklist check in `NearbyExchangeService.onEndpointFound`. |
 | H10 | "QR-code fallback" | 🟢 | `QRExchangeFragment` + ZXing-embedded. |
 | H11 | "Room mode: one host, many guests" | 🟢 | `RoomExchangeFragment`, **P2P_CLUSTER** strategy (not P2P_STAR — both peers advertise + discover simultaneously; host accepts all comers, guests are single-shot). |
