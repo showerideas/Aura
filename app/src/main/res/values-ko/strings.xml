@@ -102,6 +102,7 @@
     <string name="room_join_action">참가</string>
     <string name="room_guest_done">호스트의 카드를 받았습니다!</string>
     <string name="room_hold_to_confirm">제스처로 확인하려면 액션 버튼을 길게 누르세요.</string>
+    <string name="profile_change_avatar_desc">프로필 사진 변경</string>
     <string name="profile_avatar_desc">탭하여 프로필 사진 선택</string>
     <string name="profile_avatar_too_large">이미지가 너무 큽니다 — 더 작은 이미지를 시도해 보세요.</string>
     <string name="home_greeting">안녕하세요, %1$s</string>
