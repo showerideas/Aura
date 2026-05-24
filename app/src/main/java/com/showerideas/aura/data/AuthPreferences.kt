@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * PR-16: thin DataStore wrapper for auth-method preferences. Mirrors
+ * thin DataStore wrapper for auth-method preferences. Mirrors
  * [OnboardingPreferences] so the rest of the codebase doesn't have to
  * juggle DataStore plumbing directly.
  *
@@ -45,7 +45,7 @@ class AuthPreferences @Inject constructor(
     }
 
     /**
-     * PR-19: whether the user wants AURA to run a background listener for
+     * whether the user wants AURA to run a background listener for
      * the triple-press volume-down activation gesture. Defaults to true
      * so the headline feature works out of the box.
      */
@@ -59,7 +59,7 @@ class AuthPreferences @Inject constructor(
     }
 
     // -----------------------------------------------------------------------
-    // Issue-50: gesture-gate DataStore binding.
+    // gesture-gate DataStore binding.
     //
     // The gate flag used to live in NearbyExchangeService's companion object
     // (a JVM static), shared across all instances in the same process.  On a

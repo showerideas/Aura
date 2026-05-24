@@ -44,7 +44,7 @@ interface ContactDao {
     @Query("SELECT COUNT(*) FROM contacts")
     suspend fun count(): Int
 
-    /** PR-10: latest contact saved from a given Nearby endpoint, used to attach an incoming avatar. */
+    /** latest contact saved from a given Nearby endpoint, used to attach an incoming avatar. */
     @Query("SELECT * FROM contacts WHERE sourceEndpointId = :endpointId ORDER BY receivedAt DESC LIMIT 1")
     suspend fun findLatestByEndpoint(endpointId: String): Contact?
 

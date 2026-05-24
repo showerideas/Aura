@@ -28,7 +28,7 @@ data class Contact(
     val isFavorite: Boolean = false,
     val notes: String = "",
     /**
-     * FIX-5: SHA-256 hash of the peer's identity public key (Base64-encoded),
+     * SHA-256 hash of the peer's identity public key (Base64-encoded),
      * populated when the contact is saved in [NearbyExchangeService].
      * Nullable for backward compat (MIGRATION_3_4 adds column DEFAULT NULL).
      * Used by the "Block device" action so blocking keys on identity hash,

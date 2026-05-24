@@ -68,7 +68,7 @@ class NearbyExchangeService : Service() {
     companion object {
         const val ACTION_START = "com.showerideas.aura.nearby.START"
         const val ACTION_STOP = "com.showerideas.aura.nearby.STOP"
-        // PR-09: room-mode actions
+        // room-mode actions
         const val ACTION_START_ROOM_HOST = "com.showerideas.aura.nearby.START_ROOM_HOST"
         const val ACTION_START_ROOM_GUEST = "com.showerideas.aura.nearby.START_ROOM_GUEST"
         const val ACTION_STATE_UPDATE = "com.showerideas.aura.nearby.STATE_UPDATE"
@@ -77,7 +77,7 @@ class NearbyExchangeService : Service() {
         // has confirmed (or denied) that the 6-digit SAS PIN matches their peer.
         const val ACTION_CONFIRM_SAS     = "com.showerideas.aura.nearby.CONFIRM_SAS"
         const val ACTION_ABORT_SAS       = "com.showerideas.aura.nearby.ABORT_SAS"
-        // Issue-50: explicit Intent action to open the gesture gate on the
+        // explicit Intent action to open the gesture gate on the
         // *service instance* rather than via a static companion-object field.
         const val ACTION_GESTURE_VERIFIED = "com.showerideas.aura.nearby.GESTURE_VERIFIED"
 
@@ -92,28 +92,26 @@ class NearbyExchangeService : Service() {
         // Message type prefixes (single-byte header in the payload)
         private const val MSG_TYPE_PUBLIC_KEY: Byte = 0x01
         private const val MSG_TYPE_PROFILE: Byte = 0x02
-        // PR-10: avatar stream signalling.
+        // avatar stream signalling.
         private const val MSG_TYPE_AVATAR: Byte = 0x03
-        // PR-13: device identity challenge / response.
+        // device identity challenge / response.
         private const val MSG_TYPE_CHALLENGE: Byte = 0x04
         private const val MSG_TYPE_CHALLENGE_RESPONSE: Byte = 0x05
         private const val CHALLENGE_BYTES = 32
-        /** PR-13: byte that separates the base64 pubkey from the raw bytes. */
+        /** byte that separates the base64 pubkey from the raw bytes. */
         private const val CHALLENGE_SEPARATOR: Byte = '|'.code.toByte()
         private const val MAX_AVATAR_BYTES: Long = 200_000L
 
-        // FIX-2: peerIdentityRegistry moved to KnownPeerRepository (Room-backed).
+        // peerIdentityRegistry moved to KnownPeerRepository (Room-backed).
         // The previous in-memory map was wiped on every service restart, allowing
         // an attacker to force a restart to bypass TOFU endpoint-substitution
         // detection. The persisted registry survives reboots and process deaths.
 
-        // FIX-B: keep the mutable flow private so external callers (ViewModels)
-        // cannot bypass the service's internal state machine. Public surface is
-        // read-only StateFlow.
+        // _sessionState private; sessionState is a read-only view.
         private val _sessionState: MutableStateFlow<ExchangeSession?> = MutableStateFlow(null)
         val sessionState: StateFlow<ExchangeSession?> = _sessionState.asStateFlow()
 
-        /** Live count of guests that have joined a room host session (PR-09). */
+        /** Live count of guests that have joined a room host session. */
         private val _connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
         val connectedCount: StateFlow<Int> = _connectedCount.asStateFlow()
 
@@ -142,15 +140,8 @@ class NearbyExchangeService : Service() {
         @Volatile var pendingNfcBootstrap: NfcExchangeHelper.NfcBootstrap? = null
 
         /**
-         * Called by [com.showerideas.aura.ui.exchange.ExchangeViewModel]
-         * after a successful gesture match (or biometric / acknowledged skip
-         * when no pattern is set).
-         *
-         * Issue-50: previously set a static companion-object @Volatile field,
-         * which is JVM-class-level and therefore shared between the personal
-         * and work Android profiles on the same device.  Now sends an explicit
-         * Intent so the gate is set on the *service instance*, whose lifecycle
-         * is per-process and whose backing DataStore is per-user-profile on disk.
+         * Opens the gesture gate on this service instance after successful auth.
+         * Uses an Intent so the gate is per-user-profile, not a JVM-level static.
          */
         fun markGestureVerified(context: Context) {
             context.startService(Intent(context, NearbyExchangeService::class.java).apply {
@@ -193,14 +184,14 @@ class NearbyExchangeService : Service() {
             })
         }
 
-        /** PR-09: start as a room host (multi-guest collector). */
+        /** start as a room host (multi-guest collector). */
         fun startRoomHost(context: Context) {
             context.startForegroundService(Intent(context, NearbyExchangeService::class.java).apply {
                 action = ACTION_START_ROOM_HOST
             })
         }
 
-        /** PR-09: start as a room guest (receives host card, terminates after one exchange). */
+        /** start as a room guest (receives host card, terminates after one exchange). */
         fun startRoomGuest(context: Context) {
             context.startForegroundService(Intent(context, NearbyExchangeService::class.java).apply {
                 action = ACTION_START_ROOM_GUEST
@@ -210,19 +201,19 @@ class NearbyExchangeService : Service() {
 
     @Inject lateinit var profileRepository: ProfileRepository
     @Inject lateinit var contactRepository: ContactRepository
-    /** PR-14: blocklist check on every incoming connection initiation. */
+    /** blocklist check on every incoming connection initiation. */
     @Inject lateinit var blocklistRepository: BlocklistRepository
-    /** FIX-2: persisted TOFU endpoint-identity registry. */
+    /** persisted TOFU endpoint-identity registry. */
     @Inject lateinit var knownPeerRepository: KnownPeerRepository
     /** Cross-session identity-key rotation detector — warns when a returning peer presents a new key. */
     @Inject lateinit var identityRotationDetector: IdentityRotationDetector
     /** Privacy-preserving exchange audit log — records outcomes without PII. */
     @Inject lateinit var auditRepository: ExchangeAuditRepository
-    /** Issue-50: per-profile DataStore for the gesture gate flag. */
+    /** per-profile DataStore for the gesture gate flag. */
     @Inject lateinit var authPreferences: AuthPreferences
 
     /**
-     * Issue-50: per-instance gesture gate flag.  Mirrors the DataStore value
+     * per-instance gesture gate flag.  Mirrors the DataStore value
      * for a fast synchronous check in [startSession].  Set via
      * [ACTION_GESTURE_VERIFIED]; cleared in [terminateSession].
      *
@@ -239,7 +230,7 @@ class NearbyExchangeService : Service() {
 
     private lateinit var sessionId: String
     private var timeoutJob: Job? = null
-    /** PR-15: periodic nonce cache flush so memory is bounded. */
+    /** periodic nonce cache flush so memory is bounded. */
     private var noncePurgeJob: Job? = null
 
     /**
@@ -283,23 +274,11 @@ class NearbyExchangeService : Service() {
      */
     @Volatile private var sessionChannel: String = ExchangeAuditEntry.CHANNEL_NEARBY
 
-    /**
-     * Prompt-6 / Issue-1 (hardened): TOCTOU guard for P2P connection requests.
-     *
-     * AtomicBoolean replaces the previous @Volatile Boolean because the compound
-     * check-then-set in onEndpointFound was not atomic: two concurrent
-     * onEndpointFound callbacks on Nearby's callback thread could both read false
-     * before either wrote true, firing two simultaneous requestConnection() calls
-     * and corrupting the per-session ECDH state mid-handshake.
-     *
-     * compareAndSet(false, true) is a single CAS — only the first caller
-     * succeeds; the second sees false returned and bails out cleanly.
-     * Reset via set(false) in terminateSession() so the next session can connect.
-     */
+    /** CAS guard — prevents duplicate requestConnection() on simultaneous discovery. */
     private val connectionRequested = java.util.concurrent.atomic.AtomicBoolean(false)
 
     /**
-     * Prompt-6 / Issue-3: max encrypted profile payload bytes.
+     * max encrypted profile payload bytes.
      * Nearby Connections BYTES payloads are bounded by the protocol (~1 MB),
      * but we enforce a tighter application-level cap to prevent Gson-parsing
      * of maliciously large JSON sent by a rogue peer who completed the handshake.
@@ -308,20 +287,20 @@ class NearbyExchangeService : Service() {
     private val MAX_PROFILE_PAYLOAD_BYTES = 65_536
 
     /**
-     * PR-13: per-session challenge bookkeeping.
+     * per-session challenge bookkeeping.
      *  - pendingChallengeByEndpoint: the 32 random bytes we sent; we verify
      *    the peer's signature against these on receipt of the response.
      *  - challengeVerifiedByEndpoint: latched true once the peer's response
      *    passes verification. ECDH key sending is gated behind this flag.
      *
-     * FIX-2: ConcurrentHashMap / newKeySet() — Nearby callbacks and
+     * ConcurrentHashMap / newKeySet() — Nearby callbacks and
      * Dispatchers.IO coroutines both access these concurrently. Plain
      * mutableMapOf/mutableSetOf are not thread-safe.
      */
     private val pendingChallengeByEndpoint = ConcurrentHashMap<String, ByteArray>()
     private val challengeVerifiedByEndpoint: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-    /** Active exchange mode for the in-flight session (PR-09). */
+    /** Active exchange mode for the in-flight session. */
     private var currentMode: ExchangeSession.ExchangeMode =
         ExchangeSession.ExchangeMode.PEER_TO_PEER
 
@@ -349,7 +328,7 @@ class NearbyExchangeService : Service() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notif_starting)))
-        // PR-15: kick off the periodic nonce-cache flush. Lifetime matches
+        // kick off the periodic nonce-cache flush. Lifetime matches
         // the service: cancelled in onDestroy. The cache is shared across
         // sessions so the purge interval is much longer than a session.
         noncePurgeJob = scope.launch {
@@ -386,7 +365,7 @@ class NearbyExchangeService : Service() {
                     auditErrorCode = ExchangeAuditEntry.ERR_SAS_MISMATCH
                 )
             }
-            // Issue-50: gate opened via per-instance Intent rather than static field write.
+            // gate opened via per-instance Intent rather than static field write.
             ACTION_GESTURE_VERIFIED -> {
                 gestureVerified = true
                 scope.launch { authPreferences.setGestureGateOpen(true) }
@@ -399,7 +378,7 @@ class NearbyExchangeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        // PR-15: stop the nonce purger before tearing the scope down so we
+        // stop the nonce purger before tearing the scope down so we
         // don't strand a coroutine waiting on delay().
         noncePurgeJob?.cancel()
         noncePurgeJob = null
@@ -569,10 +548,10 @@ class NearbyExchangeService : Service() {
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
         scope.launch { authPreferences.setGestureGateOpen(false) }
-        // Prompt-6 / Issue-1: reset the connection-request CAS flag so the next
+        // reset the connection-request CAS flag so the next
         // session can request a connection again.
         connectionRequested.set(false)
-        // Reset handshake bookkeeping (PR-02).
+        // Reset handshake bookkeeping.
         handshakeState = HandshakeState.IDLE
         peerPublicKey = null
         sessionKey = null
@@ -583,16 +562,16 @@ class NearbyExchangeService : Service() {
         // Reset audit-log session tracking.
         sessionPeerKeyHash = null
         sessionChannel = ExchangeAuditEntry.CHANNEL_NEARBY
-        // PR-13: drop per-session challenge bookkeeping. The process-wide
+        // drop per-session challenge bookkeeping. The process-wide
         // peerIdentityRegistry is intentionally preserved across sessions
         // — that's the trust-on-first-use anchor.
         pendingChallengeByEndpoint.clear()
         challengeVerifiedByEndpoint.clear()
-        // Reset room bookkeeping (PR-09).
+        // Reset room bookkeeping.
         peerCtxByEndpoint.clear()
         _connectedCount.value = 0
         currentMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
-        // Reset avatar bookkeeping (PR-10) so a stale awaiting flag cannot
+        // Reset avatar bookkeeping so a stale awaiting flag cannot
         // bleed into the next session.
         awaitingAvatarStream.clear()
 
@@ -618,7 +597,7 @@ class NearbyExchangeService : Service() {
         connectionsClient.startDiscovery(SERVICE_ID, endpointDiscoveryCallback, discoveryOptions)
             .addOnSuccessListener {
                 Timber.d("Discovery started")
-                // FIX-7: emit DISCOVERING once both advertising and discovery are
+                // emit DISCOVERING once both advertising and discovery are
                 // active so the UI reflects the full dual-mode scan state.
                 updateSessionState(ExchangeSession.State.DISCOVERING)
             }
@@ -630,7 +609,7 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
 
     /**
-     * FIX-3: deferred-accept set. Endpoints are added here on
+     * deferred-accept set. Endpoints are added here on
      * onConnectionInitiated while the async blocklist check is in flight,
      * and removed before accept/reject. If the peer disconnects while we
      * are checking, onDisconnected removes the entry and the coroutine
@@ -642,7 +621,7 @@ class NearbyExchangeService : Service() {
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             Timber.d("Connection initiated from $endpointId (${info.endpointName})")
-            // FIX-3: deferred-accept pattern — do NOT block Nearby's callback
+            // deferred-accept pattern — do NOT block Nearby's callback
             // thread with Room I/O. On slow flash this was an ANR risk.
             pendingConnections.add(endpointId)
             scope.launch {
@@ -675,20 +654,20 @@ class NearbyExchangeService : Service() {
                 vibrateDouble() // Success haptic
                 if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                     // Host keeps advertising; each guest tracks its own state.
-                    // FIX-4: topology is mode, stage stays CONNECTING→EXCHANGING.
+                    // topology is mode, stage stays CONNECTING→EXCHANGING.
                     peerCtxByEndpoint[endpointId] = PeerCtx()
                     updateSessionState(ExchangeSession.State.CONNECTING)
-                    // PR-13: identity challenge first; ECDH is gated behind
+                    // identity challenge first; ECDH is gated behind
                     // a successful challenge response.
                     sendChallenge(endpointId)
                 } else {
                     connectedEndpoint = endpointId
                     connectionsClient.stopAdvertising()
                     connectionsClient.stopDiscovery()
-                    // FIX-4: both ROOM_GUEST and PEER_TO_PEER advance to CONNECTING here;
+                    // both ROOM_GUEST and PEER_TO_PEER advance to CONNECTING here;
                     // topology is expressed via session.mode == ExchangeMode.ROOM_GUEST.
                     updateSessionState(ExchangeSession.State.CONNECTING)
-                    // PR-13: identity challenge first.
+                    // identity challenge first.
                     sendChallenge(endpointId)
                 }
             } else {
@@ -699,18 +678,16 @@ class NearbyExchangeService : Service() {
 
         override fun onDisconnected(endpointId: String) {
             Timber.d("Disconnected from $endpointId")
-            // FIX-3: cancel any in-flight deferred-accept for this endpoint
+            // cancel any in-flight deferred-accept for this endpoint
             // so the coroutine does not attempt accept/reject on a dead conn.
             pendingConnections.remove(endpointId)
-            // FIX-C: if the peer dropped mid-avatar-stream, sweep any partial
-            // tmp files created in cacheDir for this endpoint so we don't
-            // leak storage. The tmp files are named avatar-incoming-*.jpg.
+            // sweep partial avatar tmp files if peer dropped mid-stream
             cleanupPartialAvatarFiles(endpointId)
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                 // Room stays open if one guest drops; clear that guest's ctx.
                 peerCtxByEndpoint.remove(endpointId)
                 awaitingAvatarStream.remove(endpointId)
-                // Prompt-6 / Issue-2: also remove the stale challenge bytes so
+                // also remove the stale challenge bytes so
                 // pendingChallengeByEndpoint doesn't accumulate 32-byte entries
                 // for guests who disconnect mid-handshake.
                 pendingChallengeByEndpoint.remove(endpointId)
@@ -727,7 +704,7 @@ class NearbyExchangeService : Service() {
             Timber.d("Endpoint found: $endpointId (${info.endpointName}) (mode=$currentMode)")
             // Hosts only advertise; they don't initiate outgoing connections.
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) return
-            // Prompt-6 / Issue-1: atomically guard against the TOCTOU race where
+            // atomically guard against the TOCTOU race where
             // two onEndpointFound callbacks fire simultaneously (both see
             // connectedEndpoint == null and both call requestConnection).
             // compareAndSet is a single atomic CAS — only one concurrent caller
@@ -760,11 +737,11 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
 
     /**
-     * PR-10: per-endpoint flag, set when the peer announces an incoming
+     * per-endpoint flag, set when the peer announces an incoming
      * avatar STREAM with [MSG_TYPE_AVATAR]. Cleared once we've ingested
      * the STREAM (or dropped it for being oversized / missing contact).
      */
-    // FIX-2: ConcurrentHashMap.newKeySet() — accessed from both Nearby
+    // ConcurrentHashMap.newKeySet() — accessed from both Nearby
     // payload callback thread and Dispatchers.IO coroutines concurrently.
     private val awaitingAvatarStream: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
@@ -806,7 +783,7 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
     // ECDH key exchange
     //
-    // PR-02: the previous boolean-based race handling allowed a symmetric
+    // the previous boolean-based race handling allowed a symmetric
     // "both sides sent first" scenario to drop one peer's response. The new
     // [HandshakeState] machine captures the four possible local states:
     //
@@ -819,7 +796,7 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
 
     // -------------------------------------------------------------------------
-    // PR-13: device identity challenge / response
+    // device identity challenge / response
     //
     // Wire format for both messages is:
     //   <MSG_TYPE byte> <base64(SPKI public key)> '|' <raw bytes>
@@ -851,7 +828,7 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    // FIX-3: payloadCallback.onPayloadReceived fires on Nearby's callback thread.
+    // payloadCallback.onPayloadReceived fires on Nearby's callback thread.
     // Both handleIncomingChallenge and handleChallengeResponse do Room I/O via
     // knownPeerRepository which is suspend. Wrapping in scope.launch moves the
     // work off the callback thread — eliminating the previous runBlocking ANR risk.
@@ -885,7 +862,7 @@ class NearbyExchangeService : Service() {
                 }
                 val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
-                // FIX-5: key-hash blocklist check. Must happen BEFORE TOFU logic
+                // key-hash blocklist check. Must happen BEFORE TOFU logic
                 // so a blocked device that reconnects with a fresh endpoint ID is
                 // still rejected as soon as its identity key is decoded.
                 if (blocklistRepository.isBlockedByKeyHash(peerIdentityKey)) {
@@ -899,7 +876,7 @@ class NearbyExchangeService : Service() {
                     return@launch
                 }
 
-                // FIX-4: sealed result distinguishes NotFound (first-use) from
+                // sealed result distinguishes NotFound (first-use) from
                 // Corrupt (decode failure). Previously both returned null and were
                 // treated as first-use — a corrupt row would silently re-trust
                 // an attacker's new key.
@@ -977,7 +954,7 @@ class NearbyExchangeService : Service() {
                     )
                     return@launch
                 }
-                // FIX-4: same sealed-result pattern as handleIncomingChallenge.
+                // same sealed-result pattern as handleIncomingChallenge.
                 when (val result = knownPeerRepository.getIdentityKey(endpointId)) {
                     is KnownPeerRepository.IdentityKeyResult.Found -> {
                         if (!result.key.encoded.contentEquals(peerIdentityKey.encoded)) {
@@ -1010,7 +987,7 @@ class NearbyExchangeService : Service() {
                 challengeVerifiedByEndpoint.add(endpointId)
                 // pendingChallengeByEndpoint already consumed via remove() above.
                 Timber.d("Challenge verified for $endpointId — advancing to ECDH")
-                // PR-13 gate: only now do we ship our ephemeral ECDH public key.
+                //  gate: only now do we ship our ephemeral ECDH public key.
                 sendPublicKey(endpointId)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to verify challenge response from $endpointId")
@@ -1049,7 +1026,7 @@ class NearbyExchangeService : Service() {
                 return
             }
 
-            // PR-09: room-host uses a per-endpoint state machine.
+            // room-host uses a per-endpoint state machine.
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
                 val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
                 ctx.peerPub = decodedPeerKey
@@ -1167,7 +1144,7 @@ class NearbyExchangeService : Service() {
     // -------------------------------------------------------------------------
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
-        // Prompt-6 / Issue-3: reject oversized payloads before decryption.
+        // reject oversized payloads before decryption.
         // Nearby Connections BYTES payloads are bounded by the protocol (~1 MB),
         // but we tighten this to 64 KB — well above any legitimate profile —
         // as a defence-in-depth guard against a crafted peer flooding the heap.
@@ -1178,11 +1155,11 @@ class NearbyExchangeService : Service() {
             return
         }
 
-        // FIX-7: emit EXCHANGING on the receiving side too — profile data is
+        // emit EXCHANGING on the receiving side too — profile data is
         // inbound; we are between CONNECTING and COMPLETED right now.
         updateSessionState(ExchangeSession.State.EXCHANGING)
 
-        // PR-09: room-host decrypts with per-guest session key and keeps the room open.
+        // room-host decrypts with per-guest session key and keeps the room open.
         if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
             val ctx = peerCtxByEndpoint[endpointId]
             val rkey = ctx?.sessionKey ?: run {
@@ -1199,7 +1176,7 @@ class NearbyExchangeService : Service() {
                     val mapType = object : TypeToken<Map<String, String>>() {}.type
                     val profileMap: Map<String, String> =
                         gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
-                    // PR-15: replay/skew check on every profile, even room.
+                    // replay/skew check on every profile, even room.
                     when (val r = PayloadValidator.validateProfilePayload(profileMap)) {
                         is PayloadValidator.ValidationResult.Ok -> { /* continue */ }
                         else -> {
@@ -1208,7 +1185,7 @@ class NearbyExchangeService : Service() {
                         }
                     }
                     val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
-                    // FIX-5: look up the peer's identity key hash from TOFU registry
+                    // look up the peer's identity key hash from TOFU registry
                     // so the "Block device" action can key on it, not the endpoint ID.
                     val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
                         as? KnownPeerRepository.IdentityKeyResult.Found)
@@ -1247,7 +1224,7 @@ class NearbyExchangeService : Service() {
                 val profileMap: Map<String, String> =
                     gson.fromJson(String(decrypted, Charsets.UTF_8), mapType)
 
-                // PR-15: stale-timestamp / replay-nonce guard. A captured
+                // stale-timestamp / replay-nonce guard. A captured
                 // ciphertext is useless to an attacker because the _ts and
                 // _nonce inside are validated here — a re-played payload
                 // either trips the age check or the nonce dedup set.
@@ -1266,7 +1243,7 @@ class NearbyExchangeService : Service() {
                 // materialising a Contact — they're protocol metadata, not
                 // user-visible profile data.
                 val cleanMap = profileMap.filterKeys { !it.startsWith("_") }
-                // FIX-5: attach identity key hash so "Block device" can use it.
+                // attach identity key hash so "Block device" can use it.
                 val keyHash = (knownPeerRepository.getIdentityKey(endpointId)
                     as? KnownPeerRepository.IdentityKeyResult.Found)
                     ?.key?.let { CryptoUtils.identityKeyHash(it) }
@@ -1339,11 +1316,11 @@ class NearbyExchangeService : Service() {
     }
 
     private fun sendProfile(endpointId: String) {
-        // FIX-7: emit EXCHANGING now — we are about to encrypt and transmit
+        // emit EXCHANGING now — we are about to encrypt and transmit
         // the profile payload; CONNECTING → EXCHANGING is the correct transition.
         updateSessionState(ExchangeSession.State.EXCHANGING)
 
-        // PR-09: room-host uses per-guest key; other modes use the single sessionKey.
+        // room-host uses per-guest key; other modes use the single sessionKey.
         val key: javax.crypto.SecretKey? =
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST)
                 peerCtxByEndpoint[endpointId]?.sessionKey
@@ -1353,7 +1330,7 @@ class NearbyExchangeService : Service() {
         if (key == null) {
             Timber.e("sendProfile() invoked without sessionKey for $endpointId")
             if (currentMode != ExchangeSession.ExchangeMode.ROOM_HOST) {
-                // PR-02: in peer-to-peer this is fatal. In room mode we just
+                // in peer-to-peer this is fatal. In room mode we just
                 // drop the one guest and keep the room alive.
                 terminateSession(ExchangeSession.State.ERROR)
             }
@@ -1361,7 +1338,7 @@ class NearbyExchangeService : Service() {
         }
         scope.launch {
             val profile = profileRepository.get() ?: return@launch
-            // PR-15: stamp _ts + _nonce on the outgoing payload so the peer
+            // stamp _ts + _nonce on the outgoing payload so the peer
             // can prove freshness and reject any later replay of these bytes.
             val stamped = profile.toShareableMap().toMutableMap()
             PayloadValidator.stampOutgoingProfile(stamped)
@@ -1382,18 +1359,18 @@ class NearbyExchangeService : Service() {
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(payload))
                 .addOnSuccessListener { Timber.d("Encrypted profile sent to $endpointId") }
 
-            // PR-10: ship the avatar (if any) right after the profile so the
+            // ship the avatar (if any) right after the profile so the
             // receiver can attach it to the contact it just saved.
             sendAvatarIfPresent(endpointId, profile.avatarUri)
         }
     }
 
     /**
-     * PR-10: send the user's avatar JPEG as a STREAM payload, preceded by
+     * send the user's avatar JPEG as a STREAM payload, preceded by
      * a BYTES MSG_TYPE_AVATAR signal. Silently no-ops when no avatar is set,
      * the file is missing, empty, or exceeds [MAX_AVATAR_BYTES].
      *
-     * FIX-9: handles both absolute file paths and content:// URIs. Previously
+     * handles both absolute file paths and content:// URIs. Previously
      * [java.io.File] was constructed unconditionally from [avatarPath]; on a
      * content:// URI that produces a path that never exists on disk, causing
      * the avatar to be silently dropped with a "file missing" warning.
@@ -1401,7 +1378,7 @@ class NearbyExchangeService : Service() {
     private fun sendAvatarIfPresent(endpointId: String, avatarPath: String) {
         if (avatarPath.isBlank()) return
 
-        // FIX-9: content:// URI — open via ContentResolver, not File.
+        // content:// URI — open via ContentResolver, not File.
         if (avatarPath.startsWith("content://")) {
             try {
                 val pfd = contentResolver.openFileDescriptor(
@@ -1456,7 +1433,7 @@ class NearbyExchangeService : Service() {
     }
 
     /**
-     * PR-10: ingest the peer's avatar STREAM. Resolve the matching saved
+     * ingest the peer's avatar STREAM. Resolve the matching saved
      * contact (most recent for this endpoint), write the bytes into the
      * dedicated avatars folder, and patch the contact's avatarUri.
      */
@@ -1536,13 +1513,7 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    /**
-     * FIX-C: scrub any partial avatar tmp files left in cacheDir if the peer
-     * disconnected mid-stream. We only delete files that match the
-     * `avatar-incoming-` prefix to avoid touching unrelated cache contents.
-     * Also clears the awaiting-avatar flag for this endpoint so a re-connect
-     * starts from a clean slate.
-     */
+    /** Deletes partial avatar tmp files for an endpoint that disconnected mid-stream. */
     private fun cleanupPartialAvatarFiles(endpointId: String) {
         try {
             awaitingAvatarStream.remove(endpointId)

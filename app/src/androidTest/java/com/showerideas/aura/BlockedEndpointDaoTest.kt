@@ -17,7 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * PR-14 / FIX-5: in-memory tests for the blocklist DAO. Confirms the
+ * in-memory tests for the blocklist DAO. Confirms the
  * contract NearbyExchangeService relies on:
  *  - isBlocked toggles correctly through block / unblock
  *  - isBlockedByKeyHash rejects reconnects via stable identity key hash
@@ -85,7 +85,7 @@ class BlockedEndpointDaoTest {
     }
 
     // -----------------------------------------------------------------------
-    // FIX-5: isBlockedByKeyHash — stable identity-based blocklist
+    // isBlockedByKeyHash — stable identity-based blocklist
     // -----------------------------------------------------------------------
 
     @Test

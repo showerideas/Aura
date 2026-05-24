@@ -16,7 +16,7 @@ import java.util.UUID
 import javax.crypto.SecretKey
 
 /**
- * Prompt-7: Wire-protocol unit tests.
+ * Wire-protocol unit tests.
  *
  * Tests the AURA exchange protocol end-to-end in JVM without any Android or
  * Play Services dependencies. Uses [FakeNearbyTransport] to wire two logical
@@ -231,7 +231,7 @@ class WireProtocolTest {
     }
 
     // -------------------------------------------------------------------------
-    // 7. Oversized profile (Prompt-6 / Issue-3 size gate)
+    // 7. Oversized profile ( /  size gate)
     // -------------------------------------------------------------------------
 
     @Test

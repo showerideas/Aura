@@ -60,7 +60,7 @@ class CryptoUtilsTest {
     }
 
     /**
-     * PR-02 race condition: when both sides simultaneously send their
+     *  race condition: when both sides simultaneously send their
      * public key before receiving the other's, each side derives its own
      * shared secret independently. The ECDH math is symmetric: regardless
      * of which order the keys arrive, both sides converge on the same
@@ -89,7 +89,7 @@ class CryptoUtilsTest {
     }
 
     // -------------------------------------------------------------------------
-    // FIX-1: HKDF-SHA256 after ECDH — NIST SP 800-56A compliance
+    // HKDF-SHA256 after ECDH — NIST SP 800-56A compliance
     // -------------------------------------------------------------------------
 
     @Test
@@ -124,7 +124,7 @@ class CryptoUtilsTest {
     }
 
     // -------------------------------------------------------------------------
-    // PR-13: ECDSA challenge / response
+    // ECDSA challenge / response
     //
     // The Android Keystore path (getOrCreateDeviceIdentityKey) is unavailable
     // on the JVM — so for unit testing we generate plain secp256r1 keys via

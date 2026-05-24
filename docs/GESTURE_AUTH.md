@@ -6,7 +6,7 @@
 > frame to authentication decision.
 >
 > **Security framing:** the hand-shape gate is an ergonomic gate, not a
-> biometric credential. See [§6 — Security properties](#6-security-properties)
+> biometric credential. See [§7 — Security properties](#7-security-properties)
 > and [`04_gesture_entropy.md`](../04_gesture_entropy.md) for the measured
 > false-accept rates and honest security discussion.
 
@@ -35,9 +35,9 @@ flowchart LR
     A["CameraX\nFront camera\nImageAnalysis\n30 fps"] --> B["MediaPipe\nGestureRecognizer\nLIVE_STREAM mode"]
     B --> C{Hand\ndetected?}
     C -- no --> A
-    C -- yes --> D["Extract 21\nNormalizedLandmarks\n(x,y per point)"]
+    C -- yes --> D["Extract 21\nNormalizedLandmarks\n(x,y,z per point)"]
     D --> E["Normalise\nWrist → origin\nMCP scale"]
-    E --> F["42-float\nembedding"]
+    E --> F["63-float\nembedding"]
     F --> G{Cosine sim\nvs last frame\n≥ 0.97?}
     G -- no --> H["Reset\nconsecutive\ncounter"]
     H --> A
@@ -101,13 +101,14 @@ on the 21 `NormalizedLandmark` objects in `GestureRecognizerResult.handLandmarks
 ```
 wrist = landmarks[0]    (index 0)
 mcp   = landmarks[9]    (middle-finger MCP)
-scale = distance(wrist, mcp)
+scale = distance(wrist, mcp)   // Euclidean in x-y plane
 
-embedding[2i]   = (landmarks[i].x - wrist.x) / scale
-embedding[2i+1] = (landmarks[i].y - wrist.y) / scale
+embedding[3i]   = (landmarks[i].x - wrist.x) / scale
+embedding[3i+1] = (landmarks[i].y - wrist.y) / scale
+embedding[3i+2] = (landmarks[i].z - wrist.z) / scale
 ```
 
-This produces a **42-float vector** that is:
+This produces a **63-float vector** (21 landmarks × 3 axes) that is:
 - **Translation-invariant** — wrist is always at the origin.
 - **Scale-invariant** — hand size and camera distance don't affect the vector.
 - **Not rotation-invariant** — tilt matters; the user must hold their hand
@@ -115,6 +116,11 @@ This produces a **42-float vector** that is:
 
 If the scale (wrist-to-MCP distance) is < 0.01 (hand too small / degenerate
 frame), a zero vector is returned and the frame is discarded.
+
+`EMBEDDING_SIZE = 63` is declared as a `const` in `CameraHandEmbedder` and
+referenced by `GestureAuthManager.EXPECTED_EMBEDDING_SIZE` — any stored
+embedding of a different length is discarded on load and the user is prompted
+to re-enrol.
 
 ---
 
@@ -140,15 +146,11 @@ counter.
 
 | What | Where |
 |---|---|
-| **42-float embedding** (comma-separated string) | `EncryptedSharedPreferences`, file `aura_gesture_prefs`, key `gesture_feature_vector` |
+| **63-float embedding** (comma-separated string) | `EncryptedSharedPreferences`, file `aura_gesture_prefs`, key `gesture_feature_vector` |
 | **Pattern UUID** | `EncryptedSharedPreferences`, key `gesture_pattern_id` |
 | **EncryptedSharedPreferences master key** | Android Keystore alias `aura_esp_master` (`MasterKey.Builder`) |
 | **Room DB** | Does **not** contain the gesture embedding |
 | **Auto-Backup / Device-to-Device** | Excluded — see `backup_rules.xml` and `data_extraction_rules.xml` |
-
-On first load, if the stored embedding is not 42 floats (e.g. a pre-camera
-pattern from a previous version), it is discarded and the user is prompted
-to re-enrol. (`GestureAuthManager.loadStoredPattern():212`)
 
 ---
 
@@ -156,7 +158,7 @@ to re-enrol. (`GestureAuthManager.loadStoredPattern():212`)
 
 `GestureAuthManager.match(candidate)`:
 
-1. Load stored pattern from `EncryptedSharedPreferences`.
+1. Load stored pattern (centroid of enrolled samples) from `EncryptedSharedPreferences`.
 2. Compute `CameraHandEmbedder.cosineSimilarity(stored, candidate)`.
 3. Return `similarity >= 0.88` (`SIMILARITY_THRESHOLD`).
 
@@ -167,11 +169,11 @@ similarity(A, B) = (A · B) / (||A|| × ||B||)
 ```
 
 Range: −1 to 1. At 0.88, the vectors must point in nearly the same direction
-in 42-dimensional space.
+in 63-dimensional space.
 
 ---
 
-## 6. Security properties
+## 7. Security properties
 
 ### What the gate provides
 
@@ -183,7 +185,7 @@ in 42-dimensional space.
 
 ### What the gate does NOT provide
 
-The 42-float normalised embedding is **gesture-class dependent, not person-
+The 63-float normalised embedding is **gesture-class dependent, not person-
 specific**. Different people performing the same gesture class produce embeddings
 that typically score 0.88–0.97 cosine similarity — right at or above the
 acceptance threshold.
@@ -200,38 +202,29 @@ documents and guards this property.
 The long-lived **Android Keystore ECDSA identity key** (`aura_device_identity`)
 is the actual security anchor. The gesture is a UX gate that runs before the
 crypto layer. On first meeting, the identity challenge is TOFU; on subsequent
-meetings, the stored key hash is compared. Adding a SAS (Short Authentication
-String) PIN for first-meet exchanges closes the TOFU gap — see
-[`docs/SECURITY.md`](SECURITY.md).
+meetings, the stored key hash is compared against the `KnownPeer` table in Room.
+`SasVerifier` produces a 6-digit Short Authentication String for first-meet
+verbal confirmation — see [`SECURITY.md`](SECURITY.md).
 
 ---
 
-## 7. Match-failure UX
-
-Per [`features/01-gesture-gate.md`](features/01-gesture-gate.md):
+## 8. Match-failure UX
 
 - **Attempt 1 fails** → "Gesture didn't match. 2 attempt(s) left."
 - **Attempt 2 fails** → "Gesture didn't match. 1 attempt(s) left."
 - **Attempt 3 fails** → "Too many failed gesture attempts. Exchange cancelled."
 - **No gesture set** → modal "No gesture set — exchange is unprotected. Continue?"
 
-Biometric is offered as an alternative on devices that have it enrolled — see
-[`features/16-biometric.md`](features/16-biometric.md).
+Biometric (fingerprint / face) is offered as an alternative on devices that
+have it enrolled — see [`SECURITY.md`](SECURITY.md).
 
 ---
 
-## 8. Historical note
+## 9. Historical note
 
 Prior to the camera-based implementation, AURA used an accelerometer + Dynamic
 Time Warping (DTW) pipeline with a 50-point resampled sequence and a variance
 gate. That implementation was replaced with the current CameraX + MediaPipe
 approach. All documentation referring to "DTW", "accelerometer",
 "resample", "variance gate", "magnitude", or "50-point sequence" describes
-the **removed** pipeline. The removal commit is
-`fa9bbb2 fix: comprehensive gesture-auth camera audit`.
-
-```bash
-# Verify no DTW/accelerometer remnants remain in docs:
-grep -rni "dtw\|accelerometer\|variance\|resample" docs/
-# Must return zero hits after this rewrite.
-```
+the **removed** pipeline.

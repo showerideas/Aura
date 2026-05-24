@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Prompt-2: Instrumented test for triple-press volume-down activation.
+ * Instrumented test for triple-press volume-down activation.
  *
  * Uses [android.app.UiAutomation.injectInputEvent] to synthesise three
  * consecutive KEYCODE_VOLUME_DOWN key events and asserts that

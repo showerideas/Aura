@@ -1,6 +1,6 @@
 # Manual QA Pass
 
-> Last updated: 2026-05-23 (Prompt-14)
+> Last updated: 2026-05-23 ()
 >
 > Run this recipe before every Play Store submission or major release.
 > Estimated time: **45–60 minutes** for one QA engineer with two devices.

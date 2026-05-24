@@ -8,7 +8,7 @@ import org.junit.Test
 /**
  * Smoke tests for the gesture-verification gate on [NearbyExchangeService].
  *
- * Issue-50: the gate flag was moved from a static companion-object @Volatile
+ * the gate flag was moved from a static companion-object @Volatile
  * field to a per-instance variable backed by DataStore.  The gate is now
  * opened via [NearbyExchangeService.ACTION_GESTURE_VERIFIED] — an explicit
  * Intent delivered through [android.app.Service.onStartCommand], consistent

@@ -17,11 +17,11 @@ import com.showerideas.aura.model.Profile
  *
  * Version history:
  *  - v1: Contact + Profile (initial scaffold)
- *  - v2: Adds BlockedEndpoint for the endpoint blocklist (PR-14).
+ *  - v2: Adds BlockedEndpoint for the endpoint blocklist.
  *        Migration: [Migrations.MIGRATION_1_2].
- *  - v3: Adds KnownPeer for persisted TOFU endpoint-identity registry (FIX-2).
+ *  - v3: Adds KnownPeer for persisted TOFU endpoint-identity registry ().
  *        Migration: [Migrations.MIGRATION_2_3].
- *  - v4: Adds identityKeyHash column to blocked_endpoints and contacts (FIX-5).
+ *  - v4: Adds identityKeyHash column to blocked_endpoints and contacts ().
  *        Migration: [Migrations.MIGRATION_3_4].
  *  - v5: Adds exchange_audit_log table for privacy-preserving exchange history.
  *        Migration: [Migrations.MIGRATION_4_5].

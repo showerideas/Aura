@@ -9,7 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 /**
- * Helpers for AURA's avatar pipeline (PR-10).
+ * Helpers for AURA's avatar pipeline.
  *
  * Sizing / compression policy:
  *   - Decode the picked image with `inSampleSize` so we never load the full
@@ -101,7 +101,7 @@ object AvatarUtils {
      * Resolution order:
      *  1. Photo saved to [peerAvatarFile] (real photo from exchange).
      *  2. [IdenticonGenerator] bitmap derived from [identityKeyHash] (or [contactId]
-     *     if the identity hash is null — e.g. legacy contacts before FIX-5).
+     *     if the identity hash is null — e.g. legacy contacts before ).
      *
      * The returned bitmap is always non-null: every contact has a visual identity.
      *

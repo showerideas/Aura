@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * PR-19: lists blocked endpoints (PR-14) and lets the user unblock them.
+ * lists blocked endpoints and lets the user unblock them.
  */
 @HiltViewModel
 class BlockedDevicesViewModel @Inject constructor(

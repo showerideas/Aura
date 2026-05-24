@@ -55,7 +55,7 @@ sequenceDiagram
     end
 
     rect rgb(254,242,242)
-    note over NCA,NCB: Phase 2 — identity challenge (PR-13)
+    note over NCA,NCB: Phase 2 — identity challenge
     NCA->>NCB: MSG_TYPE_CHALLENGE ‖ idPubA ‖ nonce_a
     NCB->>NCB: sign(nonce_a, idPrivB)
     NCB->>NCA: MSG_TYPE_CHALLENGE_RESPONSE ‖ idPubB ‖ sig_b
@@ -67,17 +67,17 @@ sequenceDiagram
     end
 
     rect rgb(240,253,244)
-    note over NCA,NCB: Phase 3 — encrypted profile + replay window (PR-15)
-    NCA->>NCB: MSG_TYPE_PROFILE ‖ AES-GCM(profileJSON_A, counter_a)
-    NCB->>NCB: check counter > stored(idPubA)
+    note over NCA,NCB: Phase 3 — encrypted profile + replay window
+    NCA->>NCB: MSG_TYPE_PROFILE ‖ AES-GCM(profileJSON_A + _ts + _nonce)
+    NCB->>NCB: PayloadValidator: _ts recency check + nonce not in dedup set
     NCB->>NCB: store(contact_A)
-    NCB->>NCA: MSG_TYPE_PROFILE ‖ AES-GCM(profileJSON_B, counter_b)
-    NCA->>NCA: check counter > stored(idPubB)
+    NCB->>NCA: MSG_TYPE_PROFILE ‖ AES-GCM(profileJSON_B + _ts + _nonce)
+    NCA->>NCA: PayloadValidator: _ts recency check + nonce not in dedup set
     NCA->>NCA: store(contact_B)
     end
 
     rect rgb(255,251,235)
-    note over NCA,NCB: Phase 4 — optional avatar (PR-10)
+    note over NCA,NCB: Phase 4 — optional avatar
     NCA-->>NCB: MSG_TYPE_AVATAR ‖ idPubA ‖ streamId
     NCA-->>NCB: STREAM payload (avatar bytes)
     NCB-->>NCA: MSG_TYPE_AVATAR ‖ idPubB ‖ streamId
@@ -94,12 +94,12 @@ sequenceDiagram
 
 - **Phase 1** runs an *additional* ECDH on top of the one Nearby Connections already negotiated, so even if Nearby's own crypto were broken the profile payload remains opaque on the wire.
 - **Phase 2** binds the session to each side's Android-Keystore identity key. The nonce is 32 cryptographically random bytes; the signature is over `nonce ‖ idPub` to prevent cross-protocol misuse.
-- **Phase 3** wraps the JSON profile in AES-GCM using the Phase-1 derived key. A monotonically-advancing 8-byte counter sits inside the plaintext envelope and is checked against the per-`idPub` value stored in Room — this is the replay window from PR-15.
+- **Phase 3** wraps the JSON profile in AES-GCM using the Phase-1 derived key. Two replay-protection fields are stamped into the plaintext envelope by `PayloadValidator.stamp()`: `_ts` (current epoch ms) and `_nonce` (random UUID). On receipt, `PayloadValidator.validate()` checks `_ts` is within the allowed recency window and that `_nonce` has not been seen before — a bounded `ConcurrentHashSet` (max 1,000 entries, purged every 5 min) acts as the dedup store.
 - **Phase 4** is optional. The avatar travels as a Nearby Connections `STREAM` payload (not `BYTES`), so multi-megabyte images don't block the small text messages.
 
 ---
 
-## 2. Room mode (1 host : N guests, PR-09)
+## 2. Room mode (1 host : N guests, )
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
@@ -145,7 +145,7 @@ In room mode the host runs `P2P_STAR` so multiple guests can connect simultaneou
 
 ---
 
-## 3. QR fallback (PR-08)
+## 3. QR fallback
 
 When BLE / Wi-Fi P2P is blocked (some corporate venues, locker-room metal cages), the user can switch to QR mode:
 

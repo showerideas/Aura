@@ -19,7 +19,7 @@ class ContactsViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
 
     /**
-     * PR-12: favourites-only filter, driven by the new chip in the Contacts
+     * favourites-only filter, driven by the new chip in the Contacts
      * fragment. When ON, the contacts flow switches to
      * [ContactRepository.favorites]; when OFF, it falls back to the
      * search-aware allContacts source.
