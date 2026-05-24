@@ -202,7 +202,7 @@ class QRExchangeViewModel @Inject constructor(
         while (System.currentTimeMillis() < deadline) {
             val bytes = relayClient.getSlot(baseUrl, peerEndpoint)
             if (!bytes.isNullOrEmpty()) {
-                return decryptAndSave(bytes, sharedKey, peerEndpoint)
+                return decryptAndSave(bytes!!, sharedKey, peerEndpoint)
             }
             delay(RELAY_POLL_INTERVAL_MS)
         }
@@ -249,3 +249,4 @@ class QRExchangeViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
