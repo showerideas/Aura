@@ -225,4 +225,7 @@
     <string name="settings_accessibility_mode">アクセシビリティモード（推奨）</string>
     <string name="settings_accessibility_enabled">有効 — すべてのデバイスで機能します ✓</string>
     <string name="settings_accessibility_disabled">アクセシビリティ設定で有効にするにはタップ</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFCタップ有効 — 高速鍵交換</string>
+    <string name="exchange_nfc_active_desc">この交換はNFCタップで開始されました — ECDHハンドシェイクが事前設定済みです</string>
 </resources>

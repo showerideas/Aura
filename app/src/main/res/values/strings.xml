@@ -286,4 +286,8 @@
     <string name="settings_accessibility_mode">Accessibility mode (recommended)</string>
     <string name="settings_accessibility_enabled">Active — works on all devices ✓</string>
     <string name="settings_accessibility_disabled">Tap to enable in Accessibility settings</string>
+
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC tap active — faster key exchange</string>
+    <string name="exchange_nfc_active_desc">This exchange was initiated via NFC tap — the ECDH handshake is pre-seeded</string>
 </resources>

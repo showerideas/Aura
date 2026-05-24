@@ -226,4 +226,7 @@
     <string name="settings_accessibility_mode">Modo de accesibilidad (recomendado)</string>
     <string name="settings_accessibility_enabled">Activo — funciona en todos los dispositivos ✓</string>
     <string name="settings_accessibility_disabled">Toca para activar en Configuración de accesibilidad</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC activo — intercambio de clave más rápido</string>
+    <string name="exchange_nfc_active_desc">Este intercambio se inició mediante NFC — el protocolo ECDH ya está preconfigurado</string>
 </resources>

@@ -225,4 +225,7 @@
     <string name="settings_accessibility_mode">辅助功能模式（推荐）</string>
     <string name="settings_accessibility_enabled">已开启 — 在所有设备上均可运行 ✓</string>
     <string name="settings_accessibility_disabled">点击在辅助功能设置中开启</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC 点触有效 — 更快的密钥交换</string>
+    <string name="exchange_nfc_active_desc">此次交换通过 NFC 点触发起 — ECDH 握手已预置</string>
 </resources>
