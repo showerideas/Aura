@@ -37,4 +37,34 @@ class ContactRepository @Inject constructor(
     /** PR-10: locate the most recently-saved contact for an endpoint. */
     suspend fun findLatestByEndpoint(endpointId: String) =
         contactDao.findLatestByEndpoint(endpointId)
+
+    /**
+     * Save a contact with deduplication by identity key hash.
+     *
+     * If [contact.identityKeyHash] is non-null and we already have a contact
+     * with that hash, the existing record is updated in-place (preserving its
+     * original [Contact.id], [Contact.receivedAt], and [Contact.isFavorite]
+     * so the contact retains its history and favourite status).
+     *
+     * Falls back to a plain insert when no hash is available (e.g. legacy
+     * contacts from before identity-key tracking was added in DB v4).
+     */
+    suspend fun saveDeduped(contact: Contact) {
+        val existing = contact.identityKeyHash
+            ?.takeIf { it.isNotBlank() }
+            ?.let { contactDao.findByIdentityKeyHash(it) }
+        if (existing != null) {
+            // Merge: refresh mutable fields, preserve immutable record identity
+            contactDao.update(
+                contact.copy(
+                    id         = existing.id,
+                    receivedAt = existing.receivedAt,
+                    isFavorite = existing.isFavorite,
+                    notes      = existing.notes
+                )
+            )
+        } else {
+            contactDao.insert(contact)
+        }
+    }
 }

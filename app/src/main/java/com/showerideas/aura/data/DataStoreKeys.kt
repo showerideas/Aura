@@ -20,4 +20,10 @@ object DataStoreKeys {
     // PR-19: whether the VolumeButtonListenerService is allowed to run in
     // the background to detect the triple-press activation gesture.
     val BG_ACTIVATION_ENABLED = booleanPreferencesKey("bg_activation_enabled")
+
+    // Issue-50: per-profile gesture-gate flag.  Stored in aura_auth_prefs so it
+    // is physically separate from the onboarding store and is scoped to the
+    // Android user profile that owns the DataStore file.  Reset to false on every
+    // session termination — ephemeral state, not a long-lived preference.
+    val GESTURE_GATE_OPEN = booleanPreferencesKey("gesture_gate_open")
 }

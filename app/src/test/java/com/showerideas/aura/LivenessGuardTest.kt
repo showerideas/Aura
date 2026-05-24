@@ -29,14 +29,14 @@ class LivenessGuardTest {
     // Helpers
     // -------------------------------------------------------------------------
 
-    /** Generate a 42-float embedding with all values set to [value]. */
-    private fun constantEmbedding(value: Float) = FloatArray(42) { value }
+    /** Generate a 63-float embedding with all values set to [value]. */
+    private fun constantEmbedding(value: Float) = FloatArray(63) { value }
 
     /**
-     * Generate a 42-float embedding that differs from [base] by adding [delta]
-     * to every element — produces L2 distance of delta * sqrt(42).
+     * Generate a 63-float embedding that differs from [base] by adding [delta]
+     * to every element — produces L2 distance of delta * sqrt(63).
      */
-    private fun shiftedEmbedding(base: Float, delta: Float) = FloatArray(42) { base + delta }
+    private fun shiftedEmbedding(base: Float, delta: Float) = FloatArray(63) { base + delta }
 
     /** Feed [count] identical embeddings to the guard. */
     private fun feedIdentical(value: Float, count: Int): LivenessGuard.Result {
@@ -90,10 +90,10 @@ class LivenessGuardTest {
 
     @Test
     fun `near-zero but non-zero drift is still Spoof`() {
-        // Drift of 0.0001 per element → L2 = 0.0001 * sqrt(42) ≈ 0.000648 << 0.003
-        val base = FloatArray(42) { 0.5f }
+        // Drift of 0.0001 per element → L2 = 0.0001 * sqrt(63) ≈ 0.000794 << 0.003
+        val base = FloatArray(63) { 0.5f }
         repeat(LivenessGuard.WINDOW_FRAMES + 1) { i ->
-            val embedding = FloatArray(42) { 0.5f + i * 0.0001f }
+            val embedding = FloatArray(63) { 0.5f + i * 0.0001f }
             guard.feed(embedding)
         }
         val drift = guard.currentMeanDrift()
@@ -108,10 +108,10 @@ class LivenessGuardTest {
     @Test
     fun `detects live hand — large drift produces Live`() {
         // Simulate micro-tremors: each frame shifts by 0.01 per element
-        // L2 distance per frame = 0.01 * sqrt(42) ≈ 0.0648 >> 0.003
+        // L2 distance per frame = 0.01 * sqrt(63) ≈ 0.0794 >> 0.003
         var last: LivenessGuard.Result = LivenessGuard.Result.Collecting
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
-            val embedding = FloatArray(42) { 0.5f + i * 0.01f }
+            val embedding = FloatArray(63) { 0.5f + i * 0.01f }
             last = guard.feed(embedding)
         }
         assertTrue(
@@ -124,7 +124,7 @@ class LivenessGuardTest {
     fun `live result carries meanDrift above threshold`() {
         var last: LivenessGuard.Result = LivenessGuard.Result.Collecting
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
-            last = guard.feed(FloatArray(42) { 0.5f + i * 0.01f })
+            last = guard.feed(FloatArray(63) { 0.5f + i * 0.01f })
         }
         val drift = (last as LivenessGuard.Result.Live).meanDrift
         assertTrue(
@@ -135,15 +135,17 @@ class LivenessGuardTest {
 
     @Test
     fun `drift exactly at threshold is Live`() {
-        // L2 distance = MIN_MEAN_DRIFT exactly
-        // We need each frame to shift by d such that d * sqrt(42) = MIN_MEAN_DRIFT
+        // L2 distance = MIN_MEAN_DRIFT exactly.
+        // We need each frame to shift by d such that d * sqrt(63) = MIN_MEAN_DRIFT.
+        // Multiply by 1.001 to prevent the FP round-trip (targetL2/sqrt(63)*sqrt(63))
+        // landing a hair below MIN_MEAN_DRIFT and producing Spoof instead of Live.
         val targetL2 = LivenessGuard.MIN_MEAN_DRIFT
-        val perElement = targetL2 / sqrt(42f)
+        val perElement = (targetL2 / sqrt(63f)) * 1.001f
         var last: LivenessGuard.Result = LivenessGuard.Result.Collecting
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
-            last = guard.feed(FloatArray(42) { 0.5f + i * perElement })
+            last = guard.feed(FloatArray(63) { 0.5f + i * perElement })
         }
-        // At exactly the threshold, should be Live (>= comparison)
+        // At or just above the threshold, should be Live (>= comparison)
         assertTrue(
             "Drift at threshold should be Live, got $last",
             last is LivenessGuard.Result.Live
@@ -176,7 +178,7 @@ class LivenessGuardTest {
         // Re-fill with drifting frames
         var last: LivenessGuard.Result = LivenessGuard.Result.Collecting
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
-            last = guard.feed(FloatArray(42) { 0.5f + i * 0.02f })
+            last = guard.feed(FloatArray(63) { 0.5f + i * 0.02f })
         }
         assertTrue("Expected Live after reset and re-fill, got $last", last is LivenessGuard.Result.Live)
     }

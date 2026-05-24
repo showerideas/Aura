@@ -115,6 +115,18 @@ class ProfileFragment : Fragment() {
                             binding.gestureStrengthBars.visibility = View.VISIBLE
                             binding.tvVarianceLabel.visibility = View.VISIBLE
                         }
+                        is GestureAuthManager.RecordingState.AwaitingStep2 -> {
+                            // Step 1 captured — prompt the user to perform their
+                            // second gesture. Camera remains running; the preview
+                            // stays visible so they can see the feed.
+                            binding.btnRecordGesture.setText(R.string.profile_btn_recording)
+                            binding.gestureStatus.text =
+                                getString(R.string.profile_gesture_status_step2)
+                            binding.gesturePreviewProfile.visibility = View.VISIBLE
+                            binding.gestureStrengthBars.visibility = View.VISIBLE
+                            binding.tvVarianceLabel.visibility = View.VISIBLE
+                            paintStrengthBars(0)
+                        }
                         is GestureAuthManager.RecordingState.Complete -> {
                             viewModel.saveGesturePattern(state.pattern)
                             viewModel.stopGestureCamera()

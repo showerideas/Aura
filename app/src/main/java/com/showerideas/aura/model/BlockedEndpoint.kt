@@ -9,10 +9,10 @@ import androidx.room.PrimaryKey
  * sees an incoming connection initiation from an endpoint in this table,
  * it rejects the connection before any handshake.
  *
- * Endpoint IDs themselves are short-lived Nearby identifiers, so this
- * blocklist is most useful in combination with PR-13's identity registry —
- * a future PR can promote this to {identityKeyHash -> note} once we're
- * confident the identity key is the right stable anchor.
+ * Endpoint IDs themselves are short-lived Nearby identifiers, so FIX-5
+ * added an [identityKeyHash] column so blocks survive reconnects with a
+ * fresh ephemeral endpoint ID. Both the endpoint ID and the identity hash
+ * are checked by [com.showerideas.aura.data.BlocklistRepository].
  */
 @Entity(tableName = "blocked_endpoints")
 data class BlockedEndpoint(

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.showerideas.aura.data.local.AppDatabase
 import com.showerideas.aura.data.local.BlockedEndpointDao
 import com.showerideas.aura.data.local.ContactDao
+import com.showerideas.aura.data.local.ExchangeAuditDao
 import com.showerideas.aura.data.local.KnownPeerDao
 import com.showerideas.aura.data.local.Migrations
 import com.showerideas.aura.data.local.ProfileDao
@@ -44,4 +45,9 @@ object DatabaseModule {
     @Provides
     fun provideKnownPeerDao(db: AppDatabase): KnownPeerDao =
         db.knownPeerDao()
+
+    /** v5: Exchange audit log DAO. */
+    @Provides
+    fun provideExchangeAuditDao(db: AppDatabase): ExchangeAuditDao =
+        db.exchangeAuditDao()
 }

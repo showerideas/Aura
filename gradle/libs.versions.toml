@@ -52,6 +52,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", v
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
 # Google Nearby Connections
 play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "nearby" }

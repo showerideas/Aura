@@ -33,17 +33,36 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_qr_title" />
 
+    <!-- Security notice: QR encodes only the ephemeral public key; profile
+         data is not transmitted in this fallback mode. -->
+    <TextView
+        android:id="@+id/tv_qr_security_warning"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="#1FFFCC00"
+        android:drawablePadding="6dp"
+        android:gravity="center"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:text="@string/qr_unencrypted_warning"
+        android:textColor="#FFCC00"
+        android:textSize="11sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_qr_subtitle" />
+
     <ImageView
         android:id="@+id/iv_qr_code"
         android:layout_width="280dp"
         android:layout_height="280dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:background="@color/white"
         android:contentDescription="@string/qr_code_image_desc"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_qr_subtitle" />
+        app:layout_constraintTop_toBottomOf="@id/tv_qr_security_warning" />
 
     <TextView
         android:id="@+id/tv_qr_countdown"

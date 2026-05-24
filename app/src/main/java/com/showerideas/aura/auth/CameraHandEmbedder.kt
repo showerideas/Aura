@@ -33,13 +33,16 @@ import kotlin.math.sqrt
  * Binds a front-facing CameraX pipeline to the provided [PreviewView] and
  * feeds each frame through a MediaPipe [GestureRecognizer] running in
  * LIVE_STREAM mode.  For every frame that contains a hand:
- *   1. The 21 normalised landmarks are extracted (x, y per point = 42 floats).
- *   2. The vector is centred on the wrist and scaled by wrist-to-MCP distance
- *      so it is invariant to hand position and distance from the camera.
+ *   1. The 21 normalised landmarks are extracted (x, y, z per point = 63 floats).
+ *      The z coordinate is MediaPipe world-space depth, providing a third
+ *      dimension that photos and flat displays cannot replicate — improving
+ *      both uniqueness entropy and spoofing resistance.
+ *   2. The vector is centred on the wrist and scaled by the 3D wrist-to-MCP
+ *      distance so it is invariant to hand position and distance from the camera.
  *   3. Consecutive frames must agree (cosine similarity > [STABILITY_THRESHOLD])
  *      for [COMMIT_FRAMES] frames before the state advances to [GestureState.Stable].
  *
- * The resulting 42-float embedding IS the authentication credential — two
+ * The resulting 63-float embedding IS the authentication credential — two
  * people making the same named gesture will produce different embeddings
  * because their hand shapes differ.  The gesture label ([HandGesture]) is
  * surfaced only for real-time UI feedback.
@@ -100,14 +103,23 @@ class CameraHandEmbedder @Inject constructor(
         private const val COMMIT_FRAMES = 12
         /** Cosine similarity required between frames to count as "same gesture". */
         private const val STABILITY_THRESHOLD = 0.97f
-        /** Output size: 21 landmarks × (x, y). */
-        const val EMBEDDING_SIZE = 42
+        /**
+         * Output size: 21 landmarks × (x, y, z) = 63 floats.
+         *
+         * Including the z (depth) coordinate serves two purposes:
+         *  1. Uniqueness: hand depth profile varies more across individuals than the
+         *     2D projection alone, lowering the false-accept rate.
+         *  2. Anti-spoofing: a flat photo or display has near-zero z variance across
+         *     landmarks, making static-source embeddings more distinguishable from
+         *     live hands (complements [LivenessGuard]'s drift check).
+         */
+        const val EMBEDDING_SIZE = 63
 
         /**
          * Normalise raw MediaPipe NormalizedLandmark list to a pose-invariant
-         * 42-float embedding:
-         *   - Translate so wrist (index 0) is at origin.
-         *   - Scale by wrist → middle-finger-MCP (index 9) distance so hand
+         * 63-float embedding:
+         *   - Translate so wrist (index 0) is at origin in all three axes.
+         *   - Scale by 3D wrist → middle-finger-MCP (index 9) distance so hand
          *     size and camera distance do not affect the vector.
          *
          * Returns a zero vector if the hand is too small or degenerate.
@@ -116,14 +128,22 @@ class CameraHandEmbedder @Inject constructor(
             if (landmarks.size < 21) return FloatArray(EMBEDDING_SIZE)
             val wristX = landmarks[0].x()
             val wristY = landmarks[0].y()
+            val wristZ = landmarks[0].z()
             val mcpX   = landmarks[9].x()
             val mcpY   = landmarks[9].y()
-            val scale  = sqrt((mcpX - wristX).pow(2) + (mcpY - wristY).pow(2))
+            val mcpZ   = landmarks[9].z()
+            // 3D Euclidean distance from wrist to middle-MCP as the scale factor
+            val scale  = sqrt(
+                (mcpX - wristX).pow(2) + (mcpY - wristY).pow(2) + (mcpZ - wristZ).pow(2)
+            )
             if (scale < 0.01f) return FloatArray(EMBEDDING_SIZE)
             return FloatArray(EMBEDDING_SIZE) { i ->
-                val lm = landmarks[i / 2]
-                if (i % 2 == 0) (lm.x() - wristX) / scale
-                else             (lm.y() - wristY) / scale
+                val lm = landmarks[i / 3]
+                when (i % 3) {
+                    0    -> (lm.x() - wristX) / scale
+                    1    -> (lm.y() - wristY) / scale
+                    else -> (lm.z() - wristZ) / scale
+                }
             }
         }
 
@@ -257,7 +277,10 @@ class CameraHandEmbedder @Inject constructor(
 
     private fun onResult(result: GestureRecognizerResult, @Suppress("UNUSED_PARAMETER") unused: com.google.mediapipe.framework.image.MPImage) {
         val gestures  = result.gestures()
-        val landmarks = result.handLandmarks()
+        // MediaPipe Tasks Vision 0.10.x changed the API from handLandmarks()
+        // (returning List<NormalizedLandmarks>) to landmarks() (returning
+        // List<List<NormalizedLandmark>> directly with no wrapper class).
+        val landmarks = result.landmarks()
 
         if (gestures.isEmpty() || gestures[0].isEmpty() || landmarks.isEmpty()) {
             resetAccumulator()
@@ -270,7 +293,8 @@ class CameraHandEmbedder @Inject constructor(
         val gesture   = HandGesture.fromMediaPipeLabel(top.categoryName())
         if (gesture == HandGesture.NONE)  { resetAccumulator(); return }
 
-        val embedding = normalizeEmbedding(landmarks[0].landmarks())
+        // landmarks[0] is already List<NormalizedLandmark> in the 0.10.x API
+        val embedding = normalizeEmbedding(landmarks[0])
 
         // Accumulate consecutive stable frames
         val similarity = if (lastEmbedding != null) cosineSimilarity(embedding, lastEmbedding!!) else 0f

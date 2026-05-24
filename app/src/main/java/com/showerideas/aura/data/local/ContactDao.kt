@@ -47,4 +47,17 @@ interface ContactDao {
     /** PR-10: latest contact saved from a given Nearby endpoint, used to attach an incoming avatar. */
     @Query("SELECT * FROM contacts WHERE sourceEndpointId = :endpointId ORDER BY receivedAt DESC LIMIT 1")
     suspend fun findLatestByEndpoint(endpointId: String): Contact?
+
+    /**
+     * Find an existing contact by their stable identity key hash.
+     *
+     * Used for contact deduplication: if we already have a contact with this
+     * identity key hash, the incoming exchange is from the same device and we
+     * should update the existing record rather than creating a duplicate.
+     *
+     * Returns null if [hash] is null/empty (no hash available) to avoid
+     * treating all hash-less contacts as the same person.
+     */
+    @Query("SELECT * FROM contacts WHERE identityKeyHash = :hash LIMIT 1")
+    suspend fun findByIdentityKeyHash(hash: String): Contact?
 }

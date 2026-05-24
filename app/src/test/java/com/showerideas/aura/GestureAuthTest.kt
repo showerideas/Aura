@@ -28,8 +28,12 @@ class GestureAuthTest {
     /** Cosine similarity threshold from GestureAuthManager.SIMILARITY_THRESHOLD */
     private val SIMILARITY_THRESHOLD = 0.88f
 
-    /** Expected embedding dimension from CameraHandEmbedder.EMBEDDING_SIZE */
-    private val EMBEDDING_SIZE = 42   // 21 landmarks × (x, y)
+    /**
+     * Expected embedding dimension from CameraHandEmbedder.EMBEDDING_SIZE.
+     * Updated from 42 (x, y only) to 63 (x, y, z) when depth was added to
+     * improve anti-spoofing resistance (commit 81cae91).
+     */
+    private val EMBEDDING_SIZE = 63   // 21 landmarks × (x, y, z)
 
     // -------------------------------------------------------------------------
     // Cosine similarity — inlined to avoid MediaPipe native-library issues
@@ -117,10 +121,10 @@ class GestureAuthTest {
     }
 
     @Test
-    fun `embedding size matches 21 landmarks times 2 coordinates`() {
+    fun `embedding size matches 21 landmarks times 3 coordinates`() {
         // Guards against accidental resize of the embedding vector which
-        // would invalidate all stored patterns.
-        assertEquals("EMBEDDING_SIZE must be 21 × 2 = 42", 42, EMBEDDING_SIZE)
+        // would invalidate all stored patterns. 63 = 21 landmarks × (x, y, z).
+        assertEquals("EMBEDDING_SIZE must be 21 × 3 = 63", 63, EMBEDDING_SIZE)
     }
 
     // -------------------------------------------------------------------------

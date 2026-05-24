@@ -9,11 +9,12 @@ import kotlin.math.sqrt
 /**
  * Prompt-3: Gesture-credential entropy measurement.
  *
- * Tests the statistical properties of the 42-float hand-landmark embedding
- * to quantify how well it separates individuals. Because MediaPipe is a native
- * library that cannot run on the JVM without device hardware, we use
- * synthetically generated embeddings whose statistical properties mirror what
- * real MediaPipe output looks like for the two key scenarios:
+ * Tests the statistical properties of the 63-float hand-landmark embedding
+ * (21 landmarks × x,y,z — including depth) to quantify how well it separates
+ * individuals. Because MediaPipe is a native library that cannot run on the
+ * JVM without device hardware, we use synthetically generated embeddings whose
+ * statistical properties mirror what real MediaPipe output looks like for the
+ * two key scenarios:
  *
  *   1. **Intra-person, same gesture** — successive repetitions of the same
  *      hand shape by the same person. Real MediaPipe cosine similarity for
@@ -48,7 +49,7 @@ class HandEmbeddingEntropyTest {
     // Constants mirrored from production (CameraHandEmbedder / GestureAuthManager)
     // -------------------------------------------------------------------------
 
-    private val EMBEDDING_SIZE = 42        // 21 landmarks × (x, y)
+    private val EMBEDDING_SIZE = 63        // 21 landmarks × (x, y, z) — depth included
     private val THRESHOLD = 0.88f          // GestureAuthManager.SIMILARITY_THRESHOLD
     private val TRIAL_COUNT = 1_000
 
@@ -69,7 +70,12 @@ class HandEmbeddingEntropyTest {
         private var state = seed
         fun nextFloat(): Float {
             state = state * 6364136223846793005L + 1442695040888963407L
-            return ((state ushr 33) and 0x7FFFFFFFFL).toFloat() / 0x7FFFFFFFFL
+            // ushr 33 extracts 31 bits (bits 33–63). Divisor must match that
+            // bit-width (2^31 − 1 = 0x7FFFFFFFL) so the result is in [0, 1].
+            // The original 0x7FFFFFFFFL (2^35 − 1) was too large, shrinking all
+            // outputs to ≈ [0, 0.0625] and making every embedding point in the
+            // same direction — causing the inter-person FAR assertion to fail.
+            return ((state ushr 33) and 0x7FFFFFFFL).toFloat() / 0x7FFFFFFFL
         }
         fun nextGaussian(): Float {
             // Box-Muller transform
@@ -84,10 +90,12 @@ class HandEmbeddingEntropyTest {
     private fun baseEmbedding(seed: Long): FloatArray {
         val rng = LCG(seed)
         val raw = FloatArray(EMBEDDING_SIZE) { rng.nextFloat() * 2f - 1f }
-        // Simulate wrist-centring (landmark 0 → origin) + MCP scaling
-        raw[0] = 0f; raw[1] = 0f  // wrist x,y = 0
-        val scale = sqrt(raw[18].pow(2) + raw[19].pow(2)).coerceAtLeast(0.1f)
-        return FloatArray(EMBEDDING_SIZE) { i -> if (i < 2) 0f else raw[i] / scale }
+        // Simulate wrist-centring (landmark 0 → origin) + 3D MCP scaling.
+        // Landmark 0 (wrist) is at indices 0,1,2 (x,y,z).
+        raw[0] = 0f; raw[1] = 0f; raw[2] = 0f
+        // Landmark 9 (middle-MCP) is at indices 27,28,29 in the 63-float layout.
+        val scale = sqrt(raw[27].pow(2) + raw[28].pow(2) + raw[29].pow(2)).coerceAtLeast(0.1f)
+        return FloatArray(EMBEDDING_SIZE) { i -> if (i < 3) 0f else raw[i] / scale }
     }
 
     /** Perturb a base embedding with Gaussian noise at a given relative std-dev. */
@@ -237,9 +245,13 @@ class HandEmbeddingEntropyTest {
 
     /**
      * Embedding size sanity guard — changing this invalidates all stored patterns.
+     *
+     * Updated from 42 to 63 when z-coordinate (depth) was added to the embedding,
+     * providing per-landmark depth information for improved uniqueness and
+     * spoofing resistance against flat-image attacks.
      */
     @Test
-    fun embeddingSize_is42() {
-        assertTrue("EMBEDDING_SIZE must be 42 (21 landmarks × x,y)", EMBEDDING_SIZE == 42)
+    fun embeddingSize_is63() {
+        assertTrue("EMBEDDING_SIZE must be 63 (21 landmarks × x,y,z)", EMBEDDING_SIZE == 63)
     }
 }

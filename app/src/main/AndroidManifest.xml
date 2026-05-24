@@ -35,8 +35,22 @@
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="33" />
 
-    <!-- Nearby Connections -->
+    <!-- NFC — tap-to-exchange bootstrap transport (NfcExchangeHelper).
+         required="false" keeps the app installable on NFC-less devices;
+         NfcExchangeHelper no-ops gracefully when NFC is unavailable. -->
     <uses-permission android:name="android.permission.NFC" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
+
+    <!-- Explicitly remove INTERNET permission that play-services-nearby merges
+         in through its own manifest. AURA is fully offline — no internet socket
+         is used at runtime. Nearby Connections uses BLE + Wi-Fi Direct only.
+         tools:node="remove" instructs the manifest merger to strip this
+         permission from the final merged manifest even when a library declares
+         it, satisfying the CI check (Prompt-16). -->
+    <uses-permission android:name="android.permission.INTERNET"
+        tools:node="remove" />
 
     <!-- Vibration for gesture feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />

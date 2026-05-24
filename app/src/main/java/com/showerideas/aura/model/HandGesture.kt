@@ -4,8 +4,8 @@ package com.showerideas.aura.model
  * Hand gestures detected by the MediaPipe GestureRecognizer.
  *
  * These labels are used only for real-time UI feedback while the camera is
- * running — the actual authentication credential is the 42-float landmark
- * embedding, not the category name. Two people making a "Victory" sign will
+ * running — the actual authentication credential is the 63-float landmark
+ * embedding (21 landmarks × x,y,z), not the category name. Two people making a "Victory" sign will
  * produce different embeddings because their hand shapes differ.
  *
  * [mediaPipeLabel] must match the category string emitted by the bundled

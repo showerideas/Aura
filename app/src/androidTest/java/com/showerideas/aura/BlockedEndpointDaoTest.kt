@@ -17,9 +17,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * PR-14: in-memory tests for the blocklist DAO. Confirms the contract
- * NearbyExchangeService relies on: isBlocked toggles correctly through
- * block / unblock, and observeAll surfaces every row.
+ * PR-14 / FIX-5: in-memory tests for the blocklist DAO. Confirms the
+ * contract NearbyExchangeService relies on:
+ *  - isBlocked toggles correctly through block / unblock
+ *  - isBlockedByKeyHash rejects reconnects via stable identity key hash
+ *  - observeAll surfaces every row in reverse-chrono order
  */
 @RunWith(AndroidJUnit4::class)
 class BlockedEndpointDaoTest {
@@ -80,5 +82,48 @@ class BlockedEndpointDaoTest {
         val all = dao.observeAll().first()
         assertEquals(1, all.size)
         assertEquals("second", all.first().note)
+    }
+
+    // -----------------------------------------------------------------------
+    // FIX-5: isBlockedByKeyHash — stable identity-based blocklist
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun isBlockedByKeyHash_returns_true_when_hash_matches() = runBlocking {
+        dao.block(BlockedEndpoint(endpointId = "ep-hash-1", identityKeyHash = "hash-abc"))
+        assertTrue(dao.isBlockedByKeyHash("hash-abc"))
+    }
+
+    @Test
+    fun isBlockedByKeyHash_returns_false_for_unknown_hash() = runBlocking {
+        dao.block(BlockedEndpoint(endpointId = "ep-hash-2", identityKeyHash = "hash-known"))
+        assertFalse(dao.isBlockedByKeyHash("hash-unknown"))
+    }
+
+    @Test
+    fun isBlockedByKeyHash_returns_false_when_table_is_empty() = runBlocking {
+        assertFalse(dao.isBlockedByKeyHash("any-hash"))
+    }
+
+    @Test
+    fun isBlockedByKeyHash_ignores_null_hash_rows() = runBlocking {
+        // Rows without an identity hash (legacy endpoint-only blocks) must not
+        // match any key-hash query — NULL != :hash in SQL.
+        dao.block(BlockedEndpoint(endpointId = "ep-no-hash", identityKeyHash = null))
+        assertFalse(dao.isBlockedByKeyHash("any-hash"))
+    }
+
+    @Test
+    fun key_hash_block_survives_unblock_of_unrelated_endpoint() = runBlocking {
+        val original = BlockedEndpoint(endpointId = "ep-original", identityKeyHash = "hash-stable")
+        val other    = BlockedEndpoint(endpointId = "ep-other")
+        dao.block(original)
+        dao.block(other)
+        dao.unblock(other)
+
+        assertTrue(
+            "Key-hash block must persist after unblocking an unrelated endpoint",
+            dao.isBlockedByKeyHash("hash-stable")
+        )
     }
 }

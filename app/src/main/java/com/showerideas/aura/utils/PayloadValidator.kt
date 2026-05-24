@@ -49,8 +49,17 @@ object PayloadValidator {
      */
     const val MAX_FIELD_LENGTH: Int = 500
 
-    /** Friendly field names for logging. */
-    private val CAPPED_FIELDS = setOf("displayName", "email", "phone", "note")
+    /**
+     * All user-visible string fields that a peer can populate in their profile map.
+     * Every key from [com.showerideas.aura.model.Profile.toShareableMap] is listed here
+     * so a crafted peer cannot cause unbounded heap allocation by sending a multi-MB
+     * value in any field that arrives through the Nearby Connections wire format.
+     * Previously "note" was listed but it is a dead key — the wire format uses "bio".
+     */
+    private val CAPPED_FIELDS = setOf(
+        "displayName", "phone", "email",
+        "company", "title", "website", "bio"
+    )
 
     sealed class ValidationResult {
         object Ok : ValidationResult()

@@ -39,6 +39,8 @@ class MigrationTest {
         private const val TEST_DB_SCHEMA = "migration-test-schema"
         private const val TEST_DB_1_2    = "migration-test-1-to-2"
         private const val TEST_DB_2_3    = "migration-test-2-to-3"
+        private const val TEST_DB_3_4    = "migration-test-3-to-4"
+        private const val TEST_DB_4_5    = "migration-test-4-to-5"
     }
 
     @get:Rule
@@ -55,7 +57,7 @@ class MigrationTest {
     @After
     fun tearDown() {
         val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-        for (name in listOf(TEST_DB_SCHEMA, TEST_DB_1_2, TEST_DB_2_3)) {
+        for (name in listOf(TEST_DB_SCHEMA, TEST_DB_1_2, TEST_DB_2_3, TEST_DB_3_4, TEST_DB_4_5)) {
             ctx.deleteDatabase(name)
         }
     }
@@ -196,6 +198,162 @@ class MigrationTest {
             migrated.query("SELECT identityPublicKeyBase64 FROM known_peers WHERE endpointId = 'ep-tofu'").use { c ->
                 assertTrue(c.moveToFirst())
                 assertEquals("dGVzdA==", c.getString(0))
+            }
+        } finally {
+            migrated.close()
+        }
+    }
+
+    /**
+     * FIX-5: validate the 3→4 migration. Inserts contacts and blocked_endpoints
+     * rows at v3, runs the migration, and asserts:
+     *   - existing rows survive (no data loss)
+     *   - identityKeyHash column is present and defaults to NULL on old rows
+     *   - identityKeyHash can be set on new inserts
+     */
+    @Test
+    @Throws(IOException::class)
+    fun migrate_3_to_4_adds_identityKeyHash_to_contacts_and_blocked_endpoints() {
+        helper.createDatabase(TEST_DB_3_4, 3).use { v3 ->
+            v3.execSQL(
+                """
+                INSERT INTO contacts (
+                    id, displayName, phone, email, company, title, website, bio,
+                    avatarUri, sourceEndpointId, rssiAtExchange, receivedAt,
+                    isFavorite, notes
+                ) VALUES (
+                    'c3', 'Katherine Johnson', '333', 'kj@x.com', '', '', '', '',
+                    '', 'ep-3', 0, 1700000000002, 0, ''
+                )
+                """.trimIndent()
+            )
+            v3.execSQL(
+                "INSERT INTO blocked_endpoints (endpointId, blockedAt, note) VALUES ('ep-blocked-3', 9000, 'noisy')"
+            )
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DB_3_4, 4, true, Migrations.MIGRATION_3_4
+        )
+        try {
+            // Existing rows survive — identityKeyHash defaults to NULL.
+            migrated.query(
+                "SELECT identityKeyHash FROM contacts WHERE id = 'c3'"
+            ).use { c ->
+                assertTrue(c.moveToFirst())
+                assertTrue(
+                    "identityKeyHash must be NULL for rows migrated from v3",
+                    c.isNull(0)
+                )
+            }
+            migrated.query(
+                "SELECT identityKeyHash FROM blocked_endpoints WHERE endpointId = 'ep-blocked-3'"
+            ).use { c ->
+                assertTrue(c.moveToFirst())
+                assertTrue(
+                    "identityKeyHash must be NULL for blocked_endpoints rows migrated from v3",
+                    c.isNull(0)
+                )
+            }
+            // New inserts can populate identityKeyHash.
+            migrated.execSQL(
+                """
+                INSERT INTO contacts (
+                    id, displayName, phone, email, company, title, website, bio,
+                    avatarUri, sourceEndpointId, rssiAtExchange, receivedAt,
+                    isFavorite, notes, identityKeyHash
+                ) VALUES (
+                    'c4-keyed', 'Keyed User', '', '', '', '', '', '',
+                    '', 'ep-4', 0, 1700000000003, 0, '', 'abc123hash'
+                )
+                """.trimIndent()
+            )
+            migrated.query(
+                "SELECT identityKeyHash FROM contacts WHERE id = 'c4-keyed'"
+            ).use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("abc123hash", c.getString(0))
+            }
+        } finally {
+            migrated.close()
+        }
+    }
+
+    /**
+     * v5: validate the 4→5 migration. Seeds data in contacts and blocked_endpoints
+     * at v4, runs the migration, and asserts:
+     *   - existing rows survive unmodified
+     *   - exchange_audit_log table is created and accepts inserts
+     *   - all expected columns exist on the new table
+     */
+    @Test
+    @Throws(IOException::class)
+    fun migrate_4_to_5_preserves_data_and_creates_exchange_audit_log() {
+        helper.createDatabase(TEST_DB_4_5, 4).use { v4 ->
+            v4.execSQL(
+                """
+                INSERT INTO contacts (
+                    id, displayName, phone, email, company, title, website, bio,
+                    avatarUri, sourceEndpointId, rssiAtExchange, receivedAt,
+                    isFavorite, notes, identityKeyHash
+                ) VALUES (
+                    'c5', 'Dorothy Vaughan', '555', 'dv@x.com', '', '', '', '',
+                    '', 'ep-5', 0, 1700000000004, 0, '', NULL
+                )
+                """.trimIndent()
+            )
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DB_4_5, 5, true, Migrations.MIGRATION_4_5
+        )
+        try {
+            // Existing contacts row preserved.
+            migrated.query("SELECT COUNT(*) FROM contacts WHERE id = 'c5'").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(1, c.getInt(0))
+            }
+            // New exchange_audit_log table exists and starts empty.
+            migrated.query("SELECT COUNT(*) FROM exchange_audit_log").use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals(0, c.getInt(0))
+            }
+            // All expected columns are present and accepting values.
+            migrated.execSQL(
+                """
+                INSERT INTO exchange_audit_log (
+                    id, timestampMs, peerIdentityKeyHash,
+                    direction, outcome, errorCode, channel
+                ) VALUES (
+                    'audit-1', 1700000001000, 'peerHash42',
+                    'BOTH', 'SUCCESS', NULL, 'NEARBY'
+                )
+                """.trimIndent()
+            )
+            migrated.query(
+                "SELECT outcome, channel FROM exchange_audit_log WHERE id = 'audit-1'"
+            ).use { c ->
+                assertTrue(c.moveToFirst())
+                assertEquals("SUCCESS", c.getString(0))
+                assertEquals("NEARBY", c.getString(1))
+            }
+            // NULL errorCode allowed (privacy-preserving — not all outcomes have codes).
+            migrated.execSQL(
+                """
+                INSERT INTO exchange_audit_log (
+                    id, timestampMs, peerIdentityKeyHash,
+                    direction, outcome, errorCode, channel
+                ) VALUES (
+                    'audit-2', 1700000002000, NULL,
+                    'BOTH', 'TIMEOUT', NULL, 'NFC'
+                )
+                """.trimIndent()
+            )
+            migrated.query(
+                "SELECT peerIdentityKeyHash FROM exchange_audit_log WHERE id = 'audit-2'"
+            ).use { c ->
+                assertTrue(c.moveToFirst())
+                assertTrue("peerIdentityKeyHash must be nullable", c.isNull(0))
             }
         } finally {
             migrated.close()

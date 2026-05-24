@@ -65,7 +65,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       # Enable KVM so the emulator can run with hardware acceleration.
       - name: Enable KVM

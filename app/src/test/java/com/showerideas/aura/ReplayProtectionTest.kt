@@ -155,16 +155,36 @@ class ReplayProtectionTest {
     }
 
     @Test
-    fun `note field over the cap is rejected`() {
+    fun `bio field over the cap is rejected`() {
+        // "note" was the old dead key; wire format uses "bio". Verify bio is capped.
         val tooLong = "x".repeat(PayloadValidator.MAX_FIELD_LENGTH + 1)
         val map = mapOf(
             "_ts" to now.toString(),
             "_nonce" to UUID.randomUUID().toString(),
-            "note" to tooLong
+            "bio" to tooLong
         )
         assertTrue(
             PayloadValidator.validateProfilePayload(map, now) is ValidationResult.FieldTooLong
         )
+    }
+
+    @Test
+    fun `all newly-added profile fields are capped (company, title, website)`() {
+        // Ensure heap-exhaustion fix covers every field in Profile.toShareableMap().
+        val tooLong = "z".repeat(PayloadValidator.MAX_FIELD_LENGTH + 1)
+        for (field in listOf("company", "title", "website")) {
+            PayloadValidator.resetForTesting()
+            val map = mapOf(
+                "_ts" to now.toString(),
+                "_nonce" to UUID.randomUUID().toString(),
+                field to tooLong
+            )
+            val result = PayloadValidator.validateProfilePayload(map, now)
+            assertTrue(
+                "Expected FieldTooLong for '$field' > ${PayloadValidator.MAX_FIELD_LENGTH} chars, got $result",
+                result is ValidationResult.FieldTooLong
+            )
+        }
     }
 
     @Test

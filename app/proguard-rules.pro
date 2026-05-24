@@ -71,3 +71,11 @@
 # some implementations use reflection to locate the image plane accessors.
 -keep class androidx.camera.** { *; }
 -dontwarn androidx.camera.**
+
+# javax.lang.model (Java compiler API) — not present on Android. Referenced by
+# AutoValue's shaded copy of JavaPoet (autovalue.shaded.com.squareup.javapoet),
+# which is a compile-time annotation-processor dependency that leaks into the
+# runtime classpath. R8 fails if it can't resolve the reference; -dontwarn
+# suppresses the error since no JavaPoet code runs at runtime on device.
+-dontwarn javax.lang.model.**
+-dontwarn autovalue.shaded.com.squareup.javapoet.**

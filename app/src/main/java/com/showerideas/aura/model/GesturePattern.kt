@@ -3,11 +3,15 @@ package com.showerideas.aura.model
 /**
  * Represents a recorded hand-gesture biometric pattern.
  *
- * The credential is a normalised 42-float MediaPipe landmark embedding
- * (21 hand landmarks × x,y per point, centred on wrist, scaled by
- * wrist→MCP distance).  Two people making the same named gesture produce
+ * The credential is a normalised 63-float MediaPipe landmark embedding
+ * (21 hand landmarks × x,y,z per point, centred on wrist, scaled by
+ * 3D wrist→MCP distance).  Two people making the same named gesture produce
  * different embeddings because their hand shapes differ — the gesture
  * label is metadata only.
+ *
+ * When multi-sample enrollment is used, [featureVector] stores the centroid
+ * (element-wise mean) of up to [sampleCount] recorded samples, reducing
+ * enrollment noise and improving FAR/FRR balance.
  *
  * Authentication is performed via cosine similarity; see
  * [com.showerideas.aura.auth.GestureAuthManager.match].
@@ -15,7 +19,7 @@ package com.showerideas.aura.model
 data class GesturePattern(
     val id: String,
     val label: String = "default",
-    /** Pose-invariant 42-float landmark embedding from [com.showerideas.aura.auth.CameraHandEmbedder]. */
+    /** Pose-invariant 63-float landmark embedding from [com.showerideas.aura.auth.CameraHandEmbedder]. */
     val featureVector: FloatArray = floatArrayOf(),
     val sampleCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis()

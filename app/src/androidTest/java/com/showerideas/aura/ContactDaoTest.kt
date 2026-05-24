@@ -21,7 +21,8 @@ import java.util.UUID
  * PR-12: in-memory Room tests for the contacts DAO. Covers the read paths
  * the new favourites filter and notes editor depend on:
  *  - insert + observeAll emits the inserted record
- *  - search filters on name, email, and phone
+ *  - search filters on all 8 text columns (name, email, phone, company,
+ *    title, notes, bio, website)
  *  - delete removes the record
  *  - observeFavorites only returns isFavorite = true rows
  */
@@ -84,6 +85,33 @@ class ContactDaoTest {
         val byPhone = dao.search("333").first()
         assertEquals(1, byPhone.size)
         assertEquals("Carol Vance", byPhone.first().displayName)
+    }
+
+    /**
+     * Verify the search LIKE expression covers all 8 text columns.
+     * company, title, notes, bio, and website were added when the Contact
+     * model was extended; if any is missing from the DAO query this catches it.
+     */
+    @Test
+    fun search_matches_company_title_notes_bio_and_website() = runBlocking {
+        val contact = Contact(
+            id          = UUID.randomUUID().toString(),
+            displayName = "ZZZ Unique Placeholder",
+            company     = "Acme Corp",
+            title       = "Lead Engineer",
+            notes       = "Met at summit",
+            bio         = "Loves Kotlin",
+            website     = "https://acme.example.com"
+        )
+        dao.insert(contact)
+
+        assertEquals(1, dao.search("Acme Corp").first().size)
+        assertEquals(1, dao.search("Lead Engineer").first().size)
+        assertEquals(1, dao.search("summit").first().size)
+        assertEquals(1, dao.search("Kotlin").first().size)
+        assertEquals(1, dao.search("acme.example").first().size)
+        // Sanity: non-matching term must return nothing
+        assertEquals(0, dao.search("zzznomatch123").first().size)
     }
 
     @Test

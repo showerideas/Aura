@@ -74,6 +74,30 @@ object Migrations {
         }
     }
 
+    /**
+     * v5: Add exchange_audit_log table for privacy-preserving exchange history.
+     *
+     * Stores only: id, timestampMs, peerIdentityKeyHash (nullable), direction,
+     * outcome, errorCode (nullable), channel. No plaintext PII.
+     */
+    val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS exchange_audit_log (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    timestampMs INTEGER NOT NULL,
+                    peerIdentityKeyHash TEXT DEFAULT NULL,
+                    direction TEXT NOT NULL DEFAULT 'BOTH',
+                    outcome TEXT NOT NULL,
+                    errorCode TEXT DEFAULT NULL,
+                    channel TEXT NOT NULL DEFAULT 'NEARBY'
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
     /** Ordered list of every migration the app knows about. */
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 }

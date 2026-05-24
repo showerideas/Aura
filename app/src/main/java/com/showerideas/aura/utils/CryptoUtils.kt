@@ -1,8 +1,11 @@
 package com.showerideas.aura.utils
 
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import timber.log.Timber
+import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -244,25 +247,81 @@ object CryptoUtils {
     // Android Keystore — long-lived device identity
     // -------------------------------------------------------------------------
 
+    /**
+     * Get or create the device identity keypair in the Android Keystore.
+     *
+     * Prefers StrongBox (dedicated Secure Element, physically isolated from main CPU — e.g.
+     * Google Titan M on Pixel 2+, Samsung's embedded SE). Falls back silently to the standard
+     * TEE-backed Keystore if StrongBox is unavailable.
+     *
+     * The StrongBox vs TEE distinction matters: StrongBox keys are immune to
+     * root-level extraction, side-channel attacks on the application processor, and
+     * Spectre/Meltdown-class hardware vulnerabilities. Where available, use it.
+     */
     fun getOrCreateDeviceIdentityKey(): KeyPair {
         val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
         if (!ks.containsAlias(KEYSTORE_ALIAS_DEVICE_ID)) {
-            Timber.d("Creating new device identity key in Keystore")
-            val spec = KeyGenParameterSpec.Builder(
+            Timber.d("Creating new device identity key — trying StrongBox first")
+            // Try StrongBox (API 28+, hardware-isolated Secure Element)
+            val created = tryCreateIdentityKey(strongBox = true)
+                ?: tryCreateIdentityKey(strongBox = false)
+            if (created == null) error("Failed to create device identity key in Keystore")
+            Timber.d("Device identity key created successfully")
+        }
+        val privateKey = ks.getKey(KEYSTORE_ALIAS_DEVICE_ID, null) as PrivateKey
+        val publicKey  = ks.getCertificate(KEYSTORE_ALIAS_DEVICE_ID).publicKey
+        return KeyPair(publicKey, privateKey)
+    }
+
+    private fun tryCreateIdentityKey(strongBox: Boolean): KeyPair? {
+        return try {
+            val specBuilder = KeyGenParameterSpec.Builder(
                 KEYSTORE_ALIAS_DEVICE_ID,
                 KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
             )
                 .setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
                 .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                .setUserAuthenticationRequired(false) // Exchange speed > bio-auth here
-                .build()
-
+                .setUserAuthenticationRequired(false)
+            if (strongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                specBuilder.setIsStrongBoxBacked(true)
+            }
             KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, KEYSTORE_PROVIDER)
-                .apply { initialize(spec) }
+                .apply { initialize(specBuilder.build()) }
                 .generateKeyPair()
+                .also {
+                    if (strongBox) Timber.i("Identity key secured in StrongBox (dedicated SE)")
+                    else           Timber.d("Identity key secured in TEE (StrongBox unavailable)")
+                }
+        } catch (e: Exception) {
+            if (strongBox) Timber.d("StrongBox unavailable — falling back to TEE: ${e.message}")
+            else           Timber.e(e, "TEE key creation also failed")
+            null
         }
-        val privateKey = ks.getKey(KEYSTORE_ALIAS_DEVICE_ID, null) as PrivateKey
-        val publicKey = ks.getCertificate(KEYSTORE_ALIAS_DEVICE_ID).publicKey
-        return KeyPair(publicKey, privateKey)
+    }
+
+    /**
+     * Returns true if the device identity key is backed by a StrongBox Secure Element
+     * (as opposed to the software TEE). Useful for surfacing a "hardware-secured" trust
+     * badge in the UI.
+     *
+     * Requires API 31+ to distinguish StrongBox from TEE via [KeyInfo.getSecurityLevel].
+     * Returns false on older API levels (key may still be hardware-backed TEE, just
+     * indistinguishable without the SecurityLevel API).
+     */
+    fun isIdentityKeyStrongBoxBacked(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        return try {
+            val ks  = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
+            val key = ks.getKey(KEYSTORE_ALIAS_DEVICE_ID, null) as? PrivateKey ?: return false
+            val ki  = KeyFactory.getInstance(key.algorithm, KEYSTORE_PROVIDER)
+                .getKeySpec(key, KeyInfo::class.java)
+            // KeyProperties.SecurityLevel is an @IntDef annotation, not a class.
+            // Access its constants directly on KeyProperties (API 31+).
+            @Suppress("NewApi") // guarded by Build.VERSION check above
+            ki.securityLevel == KeyProperties.SECURITY_LEVEL_STRONGBOX
+        } catch (e: Exception) {
+            Timber.d("Could not determine StrongBox backing: ${e.message}")
+            false
+        }
     }
 }

@@ -100,6 +100,7 @@ class HomeFragment : Fragment() {
                         ExchangeSession.State.ADVERTISING,
                         ExchangeSession.State.DISCOVERING,
                         ExchangeSession.State.CONNECTING,
+                        ExchangeSession.State.VERIFYING,
                         ExchangeSession.State.EXCHANGING
                     )
                     startPulse(if (active) R.color.aura_cyan else R.color.aura_purple)
