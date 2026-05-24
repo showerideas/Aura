@@ -1496,8 +1496,10 @@ class NearbyExchangeService : Service() {
                 // A rogue peer could send arbitrary binary as their "avatar"; BitmapFactory
                 // would return null on load (harmless), but we reject non-JPEG content
                 // before it ever reaches app-private storage.
-                val jpegMagic = tmp.inputStream().use { it.readNBytes(3) }
-                if (jpegMagic.size < 3 ||
+                // readNBytes() requires API 33; use read(buf,0,n) which is available from API 1.
+                val jpegMagic = ByteArray(3)
+                val jpegBytesRead = tmp.inputStream().use { it.read(jpegMagic, 0, 3) }
+                if (jpegBytesRead < 3 ||
                     jpegMagic[0] != 0xFF.toByte() ||
                     jpegMagic[1] != 0xD8.toByte() ||
                     jpegMagic[2] != 0xFF.toByte()
