@@ -229,4 +229,15 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC टैप सक्रिय — तेज़ कुंजी विनिमय</string>
     <string name="exchange_nfc_active_desc">यह आदान-प्रदान NFC टैप के माध्यम से प्रारंभ हुआ — ECDH हैंडशेक पूर्व-सीडेड है</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">कार्ड अपडेट हुआ</string>
+    <string name="merge_action_accept">परिवर्तन स्वीकार करें</string>
+    <string name="merge_action_revert">सब वापस करें</string>
+    <string name="merge_field_toggle_desc">%1$s के लिए नया मान रखना टॉगल करें</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s ने एक नया कार्ड भेजा। 1 फ़ील्ड बदला।</item>
+        <item quantity="other">%1$s ने एक नया कार्ड भेजा। %2$d फ़ील्ड बदले।</item>
+    </plurals>
 </resources>
