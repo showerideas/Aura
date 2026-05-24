@@ -284,14 +284,19 @@ class NearbyExchangeService : Service() {
     @Volatile private var sessionChannel: String = ExchangeAuditEntry.CHANNEL_NEARBY
 
     /**
-     * Prompt-6 / Issue-1: TOCTOU guard for P2P connection requests.
-     * Set to true the moment we call requestConnection() so that a second
-     * onEndpointFound callback (from a different AURA user in range at the
-     * same time) cannot fire a second requestConnection and overwrite the
-     * per-session ECDH state mid-handshake.
-     * Reset to false in terminateSession() so the next session can connect.
+     * Prompt-6 / Issue-1 (hardened): TOCTOU guard for P2P connection requests.
+     *
+     * AtomicBoolean replaces the previous @Volatile Boolean because the compound
+     * check-then-set in onEndpointFound was not atomic: two concurrent
+     * onEndpointFound callbacks on Nearby's callback thread could both read false
+     * before either wrote true, firing two simultaneous requestConnection() calls
+     * and corrupting the per-session ECDH state mid-handshake.
+     *
+     * compareAndSet(false, true) is a single CAS — only the first caller
+     * succeeds; the second sees false returned and bails out cleanly.
+     * Reset via set(false) in terminateSession() so the next session can connect.
      */
-    @Volatile private var connectionRequested: Boolean = false
+    private val connectionRequested = java.util.concurrent.atomic.AtomicBoolean(false)
 
     /**
      * Prompt-6 / Issue-3: max encrypted profile payload bytes.
@@ -563,9 +568,9 @@ class NearbyExchangeService : Service() {
         // Reset the gate so the next exchange must re-authenticate.
         gestureVerified = false
         scope.launch { authPreferences.setGestureGateOpen(false) }
-        // Prompt-6 / Issue-1: reset the connection-request flag so the next
+        // Prompt-6 / Issue-1: reset the connection-request CAS flag so the next
         // session can request a connection again.
-        connectionRequested = false
+        connectionRequested.set(false)
         // Reset handshake bookkeeping (PR-02).
         handshakeState = HandshakeState.IDLE
         peerPublicKey = null
@@ -724,13 +729,13 @@ class NearbyExchangeService : Service() {
             // Prompt-6 / Issue-1: atomically guard against the TOCTOU race where
             // two onEndpointFound callbacks fire simultaneously (both see
             // connectedEndpoint == null and both call requestConnection).
-            // connectionRequested is @Volatile and set here before any async work;
-            // it is reset in terminateSession() for the next session.
-            if (connectionRequested) {
+            // compareAndSet is a single atomic CAS — only one concurrent caller
+            // wins; all others see false returned and bail without touching ECDH state.
+            // Reset via set(false) in terminateSession() for the next session.
+            if (!connectionRequested.compareAndSet(false, true)) {
                 Timber.d("Connection already requested — ignoring endpoint $endpointId")
                 return
             }
-            connectionRequested = true
             connectionsClient.requestConnection(
                 android.provider.Settings.Secure.getString(contentResolver, "bluetooth_name")
                     ?: "AuraUser",
@@ -740,7 +745,7 @@ class NearbyExchangeService : Service() {
                 .addOnSuccessListener { Timber.d("Connection request sent to $endpointId") }
                 .addOnFailureListener { e ->
                     Timber.e(e, "Failed to request connection to $endpointId — resetting flag")
-                    connectionRequested = false
+                    connectionRequested.set(false)
                 }
         }
 
@@ -852,6 +857,15 @@ class NearbyExchangeService : Service() {
 
     private fun handleIncomingChallenge(endpointId: String, body: ByteArray) {
         scope.launch {
+            // Security: a peer who already completed challenge/response MUST NOT
+            // be allowed to trigger a second challenge cycle. After the handshake
+            // completes, the peer's identity is anchored in challengeVerifiedByEndpoint;
+            // a second challenge is either a protocol bug or an active attack attempt
+            // (e.g. trying to force a new challenge signed by a different key).
+            if (challengeVerifiedByEndpoint.contains(endpointId)) {
+                Timber.w("Re-challenge from already-verified endpoint $endpointId — ignored")
+                return@launch
+            }
             try {
                 val sepIdx = body.indexOfFirst { it == CHALLENGE_SEPARATOR }
                 if (sepIdx <= 0 || sepIdx >= body.size - 1) {
@@ -935,8 +949,12 @@ class NearbyExchangeService : Service() {
                 val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
                 val signature = body.copyOfRange(sepIdx + 1, body.size)
                 val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
-                val challenge = pendingChallengeByEndpoint[endpointId] ?: run {
-                    Timber.e("No pending challenge for $endpointId")
+                // Security: use remove() not get() so the challenge bytes are consumed
+                // atomically on first use. A crafted peer who replays a valid
+                // challenge-response message would find null here and be rejected,
+                // preventing a second sendPublicKey() call to an already-handshaked peer.
+                val challenge = pendingChallengeByEndpoint.remove(endpointId) ?: run {
+                    Timber.e("No pending challenge for $endpointId (already consumed or not issued)")
                     terminateSession(ExchangeSession.State.ERROR); return@launch
                 }
                 val ok = CryptoUtils.verifyChallenge(peerIdentityKey, challenge, signature)
@@ -981,7 +999,7 @@ class NearbyExchangeService : Service() {
                 // Capture the peer identity hash for audit logging (set before advancing).
                 sessionPeerKeyHash = CryptoUtils.identityKeyHash(peerIdentityKey)
                 challengeVerifiedByEndpoint.add(endpointId)
-                pendingChallengeByEndpoint.remove(endpointId)
+                // pendingChallengeByEndpoint already consumed via remove() above.
                 Timber.d("Challenge verified for $endpointId — advancing to ECDH")
                 // PR-13 gate: only now do we ship our ephemeral ECDH public key.
                 sendPublicKey(endpointId)
@@ -1285,8 +1303,21 @@ class NearbyExchangeService : Service() {
                 auditRepository.logSuccess(peerIdentityKeyHash = auditHash, channel = sessionChannel)
 
                 // Reset gate on success too.
+                // Cancel the timeout coroutine explicitly — it would also be
+                // cancelled by scope.cancel() in onDestroy, but doing it here
+                // avoids the 500 ms window where it could theoretically preempt.
+                timeoutJob?.cancel()
                 gestureVerified = false
-                scope.launch { authPreferences.setGestureGateOpen(false) }
+                // NonCancellable ensures the DataStore write completes even if
+                // stopSelf() triggers onDestroy() → scope.cancel() during the
+                // 500 ms delay below. Without it, the coroutine could be
+                // interrupted mid-write, leaving gestureGateOpen = true in
+                // the DataStore and allowing the stale flag to persist across restarts.
+                scope.launch {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                        authPreferences.setGestureGateOpen(false)
+                    }
+                }
                 sessionPeerKeyHash = null
 
                 delay(500)
@@ -1427,7 +1458,12 @@ class NearbyExchangeService : Service() {
         }
         val inputStream = payload.asStream()?.asInputStream() ?: return
         scope.launch {
-            val tmp = java.io.File.createTempFile("avatar-incoming-", ".jpg", cacheDir)
+            // Scope the tmp filename to this endpoint so cleanupPartialAvatarFiles()
+            // can surgically delete only THIS guest's partial file. Without scoping,
+            // a disconnect in room mode could delete a concurrent guest's in-progress
+            // avatar write (same prefix, age filter alone is not sufficient).
+            val safeEp = endpointId.replace(Regex("[^A-Za-z0-9_-]"), "_").take(16)
+            val tmp = java.io.File.createTempFile("avatar-incoming-${safeEp}-", ".jpg", cacheDir)
             try {
                 var written = 0L
                 inputStream.use { input ->
@@ -1484,7 +1520,8 @@ class NearbyExchangeService : Service() {
         try {
             awaitingAvatarStream.remove(endpointId)
             val dir = cacheDir ?: return
-            dir.listFiles { f -> f.name.startsWith("avatar-incoming-") && f.name.endsWith(".jpg") }
+            val safeEp = endpointId.replace(Regex("[^A-Za-z0-9_-]"), "_").take(16)
+            dir.listFiles { f -> f.name.startsWith("avatar-incoming-${safeEp}-") && f.name.endsWith(".jpg") }
                 ?.forEach { stale ->
                     val age = System.currentTimeMillis() - stale.lastModified()
                     // Only delete things that look stale (>5s old) so we don't
@@ -1504,9 +1541,35 @@ class NearbyExchangeService : Service() {
     // Helpers
     // -------------------------------------------------------------------------
 
+    /**
+     * Decode an X.509-encoded EC public key and validate it is on secp256r1.
+     *
+     * Security: without curve validation a crafted peer could supply a key
+     * from a weaker curve (e.g. secp192r1) or an invalid-curve-attack point,
+     * potentially reducing the effective ECDH security below 128-bit.
+     *
+     * Validation method: compare the group order of the decoded key against
+     * the canonical secp256r1 order (NIST SP 800-186, Table 6). The order is
+     * a fixed BigInteger unique to each named curve — mismatches are rejected
+     * hard, causing terminateSession(ERROR).
+     */
     private fun decodeEC256PublicKey(encoded: ByteArray): PublicKey {
         val spec = java.security.spec.X509EncodedKeySpec(encoded)
-        return java.security.KeyFactory.getInstance("EC").generatePublic(spec)
+        val key  = java.security.KeyFactory.getInstance("EC").generatePublic(spec)
+        val ecKey = key as? java.security.interfaces.ECPublicKey
+            ?: throw java.security.GeneralSecurityException(
+                "Incoming key is not an EC public key — rejected"
+            )
+        // secp256r1 (NIST P-256) group order — fixed constant per NIST SP 800-186.
+        val secp256r1Order = java.math.BigInteger(
+            "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16
+        )
+        if (ecKey.params.order != secp256r1Order) {
+            throw java.security.GeneralSecurityException(
+                "EC key is not on secp256r1 (order mismatch) — curve-downgrade attempt rejected"
+            )
+        }
+        return key
     }
 
     private fun updateSessionState(state: ExchangeSession.State, errorMessage: String? = null) {

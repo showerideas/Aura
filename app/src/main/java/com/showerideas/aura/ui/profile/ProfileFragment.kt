@@ -128,10 +128,16 @@ class ProfileFragment : Fragment() {
                             paintStrengthBars(0)
                         }
                         is GestureAuthManager.RecordingState.Complete -> {
-                            viewModel.saveGesturePattern(state.pattern)
+                            // addEnrollmentSample accumulates up to MAX_ENROLLMENT_SAMPLES raw
+                            // embeddings and recomputes the centroid each time, giving better
+                            // FAR/FRR than a single-sample savePattern() call. Each re-record
+                            // press improves accuracy without re-doing the full flow.
+                            val count = viewModel.addEnrollmentSample(state.pattern)
+                            val max   = GestureAuthManager.MAX_ENROLLMENT_SAMPLES
                             viewModel.stopGestureCamera()
                             binding.btnRecordGesture.setText(R.string.profile_btn_rerecord)
-                            binding.gestureStatus.setText(R.string.gesture_saved_embedding)
+                            binding.gestureStatus.text =
+                                "${getString(R.string.gesture_saved_embedding)} ($count/$max)"
                             binding.gesturePreviewProfile.visibility = View.GONE
                             binding.gestureStrengthBars.visibility = View.GONE
                             binding.tvVarianceLabel.visibility = View.GONE

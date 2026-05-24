@@ -55,8 +55,9 @@ class ExchangeFragment : Fragment() {
      * success or final failure — we no longer want to act on another emission.
      */
     private var gestureValidated = false
-    /** Ensures the SAS dialog is shown at most once per session. */
-    private var sasDialogShown = false
+    // sasDialogShown has been moved to ExchangeViewModel to survive configuration
+    // changes (rotation, theme switch). The fragment-level variable was reset to
+    // false on every recreation, causing the SAS dialog to appear twice.
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -279,12 +280,15 @@ class ExchangeFragment : Fragment() {
         binding.tvStatus.text = statusText
         binding.progressBar.visibility = if (showProgress) View.VISIBLE else View.GONE
 
-        // Show SAS verification dialog exactly once when VERIFYING state is reached.
+        // Show SAS verification dialog exactly once per VERIFYING state.
+        // sasDialogShown is ViewModel-backed (survives rotation); onSasDialogShown()
+        // marks it so the dialog is not shown again if the fragment is recreated
+        // while the service is still in VERIFYING.
         if (session.state == ExchangeSession.State.VERIFYING &&
             session.sasPin != null &&
-            !sasDialogShown
+            !viewModel.sasDialogShown.value
         ) {
-            sasDialogShown = true
+            viewModel.onSasDialogShown()
             showSasDialog(session.sasPin)
         }
 

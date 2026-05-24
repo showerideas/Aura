@@ -37,7 +37,21 @@ class OnboardingViewModel @Inject constructor(
 
     fun stopGestureCamera() = gestureAuthManager.stopCamera()
 
-    fun saveGesturePattern(pattern: GesturePattern) = gestureAuthManager.savePattern(pattern)
+    /**
+     * Add [pattern] to the multi-sample enrollment centroid accumulator.
+     *
+     * Previously called [GestureAuthManager.savePattern] (single-sample only).
+     * Using [GestureAuthManager.addEnrollmentSample] persists up to
+     * [GestureAuthManager.MAX_ENROLLMENT_SAMPLES] raw embeddings and recomputes
+     * the centroid after each addition, reducing per-capture noise and improving
+     * the False Accept Rate without requiring the user to re-do onboarding.
+     *
+     * @return sample count now stored (1 .. [GestureAuthManager.MAX_ENROLLMENT_SAMPLES]).
+     */
+    fun addEnrollmentSample(pattern: GesturePattern): Int =
+        gestureAuthManager.addEnrollmentSample(pattern)
+
+    fun enrolledSampleCount(): Int = gestureAuthManager.enrolledSampleCount()
 
     /**
      * Reset the gesture capture pipeline after a failed attempt (e.g. liveness
