@@ -97,12 +97,18 @@ class QRExchangeFragment : Fragment() {
                     viewModel.pairingResult.collect { result ->
                         if (result == null) return@collect
                         when (result) {
-                            is QRExchangeViewModel.PairingResult.Success ->
+                            is QRExchangeViewModel.PairingResult.Success -> {
+                                val name = result.contact.displayName
+                                    .ifBlank { result.contact.sourceEndpointId.take(8) }
                                 Toast.makeText(
                                     requireContext(),
-                                    getString(R.string.qr_pairing_ok, result.peerEndpoint.take(8)),
+                                    getString(R.string.qr_pairing_ok, name),
                                     Toast.LENGTH_LONG
                                 ).show()
+                                findNavController().navigateUp()
+                            }
+                            is QRExchangeViewModel.PairingResult.RelayTimeout ->
+                                Toast.makeText(requireContext(), R.string.qr_relay_timeout, Toast.LENGTH_LONG).show()
                             is QRExchangeViewModel.PairingResult.Expired ->
                                 Toast.makeText(requireContext(), R.string.qr_expired, Toast.LENGTH_LONG).show()
                             is QRExchangeViewModel.PairingResult.Invalid,

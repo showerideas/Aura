@@ -26,6 +26,14 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // QR relay base URL. Set RELAY_BASE_URL in your environment or CI secrets.
+        // Must be HTTPS (network_security_config.xml blocks cleartext).
+        // For a zero-ops relay, point this at a Firebase Realtime Database URL —
+        // see docs/qr-relay-setup.md for setup instructions.
+        val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
+            ?: "https://relay.example.com"
+        buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
+
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
         // committed to source control.
