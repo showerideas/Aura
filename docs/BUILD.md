@@ -67,7 +67,7 @@ If `KEYSTORE_PATH` is unset **or** the empty string, Gradle skips the signing co
 
 ## 5. CI parity
 
-GitHub Actions (`.github/workflows/ci.yml`) runs exactly three Gradle tasks against every PR and every push to `main`:
+GitHub Actions (`.github/workflows/ci.yml`) runs the following steps against every PR and every push to `main`:
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
@@ -84,12 +84,16 @@ GitHub Actions (`.github/workflows/ci.yml`) runs exactly three Gradle tasks agai
 },'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     PR[PR / push to main] --> A[testDebugUnitTest]
-    A -- ✅ --> B[lintDebug]
-    B -- ✅ --> C[assembleRelease<br/>KEYSTORE_* blank]
-    C -- ✅ --> D[upload aura-release-unsigned.apk]
+    A -- ✅ --> B[jacocoTestReport<br/>40% branch floor]
+    B -- ✅ --> C[lintDebug]
+    C -- ✅ --> D[assembleRelease<br/>KEYSTORE_* blank]
+    D -- ✅ --> E[check-mediapipe-classes<br/>apkanalyzer]
+    E -- ✅ --> G[check-apk-size<br/>25 MB arm64 / 22 MB v7a]
+    G -- ✅ --> H[upload aura-release-unsigned.apk]
     A -- ❌ --> F[fail + upload test reports]
     B -- ❌ --> F
     C -- ❌ --> F
+    D -- ❌ --> F
 ```
 
 The CI APK artifact has a 14-day retention. The artifact from the most recent green run is what gets attached to a tagged GitHub Release (see [`features/22-release-ci.md`](features/22-release-ci.md)).
@@ -102,8 +106,8 @@ There are intentionally only two: `debug` and `release`. We have not added stagi
 
 | Variant | App-id | versionName | Logging | Minify | Signing |
 |---|---|---|---|---|---|
-| debug | `com.showerideas.aura.debug` | `1.0.0-debug` | `BuildConfig.ENABLE_LOGGING=true` | off | debug keystore |
-| release | `com.showerideas.aura` | `1.0.0` | `BuildConfig.ENABLE_LOGGING=false` | R8 + resource shrink | env-var driven |
+| debug | `com.showerideas.aura.debug` | `1.1.0-debug` | `BuildConfig.ENABLE_LOGGING=true` | off | debug keystore |
+| release | `com.showerideas.aura` | `1.1.0` | `BuildConfig.ENABLE_LOGGING=false` | R8 + resource shrink | env-var driven |
 
 `Timber.plant(DebugTree())` is gated on `ENABLE_LOGGING`, so the release APK does not emit logs.
 

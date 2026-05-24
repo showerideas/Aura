@@ -64,7 +64,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         getString(com.showerideas.aura.R.string.contact_unknown_name)
                     }
 
-                    // PR-10 + identicon: always show an avatar — prefer the saved
+                    //  + identicon: always show an avatar — prefer the saved
                     // photo, then fall back to a deterministic identicon so every
                     // contact has a visual identity even without a profile photo.
                     val avatarBitmap = AvatarUtils.loadOrGenerateAvatar(
@@ -88,9 +88,9 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     binding.btnEmail.isEnabled = contact.email.isNotBlank()
                     binding.btnCopy.isEnabled = true
 
-                    // PR-17: dynamic TalkBack labels that include the contact
+                    // dynamic TalkBack labels that include the contact
                     // name so reading down the action row is intelligible.
-                    // PR-20: pulled the format strings into strings.xml so
+                    // pulled the format strings into strings.xml so
                     // they translate as a unit.
                     // Note: `R.string` is a Kotlin class, not an object, so it
                     // cannot be aliased to a `val`. Reference resources via
@@ -134,7 +134,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         requireContext().toast(getString(com.showerideas.aura.R.string.contact_copied))
                     }
                     binding.btnExport.setOnClickListener {
-                        // PR-07: export this contact as a .vcf via FileProvider.
+                        // export this contact as a .vcf via FileProvider.
                         requireContext().shareVCard(
                             contact.toVCard(),
                             contact.displayName.ifBlank { "contact" }
@@ -145,16 +145,16 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         dismiss()
                     }
 
-                    // PR-14: block-this-device action. Guarded by a
+                    // block-this-device action. Guarded by a
                     // confirmation dialog because it's irreversible from
-                    // here — unblocking lives in Settings (PR-19).
+                    // here — unblocking lives in Settings.
                     binding.btnBlock.setOnClickListener {
                         com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                             .setTitle(com.showerideas.aura.R.string.contact_block_dialog_title)
                             .setMessage(com.showerideas.aura.R.string.contact_block_dialog_message)
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton(com.showerideas.aura.R.string.contact_block_dialog_confirm) { _, _ ->
-                                // FIX-5: pass identityKeyHash so the block keys on
+                                // pass identityKeyHash so the block keys on
                                 // stable identity, not the ephemeral endpoint ID.
                                 viewModel.blockEndpoint(
                                     contact.sourceEndpointId,
@@ -166,7 +166,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                             .show()
                     }
 
-                    // PR-12: favourite toggle. Re-observing viewModel.contact
+                    // favourite toggle. Re-observing viewModel.contact
                     // is handled by this same collector — toggleFavorite
                     // pushes the updated copy back into _contact so the icon
                     // refreshes on the next emission without dismissing.
@@ -178,7 +178,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                         viewModel.toggleFavorite(contact)
                     }
 
-                    // PR-12: inline notes. Pre-populate on every contact load
+                    // inline notes. Pre-populate on every contact load
                     // (incl. after toggleFavorite which refreshes _contact)
                     // but don't reattach the TextWatcher every emission —
                     // we attach it once below.
@@ -193,7 +193,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
             }
         }
 
-        // PR-12: surface the Save-note button only when the text differs from
+        // surface the Save-note button only when the text differs from
         // the persisted value. Attached once so we don't stack watchers on
         // every emission of viewModel.contact.
         binding.etNotes.addTextChangedListener(object : TextWatcher {

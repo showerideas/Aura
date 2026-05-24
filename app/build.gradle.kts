@@ -21,10 +21,18 @@ android {
         applicationId = "com.showerideas.aura"
         minSdk = 26           // BLE + Nearby Connections baseline
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // QR relay base URL. Set RELAY_BASE_URL in your environment or CI secrets.
+        // Must be HTTPS (network_security_config.xml blocks cleartext).
+        // For a zero-ops relay, point this at a Firebase Realtime Database URL —
+        // see docs/qr-relay-setup.md for setup instructions.
+        val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
+            ?: "https://relay.example.com"
+        buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
@@ -463,7 +471,7 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
                 value = "COVEREDRATIO"
                 // Prompt-10: 40% branch coverage floor.
                 // Raise in 5-point increments: 40 → 45 → 50 → ... target 70%.
-                minimum = "0.40".toBigDecimal()
+                minimum = "0.45".toBigDecimal()
             }
         }
     }

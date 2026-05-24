@@ -34,7 +34,7 @@ class ContactRepository @Inject constructor(
 
     suspend fun count(): Int = contactDao.count()
 
-    /** PR-10: locate the most recently-saved contact for an endpoint. */
+    /** locate the most recently-saved contact for an endpoint. */
     suspend fun findLatestByEndpoint(endpointId: String) =
         contactDao.findLatestByEndpoint(endpointId)
 

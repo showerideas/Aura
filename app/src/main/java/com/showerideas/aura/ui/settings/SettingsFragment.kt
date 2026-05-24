@@ -29,11 +29,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * PR-19: top-level Settings screen. Surfaces:
- *  - Auth method radio group (gesture / biometric — PR-16).
+ * top-level Settings screen. Surfaces:
+ *  - Auth method radio group (gesture / biometric — ).
  *  - Background-activation switch (drives [VolumeButtonListenerService]).
- *  - Prompt-2: reliability warning banner + "Test triple-press now" row.
- *  - Data shortcuts: blocked devices (PR-14), clear gesture, clear all contacts.
+ *  - reliability warning banner + "Test triple-press now" row.
+ *  - Data shortcuts: blocked devices, clear gesture, clear all contacts.
  *  - About: version + privacy policy link.
  */
 @AndroidEntryPoint
@@ -45,7 +45,7 @@ class SettingsFragment : Fragment() {
     private val viewModel: SettingsViewModel by viewModels()
 
     /**
-     * Prompt-2: ephemeral broadcast receiver registered during the 3-second
+     * ephemeral broadcast receiver registered during the 3-second
      * "Test triple-press now" window. Unregistered immediately on receipt or
      * when the window expires to avoid leaking a receiver.
      */
@@ -101,7 +101,7 @@ class SettingsFragment : Fragment() {
                     if (binding.switchBgActivation.isChecked != enabled) {
                         binding.switchBgActivation.isChecked = enabled
                     }
-                    // Prompt-2: show / hide the reliability warning and test button
+                    // show / hide the reliability warning and test button
                     // so users understand the OEM-skin limitation whenever the
                     // feature is enabled.
                     val warningVisibility = if (enabled) View.VISIBLE else View.GONE
@@ -119,7 +119,7 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        // Prompt-2: "Test triple-press now" — open a 3-second window and
+        // "Test triple-press now" — open a 3-second window and
         // register a one-shot receiver. Toast success/fail, then clean up.
         binding.rowTestVolumePress.setOnClickListener {
             startVolumeWakeTest()
@@ -127,7 +127,7 @@ class SettingsFragment : Fragment() {
     }
 
     /**
-     * Prompt-2: Opens a 3-second window during which the user triple-presses
+     * Opens a 3-second window during which the user triple-presses
      * the volume-down button. A [BroadcastReceiver] listens for
      * [VolumeButtonListenerService.ACTION_AURA_ACTIVATE]. On receipt a success
      * Toast is shown. If 3 s elapses without a broadcast, a failure Toast is shown.
@@ -229,7 +229,7 @@ class SettingsFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        // Prompt-2: always clean up the test receiver when the fragment tears down
+        // always clean up the test receiver when the fragment tears down
         volumeTestReceiver?.let {
             try { requireContext().unregisterReceiver(it) } catch (_: Exception) {}
         }

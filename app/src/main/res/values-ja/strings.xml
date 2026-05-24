@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">スキャンをキャンセルしました。</string>
     <string name="qr_invalid">これは有効なAURAペアリングコードではありません。</string>
     <string name="qr_expired">このペアリングコードは期限切れです。相手に更新してもらってください。</string>
-    <string name="qr_pairing_ok">%1$s と鍵を交換しました — BLE または NFC で交換を完了してください。</string>
+    <string name="qr_pairing_ok">連絡先を保存しました: %1$s</string>
+    <string name="qr_relay_timeout">相手の端末が時間内に応答しませんでした。もう一度お試しください。</string>
+    <string name="qr_sas_mismatch_abort">セキュリティコードが一致しません — 交換を中止しました。連絡先は保存されていません。</string>
     <string name="home_room_mode">ルームモード</string>
     <string name="room_mode_host">ルームをホスト</string>
     <string name="room_mode_guest">ルームに参加</string>
@@ -197,7 +199,6 @@
     <string name="onboarding_email_invalid">有効なメールアドレスを入力してください。</string>
     <string name="perm_label_camera">カメラ</string>
     <string name="perm_reason_camera">安全な交換認証のために手のジェスチャーを読み取るため。</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">プロフィールを保存</string>
     <string name="profile_fields_to_share_header">共有するフィールド</string>
     <string name="profile_gesture_status_step2">ステップ1保存済み — 次のジェスチャーを実行してください</string>
@@ -207,7 +208,7 @@
     <string name="profile_share_phone">電話</string>
     <string name="profile_share_title">役職 / 役割</string>
     <string name="profile_share_website">ウェブサイト</string>
-    <string name="qr_unencrypted_warning">QRフォールバック: 公開鍵交換のみ。プロフィールは送信されません — 完全なエンドツーエンド暗号化にはBLEまたはNFCを使用してください。</string>
+    <string name="qr_unencrypted_warning">プロフィールは暗号化されたリレー経由でエンドツーエンド交換されます。両方の端末で互いのQRをスキャンしてください。</string>
     <string name="sas_dialog_confirm">一致 ✓</string>
     <string name="sas_dialog_message">あなたと連絡先は同じ6桁のコードが表示されるはずです。\n\nあなたのコード: %1$s\n\n連絡先にコードを声に出して読むよう頼んでください。コードが一致したら\'一致\'をタップしてください。</string>
     <string name="sas_dialog_mismatch">不一致 — 中止</string>

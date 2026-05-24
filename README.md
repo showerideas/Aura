@@ -4,7 +4,7 @@
 
 ### Gesture-authenticated offline contact exchange for Android
 
-*Two phones. One gesture. Zero servers.*
+*Two phones. One gesture. Local-first.*
 
 [![CI](https://github.com/showerideas/Aura/actions/workflows/ci.yml/badge.svg)](https://github.com/showerideas/Aura/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/showerideas/Aura?color=6E56CF&label=release)](https://github.com/showerideas/Aura/releases/latest)
@@ -13,7 +13,7 @@
 [![Min SDK](https://img.shields.io/badge/min%20SDK-26%20%E2%80%A2%20Android%208.0-3DDC84?logo=android&logoColor=white)](https://developer.android.com/about/versions/oreo)
 [![Target SDK](https://img.shields.io/badge/target%20SDK-35%20%E2%80%A2%20Android%2015-3DDC84?logo=android&logoColor=white)](https://developer.android.com/about/versions/15)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Zero network](https://img.shields.io/badge/network-zero%20outbound-1f1f1f)](docs/SECURITY.md)
+[![Local-first](https://img.shields.io/badge/network-local--first-1f1f1f)](docs/SECURITY.md)
 
 </div>
 
@@ -23,7 +23,7 @@
 
 **AURA** lets two people swap contact cards face-to-face — **no internet, no QR scan, no NFC tap required**. You set up your profile once, record a personal unlock gesture (or bind it to your fingerprint), and from then on a single motion is enough to push your details to the phone in front of you. The exchange flies over a direct Bluetooth-LE / Wi-Fi-P2P link encrypted end-to-end with ECDH + AES-256-GCM.
 
-> AURA has **no backend**. There is nothing to sign up for, nothing to sync, and nothing for a server operator to leak — because there is no server operator.
+> **BLE/Wi-Fi-P2P exchange is fully offline** — no account, no cloud sync, nothing for a server to leak. The optional QR relay path uses a short-lived relay slot (HTTPS, AES-256-GCM ciphertext only) for environments where direct radio contact is unavailable; the relay never sees plaintext.
 
 <div align="center">
 
@@ -67,7 +67,7 @@
 | Replay-counter window | Room mode (1 host : N) | Settings + Blocked Devices UI |
 | Endpoint blocklist | Avatar streamed inline | Localisation scaffolding |
 | Device-identity challenge | vCard / Contacts export | Room v1 → v2 migrations |
-| No PII ever logged | Favourites + private notes | 97 unit + 21 instrumentation tests |
+| No PII ever logged | Favourites + private notes | 184 unit + 51 instrumentation tests |
 
 ---
 
@@ -210,7 +210,7 @@ More detail (package map, dependency direction rules, threading) in [`docs/ARCHI
 | Preferences | DataStore + `EncryptedSharedPreferences` |
 | Build | Gradle 8.4 (Kotlin DSL) + Version Catalogs |
 | Min / Target SDK | **26** / **35** |
-| CI | GitHub Actions — unit tests + JaCoCo + Lint + `assembleRelease` + APK size / INTERNET permission / MediaPipe class checks |
+| CI | GitHub Actions — unit tests + JaCoCo + Lint + `assembleRelease` + APK size gate + MediaPipe class survival check |
 
 ---
 
@@ -235,7 +235,7 @@ Each exchange opens a **fresh ECDH key pair** (never reused), derives a 256-bit 
 ## 🗺 Roadmap
 
 - [x] **v1.0.0** — gesture gate (MediaPipe), ECDH+HKDF, room exchange, QR fallback, blocklist, replay protection (ts+nonce), biometric, accessibility, settings, R8-shrunk release APK
-- [x] **v1.1.0** — 7 translated `values-xx/` bundles (HI, ES, FR, DE, JA, KO, ZH-CN) — 80% coverage, English fallback for remainder
+- [x] **v1.1.0** — QR relay (encrypted profile POST/GET via HTTPS relay, AES-256-GCM); 7 translated `values-xx/` bundles (HI, ES, FR, DE, JA, KO, ZH-CN) — 100% key coverage enforced by CI; 184 unit + 51 instrumented tests
 - [ ] **v1.2.0** — SAS first-meet PIN dialog UI + Espresso tests on a CI emulator runner
 - [ ] **v1.3.0** — 100% translation coverage + re-enable MissingTranslation lint; signed Play Store build + Play Integrity attestation
 - [ ] **v2.0.0** — cross-platform "AURA Lite" iOS receiver (read-only via QR)

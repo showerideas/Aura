@@ -51,7 +51,7 @@ The session is encrypted end-to-end by Google's Nearby Connections layer (ECDH k
 | `NEARBY_WIFI_DEVICES` | Wi-Fi P2P transport fallback for Nearby Connections. |
 | `CAMERA` | QR-code fallback when BLE/Wi-Fi is unavailable. The camera is only opened on the QR screen. |
 | `READ_CONTACTS`, `WRITE_CONTACTS` | Importing/exporting contacts to your system address book, **only** when you explicitly tap "Add to phone contacts" or perform a vCard export. |
-| `USE_BIOMETRIC` | Optional alternative to the gesture unlock (PR-16). |
+| `USE_BIOMETRIC` | Optional alternative to the gesture unlock. |
 | `POST_NOTIFICATIONS` | Foreground-service status during an active exchange. |
 
 None of these permissions are used for any purpose other than the one listed.

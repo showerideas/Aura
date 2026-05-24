@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 object Migrations {
 
     /**
-     * PR-14: add the `blocked_endpoints` table. Schema mirrors the
+     * add the `blocked_endpoints` table. Schema mirrors the
      * [com.showerideas.aura.model.BlockedEndpoint] entity exactly so the
      * post-migration database is bit-identical to a fresh v2 install.
      */
@@ -40,7 +40,7 @@ object Migrations {
     }
 
     /**
-     * FIX-2: add the `known_peers` table for the persisted TOFU endpoint-identity
+     * add the `known_peers` table for the persisted TOFU endpoint-identity
      * registry. Schema mirrors [com.showerideas.aura.model.KnownPeer] exactly.
      */
     val MIGRATION_2_3: Migration = object : Migration(2, 3) {
@@ -59,7 +59,7 @@ object Migrations {
     }
 
     /**
-     * FIX-5: add stable identity-key hash column to both `blocked_endpoints`
+     * add stable identity-key hash column to both `blocked_endpoints`
      * and `contacts`. Both columns are nullable (DEFAULT NULL) so existing
      * rows are unaffected and no backfill is required.
      */

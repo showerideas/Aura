@@ -128,7 +128,7 @@ object CryptoUtils {
      * Used to sign challenge tokens during peer authentication.
      */
     // -------------------------------------------------------------------------
-    // ECDSA challenge / response (PR-13)
+    // ECDSA challenge / response
     //
     // The device identity key returned by [getOrCreateDeviceIdentityKey] is
     // long-lived. We sign random per-session challenges with it so the peer
@@ -164,7 +164,7 @@ object CryptoUtils {
     }
 
     /**
-     * FIX-5: stable, device-agnostic fingerprint of a peer's identity public key.
+     * stable, device-agnostic fingerprint of a peer's identity public key.
      *
      * SHA-256 over the X.509-encoded key bytes, Base64-encoded. Used as the
      * blocklist key instead of the ephemeral Nearby endpoint ID so that a

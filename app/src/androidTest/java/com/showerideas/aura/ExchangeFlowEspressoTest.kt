@@ -16,7 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * PR-21: end-to-end nav-graph smoke test exercising the activation flow.
+ * end-to-end nav-graph smoke test exercising the activation flow.
  *
  *  - Launch [MainActivity].
  *  - Assert the home Activate button is on screen.

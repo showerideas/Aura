@@ -33,7 +33,7 @@ class ContactDetailViewModel @Inject constructor(
     }
 
     /**
-     * PR-12: flip the favourite flag and refresh the observed contact so the
+     * flip the favourite flag and refresh the observed contact so the
      * bottom sheet's star button repaints immediately.
      */
     fun toggleFavorite(contact: Contact) {
@@ -45,7 +45,7 @@ class ContactDetailViewModel @Inject constructor(
     }
 
     /**
-     * PR-12: persist inline notes.
+     * persist inline notes.
      */
     fun saveNote(contact: Contact, note: String) {
         viewModelScope.launch {
@@ -56,13 +56,13 @@ class ContactDetailViewModel @Inject constructor(
     }
 
     /**
-     * FIX-5: block this contact's device using stable identity key hash so
+     * block this contact's device using stable identity key hash so
      * the block survives reconnects with a fresh Nearby endpoint ID.
      * Falls back to endpoint-ID-only block when hash is unavailable (e.g.
-     * legacy contacts saved before FIX-5 populated the field).
+     * legacy contacts saved before  populated the field).
      *
      * No-op when both endpointId and identityKeyHash are absent (should not
-     * happen for contacts saved after PR-13).
+     * happen for contacts saved after ).
      */
     fun blockEndpoint(endpointId: String, identityKeyHash: String?, note: String = "") {
         if (endpointId.isBlank() && identityKeyHash == null) return

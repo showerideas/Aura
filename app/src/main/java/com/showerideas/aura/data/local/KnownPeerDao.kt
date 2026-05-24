@@ -7,7 +7,7 @@ import androidx.room.Query
 import com.showerideas.aura.model.KnownPeer
 
 /**
- * FIX-2: DAO for the [KnownPeer] TOFU registry.
+ * DAO for the [KnownPeer] TOFU registry.
  *
  * All operations are suspend functions so callers always run them on an
  * appropriate coroutine context (never the main thread).

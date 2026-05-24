@@ -1,6 +1,6 @@
 # Data model
 
-> Everything that survives a process restart lives in **one Room database** (`AppDatabase`, currently at schema version `2`), plus a small amount of preference data in `DataStore` and `EncryptedSharedPreferences`.
+> Everything that survives a process restart lives in **one Room database** (`AppDatabase`, currently at schema version `5`), plus a small amount of preference data in `DataStore` and `EncryptedSharedPreferences`.
 
 ---
 
@@ -41,7 +41,7 @@ erDiagram
     }
 
     Contact {
-        long id PK
+        string id PK
         string displayName
         string phone
         string email
@@ -49,22 +49,42 @@ erDiagram
         string title
         string website
         string bio
-        bytes avatar
-        long exchangedAt
-        string peerIdPubFingerprint "SHA-256(idPub) hex"
-        long lastSeenCounter "PR-15 replay window"
-        boolean favorite "PR-12"
-        string note "PR-12, user-only"
+        string avatarUri
+        string sourceEndpointId
+        int rssiAtExchange
+        long receivedAt
+        boolean isFavorite
+        string notes
+        string identityKeyHash "nullable, SHA-256(idPub) hex — added v4"
     }
 
     BlockedEndpoint {
-        string idPubFingerprint PK "SHA-256(idPub) hex"
+        string endpointId PK
         long blockedAt
-        string displayName "snapshot at block time"
+        string note
+        string identityKeyHash "nullable — added v4"
+    }
+
+    KnownPeer {
+        string endpointId PK
+        string identityPublicKeyBase64 "TOFU registry entry"
+        long firstSeenAt
+        long lastSeenAt
+    }
+
+    ExchangeAuditEntry {
+        string id PK
+        long timestampMs
+        string peerIdentityKeyHash "nullable, no plaintext PII"
+        string direction "SENT / RECEIVED / BOTH"
+        string outcome "SUCCESS / FAILED / BLOCKED / SPOOF / TIMEOUT"
+        string errorCode "nullable"
+        string channel "NEARBY / NFC / QR / ROOM_HOST / ROOM_GUEST"
     }
 
     Profile ||--o{ Contact : "exchanges with"
     Contact ||--o| BlockedEndpoint : "may be blocked"
+    Contact ||--o| KnownPeer : "identity tracked by"
 ```
 
 > The `Profile` table is intentionally a singleton — there is exactly one *me* per install. The DAO upserts on `id = 0`.
@@ -73,12 +93,15 @@ erDiagram
 
 ## 2. Schema versions
 
-| Version | Introduced in | Tables | Notes |
-|---|---|---|---|
-| `1` | initial scaffold | `Contact`, `Profile` | Schema file: `app/schemas/com.showerideas.aura.data.local.AppDatabase/1.json` |
-| `2` | PR-14 endpoint blocklist | `Contact`, `Profile`, `BlockedEndpoint` | Migration `MIGRATION_1_2` adds the new table without touching existing rows. Schema file: `app/schemas/com.showerideas.aura.data.local.AppDatabase/2.json` |
+| Version | Change | Migration |
+|---|---|---|
+| `1` | Initial scaffold — `contacts`, `profiles` | (fresh install baseline) |
+| `2` | Add `blocked_endpoints` table | `MIGRATION_1_2` |
+| `3` | Add `known_peers` table (TOFU endpoint-identity registry) | `MIGRATION_2_3` |
+| `4` | Add `identityKeyHash TEXT` column to `blocked_endpoints` and `contacts` | `MIGRATION_3_4` |
+| `5` | Add `exchange_audit_log` table (privacy-preserving exchange history, no PII) | `MIGRATION_4_5` |
 
-The migration is exercised at instrumentation-test time in `MigrationTest.kt` against the on-disk schema JSON; see [`features/04-room-migrations.md`](features/04-room-migrations.md).
+Schema JSON exports live under `app/schemas/com.showerideas.aura.data.local.AppDatabase/<version>.json` and are verified by `MigrationTest.kt` at instrumentation-test time.
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
@@ -92,10 +115,12 @@ The migration is exercised at instrumentation-test time in `MigrationTest.kt` ag
   'tertiaryColor':'#FAFAF9',
   'clusterBkg':'#F8FAFC',
   'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
+},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12}}}%%
 flowchart LR
-    V1[(v1<br/>Contact, Profile)] -- MIGRATION_1_2 --> V2[(v2<br/>+ BlockedEndpoint)]
-    V2 -. "future PRs" .-> V3[(...)]
+    V1[(v1\nContact\nProfile)] -- MIGRATION_1_2 --> V2[(v2\n+ BlockedEndpoint)]
+    V2 -- MIGRATION_2_3 --> V3[(v3\n+ KnownPeer)]
+    V3 -- MIGRATION_3_4 --> V4[(v4\n+ identityKeyHash cols)]
+    V4 -- MIGRATION_4_5 --> V5[(v5\n+ ExchangeAuditEntry)]
 ```
 
 ---
@@ -104,11 +129,13 @@ flowchart LR
 
 | DAO | Public methods | Returns |
 |---|---|---|
-| `ContactDao` | `insertContact`, `updateContact`, `deleteContact`, `getAll`, `search(query)`, `getById`, `setFavorite`, `setNote`, `updateLastSeenCounter` | `Flow<List<Contact>>` for streaming reads, suspending functions for writes |
+| `ContactDao` | `insertContact`, `updateContact`, `deleteContact`, `getAll`, `search(query)`, `getById`, `setFavorite`, `setNote` | `Flow<List<Contact>>` for streaming reads, suspending functions for writes |
 | `ProfileDao` | `getProfile`, `upsertProfile` | `Flow<Profile?>` / suspend |
 | `BlockedEndpointDao` | `insert`, `delete`, `isBlocked`, `getAll` | `Flow<List<BlockedEndpoint>>` / suspend / `Boolean` |
+| `KnownPeerDao` | `upsert`, `findByEndpointId`, `deleteByEndpointId` | suspend / nullable entity |
+| `ExchangeAuditDao` | `insert`, `getAll`, `getRecent(limit)` | `Flow<List<ExchangeAuditEntry>>` / suspend |
 
-The repositories (`ContactRepository`, `ProfileRepository`, `BlocklistRepository`) own the suspending I/O dispatcher (`Dispatchers.IO`) and expose the `Flow`s to ViewModels.
+The repositories (`ContactRepository`, `ProfileRepository`, `BlocklistRepository`, `KnownPeerRepository`, `ExchangeAuditRepository`) own the suspending I/O dispatcher (`Dispatchers.IO`) and expose `Flow`s to ViewModels.
 
 ---
 
@@ -120,6 +147,7 @@ The repositories (`ContactRepository`, `ProfileRepository`, `BlocklistRepository
 | Identity key | Android Keystore | Non-extractable hardware-backed material — Room would force us to load it into memory. |
 | Auth-method preference (gesture vs biometric) | DataStore (`AuthPreferences`) | Reactive `Flow<>` updates without a full Room dependency. |
 | Onboarding-completed flag | DataStore (`OnboardingPreferences`) | Single boolean, doesn't earn its own table. |
+| Replay nonce cache | In-memory `ConcurrentHashSet` in `PayloadValidator` | Ephemeral per-process; purged every 5 min. Not persisted — replays across restarts are caught by the `_ts` recency window. |
 
 ---
 

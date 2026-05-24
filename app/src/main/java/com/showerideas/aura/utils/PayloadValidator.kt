@@ -5,7 +5,7 @@ import java.util.Collections
 import java.util.UUID
 
 /**
- * PR-15: replay-attack protection for exchanged profile payloads.
+ * replay-attack protection for exchanged profile payloads.
  *
  * A captured ciphertext can be re-played in a future session by anyone who
  * has eavesdropped on the BLE / Wi-Fi P2P channel. AES-GCM stops the
@@ -48,7 +48,7 @@ object PayloadValidator {
     private const val MAX_NONCE_CACHE_SIZE = 1_000
 
     /**
-     * Prompt-6 / Issue-3: per-field maximum character lengths.
+     * per-field maximum character lengths.
      *
      * A crafted peer can complete the challenge/response (or in a first-meet
      * scenario substitute their own identity key via TOFU) and then send a
@@ -105,7 +105,7 @@ object PayloadValidator {
             Timber.w("Nonce cache exceeded $MAX_NONCE_CACHE_SIZE entries — force-purging (flood attack?)")
             purgeNonces()
         }
-        // Prompt-6 / Issue-3: cap individual string fields to prevent a
+        // cap individual string fields to prevent a
         // crafted peer from allocating unbounded heap via long field values.
         for (field in CAPPED_FIELDS) {
             val value = map[field] ?: continue

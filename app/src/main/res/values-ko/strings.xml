@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">스캔이 취소되었습니다.</string>
     <string name="qr_invalid">유효한 AURA 페어링 코드가 아닙니다.</string>
     <string name="qr_expired">페어링 코드가 만료되었습니다. 상대방에게 갱신을 요청하세요.</string>
-    <string name="qr_pairing_ok">%1$s와(과) 키 교환 완료 — BLE 또는 NFC로 교환을 마무리하세요.</string>
+    <string name="qr_pairing_ok">연락처 저장됨: %1$s</string>
+    <string name="qr_relay_timeout">상대방 기기가 시간 내에 응답하지 않았습니다. 다시 시도하세요.</string>
+    <string name="qr_sas_mismatch_abort">보안 코드가 일치하지 않습니다 — 교환이 중단되었습니다. 연락처가 저장되지 않았습니다.</string>
     <string name="home_room_mode">룸 모드</string>
     <string name="room_mode_host">룸 호스트</string>
     <string name="room_mode_guest">룸 참가</string>
@@ -197,7 +199,6 @@
     <string name="onboarding_email_invalid">유효한 이메일 주소를 입력해주세요.</string>
     <string name="perm_label_camera">카메라</string>
     <string name="perm_reason_camera">안전한 교환 인증을 위해 손 제스처를 읽기 위해.</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">프로필 저장</string>
     <string name="profile_fields_to_share_header">공유할 필드</string>
     <string name="profile_gesture_status_step2">1단계 저장됨 — 이제 두 번째 제스처를 수행하세요</string>
@@ -207,7 +208,7 @@
     <string name="profile_share_phone">전화</string>
     <string name="profile_share_title">직책 / 역할</string>
     <string name="profile_share_website">웹사이트</string>
-    <string name="qr_unencrypted_warning">QR 대체: 공개 키 교환만 가능. 프로필이 전송되지 않습니다 — 완전한 종단 간 암호화를 위해 BLE 또는 NFC를 사용하세요.</string>
+    <string name="qr_unencrypted_warning">프로필은 암호화된 릴레이를 통해 종단 간 교환됩니다. 두 기기 모두 서로의 QR을 스캔해야 합니다.</string>
     <string name="sas_dialog_confirm">일치 ✓</string>
     <string name="sas_dialog_message">당신과 연락처는 동일한 6자리 코드를 보아야 합니다.\n\n내 코드: %1$s\n\n연락처에게 코드를 소리 내어 읽도록 요청하세요. 코드가 일치하면 \'일치\'를 탭하세요.</string>
     <string name="sas_dialog_mismatch">불일치 — 중단</string>

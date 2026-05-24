@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">Escaneo cancelado.</string>
     <string name="qr_invalid">Ese código no es un payload válido de vinculación AURA.</string>
     <string name="qr_expired">Ese código de vinculación ha caducado. Pide a la otra persona que lo actualice.</string>
-    <string name="qr_pairing_ok">Clave intercambiada con %1$s — usa BLE o NFC para completar el intercambio.</string>
+    <string name="qr_pairing_ok">Contacto guardado: %1$s</string>
+    <string name="qr_relay_timeout">El otro teléfono no respondió a tiempo. Inténtalo de nuevo.</string>
+    <string name="qr_sas_mismatch_abort">El código de seguridad no coincide — intercambio cancelado. No se guardó ningún contacto.</string>
     <string name="home_room_mode">Modo sala</string>
     <string name="room_mode_host">Alojar una sala</string>
     <string name="room_mode_guest">Unirse a una sala</string>
@@ -198,7 +200,6 @@
     <string name="onboarding_email_invalid">Por favor introduce una dirección de correo válida.</string>
     <string name="perm_label_camera">Cámara</string>
     <string name="perm_reason_camera">Para leer tu gesto de mano para la autenticación de intercambio seguro.</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">Guardar perfil</string>
     <string name="profile_fields_to_share_header">Campos a compartir</string>
     <string name="profile_gesture_status_step2">Paso 1 guardado — ahora realiza tu segundo gesto</string>
@@ -208,7 +209,7 @@
     <string name="profile_share_phone">Teléfono</string>
     <string name="profile_share_title">Título / Función</string>
     <string name="profile_share_website">Sitio web</string>
-    <string name="qr_unencrypted_warning">Alternativa QR: solo intercambio de clave pública. El perfil no se transmite — usa BLE o NFC para cifrado completo de extremo a extremo.</string>
+    <string name="qr_unencrypted_warning">Perfiles intercambiados de extremo a extremo mediante relay cifrado. Ambos teléfonos deben escanear mutuamente el QR.</string>
     <string name="sas_dialog_confirm">Coincide ✓</string>
     <string name="sas_dialog_message">Tú y tu contacto deberían ver el mismo código de 6 dígitos.\n\nTu código: %1$s\n\nPide a tu contacto que lea su código en voz alta. Si coinciden, pulsa \'Coincide\'.</string>
     <string name="sas_dialog_mismatch">No coincide — cancelar</string>

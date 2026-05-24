@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">Scan abgebrochen.</string>
     <string name="qr_invalid">Dies ist kein gültiger AURA-Kopplungsinhalt.</string>
     <string name="qr_expired">Dieser Kopplungscode ist abgelaufen. Bitten Sie die andere Person, ihn zu aktualisieren.</string>
-    <string name="qr_pairing_ok">Schlüssel mit %1$s ausgetauscht — BLE oder NFC zum Abschluss verwenden.</string>
+    <string name="qr_pairing_ok">Kontakt gespeichert: %1$s</string>
+    <string name="qr_relay_timeout">Das andere Gerät hat nicht rechtzeitig geantwortet. Bitte erneut versuchen.</string>
+    <string name="qr_sas_mismatch_abort">Sicherheitscode stimmt nicht überein – Austausch abgebrochen. Kein Kontakt gespeichert.</string>
     <string name="home_room_mode">Raum-Modus</string>
     <string name="room_mode_host">Raum hosten</string>
     <string name="room_mode_guest">Raum beitreten</string>
@@ -198,7 +200,6 @@
     <string name="onboarding_email_invalid">Bitte gib eine gültige E-Mail-Adresse ein.</string>
     <string name="perm_label_camera">Kamera</string>
     <string name="perm_reason_camera">Um Ihre Handgeste für die sichere Austaushauthentifizierung zu lesen.</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">Profil speichern</string>
     <string name="profile_fields_to_share_header">Felder zum Teilen</string>
     <string name="profile_gesture_status_step2">Schritt 1 gespeichert – Führen Sie jetzt Ihre zweite Geste aus</string>
@@ -208,7 +209,7 @@
     <string name="profile_share_phone">Telefon</string>
     <string name="profile_share_title">Titel / Rolle</string>
     <string name="profile_share_website">Website</string>
-    <string name="qr_unencrypted_warning">QR-Rückfall: Nur Öffentlicher-Schlüssel-Austausch. Profil wird nicht übertragen – Nutzen Sie BLE oder NFC für vollständige Ende-zu-Ende-Verschlüsselung.</string>
+    <string name="qr_unencrypted_warning">Profile werden Ende-zu-Ende verschlüsselt über ein Relay ausgetauscht. Beide Geräte müssen gegenseitig den QR-Code scannen.</string>
     <string name="sas_dialog_confirm">Übereinstimmung ✓</string>
     <string name="sas_dialog_message">Sie und Ihr Kontakt sollten denselben 6-stelligen Code sehen.\n\nIhr Code: %1$s\n\nBitten Sie Ihren Kontakt, seinen Code laut vorzulesen. Wenn die Codes übereinstimmen, tippen Sie auf \'Übereinstimmung\'.</string>
     <string name="sas_dialog_mismatch">Keine Übereinstimmung — Abbrechen</string>

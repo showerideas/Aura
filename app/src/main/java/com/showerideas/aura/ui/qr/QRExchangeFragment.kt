@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -20,21 +21,21 @@ import kotlinx.coroutines.launch
 
 /**
  * Fallback exchange path for environments where BLE / Wi-Fi P2P is blocked
- * (e.g. enterprise meeting rooms). Two phones can still bootstrap an ECDH
- * session by visually swapping QR codes:
+ * (e.g. enterprise meeting rooms). Two phones can bootstrap an ECDH session
+ * by visually swapping QR codes:
  *
  *  1. Each side generates an ephemeral ECDH keypair (owned by
- *     [QRExchangeViewModel] so it survives rotation — see FIX-D).
+ *     [QRExchangeViewModel] so it survives rotation).
  *  2. The local public key + a random endpoint UUID + a timestamp are
  *     encoded as JSON and rendered as a QR code.
- *  3. The "Scan their QR" button opens a ZXing scanner; the scanned JSON
- *     contains the peer's public key, from which a shared AES key is
- *     derived locally.
- *  4. The shared key would then be used with a cloud relay to swap
- *     encrypted profiles — that relay endpoint is intentionally stubbed
- *     here. The crypto path is real.
+ *  3. "Scan their QR" opens a ZXing scanner; the scanned JSON contains the
+ *     peer's public key, from which a shared AES key is derived locally.
+ *  4. Encrypted profiles are swapped via the configured HTTPS relay.
+ *  5. After decrypting the peer's profile a SAS (Short Authentication String)
+ *     dialog is shown. Both parties verbally confirm the 6-digit code matches
+ *     before the contact is saved -- protecting against relay-based MITM attacks.
  *
- * The QR payload self-expires after 60s, refreshed by the ViewModel.
+ * The QR payload self-expires after 60 s, refreshed by the ViewModel.
  */
 @AndroidEntryPoint
 class QRExchangeFragment : Fragment() {
@@ -44,12 +45,20 @@ class QRExchangeFragment : Fragment() {
 
     private val viewModel: QRExchangeViewModel by viewModels()
 
+    /**
+     * Guard against showing the SAS dialog twice if the fragment is recreated
+     * (config change) while [QRExchangeViewModel.PairingResult.AwaitingSasConfirmation]
+     * is still the active state. Reset on each new scan.
+     */
+    private var sasDialogShown = false
+
     private val scanLauncher = registerForActivityResult(ScanContract()) { result ->
         val contents = result.contents
         if (contents.isNullOrBlank()) {
             Toast.makeText(requireContext(), R.string.qr_scan_cancelled, Toast.LENGTH_SHORT).show()
             return@registerForActivityResult
         }
+        sasDialogShown = false   // fresh scan resets the dialog guard
         viewModel.onPeerScanned(contents)
     }
 
@@ -78,9 +87,7 @@ class QRExchangeFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.qrBitmap.collect { bitmap ->
-                        if (bitmap != null) {
-                            binding.ivQrCode.setImageBitmap(bitmap)
-                        }
+                        if (bitmap != null) binding.ivQrCode.setImageBitmap(bitmap)
                     }
                 }
                 launch {
@@ -95,26 +102,84 @@ class QRExchangeFragment : Fragment() {
                 }
                 launch {
                     viewModel.pairingResult.collect { result ->
-                        if (result == null) return@collect
-                        when (result) {
-                            is QRExchangeViewModel.PairingResult.Success ->
-                                Toast.makeText(
-                                    requireContext(),
-                                    getString(R.string.qr_pairing_ok, result.peerEndpoint.take(8)),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            is QRExchangeViewModel.PairingResult.Expired ->
-                                Toast.makeText(requireContext(), R.string.qr_expired, Toast.LENGTH_LONG).show()
-                            is QRExchangeViewModel.PairingResult.Invalid,
-                            is QRExchangeViewModel.PairingResult.MissingLocalKey,
-                            is QRExchangeViewModel.PairingResult.Error ->
-                                Toast.makeText(requireContext(), R.string.qr_invalid, Toast.LENGTH_LONG).show()
-                        }
-                        viewModel.consumePairingResult()
+                        handlePairingResult(result)
                     }
                 }
             }
         }
+    }
+
+    private fun handlePairingResult(result: QRExchangeViewModel.PairingResult?) {
+        if (result == null) return
+        when (result) {
+            is QRExchangeViewModel.PairingResult.AwaitingSasConfirmation -> {
+                // Do NOT call consumePairingResult -- hold this state until the user
+                // dismisses the dialog (confirm saves; mismatch discards + navigates away).
+                if (!sasDialogShown) {
+                    sasDialogShown = true
+                    showSasDialog(result.sasPin)
+                }
+            }
+            is QRExchangeViewModel.PairingResult.Success -> {
+                sasDialogShown = false
+                val name = result.contact.displayName
+                    .ifBlank { result.contact.sourceEndpointId.take(8) }
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.qr_pairing_ok, name),
+                    Toast.LENGTH_LONG
+                ).show()
+                viewModel.consumePairingResult()
+                findNavController().navigateUp()
+            }
+            is QRExchangeViewModel.PairingResult.RelayTimeout -> {
+                sasDialogShown = false
+                Toast.makeText(requireContext(), R.string.qr_relay_timeout, Toast.LENGTH_LONG).show()
+                viewModel.consumePairingResult()
+            }
+            is QRExchangeViewModel.PairingResult.Expired -> {
+                sasDialogShown = false
+                Toast.makeText(requireContext(), R.string.qr_expired, Toast.LENGTH_LONG).show()
+                viewModel.consumePairingResult()
+            }
+            is QRExchangeViewModel.PairingResult.Invalid,
+            is QRExchangeViewModel.PairingResult.MissingLocalKey -> {
+                sasDialogShown = false
+                Toast.makeText(requireContext(), R.string.qr_invalid, Toast.LENGTH_LONG).show()
+                viewModel.consumePairingResult()
+            }
+            is QRExchangeViewModel.PairingResult.Error -> {
+                sasDialogShown = false
+                val isMitmAbort = result.message.contains("MITM", ignoreCase = true) ||
+                    result.message.contains("mismatch", ignoreCase = true)
+                val msgRes = if (isMitmAbort) R.string.qr_sas_mismatch_abort else R.string.qr_invalid
+                Toast.makeText(requireContext(), msgRes, Toast.LENGTH_LONG).show()
+                viewModel.consumePairingResult()
+            }
+        }
+    }
+
+    /**
+     * Display the SAS (Short Authentication String) verification dialog.
+     *
+     * Both parties see the same 6-digit code derived from their ephemeral ECDH
+     * public keys. A verbal comparison catches a MITM who substituted a key at
+     * the relay layer. Confirming saves the contact to Room; reporting a mismatch
+     * discards the pending contact without persisting anything.
+     */
+    private fun showSasDialog(pin: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.sas_dialog_title))
+            .setMessage(getString(R.string.sas_dialog_message, pin))
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
+                viewModel.confirmSas()
+            }
+            .setNegativeButton(getString(R.string.sas_dialog_mismatch)) { _, _ ->
+                viewModel.abortSas()
+                viewModel.consumePairingResult()
+            }
+            .show()
     }
 
     override fun onDestroyView() {

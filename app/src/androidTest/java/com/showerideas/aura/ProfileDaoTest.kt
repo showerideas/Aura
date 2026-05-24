@@ -16,7 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * PR-21: in-memory Room tests for [ProfileDao]. The profile table is a single-row
+ * in-memory Room tests for [ProfileDao]. The profile table is a single-row
  * store (primary key is always "local_profile"), so the round-trip and update
  * semantics matter for the Settings + onboarding flows.
  *

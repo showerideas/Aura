@@ -111,7 +111,7 @@ class VolumeButtonListenerService : Service() {
                     android.media.session.MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
         )
 
-        // FIX-6: API 31+ routes media button events to sessions with an active
+        // API 31+ routes media button events to sessions with an active
         // PlaybackState rather than respecting FLAG_HANDLES_MEDIA_BUTTONS alone.
         // STATE_PAUSED makes us eligible without implying audio is playing.
         // Without this, triple-press silently stops working on Android 12+

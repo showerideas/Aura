@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * PR-18 / FIX-2: DAO tests for the persisted TOFU endpoint-identity registry.
+ * DAO tests for the persisted TOFU endpoint-identity registry.
  *
  * Uses an in-memory Room database so each test starts with a clean slate
  * without touching disk or requiring migrations.

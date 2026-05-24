@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">扫描已取消。</string>
     <string name="qr_invalid">这不是有效的 AURA 配对内容。</string>
     <string name="qr_expired">配对码已过期，请让对方刷新。</string>
-    <string name="qr_pairing_ok">已与 %1$s 完成密钥交换 — 使用 BLE 或 NFC 完成交换。</string>
+    <string name="qr_pairing_ok">联系人已保存：%1$s</string>
+    <string name="qr_relay_timeout">对方手机未能及时响应。请重试。</string>
+    <string name="qr_sas_mismatch_abort">安全码不匹配 — 交换已中止。未保存任何联系人。</string>
     <string name="home_room_mode">房间模式</string>
     <string name="room_mode_host">创建房间</string>
     <string name="room_mode_guest">加入房间</string>
@@ -197,7 +199,6 @@
     <string name="onboarding_email_invalid">请输入有效的电子邮件地址。</string>
     <string name="perm_label_camera">摄像头</string>
     <string name="perm_reason_camera">用于读取手势以进行安全交换认证。</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">保存个人资料</string>
     <string name="profile_fields_to_share_header">要共享的字段</string>
     <string name="profile_gesture_status_step2">步骤1已保存 — 现在请执行第二个手势</string>
@@ -207,7 +208,7 @@
     <string name="profile_share_phone">电话</string>
     <string name="profile_share_title">职称 / 角色</string>
     <string name="profile_share_website">网站</string>
-    <string name="qr_unencrypted_warning">QR 备用：仅公钥交换。配置文件不传输 — 使用 BLE 或 NFC 进行完整的端到端加密。</string>
+    <string name="qr_unencrypted_warning">个人资料通过加密中继进行端对端交换。两台手机必须互相扫描对方的 QR 码。</string>
     <string name="sas_dialog_confirm">匹配 ✓</string>
     <string name="sas_dialog_message">您和您的联系人应该看到相同的6位数代码。\n\n您的代码: %1$s\n\n请联系人大声读出其代码。如果代码匹配，请点击\'匹配\'。</string>
     <string name="sas_dialog_mismatch">不匹配 — 中止</string>

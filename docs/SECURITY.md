@@ -60,14 +60,14 @@ The actual implementation lives in [`CryptoUtils.kt`](../app/src/main/java/com/s
 | # | Threat | Defence |
 |---|---|---|
 | T1 | **Passive eavesdropping** on the BLE/Wi-Fi-P2P link | Profile is AES-256-GCM-encrypted with a per-session ECDH-derived key (HKDF-SHA256, domain-separated), *on top of* the encryption Nearby Connections already provides. |
-| T2 | **Active MITM** that forwards Nearby connection requests (known-peer case) | Identity challenge (PR-13): each side signs a 32-byte random nonce with its long-lived Keystore ECDSA key; the peer verifies the signature against the key stored in the TOFU registry. An attacker who does not hold the enrolled device's private key cannot produce a valid signature. **See §6 for the first-meet caveat.** |
-| T3 | **Replay** of a captured and re-delivered ciphertext | Every encrypted profile carries a `_ts` Unix-millisecond timestamp (rejected if outside a ±60-second clock-skew window) and a `_nonce` UUID (rejected if the nonce was already seen in the current session). The nonce cache is purged every 5 minutes to bound memory (PR-15). |
-| T4 | **Unwanted re-contact** by a peer you blocked | `BlockedEndpointDao` stores the SHA-256 of the peer's identity public key (not the ephemeral endpoint ID, which changes each session). On every new connection the identity-key hash is checked before accepting (PR-14). |
-| T5 | **Accidental exchange while phone is in pocket** | Gesture (cosine-similarity gate at 0.88) or biometric is required before the exchange service is started; volume-button triggers do not bypass it (PR-01). |
+| T2 | **Active MITM** that forwards Nearby connection requests (known-peer case) | Identity challenge: each side signs a 32-byte random nonce with its long-lived Keystore ECDSA key; the peer verifies the signature against the key stored in the TOFU registry. An attacker who does not hold the enrolled device's private key cannot produce a valid signature. **See §6 for the first-meet caveat.** |
+| T3 | **Replay** of a captured and re-delivered ciphertext | Every encrypted profile carries a `_ts` Unix-millisecond timestamp (rejected if outside a ±60-second clock-skew window) and a `_nonce` UUID (rejected if the nonce was already seen in the current session). The nonce cache is purged every 5 minutes to bound memory. |
+| T4 | **Unwanted re-contact** by a peer you blocked | `BlockedEndpointDao` stores the SHA-256 of the peer's identity public key (not the ephemeral endpoint ID, which changes each session). On every new connection the identity-key hash is checked before accepting. |
+| T5 | **Accidental exchange while phone is in pocket** | Gesture (cosine-similarity gate at 0.88) or biometric is required before the exchange service is started; volume-button triggers do not bypass it. |
 | T6 | **Gesture impersonation** | The cosine-similarity threshold (0.88) makes gesture auth an ergonomic gate — it prevents accidental exchanges, not determined attackers in range who can perform the same gesture class (~30–70% FAR for same-gesture cross-person pairs). The real security anchor is the long-lived Android Keystore ECDSA identity key. See [docs/GESTURE_AUTH.md §6](GESTURE_AUTH.md) for the quantified FAR analysis. |
 | T7 | **OS-level backup leakage** | `android:allowBackup="false"` + `dataExtractionRules` + `fullBackupContent` are set so Auto-Backup and Device-to-Device transfer never copy the Room DB or gesture EncryptedSharedPreferences. |
-| T8 | **Cleartext network egress** | `network_security_config` forbids cleartext for all domains; AURA never opens an HTTP(S) connection in source. CI enforces the absence of `INTERNET` permission via `aapt dump permissions` on every PR. |
-| T9 | **Heap exhaustion via crafted profile payload** | `PayloadValidator` enforces per-field length caps (500 chars for displayName/email/phone/note) and a pre-decryption size gate of 64 KB on the encrypted blob. An oversized payload is dropped without touching the heap further (Prompt-6). |
+| T8 | **Cleartext network egress** | `network_security_config` forbids cleartext for all domains. The only outbound HTTPS call is the optional QR relay path (`RelayClient.kt`) which uses HttpURLConnection over HTTPS exclusively — no plaintext profile data ever leaves the device unencrypted. `INTERNET` permission is intentionally declared and documented in the manifest. |
+| T9 | **Heap exhaustion via crafted profile payload** | `PayloadValidator` enforces per-field length caps (500 chars for displayName/email/phone/note) and a pre-decryption size gate of 64 KB on the encrypted blob. An oversized payload is dropped without touching the heap further (). |
 | T10 | **Reverse-engineering the release APK** | R8 + resource shrinking, `BuildConfig.ENABLE_LOGGING=false` on release, ProGuard rules keep only the public Nearby / Room / Hilt / MediaPipe entry points. |
 
 ---
@@ -91,7 +91,7 @@ AURA requests only what each Android version actually needs to scan and advertis
 - `BLUETOOTH_SCAN` is declared with **`neverForLocation`** so the platform does not surface a location prompt where avoidable.
 - `ACCESS_FINE_LOCATION` is still requested for API < 31 (legacy BLE), and lint forces the `COARSE` companion. We never read geo location — the [privacy policy](../PRIVACY_POLICY.md) is unambiguous about this.
 - `CAMERA` is `android:required="false"` so the app installs on cameraless devices; QR mode and gesture auth simply aren't offered there.
-- `INTERNET` is **not requested.** This is enforced at install-time by Android and verified in CI on every PR.
+- `INTERNET` is requested **only for the QR relay path.** The relay transmits only AES-256-GCM ciphertext; no plaintext profile data leaves the device over the network. Core BLE/Wi-Fi-P2P exchange paths remain fully offline. The manifest comment documents the rationale. All other exchange paths are unaffected.
 
 Full justification per permission lives in [`features/03-permission-rationale.md`](features/03-permission-rationale.md).
 
@@ -126,7 +126,7 @@ flowchart LR
 - `app/proguard-rules.pro` keeps the Nearby Connections, Hilt, Room, Gson, and MediaPipe reflection/JNI entry points.
 - The release signing block in `app/build.gradle.kts` is **env-var driven** so secrets never enter source control — CI leaves them blank intentionally to produce an unsigned validation APK; the Play publishing pipeline supplies the real keystore.
 - `network_security_config.xml`, `data_extraction_rules.xml`, and `backup_rules.xml` are committed under [`app/src/main/res/xml/`](../app/src/main/res/xml).
-- CI runs `check-no-internet` (aapt permissions) and `check-mediapipe-classes` (apkanalyzer) on every PR.
+- CI runs `check-mediapipe-classes` (apkanalyzer) and `check-apk-size` on every PR. The `check-no-internet` gate was removed when `INTERNET` was intentionally added for QR relay — the manifest comment documents the rationale.
 
 ---
 

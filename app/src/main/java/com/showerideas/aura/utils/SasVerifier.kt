@@ -4,7 +4,7 @@ import java.security.MessageDigest
 import java.security.PublicKey
 
 /**
- * Prompt-8: Short Authentication String (SAS) derivation for first-meet MITM protection.
+ * Short Authentication String (SAS) derivation for first-meet MITM protection.
  *
  * ## Problem
  * AURA's ECDSA challenge/response catches key-substitution attacks against *known* peers

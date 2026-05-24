@@ -87,7 +87,9 @@
     <string name="qr_scan_cancelled">स्कैन रद्द।</string>
     <string name="qr_invalid">यह एक मान्य AURA युग्मन कोड नहीं है।</string>
     <string name="qr_expired">यह युग्मन कोड समाप्त हो गया। दूसरे व्यक्ति से रिफ्रेश करने को कहें।</string>
-    <string name="qr_pairing_ok">कुंजी %1$s के साथ साझा हुई — विनिमय पूर्ण करने के लिए BLE या NFC का उपयोग करें।</string>
+    <string name="qr_pairing_ok">संपर्क सहेजा गया: %1$s</string>
+    <string name="qr_relay_timeout">दूसरे फ़ोन ने समय पर जवाब नहीं दिया। फिर से कोशिश करें।</string>
+    <string name="qr_sas_mismatch_abort">सुरक्षा कोड मेल नहीं खाता — एक्सचेंज रद्द। कोई संपर्क सहेजा नहीं गया।</string>
     <string name="home_room_mode">रूम मोड</string>
     <string name="room_mode_host">रूम होस्ट करें</string>
     <string name="room_mode_guest">रूम में शामिल हों</string>
@@ -198,7 +200,6 @@
     <string name="onboarding_email_invalid">कृपया एक वैध ईमेल पता दर्ज करें।</string>
     <string name="perm_label_camera">कैमरा</string>
     <string name="perm_reason_camera">सुरक्षित विनिमय प्रमाणीकरण के लिए आपके हाथ जेस्चर को पढ़ने के लिए।</string>
-    <string name="privacy_url">https://showerideas.app/aura/privacy</string>
     <string name="profile_btn_save_profile">प्रोफ़ाइल सहेजें</string>
     <string name="profile_fields_to_share_header">साझा करने योग्य फ़ील्ड</string>
     <string name="profile_gesture_status_step2">चरण 1 सहेजा गया — अब अपना दूसरा जेस्चर करें</string>
@@ -208,7 +209,7 @@
     <string name="profile_share_phone">फ़ोन</string>
     <string name="profile_share_title">पद / भूमिका</string>
     <string name="profile_share_website">वेबसाइट</string>
-    <string name="qr_unencrypted_warning">⚠ QR फ़ॉलबैक: केवल सार्वजनिक कुंजी विनिमय। प्रोफ़ाइल प्रसारित नहीं होती — पूर्ण एंड-टू-एंड एन्क्रिप्शन के लिए BLE या NFC का उपयोग करें।</string>
+    <string name="qr_unencrypted_warning">प्रोफ़ाइल एन्क्रिप्टेड रिले के ज़रिए एंड-टू-एंड एक्सचेंज होती है। दोनों फ़ोन को एक-दूसरे का QR स्कैन करना होगा।</string>
     <string name="sas_dialog_confirm">मेल खाता है ✓</string>
     <string name="sas_dialog_message">आप और आपका संपर्क एक ही 6-अंकीय कोड देखना चाहिए।\n\nआपका कोड: %1$s\n\nअपने संपर्क से उनका कोड ज़ोर से पढ़ने को कहें। यदि कोड मेल खाते हैं, तो \'मेल खाता है\' पर टैप करें।</string>
     <string name="sas_dialog_mismatch">मेल नहीं खाता — रद्द करें</string>
