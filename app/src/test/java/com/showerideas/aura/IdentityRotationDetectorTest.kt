@@ -6,7 +6,7 @@ import com.showerideas.aura.model.Contact
 import com.showerideas.aura.utils.IdentityRotationDetector
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 

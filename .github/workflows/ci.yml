@@ -26,6 +26,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Opt into Node.js 24 now to avoid the breaking change on 2026-06-02
+# (GitHub Actions removes Node.js 20 from runners on that date).
+# Remove this once all referenced actions (checkout, setup-java, cache,
+# upload-artifact, gradle/setup-gradle) ship native Node.js 24 support.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     name: Build & test
@@ -43,7 +50,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       # Prompt-5: Cache the MediaPipe gesture model so CI doesn't re-download
       # 8 MB on every run. Cache key is the expected SHA-256 of the model file
@@ -111,32 +118,60 @@ jobs:
       - name: Check MediaPipe classes survived R8
         run: |
           APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          CLASSES=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -rV | head -1)/apkanalyzer \
-            classes list "$APK")
-          if ! echo "$CLASSES" | grep -q "com/google/mediapipe/tasks/vision"; then
+          echo "Checking MediaPipe classes in: $APK"
+          # apkanalyzer moved from build-tools/<ver>/apkanalyzer to
+          # cmdline-tools/latest/bin/apkanalyzer in modern Android SDK.
+          # The subcommand also changed:
+          #   old (build-tools):    apkanalyzer classes list <apk>
+          #   new (cmdline-tools):  apkanalyzer dex packages --defined-only <apk>
+          if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" ]; then
+            APKANALYZER="$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer"
+            echo "Using apkanalyzer (cmdline-tools): $APKANALYZER"
+            # 'dex packages' outputs dot-separated names: com.google.mediapipe…
+            CLASSES=$("$APKANALYZER" dex packages --defined-only "$APK" 2>&1)
+            GREP_PATTERN="com.google.mediapipe.tasks.vision"
+          else
+            APKANALYZER="$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -rV | head -1)/apkanalyzer"
+            echo "Using apkanalyzer (build-tools): $APKANALYZER"
+            # 'classes list' outputs slash-separated names: com/google/mediapipe…
+            CLASSES=$("$APKANALYZER" classes list "$APK" 2>&1)
+            GREP_PATTERN="com/google/mediapipe/tasks/vision"
+          fi
+          if ! echo "$CLASSES" | grep -q "$GREP_PATTERN"; then
             echo "FAIL: com.google.mediapipe.tasks.vision.* not found in release APK!"
             echo "R8 stripped MediaPipe classes. Check proguard-rules.pro MediaPipe section."
+            echo "--- First 50 lines of class list for debugging ---"
+            echo "$CLASSES" | head -50
             exit 1
           fi
-          COUNT=$(echo "$CLASSES" | grep "mediapipe" | wc -l)
-          echo "PASS: Found $COUNT MediaPipe classes in release APK."
+          COUNT=$(echo "$CLASSES" | grep -i "mediapipe" | wc -l)
+          echo "PASS: Found $COUNT MediaPipe entries in release APK."
 
       # Prompt-15: fail CI if the APK exceeds size thresholds.
-      # arm64-v8a: 30 MB. armeabi-v7a: 25 MB. (MediaPipe native libs ~10 MB each)
+      # ABI splits are enabled so we get one APK per architecture:
+      #   arm64-v8a:   25 MB threshold  (MediaPipe arm64 native lib ~12-14 MB)
+      #   armeabi-v7a: 22 MB threshold  (MediaPipe armeabi lib ~10-12 MB)
+      #   universal:   35 MB threshold  (fallback if splits are ever disabled)
       - name: Check APK size thresholds
         run: |
           for APK in app/build/outputs/apk/release/*.apk; do
             SIZE_KB=$(du -k "$APK" | cut -f1)
             SIZE_MB=$(echo "scale=1; $SIZE_KB / 1024" | bc)
             echo "APK: $APK — ${SIZE_MB} MB (${SIZE_KB} KB)"
-            # Universal / arm64 threshold: 30 MB
-            MAX_KB=30720
+            # Pick threshold based on ABI slice in filename.
+            if echo "$APK" | grep -q "armeabi-v7a"; then
+              MAX_KB=22528   # 22 MB for 32-bit ARM slice
+            elif echo "$APK" | grep -q "arm64-v8a"; then
+              MAX_KB=25600   # 25 MB for 64-bit ARM slice
+            else
+              MAX_KB=35840   # 35 MB fallback for universal APK
+            fi
             if [ "$SIZE_KB" -gt "$MAX_KB" ]; then
-              echo "FAIL: APK size (${SIZE_MB} MB) exceeds ${MAX_KB} KB threshold!"
-              echo "Review recent dependency additions or ABI splits."
+              echo "FAIL: APK size (${SIZE_MB} MB) exceeds $((MAX_KB / 1024)) MB threshold!"
+              echo "Review recent dependency additions."
               exit 1
             fi
-            echo "PASS: APK size within threshold."
+            echo "PASS: APK size within threshold ($((MAX_KB / 1024)) MB limit)."
           done
 
       - name: Upload unsigned release APK
@@ -201,7 +236,7 @@ jobs:
 
       - name: Set up Gradle
         if: steps.creds.outputs.configured == 'true'
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Cache MediaPipe gesture model
         if: steps.creds.outputs.configured == 'true'

@@ -92,7 +92,8 @@ class LivenessGuard {
      * The guard maintains a rolling window of the last [WINDOW_FRAMES] embeddings
      * and returns the current liveness assessment after each feed.
      *
-     * @param embedding  42-float normalised hand embedding from [CameraHandEmbedder].
+     * @param embedding  63-float normalised hand embedding from [CameraHandEmbedder]
+     *                   (21 landmarks × x,y,z; includes depth for spoof resistance).
      * @return           Current [Result]; [Result.Collecting] until the window is full.
      */
     fun feed(embedding: FloatArray): Result {

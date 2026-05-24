@@ -1,3 +1,8 @@
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,12 +25,6 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Strip x86/x86_64 slices — MediaPipe native libs account for most of
-        // the APK size increase; limiting to device ABIs cuts it roughly 40%.
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-        }
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
@@ -121,6 +120,25 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // ABI splits: produce one APK per architecture instead of a universal APK.
+    // MediaPipe native libs are the dominant size contributor (~12-14 MB each).
+    // A universal APK bundles all ABI slices together, pushing the total past
+    // 30 MB. Per-ABI APKs (arm64-v8a ~20 MB, armeabi-v7a ~16 MB) are each
+    // well under threshold and are what Play Store delivers to devices.
+    //
+    // NOTE: splits.abi.include takes over the role of ndk.abiFilters — AGP
+    // throws a configuration error if both are set to the same ABIs. The ndk {}
+    // block has been removed from defaultConfig; this splits block is the sole
+    // ABI filter.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
 }
 
 dependencies {
@@ -192,6 +210,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.room:room-testing:2.6.1")
@@ -215,17 +234,20 @@ dependencies {
 // CI caches the model file keyed on this digest — see .github/workflows/ci.yml.
 // ---------------------------------------------------------------------------
 val gestureModelUrl = "https://storage.googleapis.com/mediapipe-models/" +
+    "gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task"
+// Fallback: versioned path (float16, version 1) in case `latest` redirects:
+val gestureModelUrlFallback = "https://storage.googleapis.com/mediapipe-models/" +
     "gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
-// Fallback mirror (same model, jsDelivr CDN — Apache-2.0 redistribution OK):
-val gestureModelUrlFallback = "https://cdn.jsdelivr.net/gh/google-ai-edge/mediapipe-assets@main/" +
-    "gesture_recognizer.task"
-// SHA-256 of gesture_recognizer.task (float16, version 1).
+// SHA-256 of gesture_recognizer.task (float16/latest, verified 2026-05-24).
 // Obtain with: sha256sum gesture_recognizer.task
-// TODO(Prompt-5): replace PLACEHOLDER with the real SHA-256 once you have
-// downloaded the model locally. The build will refuse to proceed with a bad
-// checksum, which is the correct secure-by-default behaviour.
+// The env var is read from GESTURE_MODEL_SHA256 (set as a GitHub Actions repo
+// variable — see Settings › Secrets and variables › Actions › Variables).
+// If blank/unset, checksum verification is skipped with a warning (safe for
+// local dev). The fallback literal here is the last known-good hash so that
+// local builds with the model already present never need the env var.
 val gestureModelSha256 = System.getenv("GESTURE_MODEL_SHA256")
-    ?: "PLACEHOLDER_REPLACE_WITH_REAL_SHA256"
+    ?.takeIf { it.isNotBlank() }   // treat empty string the same as not-set
+    ?: "97952348cf6a6a4915c2ea1496b4b37ebabc50cbbf80571435643c455f2b0482"
 
 tasks.register("downloadGestureModel") {
     description = "Download gesture_recognizer.task from MediaPipe model hub (Prompt-5: hermetic)"
@@ -259,13 +281,13 @@ tasks.register("downloadGestureModel") {
             for (attempt in 1..maxAttempts) {
                 try {
                     println("Downloading gesture_recognizer.task from $url (attempt $attempt/$maxAttempts)…")
-                    val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    val conn = URL(url).openConnection() as HttpURLConnection
                     conn.connectTimeout = 30_000   // 30 s connect timeout
                     conn.readTimeout    = 300_000  // 5 min read timeout
                     conn.connect()
                     val responseCode = conn.responseCode
                     if (responseCode != 200) {
-                        throw java.io.IOException("HTTP $responseCode from $url")
+                        throw IOException("HTTP $responseCode from $url")
                     }
                     conn.inputStream.use { inp ->
                         modelFile.outputStream().use { out -> inp.copyTo(out) }
@@ -277,7 +299,7 @@ tasks.register("downloadGestureModel") {
                         val actualHash = computeSha256(modelFile)
                         if (!actualHash.equals(gestureModelSha256, ignoreCase = true)) {
                             modelFile.delete()
-                            throw java.io.IOException(
+                            throw IOException(
                                 "SHA-256 mismatch for downloaded model!\n" +
                                 "  Expected: $gestureModelSha256\n" +
                                 "  Actual:   $actualHash\n" +
@@ -306,7 +328,7 @@ tasks.register("downloadGestureModel") {
 
         // Both primary and fallback URLs exhausted.
         modelFile.takeIf { it.exists() }?.delete()
-        throw java.io.IOException(
+        throw IOException(
             "Failed to download gesture_recognizer.task after $maxAttempts attempts " +
             "from all URLs. Last error: ${lastException?.message}\n" +
             "For offline builds, manually place the file at:\n" +
@@ -317,8 +339,8 @@ tasks.register("downloadGestureModel") {
 }
 
 /** Compute SHA-256 hex digest for a file. Used by downloadGestureModel. */
-fun computeSha256(file: java.io.File): String {
-    val digest = java.security.MessageDigest.getInstance("SHA-256")
+fun computeSha256(file: File): String {
+    val digest = MessageDigest.getInstance("SHA-256")
     file.inputStream().use { input ->
         val buf = ByteArray(8 * 1024)
         var n: Int
@@ -326,11 +348,37 @@ fun computeSha256(file: java.io.File): String {
             digest.update(buf, 0, n)
         }
     }
-    return digest.digest().joinToString("") { "%02x".format(it) }
+    return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
 }
 
-tasks.named("preBuild") {
-    dependsOn("downloadGestureModel")
+// Wire downloadGestureModel to every task that reads from src/main/assets.
+// Unit-test tasks run on JVM and never load the on-device model, so we must
+// NOT block them on a network download — the model CDN URL could be
+// unavailable in CI without affecting correctness of the test suite.
+//
+// Gradle 8 strict task dependency validation requires an explicit dependsOn
+// whenever a task reads a directory that another task writes to.  We satisfy
+// this for the three families of tasks known to scan src/main/assets:
+//   • merge*Assets           — packages assets into APK/AAB
+//   • generate*LintModel     — AGP lint model writer scans assets dirs
+//   • lintAnalyze*           — lint analysis tasks read merged assets
+afterEvaluate {
+    tasks.matching { task ->
+        val n = task.name
+        // Tasks that package the assets directory into APK/AAB.
+        (n.startsWith("merge") && n.endsWith("Assets")) ||
+        // ALL lint-related tasks: lintAnalyze*, lintVitalAnalyze*, lintReport*,
+        // lintDebug, lintRelease, etc. Lint tasks scan the entire module
+        // (including src/main/assets) to build their analysis model.
+        // Using startsWith("lint") covers all these variants in one pattern.
+        n.startsWith("lint") ||
+        // AGP lint model writer tasks: generateDebugLintReportModel,
+        // generateReleaseLintVitalReportModel, generateDebugAndroidTestLintModel,
+        // etc. They also scan the assets directory.
+        (n.startsWith("generate") && n.contains("Lint"))
+    }.configureEach {
+        dependsOn("downloadGestureModel")
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -382,15 +430,15 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         csv.required.set(false)
     }
 
-    val javaClasses = fileTree("${buildDir}/intermediates/javac/debug") {
+    val javaClasses = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
         exclude(coverageExcludePatterns)
     }
-    val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val kotlinClasses = fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
         exclude(coverageExcludePatterns)
     }
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
-    executionData.setFrom(fileTree(buildDir) {
+    executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
         include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
     })
 }
@@ -401,15 +449,15 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
 
     dependsOn("jacocoTestReport")
 
-    val javaClasses = fileTree("${buildDir}/intermediates/javac/debug") {
+    val javaClasses = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
         exclude(coverageExcludePatterns)
     }
-    val kotlinClasses = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val kotlinClasses = fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
         exclude(coverageExcludePatterns)
     }
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
-    executionData.setFrom(fileTree(buildDir) {
+    executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
         include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
     })
 

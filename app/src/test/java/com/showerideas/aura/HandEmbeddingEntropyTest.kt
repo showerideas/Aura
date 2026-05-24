@@ -70,7 +70,12 @@ class HandEmbeddingEntropyTest {
         private var state = seed
         fun nextFloat(): Float {
             state = state * 6364136223846793005L + 1442695040888963407L
-            return ((state ushr 33) and 0x7FFFFFFFFL).toFloat() / 0x7FFFFFFFFL
+            // ushr 33 extracts 31 bits (bits 33–63). Divisor must match that
+            // bit-width (2^31 − 1 = 0x7FFFFFFFL) so the result is in [0, 1].
+            // The original 0x7FFFFFFFFL (2^35 − 1) was too large, shrinking all
+            // outputs to ≈ [0, 0.0625] and making every embedding point in the
+            // same direction — causing the inter-person FAR assertion to fail.
+            return ((state ushr 33) and 0x7FFFFFFFL).toFloat() / 0x7FFFFFFFL
         }
         fun nextGaussian(): Float {
             // Box-Muller transform

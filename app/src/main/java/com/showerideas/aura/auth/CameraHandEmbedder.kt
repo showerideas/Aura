@@ -277,7 +277,10 @@ class CameraHandEmbedder @Inject constructor(
 
     private fun onResult(result: GestureRecognizerResult, @Suppress("UNUSED_PARAMETER") unused: com.google.mediapipe.framework.image.MPImage) {
         val gestures  = result.gestures()
-        val landmarks = result.handLandmarks()
+        // MediaPipe Tasks Vision 0.10.x changed the API from handLandmarks()
+        // (returning List<NormalizedLandmarks>) to landmarks() (returning
+        // List<List<NormalizedLandmark>> directly with no wrapper class).
+        val landmarks = result.landmarks()
 
         if (gestures.isEmpty() || gestures[0].isEmpty() || landmarks.isEmpty()) {
             resetAccumulator()
@@ -290,7 +293,8 @@ class CameraHandEmbedder @Inject constructor(
         val gesture   = HandGesture.fromMediaPipeLabel(top.categoryName())
         if (gesture == HandGesture.NONE)  { resetAccumulator(); return }
 
-        val embedding = normalizeEmbedding(landmarks[0].landmarks())
+        // landmarks[0] is already List<NormalizedLandmark> in the 0.10.x API
+        val embedding = normalizeEmbedding(landmarks[0])
 
         // Accumulate consecutive stable frames
         val similarity = if (lastEmbedding != null) cosineSimilarity(embedding, lastEmbedding!!) else 0f

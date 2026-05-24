@@ -315,8 +315,10 @@ object CryptoUtils {
             val key = ks.getKey(KEYSTORE_ALIAS_DEVICE_ID, null) as? PrivateKey ?: return false
             val ki  = KeyFactory.getInstance(key.algorithm, KEYSTORE_PROVIDER)
                 .getKeySpec(key, KeyInfo::class.java)
+            // KeyProperties.SecurityLevel is an @IntDef annotation, not a class.
+            // Access its constants directly on KeyProperties (API 31+).
             @Suppress("NewApi") // guarded by Build.VERSION check above
-            ki.securityLevel == KeyProperties.SecurityLevel.STRONGBOX
+            ki.securityLevel == KeyProperties.SECURITY_LEVEL_STRONGBOX
         } catch (e: Exception) {
             Timber.d("Could not determine StrongBox backing: ${e.message}")
             false

@@ -306,7 +306,7 @@ class WireProtocolTest {
 
         // Flip a bit in the ciphertext body (after the 12-byte IV).
         val tampered = encrypted.copyOf()
-        tampered[12] = tampered[12].xor(0xFF.toByte())
+        tampered[12] = (tampered[12].toInt() xor 0xFF).toByte()
 
         assertThrows(Exception::class.java) {
             CryptoUtils.decrypt(key, tampered)
