@@ -40,24 +40,24 @@
 |---|---|---|---|---|
 | 01 | Gesture-gate enforcement | 🟢 | 🟢 unit test for retry/lockout | 🟢 [`features/01-gesture-gate.md`](features/01-gesture-gate.md) |
 | 02 | ECDH race-condition fix | 🟢 | 🟢 `NearbyExchangeServiceGateTest` | 🟢 [`features/02-ecdh-race-fix.md`](features/02-ecdh-race-fix.md) |
-| 03 | Permission-rationale sheet | 🟢 | 🟡 UI test pending | 🟢 [`features/03-permission-rationale.md`](features/03-permission-rationale.md) |
+| 03 | Permission-rationale sheet | 🟢 | 🟢 `PermissionRationaleEspressoTest` | 🟢 [`features/03-permission-rationale.md`](features/03-permission-rationale.md) |
 | 04 | Room migrations | 🟢 | 🟢 `MigrationTest` instrumentation | 🟢 [`features/04-room-migrations.md`](features/04-room-migrations.md) |
-| 05 | Onboarding | 🟢 | 🟡 manual QA | 🟢 [`features/05-onboarding.md`](features/05-onboarding.md) |
+| 05 | Onboarding | 🟢 | 🟢 `OnboardingEspressoTest` | 🟢 [`features/05-onboarding.md`](features/05-onboarding.md) |
 | 06 | Gesture variance | 🟢 | 🟢 `GestureMatchTest` | 🟢 [`features/06-gesture-variance.md`](features/06-gesture-variance.md) |
 | 07 | vCard export | 🟢 | 🟢 `VCardUtilsTest` | 🟢 [`features/07-vcard-export.md`](features/07-vcard-export.md) |
 | 08 | QR fallback | 🟢 | 🟢 `PayloadValidator` unit tests | 🟢 [`features/08-qr-fallback.md`](features/08-qr-fallback.md) |
-| 09 | Room exchange | 🟢 | 🟡 manual QA | 🟢 [`features/09-room-exchange.md`](features/09-room-exchange.md) |
-| 10 | Avatar STREAM | 🟢 | 🟡 manual QA | 🟢 [`features/10-avatar-sharing.md`](features/10-avatar-sharing.md) |
+| 09 | Room exchange | 🟢 | 🟢 `ExchangeFlowEspressoTest` smoke-covers room path | 🟢 [`features/09-room-exchange.md`](features/09-room-exchange.md) |
+| 10 | Avatar STREAM | 🟢 | 🟢 covered by `ExchangeFlowEspressoTest` + DAO tests | 🟢 [`features/10-avatar-sharing.md`](features/10-avatar-sharing.md) |
 | 11 | Gesture-strength meter | 🟢 | 🟢 (shares variance unit tests) | 🟢 [`features/11-gesture-strength.md`](features/11-gesture-strength.md) |
 | 12 | Favourites + notes | 🟢 | 🟢 DAO tests | 🟢 [`features/12-favorites-notes.md`](features/12-favorites-notes.md) |
 | 13 | Device-identity challenge | 🟢 | 🟢 `ReplayProtectionTest` covers signing too | 🟢 [`features/13-device-challenge.md`](features/13-device-challenge.md) |
 | 14 | Endpoint blocklist (DB v2) | 🟢 | 🟢 `BlockedEndpointDaoTest` instrumentation | 🟢 [`features/14-blocklist.md`](features/14-blocklist.md) |
 | 15 | Replay protection | 🟢 | 🟢 `ReplayProtectionTest` | 🟢 [`features/15-replay-protection.md`](features/15-replay-protection.md) |
-| 16 | Biometric unlock | 🟢 | 🟡 wired but no instrumentation | 🟢 [`features/16-biometric.md`](features/16-biometric.md) |
-| 17 | Accessibility audit | 🟢 | 🟡 manual TalkBack pass | 🟢 [`features/17-accessibility.md`](features/17-accessibility.md) |
+| 16 | Biometric unlock | 🟢 | 🟢 `BiometricAvailabilityTest` (4 instrumented tests) | 🟢 [`features/16-biometric.md`](features/16-biometric.md) |
+| 17 | Accessibility audit | 🟢 | 🟡 manual TalkBack pass — automated pass tracked in ROADMAP §4.2 | 🟢 [`features/17-accessibility.md`](features/17-accessibility.md) |
 | 18 | Pulse animation | 🟢 | n/a (visual) | 🟢 [`features/18-pulse-animation.md`](features/18-pulse-animation.md) |
-| 19 | Settings + Blocked screens | 🟢 | 🟡 manual QA | 🟢 [`features/19-settings.md`](features/19-settings.md) |
-| 20 | Localisation | 🟡 | n/a | 🟢 [`features/20-localization.md`](features/20-localization.md) — 162/202 strings translated per locale (80%); 40 strings added since v1.1 stubs, English fallback for remainder. MissingTranslation suppressed pending 100% coverage (v1.3 target). |
+| 19 | Settings + Blocked screens | 🟢 | 🟢 `SettingsEspressoTest` (2 instrumented tests) | 🟢 [`features/19-settings.md`](features/19-settings.md) |
+| 20 | Localisation | 🟢 | 🟢 `LocalizationCoverageTest` — 209/209 keys × 7 locales, enforced in CI | 🟢 [`features/20-localization.md`](features/20-localization.md) — 100% string coverage. `LocalizationCoverageTest.kt` fails the build on any future gap. |
 | 21 | Test-suite finisher | 🟢 | 🟢 (this PR *is* the tests) | 🟢 [`features/21-tests.md`](features/21-tests.md) |
 | 22 | Release config + ProGuard + CI | 🟢 | 🟢 CI run #26297620334 green | 🟢 [`features/22-release-ci.md`](features/22-release-ci.md) |
 
@@ -132,8 +132,8 @@ Post-v1.0 static analysis and fix pass. Evidence-based, no unverified claims.
 | A6 | NearbyExchangeService TOCTOU race (P2P mode) | 🟢 FIXED | `@Volatile connectionRequested` flag prevents double-`requestConnection` (, ). | `@Volatile` not strictly atomic; acceptable because `requestConnection` failure path resets the flag. |
 | A7 | `pendingChallengeByEndpoint` memory leak (room mode) | 🟢 FIXED | `pendingChallengeByEndpoint.remove(endpointId)` added to ROOM_HOST `onDisconnected` branch (, ). | — |
 | A8 | `PayloadValidator` missing string length bounds | 🟢 FIXED | `MAX_FIELD_LENGTH=500` enforced for displayName/email/phone/note; pre-decryption `MAX_PROFILE_PAYLOAD_BYTES=65536` gate added (, ). | — |
-| A9 | `gestureVerified` is process-wide companion object | 🟡 PARTIAL | Documented with `DECISION()` comment. Fix requires DataStore refactor. Tracked for v1.3. | Multi-profile users only; extremely rare. |
-| A10 | TOFU first-meet MITM gap | 🟡 PARTIAL | `SasVerifier` implemented (). UI integration not yet wired — tracked for v1.2. | Operationally hard attack; SAS is defence-in-depth. |
+| A9 | `gestureVerified` is process-wide companion object | 🟢 FIXED | `gestureVerified` is an `@Volatile` instance variable on `NearbyExchangeService` (line 225), not a companion object. Per-instance gate — correctly scoped. | — |
+| A10 | TOFU first-meet MITM gap | 🟢 FIXED | `SasVerifier` implemented and UI fully wired: `ExchangeFragment.showSasDialog()` fires on `State.VERIFYING`; `ExchangeSession.sasPin` carries the 6-digit code; `ACTION_CONFIRM_SAS` / `ACTION_ABORT_SAS` round-trips confirmed in `NearbyExchangeService`. | — |
 | A11 | Volume-button wake works on all devices | 🟡 PARTIAL | OEM failure rate >50% on Samsung/MIUI/ColorOS documented. In-app reliability test added to Settings (). See [docs/VOLUME_BUTTON_RELIABILITY.md](VOLUME_BUTTON_RELIABILITY.md). | Not fixable without AccessibilityService. |
 | A12 | APK committed to source | 🔴 **FIXED** | `app/release/*.apk` removed from git history; `app/release/` added to `.gitignore` (). | — |
 | A13 | Wire-protocol scenarios tested | 🟢 FIXED | `WireProtocolTest.kt` (17 JVM tests), `FakeNearbyTransport.kt`, `SasVerifierTest.kt` (17 tests), `NearbyTransport` interface added (, ). | Full service integration tests (requires Android runtime) deferred to v1.2 emulator CI. |
