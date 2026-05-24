@@ -102,6 +102,7 @@
     <string name="room_join_action">参加</string>
     <string name="room_guest_done">ホストのカードを受け取りました！</string>
     <string name="room_hold_to_confirm">ジェスチャーで確認するにはアクションボタンを長押し。</string>
+    <string name="profile_change_avatar_desc">プロフィール写真を変更</string>
     <string name="profile_avatar_desc">タップしてプロフィール写真を選択</string>
     <string name="profile_avatar_too_large">画像が大きすぎます — より小さな画像を試してください。</string>
     <string name="home_greeting">こんにちは、%1$s</string>
