@@ -229,4 +229,15 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC actif — échange de clé plus rapide</string>
     <string name="exchange_nfc_active_desc">Cet échange a été initié via NFC — la poignée de main ECDH est pré-amorcée</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">Carte mise à jour</string>
+    <string name="merge_action_accept">Accepter les modifications</string>
+    <string name="merge_action_revert">Tout annuler</string>
+    <string name="merge_field_toggle_desc">Activer/désactiver la conservation de la nouvelle valeur pour %1$s</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s a envoyé une nouvelle carte. 1 champ modifié.</item>
+        <item quantity="other">%1$s a envoyé une nouvelle carte. %2$d champs modifiés.</item>
+    </plurals>
 </resources>
