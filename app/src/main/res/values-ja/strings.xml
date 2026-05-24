@@ -219,4 +219,9 @@
     <string name="settings_volume_test_success">✓ 3回押しが検出されました — このデバイスは対応しています</string>
     <string name="settings_volume_wake_warning">⚠ 3回押し音量はPixelと標準Androidで機能します。Samsung、Xiaomi、OPPOなど独自AndroidではOSレベルのキーインターセプトにより動作しない可能性があります。下のボタンでご確認ください。</string>
     <string name="status_verifying">連絡先とコードを確認してください…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">すべてのAndroidデバイスで頂部ボタンのトリプルプレス起動を有効にします。AURAは他のアプリのコンテンツを読み取りません。</string>
+    <string name="settings_accessibility_mode">アクセシビリティモード（推奨）</string>
+    <string name="settings_accessibility_enabled">有効 — すべてのデバイスで機能します ✓</string>
+    <string name="settings_accessibility_disabled">アクセシビリティ設定で有効にするにはタップ</string>
 </resources>
