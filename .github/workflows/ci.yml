@@ -7,9 +7,10 @@
 #   3. assembleRelease     — Full release build (R8 + shrinking). KEYSTORE_*
 #                            env vars are blank in CI so an unsigned APK is
 #                            produced — validates ProGuard rules cheaply.
-#   4. check-no-internet   — Prompt-16: assert INTERNET permission absent.
-#   5. check-mediapipe-classes — Prompt-5: assert MediaPipe classes survived R8.
-#   6. check-apk-size      — Prompt-15: fail if APK exceeds size thresholds.
+#   4. check-mediapipe-classes — Prompt-5: assert MediaPipe classes survived R8.
+#   5. check-apk-size      — Prompt-15: fail if APK exceeds size thresholds.
+#
+# Note: INTERNET permission is intentionally declared (QR relay POST feature).
 #
 # On push to main only (gated on `build` passing):
 #   7. upload-to-play      — Signs and uploads to Play Console internal track.
@@ -95,22 +96,6 @@ jobs:
           KEYSTORE_KEY_ALIAS: ""
           KEYSTORE_KEY_PASSWORD: ""
           GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
-
-      # Prompt-16: assert INTERNET permission is NOT in the release APK.
-      # This guards against a transitive dependency accidentally adding it.
-      - name: Check no INTERNET permission in release APK
-        run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
-          echo "Checking permissions in: $APK"
-          PERMS=$($ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -rV | head -1)/aapt dump permissions "$APK")
-          echo "$PERMS"
-          if echo "$PERMS" | grep -q "android.permission.INTERNET"; then
-            echo "FAIL: android.permission.INTERNET found in release APK!"
-            echo "A transitive dependency may have added it. Run:"
-            echo "  ./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -i internet"
-            exit 1
-          fi
-          echo "PASS: No INTERNET permission in release APK."
 
       # Prompt-5: assert MediaPipe classes survived R8. Without the -keep rules
       # in proguard-rules.pro, R8 strips all com.google.mediapipe.** classes and
