@@ -220,4 +220,9 @@
     <string name="settings_volume_test_success">✓ Triple appui détecté — cet appareil est compatible</string>
     <string name="settings_volume_wake_warning">⚠ Le triple appui sur le volume fonctionne sur Pixel et Android standard. Il peut ne pas fonctionner sur Samsung, Xiaomi, OPPO ou d\'autres versions personnalisées d\'Android en raison de l\'interception des touches au niveau du système. Utilise le bouton ci-dessous pour vérifier ton appareil.</string>
     <string name="status_verifying">Vérifier le code avec ton contact…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">Active l'activation fiable par triple pression du volume sur tous les appareils Android, y compris Samsung, MIUI et ColorOS. AURA ne lit jamais le contenu des autres apps.</string>
+    <string name="settings_accessibility_mode">Mode accessibilité (recommandé)</string>
+    <string name="settings_accessibility_enabled">Actif — fonctionne sur tous les appareils ✓</string>
+    <string name="settings_accessibility_disabled">Appuyez pour activer dans les paramètres d'accessibilité</string>
 </resources>
