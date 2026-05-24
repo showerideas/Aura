@@ -43,14 +43,12 @@
         android:name="android.hardware.nfc"
         android:required="false" />
 
-    <!-- Explicitly remove INTERNET permission that play-services-nearby merges
-         in through its own manifest. AURA is fully offline — no internet socket
-         is used at runtime. Nearby Connections uses BLE + Wi-Fi Direct only.
-         tools:node="remove" instructs the manifest merger to strip this
-         permission from the final merged manifest even when a library declares
-         it, satisfying the CI check (Prompt-16). -->
-    <uses-permission android:name="android.permission.INTERNET"
-        tools:node="remove" />
+    <!-- INTERNET is required for the QR relay path: after ECDH key agreement
+         via QR code swap, each device POSTs its AES-256-GCM encrypted profile
+         to a relay slot and polls for the peer's slot. No plaintext ever leaves
+         the device — the relay sees only ciphertext. Nearby Connections (BLE /
+         Wi-Fi P2P) paths remain fully offline; only QR relay uses the network. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Vibration for gesture feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />

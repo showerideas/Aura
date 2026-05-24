@@ -52,7 +52,7 @@ flowchart TB
         OP["Onboard<br/>Prefs"]:::data
         subgraph LOC["local"]
             direction LR
-            AD["AppDb<br/>v2"]:::data
+            AD["AppDb<br/>v5"]:::data
             CD["Contact<br/>Dao"]:::data
             PD["Profile<br/>Dao"]:::data
             BD["Blocked<br/>Dao"]:::data
@@ -296,7 +296,7 @@ ViewModels use `@HiltViewModel`. The `AuraApplication` class is annotated `@Hilt
 | Min SDK | 26 | `app/build.gradle.kts` |
 | JVM target | 17 | `app/build.gradle.kts` |
 | `applicationId` | `com.showerideas.aura` (`.debug` suffix on debug) | `app/build.gradle.kts` |
-| `versionCode` / `versionName` | `1` / `1.0.0` | `app/build.gradle.kts` |
+| `versionCode` / `versionName` | `2` / `1.1.0` | `app/build.gradle.kts` |
 | `isMinifyEnabled` (release) | `true` | `app/build.gradle.kts` |
 | ProGuard rules | `app/proguard-rules.pro` | linked in `release` block |
 | Schema export dir | `app/schemas/` | annotation processor arg |
