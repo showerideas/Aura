@@ -71,6 +71,7 @@
                     android:layout_height="16dp"
                     android:layout_marginStart="6dp"
                     android:contentDescription="@null"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_star"
                     app:tint="@color/aura_cyan"
                     android:visibility="gone" />

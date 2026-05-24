@@ -123,6 +123,7 @@
     <string name="room_hold_to_confirm">Hold the action button to confirm with your gesture.</string>
 
     <!-- Avatar sharing (PR-10) -->
+    <string name="profile_change_avatar_desc">Change profile photo</string>
     <string name="profile_avatar_desc">Tap to pick a profile photo</string>
     <string name="profile_avatar_too_large">Image was too large — try a smaller picture.</string>
 
@@ -279,4 +280,10 @@
     <string name="notif_channel_desc">Active contact exchange in progress</string>
     <string name="notif_title">AURA Exchange</string>
     <string name="notif_starting">Starting exchange\u2026</string>
+
+    <!-- AuraAccessibilityService — opt-in volume button reliability -->
+    <string name="accessibility_service_description">Enables reliable triple-press volume activation on all Android devices, including Samsung, MIUI, and ColorOS. AURA never reads content from other apps — only volume button events are intercepted.</string>
+    <string name="settings_accessibility_mode">Accessibility mode (recommended)</string>
+    <string name="settings_accessibility_enabled">Active — works on all devices ✓</string>
+    <string name="settings_accessibility_disabled">Tap to enable in Accessibility settings</string>
 </resources>

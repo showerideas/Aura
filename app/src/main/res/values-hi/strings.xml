@@ -102,6 +102,7 @@
     <string name="room_join_action">शामिल हों</string>
     <string name="room_guest_done">होस्ट का कार्ड मिल गया!</string>
     <string name="room_hold_to_confirm">इशारे से पुष्टि करने के लिए एक्शन बटन दबाए रखें।</string>
+    <string name="profile_change_avatar_desc">प्रोफ़ाइल फ़ोटो बदलें</string>
     <string name="profile_avatar_desc">प्रोफ़ाइल फ़ोटो चुनने के लिए टैप करें</string>
     <string name="profile_avatar_too_large">चित्र बहुत बड़ा था — छोटा चित्र आज़माएँ।</string>
     <string name="home_greeting">नमस्ते, %1$s</string>
@@ -220,4 +221,9 @@
     <string name="settings_volume_test_success">✓ ट्रिपल-प्रेस मिला — यह डिवाइस संगत है</string>
     <string name="settings_volume_wake_warning">⚠ ट्रिपल-प्रेस वॉल्यूम Pixel और स्टॉक Android पर काम करता है। OS-स्तर की कुंजी अवरोधन के कारण Samsung, Xiaomi, OPPO या अन्य कस्टम Android बिल्ड पर काम नहीं कर सकता। अपने डिवाइस की जाँच करने के लिए नीचे बटन का उपयोग करें।</string>
     <string name="status_verifying">अपने संपर्क के साथ कोड सत्यापित करें…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">सभी Android डिवाइसेस पर वॉल्यूम त्रिपल-प्रेस सक्रियकरण सक्षम करता है। AURA कभी अन्य एप्स की सामग्री नहीं पढ़ता।</string>
+    <string name="settings_accessibility_mode">अभिगम्यता मोड (अनुशंसित)</string>
+    <string name="settings_accessibility_enabled">सक्रिय — सभी डिवाइसेस पर काम करता है ✓</string>
+    <string name="settings_accessibility_disabled">अभिगम्यता सेटिंग्स में सक्षम करने के लिए टैप करें</string>
 </resources>

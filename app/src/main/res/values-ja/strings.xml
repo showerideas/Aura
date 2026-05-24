@@ -102,6 +102,7 @@
     <string name="room_join_action">参加</string>
     <string name="room_guest_done">ホストのカードを受け取りました！</string>
     <string name="room_hold_to_confirm">ジェスチャーで確認するにはアクションボタンを長押し。</string>
+    <string name="profile_change_avatar_desc">プロフィール写真を変更</string>
     <string name="profile_avatar_desc">タップしてプロフィール写真を選択</string>
     <string name="profile_avatar_too_large">画像が大きすぎます — より小さな画像を試してください。</string>
     <string name="home_greeting">こんにちは、%1$s</string>
@@ -219,4 +220,9 @@
     <string name="settings_volume_test_success">✓ 3回押しが検出されました — このデバイスは対応しています</string>
     <string name="settings_volume_wake_warning">⚠ 3回押し音量はPixelと標準Androidで機能します。Samsung、Xiaomi、OPPOなど独自AndroidではOSレベルのキーインターセプトにより動作しない可能性があります。下のボタンでご確認ください。</string>
     <string name="status_verifying">連絡先とコードを確認してください…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">すべてのAndroidデバイスで頂部ボタンのトリプルプレス起動を有効にします。AURAは他のアプリのコンテンツを読み取りません。</string>
+    <string name="settings_accessibility_mode">アクセシビリティモード（推奨）</string>
+    <string name="settings_accessibility_enabled">有効 — すべてのデバイスで機能します ✓</string>
+    <string name="settings_accessibility_disabled">アクセシビリティ設定で有効にするにはタップ</string>
 </resources>
