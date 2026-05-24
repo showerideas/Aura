@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
  * 2. The concrete `@Transaction` method must be marked `open` — Kotlin abstract-class
  *    methods are `final` by default, and KAPT emits `public final` in the Java stub,
  *    which Room's annotation processor also rejects with "must not be final".
+ * 3. All bodyless Room-annotated functions must be explicitly marked `abstract` —
+ *    unlike interfaces, abstract classes do not make functions implicitly abstract.
  */
 @Dao
 abstract class ProfileDao {
@@ -38,11 +40,11 @@ abstract class ProfileDao {
      * active-profile column so all consumers stay on the live active card.
      */
     @Query("SELECT * FROM profile WHERE is_active = 1 LIMIT 1")
-    fun observe(): Flow<Profile?>
+    abstract fun observe(): Flow<Profile?>
 
     /** Suspend variant of [observe] — one-shot read of the active profile. */
     @Query("SELECT * FROM profile WHERE is_active = 1 LIMIT 1")
-    suspend fun get(): Profile?
+    abstract suspend fun get(): Profile?
 
     // -------------------------------------------------------------------------
     // Multi-profile queries (Phase 6.4)
@@ -50,15 +52,15 @@ abstract class ProfileDao {
 
     /** All profiles ordered by creation time — drives the profile switcher list. */
     @Query("SELECT * FROM profile ORDER BY createdAt ASC")
-    fun getAllProfiles(): Flow<List<Profile>>
+    abstract fun getAllProfiles(): Flow<List<Profile>>
 
     /** Observe the active profile (alias for [observe]). */
     @Query("SELECT * FROM profile WHERE is_active = 1 LIMIT 1")
-    fun observeActive(): Flow<Profile?>
+    abstract fun observeActive(): Flow<Profile?>
 
     /** One-shot read of the active profile. */
     @Query("SELECT * FROM profile WHERE is_active = 1 LIMIT 1")
-    suspend fun getActive(): Profile?
+    abstract suspend fun getActive(): Profile?
 
     /**
      * Atomically make [id] the active profile.
@@ -74,10 +76,10 @@ abstract class ProfileDao {
     }
 
     @Query("UPDATE profile SET is_active = 0")
-    suspend fun clearActive()
+    abstract suspend fun clearActive()
 
     @Query("UPDATE profile SET is_active = 1 WHERE id = :id")
-    suspend fun activate(id: String)
+    abstract suspend fun activate(id: String)
 
     // -------------------------------------------------------------------------
     // Write operations
@@ -85,18 +87,18 @@ abstract class ProfileDao {
 
     /** Insert or replace a profile row (used for the legacy local_profile upsert). */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(profile: Profile)
+    abstract suspend fun insert(profile: Profile)
 
     /** Update an existing profile row. */
     @Update
-    suspend fun update(profile: Profile)
+    abstract suspend fun update(profile: Profile)
 
     /**
      * Insert a brand-new profile. Uses ABORT so a duplicate-key collision
      * surfaces as an exception rather than silently replacing an existing row.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertNew(profile: Profile)
+    abstract suspend fun insertNew(profile: Profile)
 
     /**
      * Delete a profile by id.
@@ -105,9 +107,9 @@ abstract class ProfileDao {
      * profile row remains and that the deleted profile is not currently active.
      */
     @Query("DELETE FROM profile WHERE id = :id")
-    suspend fun deleteProfile(id: String)
+    abstract suspend fun deleteProfile(id: String)
 
     /** Nuke the entire table — only used during onboarding reset. */
     @Query("DELETE FROM profile")
-    suspend fun clear()
+    abstract suspend fun clear()
 }
