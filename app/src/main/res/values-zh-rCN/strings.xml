@@ -102,6 +102,7 @@
     <string name="room_join_action">加入</string>
     <string name="room_guest_done">已收到房主名片！</string>
     <string name="room_hold_to_confirm">长按操作按钮以手势确认。</string>
+    <string name="profile_change_avatar_desc">更换头像</string>
     <string name="profile_avatar_desc">点击以选择头像</string>
     <string name="profile_avatar_too_large">图片太大——请尝试更小的图片。</string>
     <string name="home_greeting">你好，%1$s</string>
