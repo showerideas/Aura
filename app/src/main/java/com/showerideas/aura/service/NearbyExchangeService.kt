@@ -461,10 +461,11 @@ class NearbyExchangeService : Service() {
             // when the peer's Nearby key-exchange message arrives.  Both peers
             // will still complete the ECDSA challenge/response phase normally.
             runCatching {
-                val kf = java.security.KeyFactory.getInstance("EC")
-                peerPublicKey = kf.generatePublic(
-                    java.security.spec.X509EncodedKeySpec(nfcBootstrap.peerPublicKeyBytes)
-                )
+                // Security: use decodeEC256PublicKey() — not raw KeyFactory — so the same
+                // secp256r1 curve-order validation applied to Nearby-received keys also
+                // covers NFC-bootstrapped keys. A crafted NFC tag carrying a weak-curve
+                // key would otherwise bypass the curve-downgrade check entirely.
+                peerPublicKey = decodeEC256PublicKey(nfcBootstrap.peerPublicKeyBytes)
                 sessionKey = CryptoUtils.deriveSharedAESKey(ourKeyPair!!.private, peerPublicKey!!)
                 // NFC scanner is the "responder" by convention.
                 val (sr, rr) = initDirectionalRatchets(sessionKey!!, isInitiator = false)
@@ -874,6 +875,14 @@ class NearbyExchangeService : Service() {
                 }
                 val encodedPubKey = String(body, 0, sepIdx, Charsets.UTF_8)
                 val challenge = body.copyOfRange(sepIdx + 1, body.size)
+                // Security: cap the challenge size a peer can force us to sign.
+                // CHALLENGE_BYTES is 32; we allow up to 4× for future flexibility
+                // but reject anything larger — a rogue peer sending a 1 MB "challenge"
+                // would otherwise force expensive signing work on arbitrary data.
+                if (challenge.size > CHALLENGE_BYTES * 4) {
+                    Timber.w("Oversized challenge from $endpointId (${challenge.size}B) — rejecting")
+                    terminateSession(ExchangeSession.State.ERROR); return@launch
+                }
                 val peerIdentityKey = decodeEC256PublicKey(Base64.getDecoder().decode(encodedPubKey))
 
                 // FIX-5: key-hash blocklist check. Must happen BEFORE TOFU logic
@@ -1483,6 +1492,22 @@ class NearbyExchangeService : Service() {
                         }
                     }
                 }
+                // Security: validate JPEG magic bytes (FF D8 FF) before persisting.
+                // A rogue peer could send arbitrary binary as their "avatar"; BitmapFactory
+                // would return null on load (harmless), but we reject non-JPEG content
+                // before it ever reaches app-private storage.
+                val jpegMagic = tmp.inputStream().use { it.readNBytes(3) }
+                if (jpegMagic.size < 3 ||
+                    jpegMagic[0] != 0xFF.toByte() ||
+                    jpegMagic[1] != 0xD8.toByte() ||
+                    jpegMagic[2] != 0xFF.toByte()
+                ) {
+                    Timber.w("Avatar from $endpointId failed JPEG magic check — discarding")
+                    tmp.delete()
+                    awaitingAvatarStream.remove(endpointId)
+                    return@launch
+                }
+
                 val contact = contactRepository.findLatestByEndpoint(endpointId)
                 if (contact == null) {
                     Timber.w("No saved contact yet for $endpointId; discarding avatar")

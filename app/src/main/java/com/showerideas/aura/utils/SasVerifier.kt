@@ -89,13 +89,23 @@ object SasVerifier {
     /**
      * Verify that a SAS string produced by one party matches this device's own computation.
      *
+     * Uses [MessageDigest.isEqual] for a constant-time byte comparison so that
+     * timing differences cannot leak how many leading digits match — preventing a
+     * theoretical incremental-digit oracle on a local timing channel.
+     *
      * @param expected The SAS displayed on the peer's screen (entered manually or scanned).
      * @param keyA Our ephemeral ECDH public key.
      * @param keyB The peer's ephemeral ECDH public key.
      * @return `true` if the SAS matches; `false` if there is a mismatch (possible MITM).
      */
     fun verify(expected: String, keyA: PublicKey, keyB: PublicKey): Boolean {
-        return derive(keyA, keyB) == expected
+        val actual = derive(keyA, keyB)
+        // Constant-time comparison — MessageDigest.isEqual pads both arrays to the same
+        // length and XORs all bytes before returning, so no early exit leaks timing info.
+        return MessageDigest.isEqual(
+            actual.toByteArray(Charsets.UTF_8),
+            expected.toByteArray(Charsets.UTF_8)
+        )
     }
 
     // -------------------------------------------------------------------------
