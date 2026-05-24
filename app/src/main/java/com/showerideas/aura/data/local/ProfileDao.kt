@@ -16,9 +16,15 @@ import kotlinx.coroutines.flow.Flow
  * New DAO methods support listing, creating, switching, and deleting profiles.
  * Exactly one row must have `is_active = 1` at all times; [setActive] enforces
  * this atomically inside a `@Transaction`.
+ *
+ * ## Why abstract class, not interface?
+ * Room + Kotlin 2.0 / KAPT can miscompile `@Transaction` on concrete default
+ * methods in Kotlin interfaces (the generated stub doesn't always handle Kotlin
+ * coroutine suspension correctly). Using an abstract class is the pattern Room
+ * officially documents for @Transaction methods with business logic.
  */
 @Dao
-interface ProfileDao {
+abstract class ProfileDao {
 
     // -------------------------------------------------------------------------
     // Backward-compatible single-profile queries (legacy callers)
