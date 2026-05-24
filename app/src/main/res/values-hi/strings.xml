@@ -102,6 +102,7 @@
     <string name="room_join_action">शामिल हों</string>
     <string name="room_guest_done">होस्ट का कार्ड मिल गया!</string>
     <string name="room_hold_to_confirm">इशारे से पुष्टि करने के लिए एक्शन बटन दबाए रखें।</string>
+    <string name="profile_change_avatar_desc">प्रोफ़ाइल फ़ोटो बदलें</string>
     <string name="profile_avatar_desc">प्रोफ़ाइल फ़ोटो चुनने के लिए टैप करें</string>
     <string name="profile_avatar_too_large">चित्र बहुत बड़ा था — छोटा चित्र आज़माएँ।</string>
     <string name="home_greeting">नमस्ते, %1$s</string>
