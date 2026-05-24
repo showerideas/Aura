@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * PR-19: backing ViewModel for the Settings screen. Centralises all the
+ * backing ViewModel for the Settings screen. Centralises all the
  * app-wide knobs that previously lived only in code or inside other
  * screens.
  */

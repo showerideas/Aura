@@ -1,7 +1,7 @@
 package com.showerideas.aura.service
 
 /**
- * Prompt-7: Minimal transport interface that abstracts Google Nearby Connections
+ * Minimal transport interface that abstracts Google Nearby Connections
  * from the wire-protocol logic.
  *
  * Motivations:

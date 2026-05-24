@@ -55,7 +55,7 @@ sequenceDiagram
     end
 
     rect rgb(254,242,242)
-    note over NCA,NCB: Phase 2 — identity challenge (PR-13)
+    note over NCA,NCB: Phase 2 — identity challenge
     NCA->>NCB: MSG_TYPE_CHALLENGE ‖ idPubA ‖ nonce_a
     NCB->>NCB: sign(nonce_a, idPrivB)
     NCB->>NCA: MSG_TYPE_CHALLENGE_RESPONSE ‖ idPubB ‖ sig_b
@@ -77,7 +77,7 @@ sequenceDiagram
     end
 
     rect rgb(255,251,235)
-    note over NCA,NCB: Phase 4 — optional avatar (PR-10)
+    note over NCA,NCB: Phase 4 — optional avatar
     NCA-->>NCB: MSG_TYPE_AVATAR ‖ idPubA ‖ streamId
     NCA-->>NCB: STREAM payload (avatar bytes)
     NCB-->>NCA: MSG_TYPE_AVATAR ‖ idPubB ‖ streamId
@@ -99,7 +99,7 @@ sequenceDiagram
 
 ---
 
-## 2. Room mode (1 host : N guests, PR-09)
+## 2. Room mode (1 host : N guests, )
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{
@@ -145,7 +145,7 @@ In room mode the host runs `P2P_STAR` so multiple guests can connect simultaneou
 
 ---
 
-## 3. QR fallback (PR-08)
+## 3. QR fallback
 
 When BLE / Wi-Fi P2P is blocked (some corporate venues, locker-room metal cages), the user can switch to QR mode:
 

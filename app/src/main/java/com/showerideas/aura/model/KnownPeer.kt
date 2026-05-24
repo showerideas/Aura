@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * FIX-2: persisted TOFU (Trust On First Use) record for a remote endpoint.
+ * persisted TOFU (Trust On First Use) record for a remote endpoint.
  *
  * The previous implementation kept the endpoint-identity-key registry in
  * [com.showerideas.aura.service.NearbyExchangeService]'s companion-object

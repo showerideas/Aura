@@ -11,7 +11,7 @@ import java.text.DateFormat
 import java.util.Date
 
 /**
- * PR-19: ListAdapter for the blocked-devices screen. Renders endpoint ID
+ * ListAdapter for the blocked-devices screen. Renders endpoint ID
  * (truncated to a readable length) + the block time, with an inline
  * Unblock action.
  */

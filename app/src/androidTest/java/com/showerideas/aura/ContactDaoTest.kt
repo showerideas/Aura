@@ -18,7 +18,7 @@ import org.junit.runner.RunWith
 import java.util.UUID
 
 /**
- * PR-12: in-memory Room tests for the contacts DAO. Covers the read paths
+ * in-memory Room tests for the contacts DAO. Covers the read paths
  * the new favourites filter and notes editor depend on:
  *  - insert + observeAll emits the inserted record
  *  - search filters on all 8 text columns (name, email, phone, company,

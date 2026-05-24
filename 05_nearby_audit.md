@@ -114,7 +114,7 @@ gate for the other.
 **Impact:** Theoretical — requires the user to have AURA installed in both a
 personal and work Android profile simultaneously. Unlikely in practice.
 
-**Status:** Documented in code with `// DECISION(FIX-5)` comment. No fix applied
+**Status:** Documented in code with `// DECISION()` comment. No fix applied
 in this pass — fixing it requires moving `gestureVerified` to per-instance
 state or a DataStore key, which is a larger refactor requiring UI coordination.
 Tracked as a known limitation in the updated `docs/AUDIT.md`.

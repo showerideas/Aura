@@ -11,7 +11,7 @@
 | Area | State |
 |---|---|
 | Codebase | Production-ready on `main` — all 22 PRs merged |
-| Security fixes | All 9 fixes merged (FIX-1 → FIX-7, FIX-9) |
+| Security fixes | All 9 fixes merged ( → , ) |
 | Localization | 162 strings across 7 languages (DE, ES, FR, HI, JA, KO, ZH-CN) shipped |
 | Test suite | 50 tests passing — 32 unit + 4 instrumented (0 failures) |
 | CI pipeline | Green — unit tests, lint, `assembleRelease`, instrumented emulator runner |
@@ -234,7 +234,7 @@ Once the signed AAB is uploaded via CI:
 
 ### Platform
 
-- iOS companion app (SwiftUI) — not in scope yet but architecturally possible at the crypto layer
+- iOS companion app (SwiftUI) — not in scope yet; crypto layer is cross-platform capable
 - Android Auto profile — read out received contact details via TTS
 - Wear OS glance tile
 

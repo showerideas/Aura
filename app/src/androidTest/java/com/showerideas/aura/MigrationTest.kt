@@ -87,7 +87,7 @@ class MigrationTest {
     }
 
     /**
-     * PR-14: validate the 1→2 migration. Inserts a sample contact at v1,
+     * validate the 1→2 migration. Inserts a sample contact at v1,
      * runs the migration, and asserts:
      *   - existing rows survive untouched (no data loss)
      *   - the new blocked_endpoints table is now usable
@@ -141,7 +141,7 @@ class MigrationTest {
     }
 
     /**
-     * FIX-2 / PR-18: validate the 2→3 migration. Starts from a v2 database
+     * validate the 2→3 migration. Starts from a v2 database
      * containing both contacts and blocked_endpoints rows, runs the migration,
      * and asserts:
      *   - all existing rows survive untouched (no data loss)
@@ -205,7 +205,7 @@ class MigrationTest {
     }
 
     /**
-     * FIX-5: validate the 3→4 migration. Inserts contacts and blocked_endpoints
+     * validate the 3→4 migration. Inserts contacts and blocked_endpoints
      * rows at v3, runs the migration, and asserts:
      *   - existing rows survive (no data loss)
      *   - identityKeyHash column is present and defaults to NULL on old rows

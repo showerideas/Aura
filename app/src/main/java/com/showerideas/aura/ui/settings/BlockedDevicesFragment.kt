@@ -14,7 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * PR-19: lists every device the user has blocked via PR-14 and lets them
+ * lists every device the user has blocked via  and lets them
  * unblock individual entries.
  */
 @AndroidEntryPoint

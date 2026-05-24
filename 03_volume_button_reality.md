@@ -11,7 +11,7 @@
 `VolumeButtonListenerService` intercepts volume-down events via a
 `MediaSession.Callback.onMediaButtonEvent` callback. The session is set to
 `PlaybackState.STATE_PAUSED` so the OS considers it an "active" session
-eligible for media-button routing (FIX-6 in the code).
+eligible for media-button routing ( in the code).
 
 **For the callback to fire, ALL of the following must be true:**
 

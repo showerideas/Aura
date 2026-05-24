@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  *   - GUEST: connects to the first advertising host found and
  *     terminates after a single card exchange.
  *
- * Auth (PR-09 + PR-01): before either path actually starts the service
+ * Auth: before either path actually starts the service
  * we must unlock the service-level gesture gate. We mirror
  * [com.showerideas.aura.ui.exchange.ExchangeFragment]:
  *   - If a pattern is stored, the user must perform it (one tap → record

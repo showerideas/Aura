@@ -39,7 +39,7 @@ class ContactsAdapter(
                 .joinToString("")
                 .ifBlank { "?" }
 
-            // PR-10 + identicon: prefer saved photo → identicon from identity key hash → initials.
+            //  + identicon: prefer saved photo → identicon from identity key hash → initials.
             // IdenticonGenerator always returns a non-null Bitmap, so every contact has a
             // visually distinct identity even before they've exchanged an avatar photo.
             val avatarPath = contact.avatarUri
@@ -58,11 +58,11 @@ class ContactsAdapter(
                 binding.tvInitials.text = ""   // identicon replaces the text initials
             }
 
-            // PR-12: small star badge next to the name when isFavorite=true.
+            // small star badge next to the name when isFavorite=true.
             binding.ivFavouriteBadge.visibility =
                 if (contact.isFavorite) View.VISIBLE else View.GONE
 
-            // PR-17: use the pre-translated string resources so TalkBack
+            // use the pre-translated string resources so TalkBack
             // descriptions are localised rather than hardcoded English.
             binding.root.contentDescription = if (contact.isFavorite) {
                 ctx.getString(

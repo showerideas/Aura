@@ -9,9 +9,9 @@ import com.showerideas.aura.model.BlockedEndpoint
 import kotlinx.coroutines.flow.Flow
 
 /**
- * PR-14: read/write access to the blocked-endpoints table. Used by
+ * read/write access to the blocked-endpoints table. Used by
  * [com.showerideas.aura.data.BlocklistRepository] and the new
- * `BlockedDevicesFragment` (PR-19).
+ * `BlockedDevicesFragment`.
  */
 @Dao
 interface BlockedEndpointDao {
@@ -26,7 +26,7 @@ interface BlockedEndpointDao {
     suspend fun isBlocked(id: String): Boolean
 
     /**
-     * FIX-5: check whether any blocked entry carries this identity-key hash.
+     * check whether any blocked entry carries this identity-key hash.
      * Matches devices that reconnected with a fresh Nearby endpoint ID —
      * the hash is stable across sessions; the endpoint ID is not.
      */

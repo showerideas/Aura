@@ -26,15 +26,7 @@ import javax.crypto.SecretKey
 import javax.inject.Inject
 
 /**
- * FIX-D: hoist the QR fragment's keypair + countdown out of the Fragment so
- * a configuration change (most commonly screen rotation) does NOT regenerate
- * the keypair, which would invalidate any QR the peer is currently scanning.
- *
- * Owns:
- *  - One ephemeral ECDH keypair per "QR generation" cycle (re-rolled every 60s).
- *  - The current rendered QR bitmap.
- *  - The seconds-remaining countdown that drives the on-screen timer.
- *  - The peer-scan handler that derives the shared AES session key.
+ * Survives rotation. Owns ephemeral ECDH keypair, QR bitmap, countdown timer, and peer-scan handler.
  */
 @HiltViewModel
 class QRExchangeViewModel @Inject constructor() : ViewModel() {

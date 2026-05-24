@@ -29,7 +29,7 @@ class ProfileFragment : Fragment() {
 
     private val viewModel: ProfileViewModel by viewModels()
 
-    // PR-10: SAF image picker. The result callback can fire after a config
+    // SAF image picker. The result callback can fire after a config
     // change or detachment — use nullable context/_binding so it never NPEs.
     private val pickAvatarLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -83,7 +83,7 @@ class ProfileFragment : Fragment() {
                     binding.cbShareWebsite.isChecked = "website"     in shared
                     binding.cbShareBio.isChecked     = "bio"         in shared
 
-                    // PR-10: load avatar from disk if previously saved.
+                    // load avatar from disk if previously saved.
                     val avatar = AvatarUtils.userAvatarFile(requireContext())
                     AvatarUtils.loadBitmap(avatar)?.let { binding.ivAvatar.setImageBitmap(it) }
                 }
@@ -175,7 +175,7 @@ class ProfileFragment : Fragment() {
 
         binding.btnSave.setOnClickListener { saveProfile() }
 
-        // PR-10: tap the avatar to launch the system picker.
+        // tap the avatar to launch the system picker.
         binding.ivAvatar.setOnClickListener { pickAvatarLauncher.launch("image/*") }
     }
 
@@ -206,7 +206,7 @@ class ProfileFragment : Fragment() {
     }
 
     /**
-     * PR-11: paint the 5-segment strength meter. [litCount] bars become
+     * paint the 5-segment strength meter. [litCount] bars become
      * aura_purple, the rest revert to surface_variant. Tint via setColorFilter
      * on the shared drawable would mutate a single instance for all bars, so
      * we use setBackgroundColor on the per-bar View instead — the rounded
@@ -232,7 +232,7 @@ class ProfileFragment : Fragment() {
                     )
                 }
         }
-        // PR-17: the bars themselves are flagged importantForAccessibility=no
+        // the bars themselves are flagged importantForAccessibility=no
         // so the meter is communicated to TalkBack purely through the label.
         binding.tvVarianceLabel.contentDescription =
             getString(R.string.profile_gesture_strength_a11y, litCount)

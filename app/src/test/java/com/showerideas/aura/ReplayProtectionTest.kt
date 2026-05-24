@@ -9,7 +9,7 @@ import org.junit.Test
 import java.util.UUID
 
 /**
- * PR-15: unit tests for [PayloadValidator]. The validator is the entire
+ * unit tests for [PayloadValidator]. The validator is the entire
  * replay-protection contract — if these pass, the wire-level integration
  * in NearbyExchangeService only has to forward the result. JVM-only;
  * no Android dependencies.
@@ -125,7 +125,7 @@ class ReplayProtectionTest {
     }
 
     // -----------------------------------------------------------------------
-    // Prompt-6 / Issue-3: per-field length cap tests
+    // per-field length cap tests
     // -----------------------------------------------------------------------
 
     @Test

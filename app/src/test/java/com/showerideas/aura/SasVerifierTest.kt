@@ -7,7 +7,7 @@ import org.junit.Test
 import java.security.KeyPairGenerator
 
 /**
- * Prompt-8: Unit tests for [SasVerifier].
+ * Unit tests for [SasVerifier].
  *
  * Tests confirm the SAS derivation contract:
  *  1. Determinism — same keys always produce the same SAS

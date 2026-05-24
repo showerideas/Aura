@@ -22,12 +22,12 @@
 | H6 | "AES-256-GCM payload" | 🟢 | `CryptoUtils.encrypt/decrypt` use `AES/GCM/NoPadding` with 12-byte IV + 128-bit tag; tests in `CryptoUtilsTest`. |
 | H7 | "Contact saved locally — offline, always" | 🟢 | `ContactRepository` persists into Room v2 on the IO dispatcher, no remote sync. |
 | H8 | "Built for privacy: no outbound network calls. Ever." | 🟢 | Verified by grep — no `HttpURLConnection`, no OkHttp / Retrofit dependency, no analytics SDK. |
-| H9 | "Endpoint blocklist" | 🟢 | PR-14: `BlockedEndpointDao`, blocklist check in `NearbyExchangeService.onEndpointFound`. |
-| H10 | "QR-code fallback" | 🟢 | PR-08: `QRExchangeFragment` + ZXing-embedded. |
-| H11 | "Room mode: one host, many guests" | 🟢 | PR-09: `RoomExchangeFragment`, **P2P_CLUSTER** strategy (not P2P_STAR — both peers advertise + discover simultaneously; host accepts all comers, guests are single-shot). |
-| H12 | "vCard export" | 🟢 | PR-07: `VCardUtils` + `ExportUtils` + FileProvider declared in manifest. |
-| H13 | "Favourites and notes" | 🟢 | PR-12: `Contact.favorite`, `Contact.note`, DAO setters, UI in `ContactDetailBottomSheet`. |
-| H14 | "Full accessibility audit: TalkBack, large fonts, high-contrast theme" | 🟢 | PR-17: content descriptions, focusable targets, `Theme.Aura` checked at AA contrast. |
+| H9 | "Endpoint blocklist" | 🟢 | `BlockedEndpointDao`, blocklist check in `NearbyExchangeService.onEndpointFound`. |
+| H10 | "QR-code fallback" | 🟢 | `QRExchangeFragment` + ZXing-embedded. |
+| H11 | "Room mode: one host, many guests" | 🟢 | `RoomExchangeFragment`, **P2P_CLUSTER** strategy (not P2P_STAR — both peers advertise + discover simultaneously; host accepts all comers, guests are single-shot). |
+| H12 | "vCard export" | 🟢 | `VCardUtils` + `ExportUtils` + FileProvider declared in manifest. |
+| H13 | "Favourites and notes" | 🟢 | `Contact.favorite`, `Contact.note`, DAO setters, UI in `ContactDetailBottomSheet`. |
+| H14 | "Full accessibility audit: TalkBack, large fonts, high-contrast theme" | 🟢 | content descriptions, focusable targets, `Theme.Aura` checked at AA contrast. |
 | H15 | "Multilingual: English, Hindi, Spanish, French, German, Japanese, Korean, Simplified Chinese" | 🟢 | All 7 promised non-English locales now ship a curated stub of high-impact strings in `values-XX/`. Non-stubbed keys fall back to English. Tracked in [`features/20-localization.md`](features/20-localization.md). |
 | H16 | "Privacy policy: <https://showerideas.app/aura/privacy>" | 🟡 | The Markdown is committed (`PRIVACY_POLICY.md`) but the URL has not been hosted yet — `STORE_LISTING.md` calls this out as a TODO. |
 | H17 | "MIT licensed" | 🟢 | `LICENSE` shipped in PR #36. |
@@ -124,18 +124,18 @@ Post-v1.0 static analysis and fix pass. Evidence-based, no unverified claims.
 
 | # | Claim | Status | Evidence | Caveats |
 |---|---|---|---|---|
-| A1 | Gesture auth uses accelerometer + DTW | 🔴 **CORRECTED** | Actual: CameraX + MediaPipe 21-landmark cosine similarity. DTW was never implemented. Fixed in `docs/GESTURE_AUTH.md` (Prompt-4). | — |
+| A1 | Gesture auth uses accelerometer + DTW | 🔴 **CORRECTED** | Actual: CameraX + MediaPipe 21-landmark cosine similarity. DTW was never implemented. Fixed in `docs/GESTURE_AUTH.md` (). | — |
 | A2 | P2P transport strategy is P2P_STAR | 🔴 **CORRECTED** | Actual: `Strategy.P2P_CLUSTER` in `NearbyExchangeService.kt`. H11 updated above. | — |
 | A3 | Replay protection uses monotonically advancing counter | 🔴 **CORRECTED** | Actual: `_ts` timestamp ± 60s + `_nonce` UUID dedup set. Fixed in `docs/SECURITY.md` §T3. | — |
-| A4 | MediaPipe classes survive R8 | 🟢 VERIFIED + FIXED | Zero `-keep` rules existed; R8 stripped all `com.google.mediapipe.**`. Added comprehensive rules in `proguard-rules.pro` (Prompt-5). CI now asserts via apkanalyzer. | — |
-| A5 | Model download is hermetic | 🟢 FIXED | Replaced `URL.openStream()` with `HttpURLConnection` + 30s/5min timeouts + 3 retries + SHA-256 verification + jsDelivr fallback (Prompt-5). | SHA256 env var requires manual setup per environment. |
-| A6 | NearbyExchangeService TOCTOU race (P2P mode) | 🟢 FIXED | `@Volatile connectionRequested` flag prevents double-`requestConnection` (Prompt-6, Issue-1). | `@Volatile` not strictly atomic; acceptable because `requestConnection` failure path resets the flag. |
-| A7 | `pendingChallengeByEndpoint` memory leak (room mode) | 🟢 FIXED | `pendingChallengeByEndpoint.remove(endpointId)` added to ROOM_HOST `onDisconnected` branch (Prompt-6, Issue-2). | — |
-| A8 | `PayloadValidator` missing string length bounds | 🟢 FIXED | `MAX_FIELD_LENGTH=500` enforced for displayName/email/phone/note; pre-decryption `MAX_PROFILE_PAYLOAD_BYTES=65536` gate added (Prompt-6, Issue-3). | — |
-| A9 | `gestureVerified` is process-wide companion object | 🟡 PARTIAL | Documented with `DECISION(FIX-5)` comment. Fix requires DataStore refactor. Tracked for v1.3. | Multi-profile users only; extremely rare. |
-| A10 | TOFU first-meet MITM gap | 🟡 PARTIAL | `SasVerifier` implemented (Prompt-8). UI integration not yet wired — tracked for v1.2. | Operationally hard attack; SAS is defence-in-depth. |
-| A11 | Volume-button wake works on all devices | 🟡 PARTIAL | OEM failure rate >50% on Samsung/MIUI/ColorOS documented. In-app reliability test added to Settings (Prompt-2). See [docs/VOLUME_BUTTON_RELIABILITY.md](VOLUME_BUTTON_RELIABILITY.md). | Not fixable without AccessibilityService. |
-| A12 | APK committed to source | 🔴 **FIXED** | `app/release/*.apk` removed from git history; `app/release/` added to `.gitignore` (Prompt-9). | — |
-| A13 | Wire-protocol scenarios tested | 🟢 FIXED | `WireProtocolTest.kt` (17 JVM tests), `FakeNearbyTransport.kt`, `SasVerifierTest.kt` (17 tests), `NearbyTransport` interface added (Prompt-7, Prompt-8). | Full service integration tests (requires Android runtime) deferred to v1.2 emulator CI. |
-| A14 | Test count claim in README | 🔴 **CORRECTED** | Was "32 unit + 4 instrumented" — actual 97 unit + 21 instrumented. Fixed (Prompt-10). | — |
-| A15 | JaCoCo coverage gate | 🟢 NEW | `jacocoTestReport` + `jacocoTestCoverageVerification` (40% branch floor) added to build and CI (Prompt-10). | 40% is a conservative floor; raise to 70% target iteratively. |
+| A4 | MediaPipe classes survive R8 | 🟢 VERIFIED + FIXED | Zero `-keep` rules existed; R8 stripped all `com.google.mediapipe.**`. Added explicit rules in `proguard-rules.pro` (). CI now asserts via apkanalyzer. | — |
+| A5 | Model download is hermetic | 🟢 FIXED | Replaced `URL.openStream()` with `HttpURLConnection` + 30s/5min timeouts + 3 retries + SHA-256 verification + jsDelivr fallback (). | SHA256 env var requires manual setup per environment. |
+| A6 | NearbyExchangeService TOCTOU race (P2P mode) | 🟢 FIXED | `@Volatile connectionRequested` flag prevents double-`requestConnection` (, ). | `@Volatile` not strictly atomic; acceptable because `requestConnection` failure path resets the flag. |
+| A7 | `pendingChallengeByEndpoint` memory leak (room mode) | 🟢 FIXED | `pendingChallengeByEndpoint.remove(endpointId)` added to ROOM_HOST `onDisconnected` branch (, ). | — |
+| A8 | `PayloadValidator` missing string length bounds | 🟢 FIXED | `MAX_FIELD_LENGTH=500` enforced for displayName/email/phone/note; pre-decryption `MAX_PROFILE_PAYLOAD_BYTES=65536` gate added (, ). | — |
+| A9 | `gestureVerified` is process-wide companion object | 🟡 PARTIAL | Documented with `DECISION()` comment. Fix requires DataStore refactor. Tracked for v1.3. | Multi-profile users only; extremely rare. |
+| A10 | TOFU first-meet MITM gap | 🟡 PARTIAL | `SasVerifier` implemented (). UI integration not yet wired — tracked for v1.2. | Operationally hard attack; SAS is defence-in-depth. |
+| A11 | Volume-button wake works on all devices | 🟡 PARTIAL | OEM failure rate >50% on Samsung/MIUI/ColorOS documented. In-app reliability test added to Settings (). See [docs/VOLUME_BUTTON_RELIABILITY.md](VOLUME_BUTTON_RELIABILITY.md). | Not fixable without AccessibilityService. |
+| A12 | APK committed to source | 🔴 **FIXED** | `app/release/*.apk` removed from git history; `app/release/` added to `.gitignore` (). | — |
+| A13 | Wire-protocol scenarios tested | 🟢 FIXED | `WireProtocolTest.kt` (17 JVM tests), `FakeNearbyTransport.kt`, `SasVerifierTest.kt` (17 tests), `NearbyTransport` interface added (, ). | Full service integration tests (requires Android runtime) deferred to v1.2 emulator CI. |
+| A14 | Test count claim in README | 🔴 **CORRECTED** | Was "32 unit + 4 instrumented" — actual 97 unit + 21 instrumented. Fixed (). | — |
+| A15 | JaCoCo coverage gate | 🟢 NEW | `jacocoTestReport` + `jacocoTestCoverageVerification` (40% branch floor) added to build and CI (). | 40% is a conservative floor; raise to 70% target iteratively. |

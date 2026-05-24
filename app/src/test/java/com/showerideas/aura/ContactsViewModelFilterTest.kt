@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * PR-12: pure-JVM test of the favourites-filter selection logic used by
+ * pure-JVM test of the favourites-filter selection logic used by
  * ContactsViewModel.contacts (without the debounce + flatMapLatest plumbing
  * which would need a TestDispatcher and adds zero test value here). The
  * branch chosen on (query, favsOnly) is the part we actually need to pin

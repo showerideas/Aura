@@ -8,14 +8,8 @@ import androidx.fragment.app.Fragment
 import com.showerideas.aura.R
 
 /**
- * PR-16: thin wrapper around AndroidX BiometricPrompt so the rest of the
- * app can ask the system for a fingerprint / face-unlock confirmation
- * without dealing with the verbose builder API directly.
- *
- * AURA uses biometrics as an *alternative* to gesture auth, gated by the
- * user's choice in Settings (PR-19). The biometric check is only a UI
- * gate — the cryptographic security of the exchange still flows from the
- * ECDH handshake and the device identity challenge (PR-13).
+ * BiometricPrompt wrapper for the biometric auth path.
+ * UI gate only — exchange crypto flows from ECDH, not this check.
  */
 object BiometricAuthHelper {
 
@@ -34,8 +28,6 @@ object BiometricAuthHelper {
      * Show the system biometric prompt. [onSuccess] fires after a
      * confirmed match; [onFailure] fires for both hard errors (cancel,
      * lockout) and soft failures (sensor didn't recognise the print).
-     * Tests using this helper should stub out the BiometricPrompt — the
-     * helper itself is intentionally thin so there's nothing to mock here.
      */
     fun authenticate(
         fragment: Fragment,

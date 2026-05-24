@@ -7,7 +7,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * Prompt-3: Gesture-credential entropy measurement.
+ * Gesture-credential entropy measurement.
  *
  * Tests the statistical properties of the 63-float hand-landmark embedding
  * (21 landmarks × x,y,z — including depth) to quantify how well it separates

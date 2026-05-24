@@ -9,7 +9,7 @@ package com.showerideas.aura.model
 data class ExchangeSession(
     val sessionId: String,
     val state: State = State.ADVERTISING,
-    /** Which exchange topology this session is running under (PR-09). */
+    /** Which exchange topology this session is running under. */
     val mode: ExchangeMode = ExchangeMode.PEER_TO_PEER,
     val discoveredEndpoints: List<DiscoveredEndpoint> = emptyList(),
     val connectedEndpointId: String? = null,
@@ -58,14 +58,14 @@ data class ExchangeSession(
         CANCELLED,
         /** An unrecoverable error occurred */
         ERROR
-        // FIX-4: ROOM_HOST and ROOM_GUEST removed. These described exchange topology,
+        // ROOM_HOST and ROOM_GUEST removed. These described exchange topology,
         // not exchange stage — mixing them with stage values (ADVERTISING, CONNECTING,
         // COMPLETED, …) made when/else branches ambiguous and tests hard to reason about.
         // Topology is now expressed exclusively via [ExchangeMode]. To check whether a
         // session is in room-host mode use: session.mode == ExchangeMode.ROOM_HOST
     }
 
-    /** Topology selector for the exchange — PR-09. */
+    /** Topology selector for the exchange — . */
     enum class ExchangeMode {
         PEER_TO_PEER,
         ROOM_HOST,

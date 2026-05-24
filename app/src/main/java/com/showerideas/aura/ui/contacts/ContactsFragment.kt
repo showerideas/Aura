@@ -41,7 +41,7 @@ class ContactsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // PR-07: "Export all" toolbar action.
+        // "Export all" toolbar action.
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.contacts_menu, menu)
@@ -89,7 +89,7 @@ class ContactsFragment : Fragment() {
             }
         }
 
-        // PR-12: favourites filter chip.
+        // favourites filter chip.
         binding.chipFavourites.setOnClickListener { viewModel.toggleFavouritesFilter() }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

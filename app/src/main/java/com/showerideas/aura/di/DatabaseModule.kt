@@ -24,7 +24,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "aura.db")
-            // PR-04: explicit migration framework. `fallbackToDestructiveMigration`
+            // explicit migration framework. `fallbackToDestructiveMigration`
             // is intentionally NOT called — any future schema bump must add a
             // matching Migration object to [Migrations.ALL].
             .addMigrations(*Migrations.ALL)
@@ -36,12 +36,12 @@ object DatabaseModule {
     @Provides
     fun provideProfileDao(db: AppDatabase): ProfileDao = db.profileDao()
 
-    /** PR-14: blocklist DAO. */
+    /** blocklist DAO. */
     @Provides
     fun provideBlockedEndpointDao(db: AppDatabase): BlockedEndpointDao =
         db.blockedEndpointDao()
 
-    /** FIX-2: TOFU peer-identity DAO. */
+    /** TOFU peer-identity DAO. */
     @Provides
     fun provideKnownPeerDao(db: AppDatabase): KnownPeerDao =
         db.knownPeerDao()

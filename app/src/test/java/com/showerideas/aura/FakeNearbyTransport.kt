@@ -4,7 +4,7 @@ import com.showerideas.aura.service.NearbyTransport
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * Prompt-7: In-process fake implementation of [NearbyTransport].
+ * In-process fake implementation of [NearbyTransport].
  *
  * Wires two logical "endpoints" together so that a byte payload sent by
  * endpoint A arrives at endpoint B's [onPayloadReceived] callback and vice-

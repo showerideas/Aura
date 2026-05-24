@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             onPermissionsGranted()
         } else {
             Timber.w("Permissions denied: $denied")
-            // PR-03: show a rationale bottom sheet that deep-links to settings.
+            // show a rationale bottom sheet that deep-links to settings.
             PermissionRationaleBottomSheet
                 .newInstance(denied.toList())
                 .show(supportFragmentManager, PermissionRationaleBottomSheet.TAG)
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
             if (intent.action == VolumeButtonListenerService.ACTION_AURA_ACTIVATE) {
                 Timber.i("Activation broadcast received — launching exchange")
                 // ExchangeFragment runs the gesture gate before starting the
-                // NearbyExchangeService (PR-01). Do NOT start the service here.
+                // NearbyExchangeService. Do NOT start the service here.
                 navController.navigate(R.id.exchangeFragment)
             }
         }
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHost.navController
 
-        // PR-05: route first-run users to the onboarding flow before the
+        // route first-run users to the onboarding flow before the
         // nav host inflates its default start destination. We use runBlocking
         // intentionally here — this is a one-off DataStore read on app start
         // and must complete before navigation can begin.
@@ -161,7 +161,7 @@ class MainActivity : AppCompatActivity() {
 
         // Hide the bottom nav on full-screen / flow destinations so the user
         // can't tap-bypass the onboarding gate or an in-flight exchange.
-        // PR-05 + PR-08 + PR-09 contract.
+        //  +  +  contract.
         val rootDestinations = setOf(
             R.id.homeFragment, R.id.profileFragment, R.id.contactsFragment
         )
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onPermissionsGranted() {
-        // PR-19: only start the background listener if the user hasn't
+        // only start the background listener if the user hasn't
         // disabled it in Settings. Defaults to true so first-run behaviour
         // is unchanged.
         val bgEnabled = runBlocking { authPreferences.bgActivationEnabled.first() }
@@ -208,7 +208,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // -----------------------------------------------------------------
-    // PR-19: Settings entry point.
+    // Settings entry point.
     //
     // The toolbar gear navigates to the SettingsFragment in the nav graph.
     // We use the classic onCreate/onSelect menu pair instead of

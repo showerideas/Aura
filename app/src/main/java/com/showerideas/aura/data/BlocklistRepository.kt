@@ -9,10 +9,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * PR-14: thin wrapper around [BlockedEndpointDao] so the service and UI
+ * thin wrapper around [BlockedEndpointDao] so the service and UI
  * layers depend on a repository contract instead of a DAO directly.
  *
- * FIX-5: blocklist now keys on stable identity-key hash in addition to
+ * blocklist now keys on stable identity-key hash in addition to
  * the ephemeral Nearby endpoint ID. A blocked device that reconnects
  * with a new endpoint ID is still rejected via [isBlockedByKeyHash].
  */
@@ -27,7 +27,7 @@ class BlocklistRepository @Inject constructor(
         dao.block(BlockedEndpoint(endpointId = endpointId, note = note))
 
     /**
-     * FIX-5: block by both endpoint ID and stable identity key hash.
+     * block by both endpoint ID and stable identity key hash.
      * Prevents the device from bypassing the block on reconnect with a
      * fresh Nearby endpoint ID.
      */
@@ -43,7 +43,7 @@ class BlocklistRepository @Inject constructor(
     suspend fun isBlocked(endpointId: String): Boolean = dao.isBlocked(endpointId)
 
     /**
-     * FIX-5: check whether a public key's hash appears in the blocklist.
+     * check whether a public key's hash appears in the blocklist.
      * Use this after decoding the peer's identity key to catch reconnects
      * that arrive with a new ephemeral endpoint ID.
      */
@@ -51,7 +51,7 @@ class BlocklistRepository @Inject constructor(
         dao.isBlockedByKeyHash(CryptoUtils.identityKeyHash(publicKey))
 
     /**
-     * FIX-5: convenience overload that accepts a pre-computed hash string
+     * convenience overload that accepts a pre-computed hash string
      * (e.g. from a Contact's [com.showerideas.aura.model.Contact.identityKeyHash] field).
      */
     suspend fun isBlockedByKeyHash(identityKeyHash: String): Boolean =

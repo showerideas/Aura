@@ -102,9 +102,9 @@ with language like:
 
 For first-meet exchanges where device identity keys have not been seen before
 (TOFU), neither the gesture nor the crypto alone prevents impersonation.
-Prompt-8 adds a **Short Authentication String** (SAS) derived from both
+ adds a **Short Authentication String** (SAS) derived from both
 parties' ECDH public keys. Both phones display the same 6-digit number; the
 user confirms visually. This closes the first-meet MITM gap that the gesture
 alone cannot close.
 
-See `docs/SECURITY.md` (updated in Prompt-8) and `SasVerifier.kt`.
+See `docs/SECURITY.md` (updated in ) and `SasVerifier.kt`.

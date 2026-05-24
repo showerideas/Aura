@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * FIX-2: repository that backs the TOFU (Trust On First Use) endpoint registry.
+ * repository that backs the TOFU (Trust On First Use) endpoint registry.
  *
  * Converts between [java.security.PublicKey] objects (used by the service's
  * crypto layer) and the Base64-encoded X.509 strings stored in Room.
@@ -24,7 +24,7 @@ class KnownPeerRepository @Inject constructor(
 ) {
 
     /**
-     * FIX-4: sealed result so callers can distinguish three states:
+     * sealed result so callers can distinguish three states:
      * - [Found]    — record exists and key decoded successfully.
      * - [NotFound] — endpoint is genuinely new (TOFU first-use path).
      * - [Corrupt]  — record exists but key bytes are malformed.

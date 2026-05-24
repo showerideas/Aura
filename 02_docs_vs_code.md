@@ -30,7 +30,7 @@ embedding.
 | 41 | "The whole pipeline is JVM-pure once the samples are captured — `computeVariance` and `dtw` are covered by `app/src/test/java/com/showerideas/aura/GestureMatchTest.kt`." | `computeVariance` and `dtw` functions do not exist. There is no `GestureMatchTest.kt` file. Tests are in `GestureAuthTest.kt` and test cosine similarity math only. |
 | Section 2 heading | "Why DTW and not a hash?" | DTW is not used. The section is entirely fictional. |
 | Section 2 body | "Dynamic Time Warping measures how well two sequences align under non-linear time stretching" | Irrelevant — not used. |
-| Section 3 heading | "Variance gate (PR-06)" | No variance gate in code. `GestureAuthManager.kt` has no `computeVariance`. |
+| Section 3 heading | "Variance gate" | No variance gate in code. `GestureAuthManager.kt` has no `computeVariance`. |
 | Section 3 body | "we compute the population variance of the raw magnitude series" | No magnitude series, no variance computation. |
 | Section 4 heading + flowchart | "The strength meter turns the same **variance** value into a 1-of-5 bar" | The strength meter is driven by `liveVariance` which maps to `CameraHandEmbedder.GestureState.Detecting.stability` (frame-count progress 0..1), not variance. `GestureAuthManager.kt:81-86` |
 | Storage table | "The 50-float feature vector + variance — `EncryptedSharedPreferences` (`aura_gesture_prefs_v1`) under key `pattern_v1`" | Vector is 42 floats. Key name is `gesture_feature_vector`. File name is `aura_gesture_prefs`. No variance is stored. `GestureAuthManager.kt:40-41, 199` |
@@ -71,7 +71,7 @@ specific key names and vector size are wrong.
 - No instrumentation test exists that injects three `KEYCODE_VOLUME_DOWN` events
   and asserts the broadcast is received.
 - No documentation of the failure modes on Samsung One UI, MIUI, ColorOS.
-- The `STATE_PAUSED` PlaybackState trick (FIX-6, line 114) is noted in the code
+- The `STATE_PAUSED` PlaybackState trick (, line 114) is noted in the code
   itself as potentially unreliable. The audit grades this green with no caveat.
 
 **Verdict:** `PARTIAL` — code exists, reliability unproven, no test.
@@ -116,7 +116,7 @@ Android Context and MediaPipe native libs.
 
 ### H10: QR fallback (🟢)
 
-**Claim:** "PR-08: `QRExchangeFragment` + ZXing-embedded."
+**Claim:** "`QRExchangeFragment` + ZXing-embedded."
 
 **Code evidence:** Code exists. ✓
 
@@ -130,7 +130,7 @@ Android Context and MediaPipe native libs.
 
 ### H11: Room mode 1:N (🟢)
 
-**Claim:** "PR-09: `RoomExchangeFragment`, P2P_STAR strategy."
+**Claim:** "`RoomExchangeFragment`, P2P_STAR strategy."
 
 **Code evidence:** `P2P_CLUSTER` is used, not `P2P_STAR`. `NearbyExchangeService.kt:77`
 — `private val STRATEGY = Strategy.P2P_CLUSTER`.
@@ -145,7 +145,7 @@ Android Context and MediaPipe native libs.
 
 ---
 
-### PR-21: Test-suite finisher (🟢)
+### Test-suite finisher (🟢)
 
 **Claim:** "32 unit + 4 instrumentation tests."
 
@@ -154,7 +154,7 @@ and in the README feature table.
 
 ---
 
-### PR-20: Localisation (🟡)
+### Localisation (🟡)
 
 **Claim in AUDIT.md:** "translated `values-xx/` dirs not yet committed" (marked yellow, roadmap item).
 
@@ -169,7 +169,7 @@ remain English-only across all locales.
 
 ## D. `docs/features/` — PR labels vs. actual git history
 
-The `docs/features/NN-*.md` files reference "PR-01" through "PR-22". Inspecting
+The `docs/features/NN-*.md` files reference "" through "". Inspecting
 `git log --oneline` reveals:
 
 ```
@@ -182,8 +182,8 @@ ac96e13 docs: add ROADMAP.md
 
 The `PR-NN` labels in feature docs are **internal tracking numbers**, not GitHub
 pull request numbers. GitHub PR #48 is the highest visible merge, but the
-feature docs reference up to PR-22. The numbers are a documentation convention,
-not links to real GitHub PRs. There is no cross-reference between "PR-01" and
+feature docs reference up to . The numbers are a documentation convention,
+not links to real GitHub PRs. There is no cross-reference between "" and
 any GitHub PR URL.
 
 **Verdict:** No action required if the labels are treated as internal sequence

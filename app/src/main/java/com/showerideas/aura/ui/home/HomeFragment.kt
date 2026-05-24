@@ -29,7 +29,7 @@ class HomeFragment : Fragment() {
 
     private val viewModel: HomeViewModel by viewModels()
 
-    /** PR-18: reference held so we can cancel cleanly in onDestroyView. */
+    /** reference held so we can cancel cleanly in onDestroyView. */
     private var pulseAnimator: ObjectAnimator? = null
 
     override fun onCreateView(
@@ -45,16 +45,16 @@ class HomeFragment : Fragment() {
         binding.btnActivate.setOnClickListener {
             // The exchange fragment is responsible for running the gesture
             // gate and then starting NearbyExchangeService once the gate is
-            // opened. We must not start the service before that — see PR-01.
+            // opened. We must not start the service before that — see .
             findNavController().navigate(R.id.action_home_to_exchange)
         }
 
-        // PR-08: QR fallback for environments where BLE / Wi-Fi P2P is blocked.
+        // QR fallback for environments where BLE / Wi-Fi P2P is blocked.
         binding.btnQrFallback.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_qr)
         }
 
-        // PR-09: room mode — also reachable via long-press on the AURA button.
+        // room mode — also reachable via long-press on the AURA button.
         binding.btnRoomMode.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_room)
         }
@@ -84,16 +84,16 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // PR-18: start the idle-state pulse the moment the screen is up.
+        // start the idle-state pulse the moment the screen is up.
         startPulse(R.color.aura_purple)
 
-        // PR-18: while an exchange session is live, switch the pulse to cyan
+        // while an exchange session is live, switch the pulse to cyan
         // so the home screen reflects the service state if the user backs
         // out of the Exchange screen.
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 NearbyExchangeService.sessionState.collect { session ->
-                    // FIX-4: ROOM_HOST/ROOM_GUEST removed from State enum; topology
+                    // ROOM_HOST/ROOM_GUEST removed from State enum; topology
                     // is now expressed via session.mode. Active states are the four
                     // in-progress stage values regardless of mode.
                     val active = session != null && session.state in setOf(
@@ -110,7 +110,7 @@ class HomeFragment : Fragment() {
     }
 
     /**
-     * PR-18: replace the current pulse animation with a new one tinted to
+     * replace the current pulse animation with a new one tinted to
      * [colorRes]. Idempotent on the same colour — cancelling and restarting
      * is cheap enough that we don't bother diffing the current state.
      */

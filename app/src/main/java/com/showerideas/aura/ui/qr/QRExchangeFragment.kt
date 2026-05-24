@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
  * session by visually swapping QR codes:
  *
  *  1. Each side generates an ephemeral ECDH keypair (owned by
- *     [QRExchangeViewModel] so it survives rotation — see FIX-D).
+ *     [QRExchangeViewModel] so it survives rotation).
  *  2. The local public key + a random endpoint UUID + a timestamp are
  *     encoded as JSON and rendered as a QR code.
  *  3. The "Scan their QR" button opens a ZXing scanner; the scanned JSON

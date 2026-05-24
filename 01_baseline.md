@@ -137,11 +137,11 @@ Found (from static inspection):
 
 | Comment | File | Line (approx) |
 |---|---|---|
-| `// DECISION(FIX-5): gesture verifies session start, not each peer — see git log` | `NearbyExchangeService.kt` | ~124 |
-| `// FIX-6` through `// FIX-C` — past-tense fix annotations (not open TODOs) | `NearbyExchangeService.kt` | various |
+| `// DECISION(): gesture verifies session start, not each peer — see git log` | `NearbyExchangeService.kt` | ~124 |
+| `// ` through `// ` — past-tense fix annotations (not open TODOs) | `NearbyExchangeService.kt` | various |
 | No open `TODO` or `FIXME` found in `app/src/main/` | — | — |
 
-No open TODOs in main source. All `FIX-N` annotations are past-tense
+No open TODOs in main source. All `` annotations are past-tense
 documentation of already-applied fixes, not pending work.
 
 ---
