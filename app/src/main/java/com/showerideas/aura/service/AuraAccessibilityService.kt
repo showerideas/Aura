@@ -25,7 +25,7 @@ import timber.log.Timber
  *
  * ## Privacy note
  * AURA's AccessibilityService is declared with
- * `accessibilityEventTypes="typeNone"` — it registers ZERO accessibility
+ * `accessibilityEventTypes="typeAllMask (AAPT2-compatible, events ignored in onAccessibilityEvent)"` — it registers ZERO accessibility
  * events from other apps. It only intercepts key events via
  * `flagRequestFilterKeyEvents`. It cannot see the content of other apps.
  *
@@ -75,7 +75,7 @@ class AuraAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // No accessibility events subscribed — intentionally empty.
-        // accessibilityEventTypes is set to typeNone in the XML config.
+        // accessibilityEventTypes is set to typeAllMask (AAPT2-compatible, events ignored in onAccessibilityEvent) in the XML config.
     }
 
     override fun onInterrupt() {
