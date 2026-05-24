@@ -3,7 +3,9 @@ package com.showerideas.aura.ui.exchange
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import timber.log.Timber
+import android.view.View
+import timber.log.TimberGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment

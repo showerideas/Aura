@@ -290,4 +290,16 @@
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC tap active — faster key exchange</string>
     <string name="exchange_nfc_active_desc">This exchange was initiated via NFC tap — the ECDH handshake is pre-seeded</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">Card Updated</string>
+    <string name="merge_action_accept">Accept changes</string>
+    <string name="merge_action_revert">Revert all</string>
+    <string name="merge_field_toggle_desc">Toggle whether to keep the new value for %1$s</string>
+
+    <!-- merge_subtitle plural: "{name} sent a new card. {n} field(s) changed." -->
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s sent a new card. 1 field changed.</item>
+        <item quantity="other">%1$s sent a new card. %2$d fields changed.</item>
+    </plurals>
 </resources>

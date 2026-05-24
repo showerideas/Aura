@@ -222,11 +222,22 @@
     <string name="settings_volume_wake_warning">⚠ Le triple appui sur le volume fonctionne sur Pixel et Android standard. Il peut ne pas fonctionner sur Samsung, Xiaomi, OPPO ou d\'autres versions personnalisées d\'Android en raison de l\'interception des touches au niveau du système. Utilise le bouton ci-dessous pour vérifier ton appareil.</string>
     <string name="status_verifying">Vérifier le code avec ton contact…</string>
     <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">Active l'activation fiable par triple pression du volume sur tous les appareils Android, y compris Samsung, MIUI et ColorOS. AURA ne lit jamais le contenu des autres apps.</string>
+    <string name="accessibility_service_description">Active l\'activation fiable par triple pression du volume sur tous les appareils Android, y compris Samsung, MIUI et ColorOS. AURA ne lit jamais le contenu des autres apps.</string>
     <string name="settings_accessibility_mode">Mode accessibilité (recommandé)</string>
     <string name="settings_accessibility_enabled">Actif — fonctionne sur tous les appareils ✓</string>
-    <string name="settings_accessibility_disabled">Appuyez pour activer dans les paramètres d'accessibilité</string>
+    <string name="settings_accessibility_disabled">Appuyez pour activer dans les paramètres d\'accessibilité</string>
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC actif — échange de clé plus rapide</string>
     <string name="exchange_nfc_active_desc">Cet échange a été initié via NFC — la poignée de main ECDH est pré-amorcée</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">Carte mise à jour</string>
+    <string name="merge_action_accept">Accepter les modifications</string>
+    <string name="merge_action_revert">Tout annuler</string>
+    <string name="merge_field_toggle_desc">Activer/désactiver la conservation de la nouvelle valeur pour %1$s</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s a envoyé une nouvelle carte. 1 champ modifié.</item>
+        <item quantity="other">%1$s a envoyé une nouvelle carte. %2$d champs modifiés.</item>
+    </plurals>
 </resources>

@@ -202,7 +202,7 @@ class SettingsFragment : Fragment() {
         )
         binding.tvAccessibilityStatus.setTextColor(
             requireContext().getColor(
-                if (enabled) com.showerideas.aura.R.color.aura_teal
+                if (enabled) com.showerideas.aura.R.color.aura_cyan
                 else com.showerideas.aura.R.color.on_surface_secondary
             )
         )

@@ -145,7 +145,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
                         for (device in peerList.deviceList) {
                             val mac = device.deviceAddress
                             val name = device.deviceName
-                            if (mac !in discoveredPeers) {
+                            if (!discoveredPeers.containsKey(mac)) {
                                 discoveredPeers[mac] = name
                                 Timber.d("WifiDirect: peer found via PEERS_CHANGED $name ($mac)")
                                 onEndpointFound?.invoke(mac, name)
@@ -209,7 +209,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
                 // Service resolved — extract peer info
                 val mac = device.deviceAddress
                 val name = instanceName.ifBlank { device.deviceName }
-                if (mac !in discoveredPeers) {
+                if (!discoveredPeers.containsKey(mac)) {
                     discoveredPeers[mac] = name
                     Timber.i("WifiDirect: DNS-SD found $name ($mac)")
                     onEndpointFound?.invoke(mac, name)
