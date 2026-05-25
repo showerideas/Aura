@@ -4,17 +4,14 @@ import android.Manifest
 import android.os.SystemClock
 import androidx.annotation.IdRes
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.navigation.Navigation
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.showerideas.aura.ui.MainActivity
 import org.junit.Before
@@ -26,17 +23,17 @@ import org.junit.runner.RunWith
  * Espresso smoke test for [com.showerideas.aura.ui.settings.SettingsFragment].
  *
  * Verifies:
- *  1. The Settings screen is reachable from the app toolbar overflow menu.
+ *  1. The Settings screen is reachable from the app toolbar Settings gear icon.
  *  2. The auth-method radio group (gesture / biometric) is visible.
  *  3. The "Blocked devices" shortcut row is visible and tappable.
  *  4. The version row renders (i.e. build metadata is wired into the layout).
  *
- * v1.3 fix: ensureOnHome() now calls waitForView(btn_activate) to let the
- * HomeFragment fully settle — and the ActionBar overflow menu to be inflated —
- * before openActionBarOverflowOrOptionsMenu() is called. Without this guard
- * the NavController fragment transition may still be running, causing
- * openActionBarOverflowOrOptionsMenu() to fail with "No views matching
- * OverflowMenuButton" because the ActionBar hasn't rendered its menu yet.
+ * v1.4 fix: menu_main.xml uses showAsAction="always" for the Settings item —
+ * it renders as a gear icon directly in the Toolbar, not in an overflow dropdown.
+ * openActionBarOverflowOrOptionsMenu() was therefore wrong here; replaced with
+ * onView(withId(R.id.action_settings)).perform(click()) to target the icon directly.
+ * Also added waitForView(btn_activate) in ensureOnHome() so the Toolbar menu is
+ * fully inflated before the click is attempted.
  */
 @RunWith(AndroidJUnit4::class)
 class SettingsEspressoTest {
@@ -53,17 +50,14 @@ class SettingsEspressoTest {
     @Before
     fun ensureOnHome() {
         navigateToHomeIfOnOnboarding()
-        // Wait for HomeFragment to fully settle so the ActionBar overflow menu
-        // is inflated before openActionBarOverflowOrOptionsMenu() is called.
+        // Wait for HomeFragment to settle so the Toolbar menu is fully inflated.
         waitForView(R.id.btn_activate)
     }
 
     @Test
     fun settings_screen_shows_auth_and_blocked_rows() {
-        openActionBarOverflowOrOptionsMenu(
-            InstrumentationRegistry.getInstrumentation().targetContext
-        )
-        onView(withText(R.string.settings_title)).perform(click())
+        // Settings icon (gear) is showAsAction="always" — click it directly.
+        onView(withId(R.id.action_settings)).perform(click())
 
         waitForView(R.id.rg_auth_method)
         onView(withId(R.id.rb_auth_gesture)).check(matches(isDisplayed()))
@@ -75,10 +69,8 @@ class SettingsEspressoTest {
 
     @Test
     fun blocked_devices_row_navigates_to_blocked_screen() {
-        openActionBarOverflowOrOptionsMenu(
-            InstrumentationRegistry.getInstrumentation().targetContext
-        )
-        onView(withText(R.string.settings_title)).perform(click())
+        // Settings icon (gear) is showAsAction="always" — click it directly.
+        onView(withId(R.id.action_settings)).perform(click())
         waitForView(R.id.row_blocked_devices)
 
         onView(withId(R.id.row_blocked_devices)).perform(click())
