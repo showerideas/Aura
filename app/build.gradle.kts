@@ -525,9 +525,9 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
             limit {
                 counter = "BRANCH"
                 value = "COVEREDRATIO"
-                // Prompt-10: 40% branch coverage floor.
-                // Raise in 5-point increments: 40 → 45 → 50 → ... target 70%.
-                minimum = "0.50".toBigDecimal()
+                // Stage-3: 60% branch coverage floor (raised from 50%).
+                // Raise in 5-point increments: 60 → 65 → 70 target.
+                minimum = "0.60".toBigDecimal()
             }
         }
     }
