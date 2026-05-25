@@ -63,8 +63,10 @@ jobs:
           restore-keys: |
             mediapipe-gesture-model-
 
-      - name: Unit tests (testGmsDebugUnitTest testFossDebugUnitTest)
-        run: ./gradlew testGmsDebugUnitTest testFossDebugUnitTest --stacktrace
+      - name: Unit tests GMS (testGmsDebugUnitTest)
+        run: ./gradlew testGmsDebugUnitTest --stacktrace
+      - name: Unit tests FOSS (testFossDebugUnitTest)
+        run: ./gradlew testFossDebugUnitTest --stacktrace
         env:
           GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
