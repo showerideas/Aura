@@ -132,6 +132,9 @@ class MainActivity : AppCompatActivity() {
         if (navController.currentDestination?.id != R.id.exchangeFragment) {
             navController.navigate(R.id.exchangeFragment)
         }
+    
+        // Phase 6.8 — handle incoming Share AURA deeplinks (https://aura.app/c/*)
+        handleDeeplink(intent)
     }
 
     override fun onDestroy() {
@@ -239,5 +242,23 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    /**
+     * Phase 6.8 — route incoming https://aura.app/c/* App Links to the
+     * contact-import flow. DeeplinkUtils decodes the base64url JSON payload;
+     * we then navigate to the contacts screen so the user can save the card.
+     */
+    private fun handleDeeplink(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val url = intent.data?.toString() ?: return
+        val fields = com.showerideas.aura.utils.DeeplinkUtils.decodeShareUrl(url) ?: return
+        Timber.i("Deeplink received: %d fields", fields.size)
+        // Navigate to contacts and pass the pre-filled data via the back-stack entry
+        // The contacts flow can pick up the fields map and show a pre-filled merge sheet
+        val bundle = android.os.Bundle().apply {
+            putSerializable("deeplink_fields", HashMap(fields))
+        }
+        navController.navigate(R.id.contactsFragment, bundle)
     }
 }
