@@ -297,4 +297,11 @@
     <string name="action_share_card">分享名片链接</string>
     <string name="share_card_chooser_title">分享我的AURA名片</string>
     <string name="share_card_text">这是我的AURA名片：%1$s</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
 </resources>
