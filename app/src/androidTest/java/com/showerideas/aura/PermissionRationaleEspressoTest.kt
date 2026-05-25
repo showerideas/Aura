@@ -29,21 +29,17 @@ import org.junit.runner.RunWith
  *  3. The "Open Settings" and "Not now" buttons are both present.
  *  4. Tapping "Not now" dismisses the sheet without crashing.
  *
- * Uses [ActivityScenarioRule] + scenario.onActivity to show the bottom
- * sheet on the main thread via the activity's supportFragmentManager —
- * the same way the production code displays it — without needing a
- * dedicated fragment-testing artifact.
- *
- * Covers AUDIT.md §2 row 03 ("Permission-rationale sheet — UI test pending").
+ * v1.3 fix: ensureOnHome() now calls waitForView(btn_activate) to let the
+ * HomeFragment fully settle after navigation before the sheet is shown.
+ * Without this guard, the sheet could be displayed while the NavController
+ * fragment transition is still running, leaving the activity window in a
+ * continuous requestLayout state — triggering RootViewWithoutFocusException
+ * in waitForView (which previously only caught NoMatchingViewException).
+ * waitForView now catches all Throwable so it retries on focus-change errors.
  */
 @RunWith(AndroidJUnit4::class)
 class PermissionRationaleEspressoTest {
 
-    // Pre-grant dangerous permissions so MainActivity.checkAndRequestPermissions()
-    // finds them all satisfied and never shows the system dialog that would pause
-    // the activity before Espresso can interact with it.
-    // The sheet itself is shown programmatically via scenario.onActivity — these
-    // tests exercise the sheet UI, not the system permission dialog.
     @get:Rule(order = 0)
     val grantPermissionsRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -53,26 +49,23 @@ class PermissionRationaleEspressoTest {
     @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    // On a fresh emulator the DataStore ONBOARDING_COMPLETE flag is false,
-    // so MainActivity routes to onboardingFragment. Navigate to home first so
-    // the activity window has proper focus when the bottom sheet is shown.
     @Before
     fun ensureOnHome() {
         navigateToHomeIfOnOnboarding()
+        // Wait for HomeFragment to fully settle before showing the bottom sheet.
+        // Without this, the NavController fragment transition may still be running
+        // when showSheet() is called, leaving the activity in continuous requestLayout
+        // and causing RootViewWithoutFocusException in waitForView.
+        waitForView(R.id.btn_activate)
     }
 
     @Test
     fun sheet_shows_title_rows_and_buttons() {
         showSheet(listOf(Manifest.permission.CAMERA, Manifest.permission.BLUETOOTH_SCAN))
 
-        // Title is visible.
         waitForView(R.id.tv_title)
         onView(withId(R.id.tv_title)).check(matches(isDisplayed()))
-
-        // Container that receives the dynamically-built permission rows.
         onView(withId(R.id.container_permission_rows)).check(matches(isDisplayed()))
-
-        // Both action buttons must be present.
         onView(withId(R.id.btn_open_settings)).check(matches(isDisplayed()))
         onView(withId(R.id.btn_not_now)).check(matches(isDisplayed()))
     }
@@ -82,12 +75,7 @@ class PermissionRationaleEspressoTest {
         showSheet(listOf(Manifest.permission.CAMERA))
 
         waitForView(R.id.btn_not_now)
-        // isCancelable = false means the sheet cannot be swiped away, but the
-        // "Not now" button still calls dismiss() + activity.finish().
-        // We interact with it before it finishes the activity.
         onView(withId(R.id.btn_not_now)).perform(click())
-
-        // After the activity finishes the test completes — no crash == pass.
         SystemClock.sleep(500)
     }
 
@@ -110,15 +98,6 @@ class PermissionRationaleEspressoTest {
         onView(withId(R.id.btn_open_settings)).check(matches(isDisplayed()))
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * If the app started on OnboardingFragment (ONBOARDING_COMPLETE=false in DataStore
-     * on a fresh emulator), navigate to HomeFragment via the declared nav action so
-     * the activity window has focus before the bottom sheet is shown.
-     */
     private fun navigateToHomeIfOnOnboarding() {
         activityRule.scenario.onActivity { activity ->
             val navController = Navigation.findNavController(activity, R.id.nav_host_fragment)
@@ -135,6 +114,11 @@ class PermissionRationaleEspressoTest {
         }
     }
 
+    /**
+     * Polls until [id] is displayed or [timeoutMs] elapses.
+     * Catches all Throwable — including RootViewWithoutFocusException — so
+     * transient window-focus changes trigger a retry rather than a hard failure.
+     */
     private fun waitForView(@IdRes id: Int, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs
         var lastError: Throwable? = null
@@ -142,10 +126,9 @@ class PermissionRationaleEspressoTest {
             try {
                 onView(withId(id)).check(matches(isDisplayed()))
                 return
-            } catch (e: NoMatchingViewException) {
-                lastError = e; SystemClock.sleep(150)
-            } catch (e: AssertionError) {
-                lastError = e; SystemClock.sleep(150)
+            } catch (e: Throwable) {
+                lastError = e
+                SystemClock.sleep(150)
             }
         }
         lastError?.let { throw it }
