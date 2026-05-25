@@ -6,6 +6,7 @@ import androidx.annotation.IdRes
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -28,12 +29,27 @@ import org.junit.runner.RunWith
  *  3. The "Blocked devices" shortcut row is visible and tappable.
  *  4. The version row renders (i.e. build metadata is wired into the layout).
  *
- * v1.4 fix: menu_main.xml uses showAsAction="always" for the Settings item —
- * it renders as a gear icon directly in the Toolbar, not in an overflow dropdown.
- * openActionBarOverflowOrOptionsMenu() was therefore wrong here; replaced with
- * onView(withId(R.id.action_settings)).perform(click()) to target the icon directly.
- * Also added waitForView(btn_activate) in ensureOnHome() so the Toolbar menu is
- * fully inflated before the click is attempted.
+ * v1.5 fix: Choreographer layout timing.
+ *
+ * Root cause: after onView(action_settings).perform(click()), NavController adds
+ * SettingsFragment to the back stack and its view enters the hierarchy. However,
+ * Choreographer has not yet fired a VSYNC layout traversal. waitForView calls
+ * onView().check() in a polling loop — each onView() call posts to the main thread
+ * via waitForIdleSync(), which PREVENTS Choreographer callbacks from running because
+ * the main thread looper never goes fully idle. Result: getGlobalVisibleRect() stays
+ * empty for the entire 5-second window, and every isDisplayed() check fails.
+ *
+ * Fix: SystemClock.sleep(500) after the settings click gives Choreographer 500ms of
+ * uninterrupted main-thread time to run the layout traversal. After that the view
+ * bounds are populated and isDisplayed() succeeds.
+ *
+ * scrollTo() is added before each isDisplayed() assertion to handle views that may
+ * be below the fold on a small emulator screen (fragment_settings.xml root is
+ * ScrollView).
+ *
+ * waitForView is reverted to catch only NoMatchingViewException + AssertionError —
+ * the Throwable-catch variant caused Espresso's internal 10s focus-wait to absorb
+ * the entire deadline.
  */
 @RunWith(AndroidJUnit4::class)
 class SettingsEspressoTest {
@@ -51,6 +67,7 @@ class SettingsEspressoTest {
     fun ensureOnHome() {
         navigateToHomeIfOnOnboarding()
         // Wait for HomeFragment to settle so the Toolbar menu is fully inflated.
+        // Main window always has focus — waitForView is safe here.
         waitForView(R.id.btn_activate)
     }
 
@@ -58,22 +75,26 @@ class SettingsEspressoTest {
     fun settings_screen_shows_auth_and_blocked_rows() {
         // Settings icon (gear) is showAsAction="always" — click it directly.
         onView(withId(R.id.action_settings)).perform(click())
+        // Allow Choreographer to process the fragment layout traversal.
+        // onView() calls waitForIdleSync() which prevents Choreographer from
+        // running if called immediately after navigate(); sleep avoids this.
+        SystemClock.sleep(500)
 
-        waitForView(R.id.rg_auth_method)
-        onView(withId(R.id.rb_auth_gesture)).check(matches(isDisplayed()))
-        onView(withId(R.id.rb_auth_biometric)).check(matches(isDisplayed()))
-        onView(withId(R.id.row_blocked_devices)).check(matches(isDisplayed()))
-        onView(withId(R.id.switch_bg_activation)).check(matches(isDisplayed()))
-        onView(withId(R.id.tv_version)).check(matches(isDisplayed()))
+        onView(withId(R.id.rb_auth_gesture)).perform(scrollTo()).check(matches(isDisplayed()))
+        onView(withId(R.id.rb_auth_biometric)).perform(scrollTo()).check(matches(isDisplayed()))
+        onView(withId(R.id.row_blocked_devices)).perform(scrollTo()).check(matches(isDisplayed()))
+        onView(withId(R.id.switch_bg_activation)).perform(scrollTo()).check(matches(isDisplayed()))
+        onView(withId(R.id.tv_version)).perform(scrollTo()).check(matches(isDisplayed()))
     }
 
     @Test
     fun blocked_devices_row_navigates_to_blocked_screen() {
         // Settings icon (gear) is showAsAction="always" — click it directly.
         onView(withId(R.id.action_settings)).perform(click())
-        waitForView(R.id.row_blocked_devices)
+        // Allow Choreographer layout pass to complete before interacting.
+        SystemClock.sleep(500)
 
-        onView(withId(R.id.row_blocked_devices)).perform(click())
+        onView(withId(R.id.row_blocked_devices)).perform(scrollTo(), click())
 
         SystemClock.sleep(400)
         try {
@@ -98,8 +119,10 @@ class SettingsEspressoTest {
 
     /**
      * Polls until [id] is displayed or [timeoutMs] elapses.
-     * Catches all Throwable — including RootViewWithoutFocusException — so
-     * transient window-focus changes trigger a retry rather than a hard failure.
+     * Only catches NoMatchingViewException and AssertionError — NOT Throwable.
+     * Catching Throwable would absorb RootViewWithoutFocusException (thrown after
+     * Espresso's internal 10-second wait), making one failed iteration already
+     * exceed the 5-second deadline.
      */
     private fun waitForView(@IdRes id: Int, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs
@@ -108,7 +131,10 @@ class SettingsEspressoTest {
             try {
                 onView(withId(id)).check(matches(isDisplayed()))
                 return
-            } catch (e: Throwable) {
+            } catch (e: NoMatchingViewException) {
+                lastError = e
+                SystemClock.sleep(150)
+            } catch (e: AssertionError) {
                 lastError = e
                 SystemClock.sleep(150)
             }
