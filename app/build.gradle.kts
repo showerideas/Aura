@@ -472,9 +472,9 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
             limit {
                 counter = "BRANCH"
                 value = "COVEREDRATIO"
-                // Prompt-10: 40% branch coverage floor.
-                // Raise in 5-point increments: 40 → 45 → 50 → ... target 70%.
-                minimum = "0.50".toBigDecimal()
+                // Phase 5.2: raised from 50% → 60%. Target 70% by v1.3.
+                // Added tests: DeeplinkUtils, ContactDiffEngine edge cases, SasVerifier, NfcExchangeHelper.
+                minimum = "0.60".toBigDecimal()
             }
         }
     }
