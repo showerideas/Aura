@@ -288,11 +288,14 @@
     <string name="audit_clear_confirm_message">Todo el historial de intercambios se eliminará permanentemente.</string>
     <string name="audit_clear_done">Historial de intercambios borrado</string>
     <!-- Phase 6.9 / 6.8 -->
-    <string name="sas_identicon_desc">Identicon de seguridad &#x2013; huella visual de esta sesión de intercambio</string>
+    <string name="sas_identicon_desc">Identicon de seguridad – huella visual de esta sesión de intercambio</string>
     <string name="sas_code_desc">Código de seguridad</string>
     <string name="sas_dialog_instruction">Usted y su contacto deben ver el mismo código e identicon</string>
     <!-- Phase 6.7 -->
     <string name="contact_card_updated">%1$s actualizó su tarjeta desde tu último intercambio.</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">Huella de identidad — representación visual de la clave criptográfica de identidad</string>
+    <string name="contact_identicon_label">Huella de identidad</string>
     <string name="action_share_card">Compartir enlace de tarjeta</string>
     <string name="share_card_chooser_title">Compartir tu tarjeta AURA</string>
     <string name="share_card_text">Aquí está mi tarjeta AURA: %1$s</string>

@@ -120,4 +120,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_qr_fallback" />
 
+    <!--
+      Phase 6.8: Share card deeplink button.
+      Generates an https://aura.app/c/<base64url-json> URL and fires the
+      Android share sheet. Disabled until a profile with a display name is loaded.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_share_card"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@string/action_share_card"
+        android:enabled="false"
+        android:text="@string/action_share_card"
+        android:textColor="@color/aura_cyan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_room_mode" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

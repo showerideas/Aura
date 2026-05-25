@@ -357,6 +357,9 @@
 
     <!-- Phase 6.7 — profile version bump banner -->
     <string name="contact_card_updated">%1$s updated their card since your last exchange.</string>
+    <!-- Phase 6.9 — contact detail identicon fingerprint -->
+    <string name="contact_identicon_desc">Identity fingerprint — visual representation of this contact\'s cryptographic identity key</string>
+    <string name="contact_identicon_label">Identity fingerprint</string>
 
     <!-- Phase 6.8 — share card deeplink -->
     <string name="action_share_card">Share card link</string>

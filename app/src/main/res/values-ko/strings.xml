@@ -291,6 +291,9 @@
     <string name="sas_dialog_instruction">당신과 연락처 모두 같은 코드와 아이덴티콘을 봐야 합니다</string>
     <!-- Phase 6.7 -->
     <string name="contact_card_updated">%1$s님이 마지막 교환 이후 카드를 업데이트했습니다.</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">신원 지문 — 이 연락처의 암호화 신원 키의 시각적 표현</string>
+    <string name="contact_identicon_label">신원 지문</string>
     <string name="action_share_card">카드 링크 공유</string>
     <string name="share_card_chooser_title">AURA 카드 공유</string>
     <string name="share_card_text">내 AURA 카드입니다: %1$s</string>

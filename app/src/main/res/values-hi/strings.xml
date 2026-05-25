@@ -293,6 +293,9 @@
     <string name="sas_dialog_instruction">आप और आपका संपर्क दोनों एक ही कोड और आइडेंटिकॉन देखना चाहिए</string>
     <!-- Phase 6.7 -->
     <string name="contact_card_updated">%1$s ने आपके पिछले आदान-प्रदान के बाद अपना कार्ड अपडेट किया।</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">पहचान की छाप — क्रिप्टोग्राफिक पहचान कुंजी का दृश्य प्रतिनिधित्व</string>
+    <string name="contact_identicon_label">पहचान की छाप</string>
     <string name="action_share_card">कार्ड लिंक शेयर करें</string>
     <string name="share_card_chooser_title">अपना AURA कार्ड शेयर करें</string>
     <string name="share_card_text">यहाँ मेरा AURA कार्ड है: %1$s</string>

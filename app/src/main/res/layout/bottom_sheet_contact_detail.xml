@@ -30,6 +30,30 @@
         android:visibility="gone" />
 
     <!--
+      Phase 6.9: Cryptographic identity fingerprint identicon.
+      Always shown — derived from identityKeyHash so the user can visually
+      verify this contact's fingerprint didn't change across exchanges.
+      Intentionally smaller than the avatar (48 dp) and centred below it.
+    -->
+    <ImageView
+        android:id="@+id/iv_identicon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="2dp"
+        android:contentDescription="@string/contact_identicon_desc"
+        android:scaleType="fitCenter" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:text="@string/contact_identicon_label"
+        android:textColor="@color/on_surface_secondary"
+        android:textSize="10sp" />
+
+    <!--
       PR-12: name row gains a favourite-toggle star. Wrapped in a horizontal
       LinearLayout so the existing block stays a vertical LinearLayout child.
       The star is a 48x48 ImageButton (accessibility touch-target minimum).
