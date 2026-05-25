@@ -264,6 +264,9 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.13")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // GrantPermissionRule — pre-grants dangerous permissions before Espresso tests
+    // launch activities (prevents system permission dialog from pausing the activity).
+    androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
 }
 
