@@ -5,6 +5,7 @@ import androidx.annotation.IdRes
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -21,8 +22,8 @@ import org.junit.runner.RunWith
  * The onboarding flow is shown on first launch (before [OnboardingPreferences]
  * marks it complete). This test verifies the three-page pager structure:
  *  - The ViewPager2 is visible.
- *  - The tab indicator (TabLayout) is visible.
- *  - A "Next" / "Get started" call-to-action button is present.
+ *  - The tab indicator (TabLayout / page_indicator) is visible.
+ *  - Swiping advances the pager to the next page.
  *
  * Because CI emulators run on a fresh (unshared) package, the DataStore
  * `ONBOARDING_COMPLETE` flag starts as false, so MainActivity routes
@@ -51,26 +52,25 @@ class OnboardingEspressoTest {
         ensureOnOnboarding()
 
         // ViewPager2 that hosts the three onboarding pages.
-        onView(withId(R.id.pager_onboarding)).check(matches(isDisplayed()))
+        onView(withId(R.id.pager)).check(matches(isDisplayed()))
 
         // Tab indicator (dots) beneath the pager.
-        onView(withId(R.id.tab_indicator)).check(matches(isDisplayed()))
+        onView(withId(R.id.page_indicator)).check(matches(isDisplayed()))
     }
 
     @Test
-    fun onboarding_next_button_advances_pager() {
+    fun onboarding_swipe_advances_pager() {
         ensureOnOnboarding()
 
-        // Verify the "Next" button is shown on page 1.
-        waitForView(R.id.btn_next)
-        onView(withId(R.id.btn_next)).check(matches(isDisplayed()))
+        // Verify the page indicator is shown.
+        onView(withId(R.id.page_indicator)).check(matches(isDisplayed()))
 
-        // Tap Next — should advance to page 2 (profile details).
-        onView(withId(R.id.btn_next)).perform(click())
+        // Swipe left to advance to page 2 (profile details).
+        onView(withId(R.id.pager)).perform(swipeLeft())
 
         // After the swipe, the pager should still be visible (we're on page 2).
         SystemClock.sleep(300)
-        onView(withId(R.id.pager_onboarding)).check(matches(isDisplayed()))
+        onView(withId(R.id.pager)).check(matches(isDisplayed()))
     }
 
     // -------------------------------------------------------------------------
@@ -83,7 +83,7 @@ class OnboardingEspressoTest {
      */
     private fun ensureOnOnboarding() {
         val onPager = try {
-            onView(withId(R.id.pager_onboarding)).check(matches(isDisplayed()))
+            onView(withId(R.id.pager)).check(matches(isDisplayed()))
             true
         } catch (_: Exception) {
             false
@@ -97,7 +97,7 @@ class OnboardingEspressoTest {
                 )
                 navController.navigate(R.id.onboardingFragment)
             }
-            waitForView(R.id.pager_onboarding)
+            waitForView(R.id.pager)
         }
     }
 
