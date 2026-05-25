@@ -242,10 +242,10 @@ class NfcExchangeHelperTest {
     }
 
     @Test
-    fun `parseNdefMessage handles P-256 key round-trip (91-byte X.509 SPKI)`() {
+    fun `parseNdefMessage handles P-256 key round-trip (91-byte X509 SPKI)`() {
         val key = generateP256PublicKey()
         // P-256 X.509 SubjectPublicKeyInfo encoding is 91 bytes
-        assertEquals("P-256 X.509 SPKI must be 91 bytes", 91, key.encoded.size)
+        assertEquals("P-256 X509 SPKI must be 91 bytes", 91, key.encoded.size)
         val result = parseNdefMessage(buildAuraRecord("p256-session", key.encoded))
         assertNotNull(result)
         assertArrayEquals("Key bytes must survive NDEF round-trip", key.encoded,
