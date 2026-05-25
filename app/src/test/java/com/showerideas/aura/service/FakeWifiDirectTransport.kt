@@ -34,6 +34,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
     override var onDisconnected: ((endpointId: String) -> Unit)? = null
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
+    override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
     // -------------------------------------------------------------------------
     // Test introspection
@@ -60,7 +61,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
     /**
      * Simulate a mutual Wi-Fi Direct connection between this fake and [peer].
      *
-     * Fires [onConnected] on both fakes:
+     * Fires [onConnectionInitiated] and then [onConnected] on both fakes:
      * - This fake is treated as the Group Owner (isIncoming = true from peer's view).
      * - [peer] is treated as the client (isIncoming = false).
      * Also fires [onEndpointFound] on both if they were in discovery mode.
@@ -76,8 +77,11 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
         this.onEndpointFound?.invoke(peer.localName, peer.localName)
         peer.onEndpointFound?.invoke(localName, localName)
 
-        // Simulate connection (this = GO, peer = client — lexicographic rule)
-        // Named arguments are not allowed on function-type invocations; use positional.
+        // Simulate connection initiation (pre-accept) — mirrors WifiDirectTransport.onPeerSocketReady
+        this.onConnectionInitiated?.invoke(peer.localName, peer.localName)
+        peer.onConnectionInitiated?.invoke(localName, localName)
+
+        // Simulate connection established (this = GO, peer = client — lexicographic rule)
         this.onConnected?.invoke(peer.localName, peer.localName, true)
         peer.onConnected?.invoke(localName, localName, false)
     }
@@ -118,7 +122,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
     }
 
     override fun acceptConnection(endpointId: String) {
-        // No-op — Wi-Fi Direct acceptance is implicit
+        // No-op — Wi-Fi Direct acceptance is implicit (OS-level)
     }
 
     override fun rejectConnection(endpointId: String) {
