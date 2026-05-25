@@ -266,6 +266,9 @@ dependencies {
     // 3-attempt retry — see the task registration below.
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
+    // Android Auto — Car App Library (Phase 7.3)
+    implementation("androidx.car.app:app:1.4.0")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
