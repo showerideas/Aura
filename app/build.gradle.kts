@@ -47,6 +47,10 @@ android {
     // Make the schemas directory available to androidTest for MigrationTestHelper.
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        // Phase 6.2: flavor-specific source sets for TransportModule and
+        // NearbyConnectionsTransport (gms) vs WifiDirectTransport (foss).
+        getByName("gms").java.srcDirs("src/gms/java")
+        getByName("foss").java.srcDirs("src/foss/java")
     }
 
     // Issue-51: all 7 locale bundles (de, es, fr, hi, ja, ko, zh-rCN) are now
@@ -216,8 +220,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
 
-    // Google Nearby Connections
-    implementation(libs.play.services.nearby)
+    // Google Nearby Connections — gms flavor only (foss uses WifiDirectTransport)
+    "gmsImplementation"(libs.play.services.nearby)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
