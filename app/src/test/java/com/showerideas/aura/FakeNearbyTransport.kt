@@ -30,6 +30,7 @@ class FakeNearbyTransport(
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
     override var onDisconnected: ((endpointId: String) -> Unit)? = null
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
+    override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
     /** Paired remote transport — set by [pairedPair]. */
     var peer: FakeNearbyTransport? = null
