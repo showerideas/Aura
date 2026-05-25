@@ -23,6 +23,8 @@ import javax.inject.Inject
  * identity key and produces a rotation certificate for known peers.
  */
 @HiltViewModel
+@javax.inject.Inject lateinit var relayClient: com.showerideas.aura.network.RelayClient
+
 class SettingsViewModel @Inject constructor(
     private val gestureAuthManager: GestureAuthManager,
     private val contactRepository: ContactRepository,
@@ -81,4 +83,32 @@ class SettingsViewModel @Inject constructor(
             Timber.e(e, "Identity key rotation failed")
         }.isSuccess
     }
+
+    // Phase 8.3 — Orbot/Tor anonymization proxy
+
+    /** True if org.torproject.android (Orbot) is installed on this device. */
+    val isOrbotInstalled: Boolean
+        get() = try {
+            getApplication<android.app.Application>().packageManager
+                .getPackageInfo("org.torproject.android", 0)
+            true
+        } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+            false
+        }
+
+    /**
+     * Enable or disable routing relay traffic through Orbot (127.0.0.1:9050).
+     * Persisted to [AuthPreferences]. Effective immediately via [RelayClient.setAnonymizationProxy].
+     */
+    fun setTorProxyEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            authPreferences.setTorProxyEnabled(enabled)
+            if (enabled && isOrbotInstalled) {
+                relayClient.setAnonymizationProxy(java.net.InetSocketAddress("127.0.0.1", 9050))
+            } else {
+                relayClient.setAnonymizationProxy(null)
+            }
+        }
+    }
+
 }
