@@ -36,7 +36,18 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PermissionRationaleEspressoTest {
 
-    @get:Rule
+    // Pre-grant dangerous permissions so MainActivity.checkAndRequestPermissions()
+    // finds them all satisfied and never shows the system dialog that would pause
+    // the activity before Espresso can interact with it.
+    // The sheet itself is shown programmatically via scenario.onActivity — these
+    // tests exercise the sheet UI, not the system permission dialog.
+    @get:Rule(order = 0)
+    val grantPermissionsRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.CAMERA
+    )
+
+    @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test

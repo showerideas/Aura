@@ -1,5 +1,6 @@
 package com.showerideas.aura
 
+import android.Manifest
 import android.os.SystemClock
 import androidx.annotation.IdRes
 import androidx.test.espresso.Espresso.onView
@@ -10,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.rule.GrantPermissionRule
 import com.showerideas.aura.ui.MainActivity
 import org.junit.Rule
 import org.junit.Test
@@ -37,7 +39,16 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ExchangeFlowEspressoTest {
 
-    @get:Rule
+    // Pre-grant dangerous permissions so MainActivity.checkAndRequestPermissions()
+    // finds them all satisfied and never shows the system dialog that would pause
+    // the activity before Espresso can interact with it.
+    @get:Rule(order = 0)
+    val grantPermissionsRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.CAMERA
+    )
+
+    @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
