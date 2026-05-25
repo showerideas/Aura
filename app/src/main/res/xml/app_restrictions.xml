@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phase 7.4 — Enterprise MDM managed configuration keys.
+    Push these via your EMM (Managed Google Play, SOTI, VMware, etc.)
+-->
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <restriction
+        android:key="allowed_auth_methods"
+        android:title="Allowed Authentication Methods"
+        android:restrictionType="choice"
+        android:description="Restrict which authentication methods employees may use."
+        android:defaultValue="both"
+        android:entries="@array/auth_method_entries"
+        android:entryValues="@array/auth_method_values" />
+
+    <restriction
+        android:key="qr_relay_enabled"
+        android:title="Enable QR Code Relay"
+        android:restrictionType="bool"
+        android:description="Allow QR code relay for contact exchange."
+        android:defaultValue="true" />
+
+    <restriction
+        android:key="min_gesture_similarity"
+        android:title="Minimum Gesture Similarity Threshold"
+        android:restrictionType="string"
+        android:description="Float 0.0–1.0. Higher = stricter gesture match required."
+        android:defaultValue="0.75" />
+
+    <restriction
+        android:key="audit_log_retention_days"
+        android:title="Audit Log Retention (days)"
+        android:restrictionType="integer"
+        android:description="Number of days to retain exchange audit log entries."
+        android:defaultValue="90" />
+
+    <restriction
+        android:key="force_key_rotation_days"
+        android:title="Force Key Rotation (days)"
+        android:restrictionType="integer"
+        android:description="Force identity key rotation after N days. 0 = disabled."
+        android:defaultValue="0" />
+
+</restrictions>

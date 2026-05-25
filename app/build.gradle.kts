@@ -33,6 +33,11 @@ android {
         val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
             ?: "https://relay.example.com"
         buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
+        // Phase 5.7 — TLS certificate pin expiry epoch (milliseconds since Unix epoch).
+        // RelayClient logs a warning when within 30 days of expiry.
+        // Rotate the pin AND update this value before the expiry date.
+        // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
+        buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
@@ -533,5 +538,27 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
                 minimum = "0.50".toBigDecimal()
             }
         }
+    }
+}
+
+// Phase 5.8 — verify SHA-256 of bundled gesture model asset before building.
+// Run: ./gradlew verifyGestureModel
+val GESTURE_MODEL_SHA256 = "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
+tasks.register("verifyGestureModel") {
+    description = "Verifies the SHA-256 hash of the bundled MediaPipe gesture model."
+    group = "verification"
+    doLast {
+        val modelFile = file("src/main/assets/gesture_recognizer.task")
+        if (!modelFile.exists()) {
+            println("WARNING: gesture_recognizer.task not found in assets/ — model must be present before release")
+            return@doLast
+        }
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(modelFile.readBytes())
+            .joinToString("") { "%02x".format(it) }
+        if (hash != GESTURE_MODEL_SHA256) {
+            throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
+        }
+        println("gesture_recognizer.task SHA-256 OK: $hash")
     }
 }
