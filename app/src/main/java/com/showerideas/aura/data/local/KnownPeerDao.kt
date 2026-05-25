@@ -29,4 +29,16 @@ interface KnownPeerDao {
     /** Remove the record entirely (e.g. when the user unblocks / forgets a device). */
     @Query("DELETE FROM known_peers WHERE endpointId = :endpointId")
     suspend fun delete(endpointId: String)
+
+    /**
+     * Update only the [KnownPeer.lastSeenProfileVersion] for [endpointId].
+     *
+     * Called after a successful exchange so we can detect future card updates:
+     * on next exchange, if the incoming [Contact.profileVersion] is higher
+     * than this stored value, the peer's card changed since we last saw them.
+     *
+     * No-op if [endpointId] is not in the registry (unknown peer).
+     */
+    @Query("UPDATE known_peers SET last_seen_profile_version = :version WHERE endpointId = :endpointId")
+    suspend fun updateLastSeenProfileVersion(endpointId: String, version: Int)
 }
