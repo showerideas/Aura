@@ -113,7 +113,7 @@ class QRExchangeViewModelTest {
     fun exchangeSession_defaultProfileVersionBumped_isFalse() {
         val session = ExchangeSession(
             sessionId = "unit-test-session",
-            state = ExchangeSession.State.IDLE
+            state = ExchangeSession.State.ADVERTISING
         )
         assertFalse(session.profileVersionBumped)
     }
@@ -131,8 +131,8 @@ class QRExchangeViewModelTest {
 
     @Test
     fun exchangeSession_stateEquality() {
-        assertEquals(ExchangeSession.State.IDLE, ExchangeSession.State.IDLE)
-        assertNotEquals(ExchangeSession.State.IDLE, ExchangeSession.State.COMPLETED)
+        assertEquals(ExchangeSession.State.ADVERTISING, ExchangeSession.State.ADVERTISING)
+        assertNotEquals(ExchangeSession.State.ADVERTISING, ExchangeSession.State.COMPLETED)
     }
 }
 
