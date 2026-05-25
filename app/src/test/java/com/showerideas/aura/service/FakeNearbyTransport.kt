@@ -13,6 +13,7 @@ package com.showerideas.aura.service
  * val transport = FakeNearbyTransport()
  * // Wire up SUT that depends on NearbyTransport …
  * transport.simulateEndpointFound("peer-1", "Alice")
+ * transport.simulateConnectionInitiated("peer-1", "Alice")
  * transport.simulateConnected("peer-1", "Alice", isIncoming = false)
  * transport.simulatePayloadReceived("peer-1", myPayloadBytes)
  * val sent = transport.sentPayloads["peer-1"] ?: emptyList()
@@ -28,6 +29,7 @@ class FakeNearbyTransport : NearbyTransport {
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
     override var onDisconnected: ((endpointId: String) -> Unit)? = null
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
+    override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
     // -------------------------------------------------------------------------
     // Captured calls — inspected by tests
@@ -107,6 +109,14 @@ class FakeNearbyTransport : NearbyTransport {
     /** Simulate the transport discovering a remote endpoint. */
     fun simulateEndpointFound(endpointId: String, remoteName: String) {
         onEndpointFound?.invoke(endpointId, remoteName)
+    }
+
+    /**
+     * Simulate an incoming connection being initiated (pre-accept/reject).
+     * Call this before [simulateConnected] when testing the blocklist-check path.
+     */
+    fun simulateConnectionInitiated(endpointId: String, remoteName: String) {
+        onConnectionInitiated?.invoke(endpointId, remoteName)
     }
 
     /** Simulate a connection being established (incoming or outgoing). */
