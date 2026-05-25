@@ -421,7 +421,7 @@ afterEvaluate {
 // Run:  ./gradlew jacocoTestReport
 //       ./gradlew jacocoTestCoverageVerification   ← fails if branch drops below gate
 //
-// The report is generated from testDebugUnitTest execution data.
+// The report is generated from testGmsDebugUnitTest execution data (GMS flavor).
 // Classes from DI modules, Room DAOs/Entities, generated Hilt code, and the
 // Android resource-generated R class are excluded — they have trivial coverage
 // and add noise to the report.
@@ -456,7 +456,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     group = "verification"
     description = "Generate JaCoCo coverage report from debug unit test execution data."
 
-    dependsOn("testDebugUnitTest")
+    dependsOn("testGmsDebugUnitTest")
 
     reports {
         xml.required.set(true)
@@ -473,7 +473,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("jacoco/testGmsDebugUnitTest.exec", "outputs/unit_test_code_coverage/gmsDebugUnitTest/testGmsDebugUnitTest.exec")
     })
 }
 
@@ -492,7 +492,7 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("jacoco/testGmsDebugUnitTest.exec", "outputs/unit_test_code_coverage/gmsDebugUnitTest/testGmsDebugUnitTest.exec")
     })
 
     violationRules {
