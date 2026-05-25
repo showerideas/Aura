@@ -532,3 +532,25 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
         }
     }
 }
+
+// Phase 5.8 — verify SHA-256 of bundled gesture model asset before building.
+// Run: ./gradlew verifyGestureModel
+val GESTURE_MODEL_SHA256 = "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
+tasks.register("verifyGestureModel") {
+    description = "Verifies the SHA-256 hash of the bundled MediaPipe gesture model."
+    group = "verification"
+    doLast {
+        val modelFile = file("src/main/assets/gesture_recognizer.task")
+        if (!modelFile.exists()) {
+            println("WARNING: gesture_recognizer.task not found in assets/ — model must be present before release")
+            return@doLast
+        }
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(modelFile.readBytes())
+            .joinToString("") { "%02x".format(it) }
+        if (hash != GESTURE_MODEL_SHA256) {
+            throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
+        }
+        println("gesture_recognizer.task SHA-256 OK: $hash")
+    }
+}
