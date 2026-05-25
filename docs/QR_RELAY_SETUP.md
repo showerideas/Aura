@@ -303,3 +303,42 @@ export RELAY_BASE_URL=https://aura-relay.your-subdomain.workers.dev
 | Relay sees | Ciphertext only |
 | Auth required | None (slot ID is the capability) |
 | MITM protection | SAS PIN (client-side, not relay-provided) |
+
+
+---
+
+## Phase 5.7 — TLS Certificate Pinning
+
+AURA pins the relay server's TLS leaf certificate via `network_security_config.xml`.
+This section documents the pin rotation process.
+
+### Current pin configuration
+
+File: `app/src/main/res/xml/network_security_config.xml`
+- `domain`: `relay.example.com` (replace with your actual relay hostname)
+- `pin-set expiration`: `2027-06-01`
+- `BuildConfig.RELAY_PIN_EXPIRY_EPOCH_MS`: `1780300800000L` (in `app/build.gradle.kts`)
+
+### How to get the current certificate's pin hash
+
+```bash
+openssl s_client -connect relay.example.com:443 2>/dev/null </dev/null \
+  | openssl x509 -pubkey -noout \
+  | openssl pkey -pubin -outform DER \
+  | openssl dgst -sha256 -binary \
+  | base64
+```
+
+### Pin rotation process
+
+1. **Obtain the new certificate pin** using the command above against the new server cert.
+2. **Update `network_security_config.xml`**: replace the `<pin>` values with the new hash.
+3. **Update the expiry date**: set `pin-set expiration` to the new certificate's expiry date.
+4. **Update `build.gradle.kts`**: set `RELAY_PIN_EXPIRY_EPOCH_MS` to the new expiry epoch in milliseconds.
+5. **Verify**: run `./gradlew test` — `RelayClientPinTest.relayPinExpiryEpoch_isInFuture()` must pass.
+6. **Ship**: build a release APK/AAB and verify relay connectivity before distributing.
+
+### CI warning system
+
+`RelayClient` logs a `Timber.w` warning when the current time is within 30 days of
+`BuildConfig.RELAY_PIN_EXPIRY_EPOCH_MS`. Monitor CI logs for this warning.

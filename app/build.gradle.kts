@@ -33,6 +33,11 @@ android {
         val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
             ?: "https://relay.example.com"
         buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
+        // Phase 5.7 — TLS certificate pin expiry epoch (milliseconds since Unix epoch).
+        // RelayClient logs a warning when within 30 days of expiry.
+        // Rotate the pin AND update this value before the expiry date.
+        // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
+        buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
