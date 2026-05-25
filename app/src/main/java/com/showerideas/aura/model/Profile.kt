@@ -55,7 +55,16 @@ data class Profile(
      * Ignored for PERSONAL and WORK.
      */
     @ColumnInfo(name = "custom_label")
-    val customLabel: String = ""
+    val customLabel: String = "",
+    /**
+     * Monotonically-increasing profile version, auto-incremented by
+     * [com.showerideas.aura.data.ProfileRepository.update] on every field save.
+     * Sent to peers via [toShareableMap] so they can detect when a returning contact
+     * updated their card — used by Phase 6.7 to surface the "Card updated" banner.
+     * Added in DB v8 (MIGRATION_7_8).
+     */
+    @ColumnInfo(name = "version")
+    val version: Int = 1
 ) {
     fun toShareableMap(): Map<String, String> {
         val enabled = shareFields.split(",").map { it.trim() }.toSet()
@@ -67,6 +76,8 @@ data class Profile(
             if ("title" in enabled && title.isNotBlank()) put("title", title)
             if ("website" in enabled && website.isNotBlank()) put("website", website)
             if ("bio" in enabled && bio.isNotBlank()) put("bio", bio)
+            // Version is always sent — peers use it to detect card updates (Phase 6.7).
+            put("version", version.toString())
         }
     }
 }

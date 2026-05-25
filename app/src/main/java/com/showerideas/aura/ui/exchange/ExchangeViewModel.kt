@@ -9,6 +9,8 @@ import com.showerideas.aura.auth.CameraHandEmbedder
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.auth.LivenessGuard
 import com.showerideas.aura.data.AuthPreferences
+import com.showerideas.aura.data.ContactRepository
+import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.service.NearbyExchangeService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +27,8 @@ import javax.inject.Inject
 class ExchangeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val gestureAuthManager: GestureAuthManager,
-    private val authPreferences: AuthPreferences
+    private val authPreferences: AuthPreferences,
+    private val contactRepository: ContactRepository
 ) : ViewModel() {
 
     val sessionState: StateFlow<ExchangeSession?> = NearbyExchangeService.sessionState
@@ -115,4 +118,14 @@ class ExchangeViewModel @Inject constructor(
      * Terminates the session with an error via [NearbyExchangeService.ACTION_ABORT_SAS].
      */
     fun abortSas() = NearbyExchangeService.abortSas(context)
+
+    /**
+     * Apply per-field merge [selections] from [ContactMergeBottomSheet].
+     * Called after the user reviews a card-update diff (Phase 6.3 / 6.7).
+     */
+    fun applyMergeSelections(base: Contact, selections: Map<String, String>) {
+        viewModelScope.launch {
+            contactRepository.applyMergeSelections(base, selections)
+        }
+    }
 }

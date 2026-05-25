@@ -285,4 +285,11 @@
     <string name="audit_clear_confirm_title">清除交换历史？</string>
     <string name="audit_clear_confirm_message">所有交换历史将被永久删除。</string>
     <string name="audit_clear_done">交换历史已清除</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">安全标识图标 – 此交换会话的视觉指纹</string>
+    <string name="sas_code_desc">安全码</string>
+    <string name="sas_dialog_instruction">您和您的联系人必须看到相同的代码和标识图标</string>
+    <string name="action_share_card">分享名片链接</string>
+    <string name="share_card_chooser_title">分享我的AURA名片</string>
+    <string name="share_card_text">这是我的AURA名片：%1$s</string>
 </resources>

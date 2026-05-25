@@ -38,9 +38,15 @@ class ProfileRepository @Inject constructor(
     /** Insert or replace (legacy single-profile path — key is always 'local_profile'). */
     suspend fun save(profile: Profile) = profileDao.insert(profile)
 
-    /** Update an existing profile, stamping updatedAt. */
+    /**
+     * Update an existing profile, stamping [Profile.updatedAt] and incrementing
+     * [Profile.version] so peers detect card changes on their next exchange (Phase 6.7).
+     */
     suspend fun update(profile: Profile) {
-        val updated = profile.copy(updatedAt = System.currentTimeMillis())
+        val updated = profile.copy(
+            updatedAt = System.currentTimeMillis(),
+            version   = profile.version + 1
+        )
         profileDao.update(updated)
     }
 

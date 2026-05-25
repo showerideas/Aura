@@ -285,4 +285,11 @@
     <string name="audit_clear_confirm_title">교환 기록을 지우시겠습니까?</string>
     <string name="audit_clear_confirm_message">모든 교환 기록이 영구적으로 삭제됩니다.</string>
     <string name="audit_clear_done">교환 기록이 지워졌습니다</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">보안 아이덴티콘 – 이 교환 세션의 시각적 지문</string>
+    <string name="sas_code_desc">보안 코드</string>
+    <string name="sas_dialog_instruction">당신과 연락처 모두 같은 코드와 아이덴티콘을 봐야 합니다</string>
+    <string name="action_share_card">카드 링크 공유</string>
+    <string name="share_card_chooser_title">AURA 카드 공유</string>
+    <string name="share_card_text">내 AURA 카드입니다: %1$s</string>
 </resources>

@@ -20,6 +20,7 @@ import com.showerideas.aura.R
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
+import com.showerideas.aura.service.AuraHceService
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.service.NfcExchangeHelper
 import com.showerideas.aura.service.VolumeButtonListenerService
@@ -105,13 +106,19 @@ class MainActivity : AppCompatActivity() {
         // and store it in the service companion so NfcExchangeHelper can advertise
         // our public key over NFC.  A new pair is generated on every onResume so
         // we never reuse keys across sessions.
+        val sessionUuid = java.util.UUID.randomUUID().toString()
         val kp = CryptoUtils.generateEphemeralECDHKeyPair()
         NearbyExchangeService.nfcLocalKeyPair = kp
-        NfcExchangeHelper.enable(this, kp.public, java.util.UUID.randomUUID().toString())
+        NfcExchangeHelper.enable(this, kp.public, sessionUuid)
+        // Phase 6.1 — also push the same key into HCE so we respond over NFC
+        // in both directions (we act as reader via NfcExchangeHelper, as card
+        // via AuraHceService).
+        AuraHceService.setLocalKey(kp.public.encoded, sessionUuid)
     }
 
     override fun onPause() {
         NfcExchangeHelper.disable(this)
+        AuraHceService.clearLocalKey()
         super.onPause()
     }
 

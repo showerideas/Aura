@@ -25,6 +25,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *  v4 → v5: exchange_audit_log table
  *  v5 → v6: profile_type, is_active, custom_label columns on profile
  *  v6 → v7: rotation_certificate column on known_peers (Phase 6.5)
+ *  v7 → v8: version column on profile, profile_version on contacts,
+ *           last_seen_profile_version on known_peers (Phase 6.7)
  */
 object Migrations {
 
@@ -148,6 +150,30 @@ object Migrations {
         }
     }
 
+    /**
+     * v8: Profile versioning (Phase 6.7) and contact deduplication improvements (Phase 6.3).
+     *
+     * - `profile.version INTEGER NOT NULL DEFAULT 1` — auto-incremented on every profile save.
+     *   Sent to peers so they can detect when a returning contact updated their card.
+     * - `contacts.profile_version INTEGER NOT NULL DEFAULT 0` — the version received at
+     *   exchange time; compared against [known_peers.last_seen_profile_version] to detect updates.
+     * - `known_peers.last_seen_profile_version INTEGER NOT NULL DEFAULT 0` — the most recent
+     *   profile version we have seen from this peer. Updated after every successful exchange.
+     */
+    val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE profile ADD COLUMN version INTEGER NOT NULL DEFAULT 1"
+            )
+            db.execSQL(
+                "ALTER TABLE contacts ADD COLUMN profile_version INTEGER NOT NULL DEFAULT 0"
+            )
+            db.execSQL(
+                "ALTER TABLE known_peers ADD COLUMN last_seen_profile_version INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+
     /** Ordered list of every migration — passed to Room.databaseBuilder. */
     val ALL: Array<Migration> = arrayOf(
         MIGRATION_1_2,
@@ -155,6 +181,7 @@ object Migrations {
         MIGRATION_3_4,
         MIGRATION_4_5,
         MIGRATION_5_6,
-        MIGRATION_6_7
+        MIGRATION_6_7,
+        MIGRATION_7_8
     )
 }

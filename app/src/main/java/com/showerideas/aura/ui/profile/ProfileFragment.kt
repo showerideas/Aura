@@ -1,5 +1,6 @@
 package com.showerideas.aura.ui.profile
 
+import android.content.Intent
 import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +19,7 @@ import com.showerideas.aura.R
 import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.databinding.FragmentProfileBinding
 import com.showerideas.aura.utils.AvatarUtils
+import com.showerideas.aura.utils.DeeplinkUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -174,6 +176,21 @@ class ProfileFragment : Fragment() {
         }
 
         binding.btnSave.setOnClickListener { saveProfile() }
+
+        // Phase 6.8 — share card as a deep-link URL via the system share sheet.
+        binding.btnShareCard.setOnClickListener {
+            val profile = viewModel.profile.value ?: run {
+                Toast.makeText(requireContext(), R.string.profile_saved, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val url = DeeplinkUtils.generateShareUrl(profile)
+            val shareText = getString(R.string.share_card_text, url)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, shareText)
+            }
+            startActivity(Intent.createChooser(intent, getString(R.string.share_card_chooser_title)))
+        }
 
         // tap the avatar to launch the system picker.
         binding.ivAvatar.setOnClickListener { pickAvatarLauncher.launch("image/*") }

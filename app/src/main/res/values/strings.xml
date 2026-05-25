@@ -349,4 +349,14 @@
     <string name="audit_clear_confirm_title">Clear exchange history?</string>
     <string name="audit_clear_confirm_message">All exchange history will be permanently deleted.</string>
     <string name="audit_clear_done">Exchange history cleared</string>
+
+    <!-- Phase 6.9 — SAS identicon accessibility + dialog strings -->
+    <string name="sas_identicon_desc">Security identicon — visual fingerprint of this exchange session</string>
+    <string name="sas_code_desc">Security code</string>
+    <string name="sas_dialog_instruction">Both you and your contact must see the same code and identicon</string>
+
+    <!-- Phase 6.8 — share card deeplink -->
+    <string name="action_share_card">Share card link</string>
+    <string name="share_card_chooser_title">Share your AURA card</string>
+    <string name="share_card_text">Here\'s my AURA card: %1$s</string>
 </resources>

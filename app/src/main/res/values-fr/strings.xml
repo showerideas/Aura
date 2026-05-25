@@ -287,4 +287,11 @@
     <string name="audit_clear_confirm_title">Effacer l\'historique des échanges ?</string>
     <string name="audit_clear_confirm_message">Tout l\'historique des échanges sera définitivement supprimé.</string>
     <string name="audit_clear_done">Historique des échanges effacé</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">Identicon de sécurité &#x2013; empreinte visuelle de cette session d'échange</string>
+    <string name="sas_code_desc">Code de sécurité</string>
+    <string name="sas_dialog_instruction">Vous et votre contact devez voir le même code et identicon</string>
+    <string name="action_share_card">Partager le lien de la carte</string>
+    <string name="share_card_chooser_title">Partager votre carte AURA</string>
+    <string name="share_card_text">Voici ma carte AURA : %1$s</string>
 </resources>

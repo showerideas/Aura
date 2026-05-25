@@ -30,11 +30,14 @@ import com.showerideas.aura.model.Profile
  *        Migration: [Migrations.MIGRATION_5_6]. (Phase 6.4 — multiple profiles)
  *  - v7: Adds rotation_certificate column to known_peers table.
  *        Migration: [Migrations.MIGRATION_6_7]. (Phase 6.5 — key rotation)
+ *  - v8: Adds version to profile, profile_version to contacts,
+ *        last_seen_profile_version to known_peers.
+ *        Migration: [Migrations.MIGRATION_7_8]. (Phase 6.7 — profile versioning)
  */
 @Database(
     entities = [Contact::class, Profile::class, BlockedEndpoint::class, KnownPeer::class,
                 ExchangeAuditEntry::class],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

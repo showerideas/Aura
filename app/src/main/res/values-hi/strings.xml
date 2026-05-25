@@ -287,4 +287,11 @@
     <string name="audit_clear_confirm_title">आदान-प्रदान इतिहास साफ़ करें?</string>
     <string name="audit_clear_confirm_message">सभी आदान-प्रदान इतिहास स्थायी रूप से हटा दिया जाएगा।</string>
     <string name="audit_clear_done">आदान-प्रदान इतिहास साफ़ हो गया</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">सुरक्षा आइडेंटिकॉन – इस एक्सचेंज सत्र का दृश्य फिंगरप्रिंट</string>
+    <string name="sas_code_desc">सुरक्षा कोड</string>
+    <string name="sas_dialog_instruction">आप और आपका संपर्क दोनों एक ही कोड और आइडेंटिकॉन देखना चाहिए</string>
+    <string name="action_share_card">कार्ड लिंक शेयर करें</string>
+    <string name="share_card_chooser_title">अपना AURA कार्ड शेयर करें</string>
+    <string name="share_card_text">यहाँ मेरा AURA कार्ड है: %1$s</string>
 </resources>
