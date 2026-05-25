@@ -25,7 +25,7 @@ class RelayClientPinTest {
         // If this test fails, rotate the pin immediately.
         val expiryMs = com.showerideas.aura.BuildConfig.RELAY_PIN_EXPIRY_EPOCH_MS
         assertTrue(
-            "RELAY_PIN_EXPIRY_EPOCH_MS must be in the future — rotate the TLS pin\!",
+            "RELAY_PIN_EXPIRY_EPOCH_MS must be in the future — rotate the TLS pin!",
             expiryMs > System.currentTimeMillis()
         )
     }
