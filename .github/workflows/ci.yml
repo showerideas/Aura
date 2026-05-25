@@ -117,7 +117,7 @@ jobs:
       # the gesture recognizer crashes on first use.
       - name: Check MediaPipe classes survived R8
         run: |
-          APK=$(find app/build/outputs/apk/gmsRelease -name "*.apk" | head -1)
+          APK=$(find app/build/outputs/apk/gms/release -name "*.apk" | head -1)
           echo "Checking MediaPipe classes in: $APK"
           # apkanalyzer moved from build-tools/<ver>/apkanalyzer to
           # cmdline-tools/latest/bin/apkanalyzer in modern Android SDK.
@@ -154,7 +154,7 @@ jobs:
       #   universal:   35 MB threshold  (fallback if splits are ever disabled)
       - name: Check APK size thresholds
         run: |
-          for APK in app/build/outputs/apk/gmsRelease/*.apk; do
+          for APK in app/build/outputs/apk/gms/release/*.apk; do
             SIZE_KB=$(du -k "$APK" | cut -f1)
             SIZE_MB=$(echo "scale=1; $SIZE_KB / 1024" | bc)
             echo "APK: $APK — ${SIZE_MB} MB (${SIZE_KB} KB)"
@@ -179,7 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aura-release-unsigned
-          path: app/build/outputs/apk/gmsRelease/*.apk
+          path: app/build/outputs/apk/gms/release/*.apk
           if-no-files-found: warn
           retention-days: 14
 
