@@ -47,10 +47,6 @@ android {
     // Make the schemas directory available to androidTest for MigrationTestHelper.
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
-        // Phase 6.2: flavor-specific source sets for TransportModule and
-        // NearbyConnectionsTransport (gms) vs WifiDirectTransport (foss).
-        getByName("gms").java.srcDirs("src/gms/java")
-        getByName("foss").java.srcDirs("src/foss/java")
     }
 
     // Issue-51: all 7 locale bundles (de, es, fr, hi, ja, ko, zh-rCN) are now
@@ -108,6 +104,13 @@ android {
             // compiles cleanly but WifiDirectTransport is injected instead of
             // NearbyConnectionsTransport at runtime via TransportModule.
         }
+    }
+
+    // Phase 6.2: flavor-specific source sets must be declared AFTER productFlavors
+    // so that AGP has already registered the "gms" and "foss" AndroidSourceSet objects.
+    sourceSets {
+        getByName("gms").java.srcDirs("src/gms/java")
+        getByName("foss").java.srcDirs("src/foss/java")
     }
 
     buildTypes {
