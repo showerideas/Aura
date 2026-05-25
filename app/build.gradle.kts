@@ -164,7 +164,22 @@ android {
     // ABI filter.
     splits {
         abi {
-            isEnable = true
+            // Enable ABI splits only for release assemble tasks so that:
+            //  1. bundleRelease avoids AGP bug #402800800 (ABI splits + AAB conflict).
+            //  2. connectedAndroidTest tasks can install on the x86_64 CI emulator
+            //     (which has no arm64/armeabi APK when splits are active).
+            //  3. Release APKs are still sliced per-ABI for Play Store distribution.
+            val taskNames = gradle.startParameter.taskNames
+            val isAssembleRelease = taskNames.any { t ->
+                t.contains("assemble", ignoreCase = true) &&
+                t.contains("release", ignoreCase = true)
+            }
+            val isBundleOrTestTask = taskNames.any { t ->
+                t.contains("bundle", ignoreCase = true) ||
+                t.contains("connected", ignoreCase = true) ||
+                t.contains("test", ignoreCase = true)
+            }
+            isEnable = isAssembleRelease && !isBundleOrTestTask
             reset()
             include("arm64-v8a", "armeabi-v7a")
             isUniversalApk = false
