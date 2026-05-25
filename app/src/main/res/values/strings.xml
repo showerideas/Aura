@@ -35,17 +35,17 @@
     <string name="exchange_gesture_failed_retry">Gesture didn\'t match. %1$d attempt(s) left.</string>
     <string name="exchange_gesture_failed_max">Too many failed gesture attempts. Exchange cancelled.</string>
     <string name="exchange_unprotected_title">No gesture set</string>
-    <string name="exchange_unprotected_message">No gesture set — exchange is unprotected. Continue?</string>
+    <string name="exchange_unprotected_message">No gesture set â exchange is unprotected. Continue?</string>
     <string name="exchange_completed">Exchanged with %1$s!</string>
     <string name="exchange_cancelled">Exchange cancelled</string>
     <string name="exchange_error_generic">Something went wrong. Try again.</string>
     <string name="exchange_error_bluetooth">Exchange failed. Make sure Bluetooth and location are on.</string>
 
-    <!-- SAS (Short Authentication String) verification dialog — Prompt-8 UI integration -->
+    <!-- SAS (Short Authentication String) verification dialog â Prompt-8 UI integration -->
     <string name="sas_dialog_title">Verify Security Code</string>
     <string name="sas_dialog_message">Both you and your contact should see the same 6-digit code.\n\nYour code: %1$s\n\nAsk your contact to read their code aloud. If the codes match, tap \'Match\'.</string>
-    <string name="sas_dialog_confirm">Match ✓</string>
-    <string name="sas_dialog_mismatch">Mismatch — abort</string>
+    <string name="sas_dialog_confirm">Match â</string>
+    <string name="sas_dialog_mismatch">Mismatch â abort</string>
 
     <!-- Permission rationale (PR-03) -->
     <string name="perm_rationale_title">AURA needs a few permissions</string>
@@ -77,11 +77,11 @@
     <string name="onboarding_gesture_title">Set an unlock gesture</string>
     <string name="onboarding_gesture_subtitle">Pick a quick motion only you would make. AURA will use it to confirm every exchange.</string>
     <string name="onboarding_gesture_skip">Skip for now</string>
-    <string name="onboarding_gesture_skipped">Skipped — you can add a gesture later from the Profile screen.</string>
+    <string name="onboarding_gesture_skipped">Skipped â you can add a gesture later from the Profile screen.</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_name_required">Please enter your name to continue.</string>
     <string name="onboarding_email_invalid">Please enter a valid email address.</string>
-    <string name="gesture_recording">Perform your gesture now…</string>
+    <string name="gesture_recording">Perform your gesture nowâ¦</string>
     <string name="gesture_saved">Gesture saved!</string>
     <string name="gesture_status_no_gesture">No gesture set yet</string>
 
@@ -91,21 +91,21 @@
     <string name="export_all_empty">No contacts to export yet.</string>
 
     <!-- QR fallback exchange (PR-08) -->
-    <string name="home_qr_fallback">Can’t connect? Use QR</string>
+    <string name="home_qr_fallback">Canât connect? Use QR</string>
     <string name="qr_title">Scan to pair</string>
     <string name="qr_subtitle">Have the other person scan this code, then scan theirs.</string>
     <string name="qr_code_image_desc">Your single-use pairing QR code</string>
     <string name="qr_scan_button">Scan their QR</string>
-    <string name="qr_scan_prompt">Point at the other phone’s QR code</string>
+    <string name="qr_scan_prompt">Point at the other phoneâs QR code</string>
     <string name="qr_countdown_template">Refreshes in %1$ds</string>
-    <string name="qr_refreshing">Refreshing…</string>
+    <string name="qr_refreshing">Refreshingâ¦</string>
     <string name="qr_render_failed">Could not render the QR code.</string>
     <string name="qr_scan_cancelled">Scan cancelled.</string>
-    <string name="qr_invalid">That code isn’t a valid AURA pairing payload.</string>
+    <string name="qr_invalid">That code isnât a valid AURA pairing payload.</string>
     <string name="qr_expired">That pairing code has expired. Ask the other person to refresh it.</string>
     <string name="qr_pairing_ok">Contact saved: %1$s</string>
     <string name="qr_relay_timeout">The other phone didn\'t respond in time. Try again.</string>
-    <string name="qr_sas_mismatch_abort">Security code mismatch — exchange aborted. No contact was saved.</string>
+    <string name="qr_sas_mismatch_abort">Security code mismatch â exchange aborted. No contact was saved.</string>
     <string name="qr_unencrypted_warning">Profiles exchanged end-to-end via encrypted relay. Both phones must scan each other\'s QR.</string>
 
     <!-- Room exchange (PR-09) -->
@@ -115,17 +115,17 @@
     <string name="room_host_idle_status">Open a room</string>
     <string name="room_host_subtitle">Up to 10 nearby people can join and share their card with you.</string>
     <string name="room_guest_idle_status">Join a nearby room</string>
-    <string name="room_guest_subtitle">You’ll receive the host’s card. Your card is sent in return.</string>
+    <string name="room_guest_subtitle">Youâll receive the hostâs card. Your card is sent in return.</string>
     <string name="room_open_action">Open room</string>
     <string name="room_close_action">Close room</string>
     <string name="room_join_action">Join</string>
-    <string name="room_guest_done">Got the host’s card!</string>
+    <string name="room_guest_done">Got the hostâs card!</string>
     <string name="room_hold_to_confirm">Hold the action button to confirm with your gesture.</string>
 
     <!-- Avatar sharing (PR-10) -->
     <string name="profile_change_avatar_desc">Change profile photo</string>
     <string name="profile_avatar_desc">Tap to pick a profile photo</string>
-    <string name="profile_avatar_too_large">Image was too large — try a smaller picture.</string>
+    <string name="profile_avatar_too_large">Image was too large â try a smaller picture.</string>
 
     <!--
       ============================================================
@@ -146,22 +146,22 @@
 
     <!-- PR-20: Profile -->
     <string name="profile_btn_record">Record Gesture</string>
-    <string name="profile_btn_recording">Hold your gesture steady…</string>
+    <string name="profile_btn_recording">Hold your gesture steadyâ¦</string>
     <string name="profile_btn_rerecord">Re-record Gesture</string>
 
     <!-- Camera gesture auth strings -->
     <string name="gesture_show_to_auth">Show your saved hand gesture to authenticate</string>
     <string name="gesture_camera_preview_desc">Camera preview for gesture authentication</string>
-    <string name="gesture_no_hand">No hand detected — point camera at your hand</string>
-    <string name="gesture_detecting">%1$s %2$s — %3$d%% stable</string>
-    <string name="gesture_stable">%1$s %2$s — hold steady…</string>
-    <string name="gesture_saved_embedding">Hand shape saved — gesture authentication ready</string>
+    <string name="gesture_no_hand">No hand detected â point camera at your hand</string>
+    <string name="gesture_detecting">%1$s %2$s â %3$d%% stable</string>
+    <string name="gesture_stable">%1$s %2$s â hold steadyâ¦</string>
+    <string name="gesture_saved_embedding">Hand shape saved â gesture authentication ready</string>
     <string name="profile_gesture_status_perform">Perform your gesture now</string>
     <string name="profile_gesture_status_saved">Gesture saved!</string>
     <string name="profile_gesture_status_saved_idle">Gesture saved</string>
     <string name="profile_gesture_status_none">No gesture set</string>
     <!-- Sequence mode: step 1 captured, waiting for the user to perform step 2 -->
-    <string name="profile_gesture_status_step2">Step 1 saved — now perform your second gesture</string>
+    <string name="profile_gesture_status_step2">Step 1 saved â now perform your second gesture</string>
     <string name="profile_saved">Profile saved</string>
     <string name="profile_gesture_strength_label">gesture strength</string>
     <string name="profile_gesture_strength_a11y">Gesture strength: %1$d out of 5</string>
@@ -183,7 +183,7 @@
     <string name="contact_a11y_block">Block this device</string>
     <string name="contact_a11y_row">%1$s, %2$s, double tap to view details</string>
     <string name="contact_a11y_row_favourite">%1$s, favourite, %2$s, double tap to view details</string>
-    <string name="contact_note_hint">Add a note…</string>
+    <string name="contact_note_hint">Add a noteâ¦</string>
     <string name="contact_save_note">Save note</string>
 
     <!-- PR-20: Settings -->
@@ -211,16 +211,16 @@
     <string name="settings_clear_contacts_confirm">Delete all</string>
     <string name="settings_clear_contacts_done">Contacts cleared</string>
     <string name="settings_privacy_fallback">Privacy policy: %1$s</string>
-    <!-- v1.3: live privacy policy URL — translatable="false" because URLs are
+    <!-- v1.3: live privacy policy URL â translatable="false" because URLs are
          language-independent. All locale files fall back to this value. -->
     <string name="privacy_url" translatable="false">https://showerideas.app/aura/privacy</string>
 
     <!-- Prompt-2: Volume-button reliability disclaimer -->
-    <string name="settings_volume_wake_warning">⚠ Triple-press volume works on Pixel and stock Android. It may not work on Samsung, Xiaomi, OPPO, or other custom Android builds due to OS-level key interception. Use the button below to check your device.</string>
+    <string name="settings_volume_wake_warning">â  Triple-press volume works on Pixel and stock Android. It may not work on Samsung, Xiaomi, OPPO, or other custom Android builds due to OS-level key interception. Use the button below to check your device.</string>
     <string name="settings_test_volume_press">Test triple-press now</string>
-    <string name="settings_volume_test_listening">Listening for 3 s — triple-press volume ▼</string>
-    <string name="settings_volume_test_success">✓ Triple-press detected — this device is compatible</string>
-    <string name="settings_volume_test_fail">✗ Triple-press not received — not supported on this device</string>
+    <string name="settings_volume_test_listening">Listening for 3 s â triple-press volume â¼</string>
+    <string name="settings_volume_test_success">â Triple-press detected â this device is compatible</string>
+    <string name="settings_volume_test_fail">â Triple-press not received â not supported on this device</string>
 
     <!-- PR-20: Blocked devices -->
     <string name="blocked_devices_title">Blocked devices</string>
@@ -234,20 +234,20 @@
     <string name="biometric_unavailable_fallback">Biometric unavailable, using gesture</string>
     <string name="biometric_auth_failed">Authentication failed</string>
     <plurals name="room_host_count">
-        <item quantity="zero">Waiting for people to join…</item>
+        <item quantity="zero">Waiting for people to joinâ¦</item>
         <item quantity="one">%d person joined</item>
         <item quantity="other">%d people joined</item>
     </plurals>
 
     <!-- ================================================================
-         Strings previously hardcoded in layouts — centralised here so
+         Strings previously hardcoded in layouts â centralised here so
          every locale gets a translation automatically.
          ================================================================ -->
 
     <!-- Home screen -->
     <string name="home_activate_hint">Triple-press volume down or tap to share</string>
 
-    <!-- Profile screen — share-field section -->
+    <!-- Profile screen â share-field section -->
     <string name="profile_fields_to_share_header">Fields to share</string>
     <string name="profile_share_phone">Phone</string>
     <string name="profile_share_email">Email</string>
@@ -258,7 +258,7 @@
     <string name="profile_btn_save_profile">Save Profile</string>
 
     <!-- Contacts screen -->
-    <string name="contacts_chip_favourites">★  Favourites</string>
+    <string name="contacts_chip_favourites">â  Favourites</string>
     <string name="contact_subtitle_aura">AURA contact</string>
 
     <!-- Contact detail sheet -->
@@ -272,7 +272,7 @@
     <string name="contact_toggle_favourite_initial">Toggle favourite</string>
 
     <!-- Gesture / camera -->
-    <string name="gesture_model_error">Camera model failed to load — try restarting the app.</string>
+    <string name="gesture_model_error">Camera model failed to load â try restarting the app.</string>
     <string name="gesture_stability_desc">Gesture stability</string>
 
     <!-- NearbyExchangeService foreground notification -->
@@ -281,15 +281,15 @@
     <string name="notif_title">AURA Exchange</string>
     <string name="notif_starting">Starting exchange\u2026</string>
 
-    <!-- AuraAccessibilityService — opt-in volume button reliability -->
-    <string name="accessibility_service_description">Enables reliable triple-press volume activation on all Android devices, including Samsung, MIUI, and ColorOS. AURA never reads content from other apps — only volume button events are intercepted.</string>
+    <!-- AuraAccessibilityService â opt-in volume button reliability -->
+    <string name="accessibility_service_description">Enables reliable triple-press volume activation on all Android devices, including Samsung, MIUI, and ColorOS. AURA never reads content from other apps â only volume button events are intercepted.</string>
     <string name="settings_accessibility_mode">Accessibility mode (recommended)</string>
-    <string name="settings_accessibility_enabled">Active — works on all devices ✓</string>
+    <string name="settings_accessibility_enabled">Active â works on all devices â</string>
     <string name="settings_accessibility_disabled">Tap to enable in Accessibility settings</string>
 
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
-    <string name="exchange_nfc_active">NFC tap active — faster key exchange</string>
-    <string name="exchange_nfc_active_desc">This exchange was initiated via NFC tap — the ECDH handshake is pre-seeded</string>
+    <string name="exchange_nfc_active">NFC tap active â faster key exchange</string>
+    <string name="exchange_nfc_active_desc">This exchange was initiated via NFC tap â the ECDH handshake is pre-seeded</string>
 
     <!-- Contact merge review bottom sheet (Phase 6.3) -->
     <string name="merge_title">Card Updated</string>
@@ -318,16 +318,16 @@
     <string name="profile_active">Active</string>
     <string name="profile_card_hint">This card will be shared on your next exchange</string>
 
-    <!-- Key rotation — Settings > Security (Phase 6.5) -->
+    <!-- Key rotation â Settings > Security (Phase 6.5) -->
     <string name="settings_section_security">Security</string>
     <string name="settings_rotate_key">Rotate identity key</string>
     <string name="settings_rotate_key_subtitle">Generate a new signing key. Known peers will learn of the rotation at your next exchange.</string>
     <string name="settings_rotate_key_confirm_title">Rotate your identity key?</string>
     <string name="settings_rotate_key_confirm_message">A new key will be generated. Your existing contacts are not affected, but peers will see a new key on your next exchange.</string>
     <string name="settings_rotate_key_done">Identity key rotated</string>
-    <string name="settings_rotate_key_error">Key rotation failed — please try again</string>
+    <string name="settings_rotate_key_error">Key rotation failed â please try again</string>
 
-    <!-- Exchange history — Settings + Audit screen (Phase 6.6) -->
+    <!-- Exchange history â Settings + Audit screen (Phase 6.6) -->
     <string name="settings_exchange_history">Exchange history</string>
     <string name="audit_title">Exchange history</string>
     <string name="audit_empty">No exchanges recorded yet</string>
@@ -350,26 +350,30 @@
     <string name="audit_clear_confirm_message">All exchange history will be permanently deleted.</string>
     <string name="audit_clear_done">Exchange history cleared</string>
 
-    <!-- Phase 6.9 — SAS identicon accessibility + dialog strings -->
-    <string name="sas_identicon_desc">Security identicon — visual fingerprint of this exchange session</string>
+    <!-- Phase 6.9 â SAS identicon accessibility + dialog strings -->
+    <string name="sas_identicon_desc">Security identicon â visual fingerprint of this exchange session</string>
     <string name="sas_code_desc">Security code</string>
     <string name="sas_dialog_instruction">Both you and your contact must see the same code and identicon</string>
 
-    <!-- Phase 6.7 — profile version bump banner -->
+    <!-- Phase 6.7 â profile version bump banner -->
     <string name="contact_card_updated">%1$s updated their card since your last exchange.</string>
-    <!-- Phase 6.9 — contact detail identicon fingerprint -->
-    <string name="contact_identicon_desc">Identity fingerprint — visual representation of this contact\'s cryptographic identity key</string>
+    <!-- Phase 6.9 â contact detail identicon fingerprint -->
+    <string name="contact_identicon_desc">Identity fingerprint â visual representation of this contact\'s cryptographic identity key</string>
     <string name="contact_identicon_label">Identity fingerprint</string>
 
-    <!-- Phase 6.8 — share card deeplink -->
+    <!-- Phase 6.8 â share card deeplink -->
     <string name="action_share_card">Share card link</string>
     <string name="share_card_chooser_title">Share your AURA card</string>
     <string name="share_card_text">Here\'s my AURA card: %1$s</string>
 
-    <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
+    <!-- Phase 5.3 â Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>
     <string name="cd_btn_nfc">NFC tap exchange</string>
     <string name="cd_btn_qr_scan">Scan QR code</string>
     <string name="cd_fab_export_audit">Export audit log</string>
     <string name="cd_btn_profile_switch">Switch profile</string>
+
+    <string name="shortcut_start_exchange_short">Exchange</string>
+    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
+    <string name="shortcut_disabled">AURA is not available</string>
 </resources>
