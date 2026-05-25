@@ -3,10 +3,9 @@
 # Every PR and every push to main runs:
 #
 #   1. testDebugUnitTest   — JVM unit tests. ~1 minute on a clean runner.
-#   2. lintDebug           — Android Lint. Fails on new issues.
-#   3. assembleRelease     — Full release build (R8 + shrinking). KEYSTORE_*
-#                            env vars are blank in CI so an unsigned APK is
-#                            produced — validates ProGuard rules cheaply.
+#   2. lintGmsDebug        — Android Lint. Fails on new issues.
+#   3. assembleGmsRelease  — Full GMS release build (R8 + shrinking). Unsigned in CI.
+#      assembleFossRelease — FOSS (Wi-Fi Direct) build. Both validate ProGuard rules.
 #   4. check-mediapipe-classes — Prompt-5: assert MediaPipe classes survived R8.
 #   5. check-apk-size      — Prompt-15: fail if APK exceeds size thresholds.
 #
@@ -64,8 +63,10 @@ jobs:
           restore-keys: |
             mediapipe-gesture-model-
 
-      - name: Unit tests (testDebugUnitTest)
-        run: ./gradlew testDebugUnitTest --stacktrace
+      - name: Unit tests GMS (testGmsDebugUnitTest)
+        run: ./gradlew testGmsDebugUnitTest --stacktrace
+      - name: Unit tests FOSS (testFossDebugUnitTest)
+        run: ./gradlew testFossDebugUnitTest --stacktrace
         env:
           GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
@@ -85,11 +86,25 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Android Lint (lintDebug)
-        run: ./gradlew lintDebug --stacktrace
+      - name: Android Lint (lintGmsDebug)
+        run: ./gradlew lintGmsDebug --stacktrace
 
-      - name: Assemble release (assembleRelease)
-        run: ./gradlew assembleRelease --stacktrace
+      # Phase 6.2: build both transport flavor variants.
+      # assembleGmsRelease  — standard GMS build (Google Play target).
+      # assembleFossRelease — GMS-free Wi-Fi Direct transport build (F-Droid target).
+      # Both are unsigned in CI (KEYSTORE_PATH empty); signed builds happen in
+      # the upload-to-play job below which has access to the keystore secrets.
+      - name: Assemble GMS release (assembleGmsRelease)
+        run: ./gradlew assembleGmsRelease --stacktrace
+        env:
+          KEYSTORE_PATH: ""
+          KEYSTORE_STORE_PASSWORD: ""
+          KEYSTORE_KEY_ALIAS: ""
+          KEYSTORE_KEY_PASSWORD: ""
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
+
+      - name: Assemble FOSS release (assembleFossRelease)
+        run: ./gradlew assembleFossRelease --stacktrace
         env:
           KEYSTORE_PATH: ""
           KEYSTORE_STORE_PASSWORD: ""
@@ -102,7 +117,7 @@ jobs:
       # the gesture recognizer crashes on first use.
       - name: Check MediaPipe classes survived R8
         run: |
-          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          APK=$(find app/build/outputs/apk/gms/release -name "*.apk" | head -1)
           echo "Checking MediaPipe classes in: $APK"
           # apkanalyzer moved from build-tools/<ver>/apkanalyzer to
           # cmdline-tools/latest/bin/apkanalyzer in modern Android SDK.
@@ -139,7 +154,7 @@ jobs:
       #   universal:   35 MB threshold  (fallback if splits are ever disabled)
       - name: Check APK size thresholds
         run: |
-          for APK in app/build/outputs/apk/release/*.apk; do
+          for APK in app/build/outputs/apk/gms/release/*.apk; do
             SIZE_KB=$(du -k "$APK" | cut -f1)
             SIZE_MB=$(echo "scale=1; $SIZE_KB / 1024" | bc)
             echo "APK: $APK — ${SIZE_MB} MB (${SIZE_KB} KB)"
@@ -164,7 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aura-release-unsigned
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/gms/release/*.apk
           if-no-files-found: warn
           retention-days: 14
 
@@ -175,8 +190,8 @@ jobs:
           name: test-reports
           path: |
             app/build/reports/tests
-            app/build/reports/lint-results-debug.html
-            app/build/reports/lint-results-debug.xml
+            app/build/reports/lint-results-gmsDebug.html
+            app/build/reports/lint-results-gmsDebug.xml
           if-no-files-found: ignore
           retention-days: 14
 
