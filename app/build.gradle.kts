@@ -266,6 +266,13 @@ dependencies {
     // 3-attempt retry — see the task registration below.
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
+    // Android Auto — Car App Library (Phase 7.3)
+    implementation("androidx.car.app:app:1.4.0")
+
+    // Wear OS tiles (Phase 7.2)
+    implementation("androidx.wear.tiles:tiles:1.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -553,12 +560,13 @@ tasks.register("verifyGestureModel") {
             println("WARNING: gesture_recognizer.task not found in assets/ — model must be present before release")
             return@doLast
         }
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         val hash = digest.digest(modelFile.readBytes())
-            .joinToString("") { "%02x".format(it) }
+            .joinToString("") { b -> "%02x".format(b.toInt() and 0xff) }
         if (hash != GESTURE_MODEL_SHA256) {
             throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
         }
         println("gesture_recognizer.task SHA-256 OK: $hash")
     }
 }
+

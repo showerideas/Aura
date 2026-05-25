@@ -11,7 +11,7 @@ import androidx.car.app.validation.HostValidator
 class AuraCarAppService : CarAppService() {
 
     override fun createHostValidator(): HostValidator =
-        HostValidator.ALLOW_DEBUG_HOSTS
+        HostValidator.ALLOW_ALL_HOSTS
 
     override fun onCreateSession(): Session = AuraCarSession()
 }
