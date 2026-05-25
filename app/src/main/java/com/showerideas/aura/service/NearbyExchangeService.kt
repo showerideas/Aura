@@ -32,6 +32,7 @@ import com.showerideas.aura.utils.vibrateDouble
 import com.showerideas.aura.utils.vibrateShort
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,6 +127,17 @@ class NearbyExchangeService : Service() {
             context.startService(Intent(context, NearbyExchangeService::class.java).apply {
                 action = ACTION_ABORT_SAS
             })
+        }
+
+
+        /**
+         * Testing only: directly set [sessionState] to drive UI without a real
+         * Nearby Connections session. Used by Espresso tests to trigger the SAS
+         * dialog without a live peer. Never call this in production code.
+         */
+        @VisibleForTesting
+        internal fun injectTestSessionState(session: ExchangeSession?) {
+            _sessionState.value = session
         }
 
         fun start(context: Context) {
