@@ -393,8 +393,8 @@ class NearbyExchangeService : Service() {
         // ------------------------------------------------------------------
         // onPayloadReceived — dispatch on first-byte message type
         // ------------------------------------------------------------------
-        transport.onPayloadReceived = { endpointId, data ->
-            if (data.isEmpty()) return@onPayloadReceived
+        transport.onPayloadReceived = payloadHandler@{ endpointId, data ->
+            if (data.isEmpty()) return@payloadHandler
             when (data[0]) {
                 MSG_TYPE_PUBLIC_KEY ->
                     handleIncomingPublicKey(endpointId, data.copyOfRange(1, data.size))
