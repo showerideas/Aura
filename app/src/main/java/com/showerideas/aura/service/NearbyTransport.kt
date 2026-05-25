@@ -122,5 +122,5 @@ interface NearbyTransport {
      */
     var onAvatarStreamReceived: ((endpointId: String, stream: java.io.InputStream) -> Unit)?
         get() = null
-        set(_) {}
+        @Suppress("UNUSED_PARAMETER") set(value) {}
 }
