@@ -201,14 +201,17 @@ class NearbyExchangeServiceUnitTest {
             id = "c1", displayName = "Alice", email = "alice@test.com",
             phone = "", company = "", title = "", website = "", bio = "",
             identityKeyHash = "hash", sourceEndpointId = "ep1",
-            avatarPath = null, profileVersion = 1
+            avatarUri = "", profileVersion = 1
         )
         val mergeEvent = com.showerideas.aura.model.MergeEvent(
-            preserved = contact,
-            incoming  = contact.copy(email = "new@test.com"),
-            changes   = mapOf("email" to com.showerideas.aura.model.ContactDiff(
-                field = "email", oldValue = "alice@test.com", newValue = "new@test.com"
-            ))
+            preserved = contact.copy(email = "new@test.com"),
+            previous  = contact,
+            diffs     = listOf(
+                com.showerideas.aura.model.ContactFieldDiff(
+                    field = "email", label = "Email",
+                    oldValue = "alice@test.com", newValue = "new@test.com"
+                )
+            )
         )
         val session = ExchangeSession(
             sessionId  = "merge-test",
@@ -216,7 +219,7 @@ class NearbyExchangeServiceUnitTest {
             mergeEvent = mergeEvent
         )
         assertTrue("mergeEvent.hasChanges should be true", session.mergeEvent!!.hasChanges)
-        assertEquals("alice@test.com", session.mergeEvent!!.preserved.email)
-        assertEquals("new@test.com",   session.mergeEvent!!.incoming.email)
+        assertEquals("new@test.com",   session.mergeEvent!!.preserved.email)
+        assertEquals("alice@test.com", session.mergeEvent!!.previous.email)
     }
 }
