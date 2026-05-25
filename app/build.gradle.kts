@@ -135,7 +135,12 @@ android {
     // ABI filter.
     splits {
         abi {
-            isEnable = true
+            // Disable ABI splits when building an App Bundle — AGP cannot handle
+            // multiple per-ABI shrunk-resource files inside PerModuleBundleTask.
+            // Splits are only needed for assembleRelease (per-ABI APKs for GitHub
+            // Releases). bundleRelease produces a single universal AAB for Play.
+            // See: https://issuetracker.google.com/402800800
+            isEnable = gradle.startParameter.taskNames.none { it.contains("bundle", ignoreCase = true) }
             reset()
             include("arm64-v8a", "armeabi-v7a")
             isUniversalApk = false
