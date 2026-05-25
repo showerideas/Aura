@@ -11,11 +11,13 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.navigation.Navigation
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.showerideas.aura.ui.MainActivity
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +48,14 @@ class SettingsEspressoTest {
 
     @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
+
+    // On a fresh emulator the DataStore ONBOARDING_COMPLETE flag is false,
+    // so MainActivity routes to onboardingFragment. Navigate to home first so
+    // the ActionBar is in root-destination mode and the overflow menu is reachable.
+    @Before
+    fun ensureOnHome() {
+        navigateToHomeIfOnOnboarding()
+    }
 
     @Test
     fun settings_screen_shows_auth_and_blocked_rows() {
@@ -102,6 +112,20 @@ class SettingsEspressoTest {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * If the app started on OnboardingFragment (ONBOARDING_COMPLETE=false in DataStore
+     * on a fresh emulator), navigate to HomeFragment via the declared nav action so
+     * the ActionBar is in root-destination mode and the overflow menu is accessible.
+     */
+    private fun navigateToHomeIfOnOnboarding() {
+        activityRule.scenario.onActivity { activity ->
+            val navController = Navigation.findNavController(activity, R.id.nav_host_fragment)
+            if (navController.currentDestination?.id == R.id.onboardingFragment) {
+                navController.navigate(R.id.action_onboarding_to_home)
+            }
+        }
+    }
 
     private fun waitForView(@IdRes id: Int, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs

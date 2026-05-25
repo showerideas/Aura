@@ -9,10 +9,12 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.navigation.Navigation
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.showerideas.aura.ui.MainActivity
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,6 +53,15 @@ class ExchangeFlowEspressoTest {
     @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
+    // On a fresh emulator the DataStore ONBOARDING_COMPLETE flag is false,
+    // so MainActivity routes to onboardingFragment instead of homeFragment.
+    // Navigate to home before each test so assertions on HomeFragment views work.
+    @Before
+    fun ensureOnHome() {
+        navigateToHomeIfOnOnboarding()
+        waitForView(R.id.btn_activate)
+    }
+
     @Test
     fun tap_activate_shows_exchange_then_cancel_returns_home() {
         // Home: Activate button should be visible at startup.
@@ -68,6 +79,24 @@ class ExchangeFlowEspressoTest {
 
         // Home: Activate button is showing again.
         waitForView(R.id.btn_activate)
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * If the app started on OnboardingFragment (ONBOARDING_COMPLETE=false in DataStore
+     * on a fresh emulator), navigate to HomeFragment via the declared nav action so
+     * tests that expect HomeFragment views don't immediately fail.
+     */
+    private fun navigateToHomeIfOnOnboarding() {
+        activityRule.scenario.onActivity { activity ->
+            val navController = Navigation.findNavController(activity, R.id.nav_host_fragment)
+            if (navController.currentDestination?.id == R.id.onboardingFragment) {
+                navController.navigate(R.id.action_onboarding_to_home)
+            }
+        }
     }
 
     /**
