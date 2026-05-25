@@ -289,6 +289,8 @@
     <string name="sas_identicon_desc">보안 아이덴티콘 – 이 교환 세션의 시각적 지문</string>
     <string name="sas_code_desc">보안 코드</string>
     <string name="sas_dialog_instruction">당신과 연락처 모두 같은 코드와 아이덴티콘을 봐야 합니다</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$s님이 마지막 교환 이후 카드를 업데이트했습니다.</string>
     <string name="action_share_card">카드 링크 공유</string>
     <string name="share_card_chooser_title">AURA 카드 공유</string>
     <string name="share_card_text">내 AURA 카드입니다: %1$s</string>

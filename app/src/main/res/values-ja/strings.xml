@@ -289,6 +289,8 @@
     <string name="sas_identicon_desc">セキュリティ識別子 – この交換セッションの視覚的フィンガープリント</string>
     <string name="sas_code_desc">セキュリティコード</string>
     <string name="sas_dialog_instruction">あなたとあなたの連絡先は同じコードと識別子を表示する必要があります</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$sが前回の交換以降にカードを更新しました。</string>
     <string name="action_share_card">カードリンクを共有</string>
     <string name="share_card_chooser_title">AURAカードを共有</string>
     <string name="share_card_text">私のAURAカードはこちら: %1$s</string>

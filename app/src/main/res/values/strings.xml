@@ -355,6 +355,9 @@
     <string name="sas_code_desc">Security code</string>
     <string name="sas_dialog_instruction">Both you and your contact must see the same code and identicon</string>
 
+    <!-- Phase 6.7 — profile version bump banner -->
+    <string name="contact_card_updated">%1$s updated their card since your last exchange.</string>
+
     <!-- Phase 6.8 — share card deeplink -->
     <string name="action_share_card">Share card link</string>
     <string name="share_card_chooser_title">Share your AURA card</string>

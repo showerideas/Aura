@@ -27,6 +27,7 @@ import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.ui.contacts.ContactMergeBottomSheet
 import com.showerideas.aura.utils.IdenticonGenerator
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -71,6 +72,8 @@ class ExchangeFragment : Fragment() {
      * success or final failure — we no longer want to act on another emission.
      */
     private var gestureValidated = false
+    /** Guard: show the "card updated" Snackbar at most once per completed session. */
+    private var cardUpdatedSnackbarShown = false
     // sasDialogShown has been moved to ExchangeViewModel to survive configuration
     // changes (rotation, theme switch). The fragment-level variable was reset to
     // false on every recreation, causing the SAS dialog to appear twice.
@@ -328,6 +331,17 @@ class ExchangeFragment : Fragment() {
                 ContactMergeBottomSheet.newInstance(mergeEvent) { selections ->
                     viewModel.applyMergeSelections(mergeEvent.preserved, selections)
                 }.show(childFragmentManager, ContactMergeBottomSheet.TAG)
+            }
+            // Phase 6.7: show "Card updated" banner if this peer bumped their profile version.
+            if (session.profileVersionBumped && !cardUpdatedSnackbarShown) {
+                cardUpdatedSnackbarShown = true
+                val name = session.receivedContact?.displayName?.takeIf { it.isNotBlank() }
+                    ?: getString(R.string.someone)
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.contact_card_updated, name),
+                    Snackbar.LENGTH_LONG
+                ).show()
             }
         }
         if (session.state == ExchangeSession.State.ERROR) {

@@ -1278,12 +1278,24 @@ class NearbyExchangeService : Service() {
                 // to the UI via ExchangeSession so the user can review what changed (Phase 6.3/6.7).
                 val mergeEvent: MergeEvent? = contactRepository.saveDeduped(contact)
 
+                // Phase 6.7: profile version banner.
+                // storedVersion > 0 means we've met this peer before (DEFAULT 0 = first-time).
+                // Only show the banner if the incoming version is strictly higher.
+                val storedVersion = knownPeerRepository.getLastSeenProfileVersion(endpointId)
+                val profileVersionBumped = storedVersion > 0 && contact.profileVersion > storedVersion
+                // Persist the new version so the next exchange knows the baseline.
+                if (contact.profileVersion > 0) {
+                    knownPeerRepository.updateLastSeenProfileVersion(endpointId, contact.profileVersion)
+                    Timber.d("Updated lastSeenProfileVersion for $endpointId → ${contact.profileVersion}")
+                }
+
                 val current = sessionState.value
                 _sessionState.value = current?.copy(
                     state = ExchangeSession.State.COMPLETED,
                     receivedContact = contact,
                     errorMessage = sessionWarning,
-                    mergeEvent = mergeEvent
+                    mergeEvent = mergeEvent,
+                    profileVersionBumped = profileVersionBumped
                 )
                 broadcastState(sessionState.value)
                 Timber.i("Exchange complete — saved contact: ${contact.displayName}")
