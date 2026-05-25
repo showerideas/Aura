@@ -341,7 +341,10 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
     fun release() {
         stopAllEndpoints()
         scope.cancel()
-        channel.close()
+        // WifiP2pManager.Channel.close() requires API 27; guard to keep minSdk 26 clean.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            channel.close()
+        }
     }
 
     // -------------------------------------------------------------------------
