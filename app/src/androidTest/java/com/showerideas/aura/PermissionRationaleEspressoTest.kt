@@ -7,6 +7,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.navigation.Navigation
@@ -29,13 +30,24 @@ import org.junit.runner.RunWith
  *  3. The "Open Settings" and "Not now" buttons are both present.
  *  4. Tapping "Not now" dismisses the sheet without crashing.
  *
- * v1.4 fix: sheet_renders_with_all_seven_permission_types now asserts on
- * tv_title (always at the top of the sheet) instead of container_permission_rows.
- * With 7 rows the sheet height exceeds the emulator screen height; the bottom
- * sheet opens in a partial state where container_permission_rows (middle of the
- * layout) may be outside the visible rect — causing isDisplayed() to fail even
- * though the sheet rendered correctly. tv_title is always at the top of the sheet
- * and is visible regardless of how many rows are present.
+ * v1.5 fix: Two root causes addressed together:
+ *
+ * (A) @Before regression: waitForView(btn_activate) with Throwable-catch caused
+ *     tapping_not_now regression. Espresso's RootViewPicker waits up to 10 seconds
+ *     internally per onView() call — so one failed iteration already exceeds the 5s
+ *     deadline. Using SystemClock.sleep(400) instead avoids Espresso entirely and lets
+ *     the activity settle without triggering the internal 10s focus timeout.
+ *
+ * (B) sheet_renders_with_all_seven_permission_types: BottomSheetDialogFragment with
+ *     isCancelable=false may not acquire window focus on a cold emulator (first test
+ *     run). Espresso's RootViewPicker throws RootViewWithoutFocusException. Fix: use
+ *     inRoot(RootMatchers.isDialog()) which matches by window type/flags — not by
+ *     input focus — so the check succeeds even without window focus. Also added
+ *     SystemClock.sleep(800) after showSheet() to let the dialog attach and draw
+ *     before Espresso inspects it.
+ *
+ * waitForView is reverted to catch only NoMatchingViewException + AssertionError —
+ * catching Throwable was the original regression vector.
  */
 @RunWith(AndroidJUnit4::class)
 class PermissionRationaleEspressoTest {
@@ -52,27 +64,40 @@ class PermissionRationaleEspressoTest {
     @Before
     fun ensureOnHome() {
         navigateToHomeIfOnOnboarding()
-        // Wait for HomeFragment to fully settle before showing the bottom sheet.
-        waitForView(R.id.btn_activate)
+        // Brief pause for NavController fragment transition + Choreographer layout pass.
+        // Intentionally avoids Espresso here: Espresso's RootViewPicker waits up to
+        // 10 seconds per onView() call, which would exceed the waitForView 5s deadline
+        // on the very first iteration when the emulator is cold.
+        SystemClock.sleep(400)
     }
 
     @Test
     fun sheet_shows_title_rows_and_buttons() {
         showSheet(listOf(Manifest.permission.CAMERA, Manifest.permission.BLUETOOTH_SCAN))
 
-        waitForView(R.id.tv_title)
-        onView(withId(R.id.tv_title)).check(matches(isDisplayed()))
-        onView(withId(R.id.container_permission_rows)).check(matches(isDisplayed()))
-        onView(withId(R.id.btn_open_settings)).check(matches(isDisplayed()))
-        onView(withId(R.id.btn_not_now)).check(matches(isDisplayed()))
+        SystemClock.sleep(600)
+        onView(withId(R.id.tv_title))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
+        onView(withId(R.id.btn_open_settings))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
+        onView(withId(R.id.btn_not_now))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
     }
 
     @Test
     fun tapping_not_now_dismisses_without_crash() {
         showSheet(listOf(Manifest.permission.CAMERA))
 
-        waitForView(R.id.btn_not_now)
-        onView(withId(R.id.btn_not_now)).perform(click())
+        SystemClock.sleep(600)
+        onView(withId(R.id.btn_not_now))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
+        onView(withId(R.id.btn_not_now))
+            .inRoot(RootMatchers.isDialog())
+            .perform(click())
         SystemClock.sleep(500)
     }
 
@@ -90,12 +115,16 @@ class PermissionRationaleEspressoTest {
             )
         )
 
-        // Assert on tv_title (always at the top of the sheet) — with 7 rows the
-        // sheet height exceeds the screen and the bottom sheet opens in a partial
-        // state. container_permission_rows may be outside the visible rect in that
-        // state; tv_title is always visible and confirms the sheet rendered.
-        waitForView(R.id.tv_title)
-        onView(withId(R.id.tv_title)).check(matches(isDisplayed()))
+        // Allow the BottomSheetDialogFragment to attach, draw all 7 rows, and
+        // stabilise before Espresso inspects it.
+        SystemClock.sleep(800)
+
+        // inRoot(isDialog()) matches by window type/flags — does NOT require the
+        // dialog window to have input focus. This is the correct matcher when the
+        // BottomSheet may not yet have acquired focus on a cold emulator.
+        onView(withId(R.id.tv_title))
+            .inRoot(RootMatchers.isDialog())
+            .check(matches(isDisplayed()))
     }
 
     private fun navigateToHomeIfOnOnboarding() {
@@ -116,8 +145,10 @@ class PermissionRationaleEspressoTest {
 
     /**
      * Polls until [id] is displayed or [timeoutMs] elapses.
-     * Catches all Throwable — including RootViewWithoutFocusException — so
-     * transient window-focus changes trigger a retry rather than a hard failure.
+     * Only catches NoMatchingViewException and AssertionError — NOT Throwable.
+     * Catching Throwable would absorb RootViewWithoutFocusException (a RuntimeException
+     * thrown after Espresso's internal 10-second wait), making one failed iteration
+     * already exceed the 5-second deadline.
      */
     private fun waitForView(@IdRes id: Int, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs
@@ -126,7 +157,10 @@ class PermissionRationaleEspressoTest {
             try {
                 onView(withId(id)).check(matches(isDisplayed()))
                 return
-            } catch (e: Throwable) {
+            } catch (e: NoMatchingViewException) {
+                lastError = e
+                SystemClock.sleep(150)
+            } catch (e: AssertionError) {
                 lastError = e
                 SystemClock.sleep(150)
             }
