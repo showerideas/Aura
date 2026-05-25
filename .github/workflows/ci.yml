@@ -3,7 +3,7 @@
 # Every PR and every push to main runs:
 #
 #   1. testDebugUnitTest   — JVM unit tests. ~1 minute on a clean runner.
-#   2. lintDebug           — Android Lint. Fails on new issues.
+#   2. lintGmsDebug        — Android Lint. Fails on new issues.
 #   3. assembleGmsRelease  — Full GMS release build (R8 + shrinking). Unsigned in CI.
 #      assembleFossRelease — FOSS (Wi-Fi Direct) build. Both validate ProGuard rules.
 #   4. check-mediapipe-classes — Prompt-5: assert MediaPipe classes survived R8.
@@ -86,8 +86,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Android Lint (lintDebug)
-        run: ./gradlew lintDebug --stacktrace
+      - name: Android Lint (lintGmsDebug)
+        run: ./gradlew lintGmsDebug --stacktrace
 
       # Phase 6.2: build both transport flavor variants.
       # assembleGmsRelease  — standard GMS build (Google Play target).
@@ -190,8 +190,8 @@ jobs:
           name: test-reports
           path: |
             app/build/reports/tests
-            app/build/reports/lint-results-debug.html
-            app/build/reports/lint-results-debug.xml
+            app/build/reports/lint-results-gmsDebug.html
+            app/build/reports/lint-results-gmsDebug.xml
           if-no-files-found: ignore
           retention-days: 14
 
