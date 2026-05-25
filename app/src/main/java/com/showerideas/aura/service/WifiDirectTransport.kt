@@ -97,6 +97,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
     override var onDisconnected: ((endpointId: String) -> Unit)? = null
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
+    override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
     // -------------------------------------------------------------------------
     // Internal state
@@ -408,6 +409,9 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         activeStreams[endpointId] = DataOutputStream(socket.getOutputStream().buffered())
         connectedPeerMac = endpointId
         Timber.i("WifiDirect: TCP channel ready to $remoteName ($endpointId)")
+        // Notify before onConnected so the service can run async blocklist check.
+        // For Wi-Fi Direct the OS already accepted; rejectConnection() calls removeGroup().
+        onConnectionInitiated?.invoke(endpointId, remoteName)
         onConnected?.invoke(endpointId, remoteName, isIncoming)
         // Start receive loop
         scope.launch { receiveLoop(endpointId, socket) }
