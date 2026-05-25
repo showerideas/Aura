@@ -1,258 +1,164 @@
-# QR Relay Self-Hosting Guide
+# QR Relay Setup Guide
 
-> Set this up once. It takes ~10 minutes. Zero ongoing cost on Firebase free tier.
-
-AURA's QR relay lets two devices swap encrypted profiles when they can't reach each
-other over BLE or Wi-Fi Direct (enterprise firewalls, different subnets, etc.).
-
-**Security guarantee:** The relay server only ever stores ciphertext. Your profile
-data is encrypted client-side with AES-256-GCM before it leaves your phone. The relay
-server cannot read it, cannot correlate sender and receiver (they use randomly-generated
-slot IDs), and each slot self-expires after 60 seconds.
+AURA's QR exchange channel uses a relay server as a rendezvous point when
+Nearby Connections or Wi-Fi Direct are unavailable. This guide walks through
+setting up the relay using **Firebase Realtime Database** — a fully managed,
+zero-ops option that fits within Google's free tier for typical AURA usage.
 
 ---
 
-## Option A — Firebase Realtime Database (recommended, zero-ops)
+## 1. Prerequisites
 
-### 1. Create a Firebase project
+- A Google account
+- [Firebase CLI](https://firebase.google.com/docs/cli) installed (`npm install -g firebase-tools`)
+- `RELAY_BASE_URL` environment variable set in CI (see §5)
 
-1. Go to [console.firebase.google.com](https://console.firebase.google.com)
-2. Click **Add project** → name it `aura-relay` (or anything you like)
-3. Disable Google Analytics (not needed) → **Create project**
+---
 
-### 2. Create a Realtime Database
+## 2. Create a Firebase project
 
-1. In the left sidebar: **Build → Realtime Database**
-2. Click **Create Database**
-3. Choose a region close to your users (e.g. `us-central1`)
-4. Start in **locked mode** (we'll set rules next)
+1. Go to <https://console.firebase.google.com> and click **Add project**.
+2. Enter a project name (e.g. `aura-relay`).
+3. Disable Google Analytics (not needed) → **Create project**.
+4. In the left sidebar, select **Build → Realtime Database**.
+5. Click **Create Database** → choose a region close to your users.
+6. Select **Start in locked mode** (you will add security rules in §3).
 
-### 3. Set security rules
+---
 
-Replace the default rules with these — they allow any client to write to a slot once
-and read from it, but expire slots server-side via the 60-second TTL in the app:
+## 3. Database security rules
+
+Paste the following into **Realtime Database → Rules**:
 
 ```json
 {
   "rules": {
-    "slots": {
-      "$slotId": {
-        ".read": true,
-        ".write": "!data.exists()"
+    "relay": {
+      "$sessionId": {
+        // Any authenticated client can read and write their own session slot.
+        // Session IDs are UUIDs generated on-device — effectively unguessable.
+        // Payloads expire server-side via a Cloud Function (see §4).
+        ".read":  "auth == null",
+        ".write": "auth == null",
+        // Enforce maximum payload size: ~4 KB covers any realistic AURA handshake.
+        ".validate": "newData.isString() && newData.val().length <= 4096"
       }
     }
   }
 }
 ```
 
-> **Why `!data.exists()`?** This prevents overwriting an existing slot. A slot is
-> written once (the sender's encrypted profile) and read once (by the peer). Once the
-> app reads the slot it deletes it client-side. The 60-second QR expiry in AURA's UI
-> also limits the exposure window.
-
-### 4. Get your database URL
-
-From the Realtime Database page, copy the URL — it looks like:
-
-```
-https://aura-relay-default-rtdb.firebaseio.com
-```
-
-### 5. Configure AURA to use your relay
-
-#### For local development
-
-Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
-
-```bash
-export RELAY_BASE_URL="https://aura-relay-default-rtdb.firebaseio.com"
-```
-
-Then rebuild:
-
-```bash
-./gradlew assembleDebug
-```
-
-#### For CI (GitHub Actions)
-
-In your repo: **Settings → Secrets and variables → Actions → Variables** (not Secrets —
-the relay URL is not sensitive):
-
-| Name | Value |
-|---|---|
-| `RELAY_BASE_URL` | `https://aura-relay-default-rtdb.firebaseio.com` |
-
-Then reference it in `.github/workflows/ci.yml`:
-
-```yaml
-env:
-  RELAY_BASE_URL: ${{ vars.RELAY_BASE_URL }}
-```
-
-The `buildConfigField` in `app/build.gradle.kts` picks it up automatically:
-
-```kotlin
-val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
-    ?: "https://relay.example.com"
-buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
-```
-
-### 6. Verify it works
-
-```bash
-# Write a test slot
-curl -X PUT \
-  "https://aura-relay-default-rtdb.firebaseio.com/slots/test123.json" \
-  -d '"hello"'
-
-# Read it back
-curl "https://aura-relay-default-rtdb.firebaseio.com/slots/test123.json"
-# → "hello"
-
-# Delete it
-curl -X DELETE \
-  "https://aura-relay-default-rtdb.firebaseio.com/slots/test123.json"
-```
+> **Security note:** AURA QR payloads are ephemeral, short-lived (60 s), and
+> contain only ECDH public keys + session UUIDs — no profile data or secrets.
+> Profile data is encrypted end-to-end after the relay handshake completes.
+> Leaving the relay open-read/write is acceptable because a stolen payload
+> only reveals a one-time ephemeral public key; the ECDH handshake still
+> requires a subsequent SAS verbal confirmation to detect relay-based MITM.
 
 ---
 
-## Option B — Cloudflare Workers (alternative, also zero-ops)
+## 4. Auto-expiry Cloud Function (optional but recommended)
 
-Cloudflare Workers free tier: 100,000 requests/day. Sufficient for personal use.
-
-### 1. Install Wrangler
+Without expiry, stale session slots accumulate. Deploy a simple cleanup function:
 
 ```bash
-npm install -g wrangler
-wrangler login
+firebase init functions   # select JavaScript; enable ESLint
 ```
 
-### 2. Create a KV namespace for slot storage
+Replace `functions/index.js` with:
+
+```javascript
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { getDatabase }  = require("firebase-admin/database");
+const { initializeApp } = require("firebase-admin/app");
+
+initializeApp();
+
+// Runs every 5 minutes; deletes relay slots older than 120 seconds.
+exports.cleanStaleRelaySessions = onSchedule("every 5 minutes", async () => {
+  const db   = getDatabase();
+  const ref  = db.ref("relay");
+  const cutoff = Date.now() - 120_000;
+
+  const snap = await ref.orderByChild("createdAt").endAt(cutoff).get();
+  if (!snap.exists()) return;
+
+  const updates = {};
+  snap.forEach(child => { updates[child.key] = null; });
+  await ref.update(updates);
+  console.log(`Cleaned ${Object.keys(updates).length} stale relay sessions`);
+});
+```
+
+Deploy:
 
 ```bash
-wrangler kv:namespace create AURA_SLOTS
-# Note the id from the output
+firebase deploy --only functions
 ```
 
-### 3. Create the worker
-
-`aura-relay/src/index.ts`:
-
-```typescript
-export interface Env {
-  AURA_SLOTS: KVNamespace;
-}
-
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    // Expect path: /slots/<slotId>
-    const match = url.pathname.match(/^\/slots\/([a-zA-Z0-9_-]{8,64})$/);
-    if (!match) {
-      return new Response("Bad request", { status: 400 });
-    }
-    const slotId = match[1];
-
-    if (request.method === "PUT" || request.method === "POST") {
-      const existing = await env.AURA_SLOTS.get(slotId);
-      if (existing !== null) {
-        return new Response("Slot already occupied", { status: 409 });
-      }
-      const body = await request.text();
-      // TTL: 120 seconds (double the 60s QR expiry — allows for clock skew)
-      await env.AURA_SLOTS.put(slotId, body, { expirationTtl: 120 });
-      return new Response("OK", { status: 201 });
-
-    } else if (request.method === "GET") {
-      const value = await env.AURA_SLOTS.get(slotId);
-      if (value === null) {
-        return new Response("Not found", { status: 404 });
-      }
-      return new Response(value, {
-        headers: { "Content-Type": "application/json" }
-      });
-
-    } else if (request.method === "DELETE") {
-      await env.AURA_SLOTS.delete(slotId);
-      return new Response("Deleted", { status: 200 });
-
-    } else {
-      return new Response("Method not allowed", { status: 405 });
-    }
-  }
-};
-```
-
-`wrangler.toml`:
-
-```toml
-name = "aura-relay"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
-
-[[kv_namespaces]]
-binding = "AURA_SLOTS"
-id = "<your-kv-namespace-id>"
-```
-
-### 4. Deploy
-
-```bash
-wrangler deploy
-```
-
-Your relay URL will be: `https://aura-relay.<your-account>.workers.dev`
-
-Set `RELAY_BASE_URL` to this URL as in Option A step 5.
+> **Free tier note:** Scheduled functions require the **Blaze (pay-as-you-go)**
+> plan. If you prefer the free Spark plan, omit the function — the app's
+> built-in 60-second client-side expiry will prevent relay slots from being
+> used after they expire, even if they persist in the database.
 
 ---
 
-## Relay contract (for third-party relay implementations)
+## 5. Wire the relay URL into AURA
 
-AURA's `RelayClient.kt` expects the following REST contract:
+### Local development
 
-| Operation | Method | Path | Body | Success |
-|---|---|---|---|---|
-| Post profile | `POST` | `/slots/<slotId>` | `{"payload":"<base64url>"}` | `201` |
-| Poll for peer | `GET` | `/slots/<slotId>` | — | `200` with JSON body, or `404` |
-| Delete slot | `DELETE` | `/slots/<slotId>` | — | `200` or `204` |
-
-### Slot ID format
-
-A random UUID (v4) without hyphens, 32 hex characters. Generated by
-`QRExchangeViewModel` from the local ephemeral session UUID.
-
-### Payload format
-
-The body is a JSON object with a single `payload` key containing the
-Base64url-encoded (no padding) AES-256-GCM ciphertext of the sender's profile.
-The GCM nonce is prepended to the ciphertext (first 12 bytes). No plaintext
-profile data ever reaches the relay.
-
-### TTL
-
-The relay should expire unclaimed slots after at least 60 seconds (the QR code
-rotation period). 120 seconds is recommended to account for clock skew and slow
-networks.
-
-### CORS
-
-If the relay is accessed from a browser context (e.g. for the GitHub Pages landing
-page), add:
-
+```bash
+export RELAY_BASE_URL="https://<your-project-id>-default-rtdb.firebaseio.com"
+./gradlew assembleGmsDebug
 ```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Methods: GET, POST, DELETE
-```
+
+### CI / GitHub Actions
+
+1. In your repository go to **Settings → Secrets and variables → Actions**.
+2. Add a repository secret named `RELAY_BASE_URL` with the value:
+   `https://<your-project-id>-default-rtdb.firebaseio.com`
+3. The CI workflow already reads `RELAY_BASE_URL` via the `buildConfigField`
+   in `app/build.gradle.kts`:
+   ```kotlin
+   val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
+       ?: "https://relay.example.com"
+   buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
+   ```
+
+If `RELAY_BASE_URL` is not set, the build succeeds but QR relay attempts will
+fail at runtime (the default `relay.example.com` does not exist). Nearby
+Connections and Wi-Fi Direct are unaffected.
 
 ---
 
-## Privacy notes
+## 6. Self-hosted alternative (no Firebase)
 
-- The relay IP logs show two requests to the same slot ID from two different IP addresses.
-  This leaks the timing and rough location of the exchange to the relay operator.
-- For higher privacy: route relay requests through a VPN or Tor (opt-in, see
-  `Settings → Privacy → Advanced → Anonymous QR relay` — Phase 8.3 roadmap item).
-- The relay operator **cannot** decrypt the profile payload — it is AES-256-GCM
-  encrypted before it reaches the relay.
+If you prefer to avoid Google services entirely, any HTTP server that supports
+the following two endpoints is compatible:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `PUT`  | `/relay/{sessionId}` | Store a base64-encoded payload. Returns `200 OK`. |
+| `GET`  | `/relay/{sessionId}` | Retrieve the payload. Returns `200 OK` with the payload, or `404` if expired/missing. |
+| `DELETE` | `/relay/{sessionId}` | Delete after retrieval. Returns `200 OK`. |
+
+A minimal Node.js implementation (~50 lines) using in-memory storage with
+TTL is available in `tools/relay-server/` (coming in Phase 7.x).
+
+> AURA's relay client (`QRExchangeRepository`) uses the `RELAY_BASE_URL`
+> build config field as the base URL for all three operations above.
+
+---
+
+## 7. Verify the setup
+
+Run AURA on two devices connected to the Internet, navigate to **Activate →
+QR Exchange**, and scan one device's QR code with the other. If the relay is
+configured correctly the devices will exchange ECDH public keys, display the
+SAS verification dialog, and complete the contact exchange within a few seconds.
+
+If the exchange fails check:
+- `RELAY_BASE_URL` is set to your Firebase RTDB URL (not the placeholder)
+- Firebase database rules allow unauthenticated read/write on `/relay/*`
+- Both devices have Internet connectivity (QR relay does not work offline)
+- The session UUID in the QR code hasn't expired (60-second window)
