@@ -1024,7 +1024,7 @@ class NearbyExchangeService : Service() {
                 transport.sendBytes(endpointId, byteArrayOf(MSG_TYPE_AVATAR))
                 val sent = transport.sendAvatarStream(
                     endpointId,
-                    pfd.inputStream(),
+                    android.os.ParcelFileDescriptor.AutoCloseInputStream(pfd),
                     pfd.statSize,
                 )
                 if (!sent) Timber.d("Avatar streaming skipped — transport does not support STREAM payloads")
