@@ -22,7 +22,9 @@ import com.showerideas.aura.R
 import com.showerideas.aura.auth.BiometricAuthHelper
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentSettingsBinding
+import com.showerideas.aura.service.AuraAccessibilityService
 import com.showerideas.aura.service.VolumeButtonListenerService
+import android.provider.Settings as AndroidSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -62,6 +64,8 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         wireAuthSection()
         wireActivationSection()
+        wireAccessibilitySection()
+        wireSecuritySection()
         wireDataSection()
         wireAboutSection()
     }
@@ -107,6 +111,7 @@ class SettingsFragment : Fragment() {
                     val warningVisibility = if (enabled) View.VISIBLE else View.GONE
                     binding.tvVolumeWakeWarning.visibility = warningVisibility
                     binding.rowTestVolumePress.visibility = warningVisibility
+                    binding.rowAccessibilityMode.visibility = warningVisibility
                 }
             }
         }
@@ -174,6 +179,67 @@ class SettingsFragment : Fragment() {
         try { requireContext().unregisterReceiver(this) } catch (_: Exception) {}
     }
 
+    // -------------------------------------------------------------------------
+    // Accessibility mode — volume-button reliability on Samsung/MIUI/ColorOS
+    // -------------------------------------------------------------------------
+
+    private fun wireAccessibilitySection() {
+        binding.rowAccessibilityMode.setOnClickListener {
+            // Open Android Accessibility settings — user must enable the service manually.
+            try {
+                startActivity(Intent(AndroidSettings.ACTION_ACCESSIBILITY_SETTINGS))
+            } catch (e: Exception) {
+                // Fallback: open main Settings if Accessibility settings is unavailable.
+                startActivity(Intent(AndroidSettings.ACTION_SETTINGS))
+            }
+        }
+    }
+
+    private fun refreshAccessibilityStatus() {
+        val enabled = AuraAccessibilityService.isEnabled(requireContext())
+        binding.tvAccessibilityStatus.text = getString(
+            if (enabled) R.string.settings_accessibility_enabled
+            else R.string.settings_accessibility_disabled
+        )
+        binding.tvAccessibilityStatus.setTextColor(
+            requireContext().getColor(
+                if (enabled) com.showerideas.aura.R.color.aura_cyan
+                else com.showerideas.aura.R.color.on_surface_secondary
+            )
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // Security section — key rotation + exchange history (Phase 6.5 / 6.6)
+    // -------------------------------------------------------------------------
+
+    private fun wireSecuritySection() {
+        // Key rotation row
+        binding.rowRotateKey.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.settings_rotate_key_confirm_title)
+                .setMessage(R.string.settings_rotate_key_confirm_message)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.settings_rotate_key) { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val success = viewModel.rotateIdentityKey()
+                        Toast.makeText(
+                            requireContext(),
+                            if (success) R.string.settings_rotate_key_done
+                            else R.string.settings_rotate_key_error,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                .show()
+        }
+
+        // Exchange history row
+        binding.rowExchangeHistory.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_audit)
+        }
+    }
+
     private fun wireDataSection() {
         binding.rowBlockedDevices.setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_blocked_devices)
@@ -226,6 +292,12 @@ class SettingsFragment : Fragment() {
                 ).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh accessibility status every time the user returns from Android settings.
+        refreshAccessibilityStatus()
     }
 
     override fun onDestroyView() {

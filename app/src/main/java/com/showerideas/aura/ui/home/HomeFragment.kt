@@ -2,6 +2,7 @@ package com.showerideas.aura.ui.home
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +18,10 @@ import androidx.navigation.fragment.findNavController
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentHomeBinding
 import com.showerideas.aura.model.ExchangeSession
+import com.showerideas.aura.model.Profile
+import com.showerideas.aura.model.ProfileType
 import com.showerideas.aura.service.NearbyExchangeService
+import com.showerideas.aura.utils.DeeplinkUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -31,6 +35,8 @@ class HomeFragment : Fragment() {
 
     /** reference held so we can cancel cleanly in onDestroyView. */
     private var pulseAnimator: ObjectAnimator? = null
+    /** Latest profile snapshot — held so the share button can generate a URL on demand. */
+    private var latestProfile: Profile? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -66,13 +72,45 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.profile.collect { profile ->
+                    latestProfile = profile
                     binding.tvGreeting.text = if (profile?.displayName?.isNotBlank() == true) {
                         getString(R.string.home_greeting, profile.displayName)
                     } else {
                         getString(R.string.home_greeting_no_profile)
                     }
+                    // Update the profile chip with the active profile type label
+                    val typeLabel = when (profile?.profileType) {
+                        ProfileType.WORK   -> getString(R.string.profile_type_work)
+                        ProfileType.CUSTOM -> profile.customLabel.ifBlank {
+                            getString(R.string.profile_type_custom)
+                        }
+                        else               -> getString(R.string.profile_type_personal)
+                    }
+                    binding.chipActiveProfile.text = typeLabel
+                    // Phase 6.8: enable share button once a profile exists
+                    binding.btnShareCard.isEnabled = profile != null &&
+                        profile.displayName.isNotBlank()
                 }
             }
+        }
+
+        // Phase 6.8: share card deeplink via Android share sheet.
+        binding.btnShareCard.setOnClickListener {
+            val profile = latestProfile ?: return@setOnClickListener
+            val url = DeeplinkUtils.generateShareUrl(profile)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.share_card_text, url))
+            }
+            startActivity(
+                Intent.createChooser(shareIntent, getString(R.string.share_card_chooser_title))
+            )
+        }
+
+        // Profile chip tap → open profile switcher bottom sheet
+        binding.chipActiveProfile.setOnClickListener {
+            ProfileSwitcherBottomSheet()
+                .show(childFragmentManager, ProfileSwitcherBottomSheet.TAG)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

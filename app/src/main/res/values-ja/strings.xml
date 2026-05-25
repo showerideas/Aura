@@ -102,6 +102,7 @@
     <string name="room_join_action">参加</string>
     <string name="room_guest_done">ホストのカードを受け取りました！</string>
     <string name="room_hold_to_confirm">ジェスチャーで確認するにはアクションボタンを長押し。</string>
+    <string name="profile_change_avatar_desc">プロフィール写真を変更</string>
     <string name="profile_avatar_desc">タップしてプロフィール写真を選択</string>
     <string name="profile_avatar_too_large">画像が大きすぎます — より小さな画像を試してください。</string>
     <string name="home_greeting">こんにちは、%1$s</string>
@@ -219,4 +220,81 @@
     <string name="settings_volume_test_success">✓ 3回押しが検出されました — このデバイスは対応しています</string>
     <string name="settings_volume_wake_warning">⚠ 3回押し音量はPixelと標準Androidで機能します。Samsung、Xiaomi、OPPOなど独自AndroidではOSレベルのキーインターセプトにより動作しない可能性があります。下のボタンでご確認ください。</string>
     <string name="status_verifying">連絡先とコードを確認してください…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">すべてのAndroidデバイスで頂部ボタンのトリプルプレス起動を有効にします。AURAは他のアプリのコンテンツを読み取りません。</string>
+    <string name="settings_accessibility_mode">アクセシビリティモード（推奨）</string>
+    <string name="settings_accessibility_enabled">有効 — すべてのデバイスで機能します ✓</string>
+    <string name="settings_accessibility_disabled">アクセシビリティ設定で有効にするにはタップ</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFCタップ有効 — 高速鍵交換</string>
+    <string name="exchange_nfc_active_desc">この交換はNFCタップで開始されました — ECDHハンドシェイクが事前設定済みです</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">カードが更新されました</string>
+    <string name="merge_action_accept">変更を承認</string>
+    <string name="merge_action_revert">すべて元に戻す</string>
+    <string name="merge_field_toggle_desc">%1$s の新しい値を保持するかどうかを切り替える</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s が新しいカードを送りました。%2$d 件のフィールドが変更されました。</item>
+    </plurals>
+
+    <!-- プロフィール切り替え (Phase 6.4) -->
+    <string name="profile_type_personal">個人</string>
+    <string name="profile_type_work">仕事</string>
+    <string name="profile_type_custom">カスタム</string>
+    <string name="profile_switcher_title">アクティブプロフィール</string>
+    <string name="profile_switcher_hint">タップしてアクティブカードを切り替え</string>
+    <string name="profile_add">プロフィールを追加</string>
+    <string name="profile_add_work">仕事プロフィールを追加</string>
+    <string name="profile_delete">プロフィールを削除</string>
+    <string name="profile_delete_confirm_title">このプロフィールを削除しますか？</string>
+    <string name="profile_delete_confirm_message">このプロフィールは完全に削除されます。連絡先には影響しません。</string>
+    <string name="profile_set_active">アクティブに設定</string>
+    <string name="profile_active">アクティブ</string>
+    <string name="profile_card_hint">このカードは次回の交換で共有されます</string>
+
+    <!-- キーローテーション — 設定 > セキュリティ (Phase 6.5) -->
+    <string name="settings_section_security">セキュリティ</string>
+    <string name="settings_rotate_key">IDキーをローテート</string>
+    <string name="settings_rotate_key_subtitle">新しい署名キーを生成します。既知のピアは次回の交換時にローテーションを認識します。</string>
+    <string name="settings_rotate_key_confirm_title">IDキーをローテートしますか？</string>
+    <string name="settings_rotate_key_confirm_message">新しいキーが生成されます。既存の連絡先には影響しませんが、ピアは次回の交換時に新しいキーを確認します。</string>
+    <string name="settings_rotate_key_done">IDキーをローテートしました</string>
+    <string name="settings_rotate_key_error">キーのローテートに失敗しました — 再試行してください</string>
+
+    <!-- 交換履歴 (Phase 6.6) -->
+    <string name="settings_exchange_history">交換履歴</string>
+    <string name="audit_title">交換履歴</string>
+    <string name="audit_empty">まだ交換の記録はありません</string>
+    <string name="audit_outcome_success">交換済み</string>
+    <string name="audit_outcome_failed">失敗</string>
+    <string name="audit_outcome_blocked">ブロック済み</string>
+    <string name="audit_outcome_spoof">スプーフィングを検出</string>
+    <string name="audit_outcome_timeout">タイムアウト</string>
+    <string name="audit_outcome_sas_confirmed">SAS確認済み</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">ルーム（ホスト）</string>
+    <string name="audit_channel_room_guest">ルーム（ゲスト）</string>
+    <string name="audit_peer_unknown">不明なピア</string>
+    <string name="audit_export_csv">ログをエクスポート</string>
+    <string name="audit_export_done">ログをダウンロードに保存しました</string>
+    <string name="audit_clear">ログを消去</string>
+    <string name="audit_clear_confirm_title">交換履歴を消去しますか？</string>
+    <string name="audit_clear_confirm_message">すべての交換履歴が完全に削除されます。</string>
+    <string name="audit_clear_done">交換履歴を消去しました</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">セキュリティ識別子 – この交換セッションの視覚的フィンガープリント</string>
+    <string name="sas_code_desc">セキュリティコード</string>
+    <string name="sas_dialog_instruction">あなたとあなたの連絡先は同じコードと識別子を表示する必要があります</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$sが前回の交換以降にカードを更新しました。</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">ID フィンガープリント — この連絡先の暗号化 ID キーの視覚的表現</string>
+    <string name="contact_identicon_label">ID フィンガープリント</string>
+    <string name="action_share_card">カードリンクを共有</string>
+    <string name="share_card_chooser_title">AURAカードを共有</string>
+    <string name="share_card_text">私のAURAカードはこちら: %1$s</string>
 </resources>

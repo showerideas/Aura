@@ -102,6 +102,7 @@
     <string name="room_join_action">加入</string>
     <string name="room_guest_done">已收到房主名片！</string>
     <string name="room_hold_to_confirm">长按操作按钮以手势确认。</string>
+    <string name="profile_change_avatar_desc">更换头像</string>
     <string name="profile_avatar_desc">点击以选择头像</string>
     <string name="profile_avatar_too_large">图片太大——请尝试更小的图片。</string>
     <string name="home_greeting">你好，%1$s</string>
@@ -219,4 +220,81 @@
     <string name="settings_volume_test_success">✓ 检测到三次按键 — 此设备兼容</string>
     <string name="settings_volume_wake_warning">⚠ 三次按音量键在 Pixel 和原生 Android 上有效。由于操作系统级别的按键拦截，在三星、小米、OPPO 或其他定制 Android 版本上可能无效。请使用下方按钮检查您的设备。</string>
     <string name="status_verifying">与联系人核对代码…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">在所有 Android 设备上启用可靠的三次按音量键激活，包括三星、MIUI 和 ColorOS。AURA 永远不读取其他应用的内容。</string>
+    <string name="settings_accessibility_mode">辅助功能模式（推荐）</string>
+    <string name="settings_accessibility_enabled">已开启 — 在所有设备上均可运行 ✓</string>
+    <string name="settings_accessibility_disabled">点击在辅助功能设置中开启</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC 点触有效 — 更快的密钥交换</string>
+    <string name="exchange_nfc_active_desc">此次交换通过 NFC 点触发起 — ECDH 握手已预置</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">名片已更新</string>
+    <string name="merge_action_accept">接受更改</string>
+    <string name="merge_action_revert">全部还原</string>
+    <string name="merge_field_toggle_desc">切换是否保留 %1$s 的新值</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s 发送了一张新名片。%2$d 个字段已更改。</item>
+    </plurals>
+
+    <!-- 档案切换器 (Phase 6.4) -->
+    <string name="profile_type_personal">个人</string>
+    <string name="profile_type_work">工作</string>
+    <string name="profile_type_custom">自定义</string>
+    <string name="profile_switcher_title">当前档案</string>
+    <string name="profile_switcher_hint">点击切换当前名片</string>
+    <string name="profile_add">添加档案</string>
+    <string name="profile_add_work">添加工作档案</string>
+    <string name="profile_delete">删除档案</string>
+    <string name="profile_delete_confirm_title">删除此档案？</string>
+    <string name="profile_delete_confirm_message">该档案将被永久删除。您的联系人不受影响。</string>
+    <string name="profile_set_active">设为当前</string>
+    <string name="profile_active">当前</string>
+    <string name="profile_card_hint">此名片将在下次交换时共享</string>
+
+    <!-- 密钥轮换 — 设置 > 安全 (Phase 6.5) -->
+    <string name="settings_section_security">安全</string>
+    <string name="settings_rotate_key">轮换身份密钥</string>
+    <string name="settings_rotate_key_subtitle">生成新的签名密钥。已知联系人将在下次交换时得知轮换情况。</string>
+    <string name="settings_rotate_key_confirm_title">轮换身份密钥？</string>
+    <string name="settings_rotate_key_confirm_message">将生成新密钥。您现有的联系人不受影响，但对方将在下次交换时看到新密钥。</string>
+    <string name="settings_rotate_key_done">身份密钥已轮换</string>
+    <string name="settings_rotate_key_error">密钥轮换失败 — 请重试</string>
+
+    <!-- 交换历史 (Phase 6.6) -->
+    <string name="settings_exchange_history">交换历史</string>
+    <string name="audit_title">交换历史</string>
+    <string name="audit_empty">暂无交换记录</string>
+    <string name="audit_outcome_success">已交换</string>
+    <string name="audit_outcome_failed">失败</string>
+    <string name="audit_outcome_blocked">已屏蔽</string>
+    <string name="audit_outcome_spoof">检测到欺骗</string>
+    <string name="audit_outcome_timeout">超时</string>
+    <string name="audit_outcome_sas_confirmed">SAS已确认</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">房间（主持人）</string>
+    <string name="audit_channel_room_guest">房间（嘉宾）</string>
+    <string name="audit_peer_unknown">未知对等方</string>
+    <string name="audit_export_csv">导出日志</string>
+    <string name="audit_export_done">日志已保存至下载</string>
+    <string name="audit_clear">清除日志</string>
+    <string name="audit_clear_confirm_title">清除交换历史？</string>
+    <string name="audit_clear_confirm_message">所有交换历史将被永久删除。</string>
+    <string name="audit_clear_done">交换历史已清除</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">安全标识图标 – 此交换会话的视觉指纹</string>
+    <string name="sas_code_desc">安全码</string>
+    <string name="sas_dialog_instruction">您和您的联系人必须看到相同的代码和标识图标</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$s自您上次交换后更新了名片。</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">身份指纹 — 此联系人加密身份密钥的视觉表示</string>
+    <string name="contact_identicon_label">身份指纹</string>
+    <string name="action_share_card">分享名片链接</string>
+    <string name="share_card_chooser_title">分享我的AURA名片</string>
+    <string name="share_card_text">这是我的AURA名片：%1$s</string>
 </resources>

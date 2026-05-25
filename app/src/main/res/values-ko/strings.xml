@@ -102,6 +102,7 @@
     <string name="room_join_action">참가</string>
     <string name="room_guest_done">호스트의 카드를 받았습니다!</string>
     <string name="room_hold_to_confirm">제스처로 확인하려면 액션 버튼을 길게 누르세요.</string>
+    <string name="profile_change_avatar_desc">프로필 사진 변경</string>
     <string name="profile_avatar_desc">탭하여 프로필 사진 선택</string>
     <string name="profile_avatar_too_large">이미지가 너무 큽니다 — 더 작은 이미지를 시도해 보세요.</string>
     <string name="home_greeting">안녕하세요, %1$s</string>
@@ -219,4 +220,81 @@
     <string name="settings_volume_test_success">✓ 세 번 누르기 감지됨 — 이 기기는 호환됩니다</string>
     <string name="settings_volume_wake_warning">⚠ 볼륨 세 번 누르기는 Pixel 및 일반 Android에서 작동합니다. Samsung, Xiaomi, OPPO 또는 기타 커스텀 Android에서는 OS 수준의 키 인터셉션으로 인해 작동하지 않을 수 있습니다. 아래 버튼을 사용하여 기기를 확인하세요.</string>
     <string name="status_verifying">연락처와 코드 확인 중…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">모든 Android 기기에서 볼륨 버튼 세 번 누르기 활성화를 지원합니다. AURA는 다른 앱의 콘텐츠를 읽지 않습니다.</string>
+    <string name="settings_accessibility_mode">접근성 모드 (권장)</string>
+    <string name="settings_accessibility_enabled">활성화됨 — 모든 기기에서 작동합니다 ✓</string>
+    <string name="settings_accessibility_disabled">접근성 설정에서 활성화하려면 탭하세요</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC 탭 활성 — 빠른 키 교환</string>
+    <string name="exchange_nfc_active_desc">이 교환은 NFC 탭으로 시작되었습니다 — ECDH 핸드셰이크가 사전 설정되었습니다</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">카드가 업데이트됨</string>
+    <string name="merge_action_accept">변경 사항 수락</string>
+    <string name="merge_action_revert">모두 되돌리기</string>
+    <string name="merge_field_toggle_desc">%1$s의 새 값을 유지할지 전환</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="other">%1$s이(가) 새 카드를 보냈습니다. %2$d개 항목이 변경되었습니다.</item>
+    </plurals>
+
+    <!-- 프로필 전환기 (Phase 6.4) -->
+    <string name="profile_type_personal">개인</string>
+    <string name="profile_type_work">업무</string>
+    <string name="profile_type_custom">사용자 지정</string>
+    <string name="profile_switcher_title">활성 프로필</string>
+    <string name="profile_switcher_hint">탭하여 활성 카드 변경</string>
+    <string name="profile_add">프로필 추가</string>
+    <string name="profile_add_work">업무 프로필 추가</string>
+    <string name="profile_delete">프로필 삭제</string>
+    <string name="profile_delete_confirm_title">이 프로필을 삭제하시겠습니까?</string>
+    <string name="profile_delete_confirm_message">프로필이 영구적으로 삭제됩니다. 연락처는 영향을 받지 않습니다.</string>
+    <string name="profile_set_active">활성으로 설정</string>
+    <string name="profile_active">활성</string>
+    <string name="profile_card_hint">다음 교환 시 이 카드가 공유됩니다</string>
+
+    <!-- 키 교체 — 설정 > 보안 (Phase 6.5) -->
+    <string name="settings_section_security">보안</string>
+    <string name="settings_rotate_key">신원 키 교체</string>
+    <string name="settings_rotate_key_subtitle">새 서명 키를 생성합니다. 알려진 피어는 다음 교환 시 교체 사실을 알게 됩니다.</string>
+    <string name="settings_rotate_key_confirm_title">신원 키를 교체하시겠습니까?</string>
+    <string name="settings_rotate_key_confirm_message">새 키가 생성됩니다. 기존 연락처는 영향을 받지 않지만, 피어는 다음 교환 시 새 키를 확인하게 됩니다.</string>
+    <string name="settings_rotate_key_done">신원 키가 교체되었습니다</string>
+    <string name="settings_rotate_key_error">키 교체에 실패했습니다 — 다시 시도하세요</string>
+
+    <!-- 교환 기록 (Phase 6.6) -->
+    <string name="settings_exchange_history">교환 기록</string>
+    <string name="audit_title">교환 기록</string>
+    <string name="audit_empty">아직 기록된 교환이 없습니다</string>
+    <string name="audit_outcome_success">교환 완료</string>
+    <string name="audit_outcome_failed">실패</string>
+    <string name="audit_outcome_blocked">차단됨</string>
+    <string name="audit_outcome_spoof">스푸핑 감지됨</string>
+    <string name="audit_outcome_timeout">시간 초과</string>
+    <string name="audit_outcome_sas_confirmed">SAS 확인됨</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">룸 (호스트)</string>
+    <string name="audit_channel_room_guest">룸 (게스트)</string>
+    <string name="audit_peer_unknown">알 수 없는 피어</string>
+    <string name="audit_export_csv">로그 내보내기</string>
+    <string name="audit_export_done">로그가 다운로드에 저장되었습니다</string>
+    <string name="audit_clear">로그 지우기</string>
+    <string name="audit_clear_confirm_title">교환 기록을 지우시겠습니까?</string>
+    <string name="audit_clear_confirm_message">모든 교환 기록이 영구적으로 삭제됩니다.</string>
+    <string name="audit_clear_done">교환 기록이 지워졌습니다</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">보안 아이덴티콘 – 이 교환 세션의 시각적 지문</string>
+    <string name="sas_code_desc">보안 코드</string>
+    <string name="sas_dialog_instruction">당신과 연락처 모두 같은 코드와 아이덴티콘을 봐야 합니다</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$s님이 마지막 교환 이후 카드를 업데이트했습니다.</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">신원 지문 — 이 연락처의 암호화 신원 키의 시각적 표현</string>
+    <string name="contact_identicon_label">신원 지문</string>
+    <string name="action_share_card">카드 링크 공유</string>
+    <string name="share_card_chooser_title">AURA 카드 공유</string>
+    <string name="share_card_text">내 AURA 카드입니다: %1$s</string>
 </resources>

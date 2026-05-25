@@ -102,6 +102,7 @@
     <string name="room_join_action">शामिल हों</string>
     <string name="room_guest_done">होस्ट का कार्ड मिल गया!</string>
     <string name="room_hold_to_confirm">इशारे से पुष्टि करने के लिए एक्शन बटन दबाए रखें।</string>
+    <string name="profile_change_avatar_desc">प्रोफ़ाइल फ़ोटो बदलें</string>
     <string name="profile_avatar_desc">प्रोफ़ाइल फ़ोटो चुनने के लिए टैप करें</string>
     <string name="profile_avatar_too_large">चित्र बहुत बड़ा था — छोटा चित्र आज़माएँ।</string>
     <string name="home_greeting">नमस्ते, %1$s</string>
@@ -220,4 +221,82 @@
     <string name="settings_volume_test_success">✓ ट्रिपल-प्रेस मिला — यह डिवाइस संगत है</string>
     <string name="settings_volume_wake_warning">⚠ ट्रिपल-प्रेस वॉल्यूम Pixel और स्टॉक Android पर काम करता है। OS-स्तर की कुंजी अवरोधन के कारण Samsung, Xiaomi, OPPO या अन्य कस्टम Android बिल्ड पर काम नहीं कर सकता। अपने डिवाइस की जाँच करने के लिए नीचे बटन का उपयोग करें।</string>
     <string name="status_verifying">अपने संपर्क के साथ कोड सत्यापित करें…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">सभी Android डिवाइसेस पर वॉल्यूम त्रिपल-प्रेस सक्रियकरण सक्षम करता है। AURA कभी अन्य एप्स की सामग्री नहीं पढ़ता।</string>
+    <string name="settings_accessibility_mode">अभिगम्यता मोड (अनुशंसित)</string>
+    <string name="settings_accessibility_enabled">सक्रिय — सभी डिवाइसेस पर काम करता है ✓</string>
+    <string name="settings_accessibility_disabled">अभिगम्यता सेटिंग्स में सक्षम करने के लिए टैप करें</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC टैप सक्रिय — तेज़ कुंजी विनिमय</string>
+    <string name="exchange_nfc_active_desc">यह आदान-प्रदान NFC टैप के माध्यम से प्रारंभ हुआ — ECDH हैंडशेक पूर्व-सीडेड है</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">कार्ड अपडेट हुआ</string>
+    <string name="merge_action_accept">परिवर्तन स्वीकार करें</string>
+    <string name="merge_action_revert">सब वापस करें</string>
+    <string name="merge_field_toggle_desc">%1$s के लिए नया मान रखना टॉगल करें</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s ने एक नया कार्ड भेजा। 1 फ़ील्ड बदला।</item>
+        <item quantity="other">%1$s ने एक नया कार्ड भेजा। %2$d फ़ील्ड बदले।</item>
+    </plurals>
+
+    <!-- प्रोफ़ाइल स्विचर (Phase 6.4) -->
+    <string name="profile_type_personal">व्यक्तिगत</string>
+    <string name="profile_type_work">कार्य</string>
+    <string name="profile_type_custom">कस्टम</string>
+    <string name="profile_switcher_title">सक्रिय प्रोफ़ाइल</string>
+    <string name="profile_switcher_hint">सक्रिय कार्ड बदलने के लिए टैप करें</string>
+    <string name="profile_add">प्रोफ़ाइल जोड़ें</string>
+    <string name="profile_add_work">कार्य प्रोफ़ाइल जोड़ें</string>
+    <string name="profile_delete">प्रोफ़ाइल हटाएं</string>
+    <string name="profile_delete_confirm_title">यह प्रोफ़ाइल हटाएं?</string>
+    <string name="profile_delete_confirm_message">यह प्रोफ़ाइल स्थायी रूप से हटा दी जाएगी। आपके संपर्क प्रभावित नहीं होंगे।</string>
+    <string name="profile_set_active">सक्रिय के रूप में सेट करें</string>
+    <string name="profile_active">सक्रिय</string>
+    <string name="profile_card_hint">यह कार्ड आपके अगले आदान-प्रदान में साझा किया जाएगा</string>
+
+    <!-- कुंजी रोटेशन — सेटिंग्स > सुरक्षा (Phase 6.5) -->
+    <string name="settings_section_security">सुरक्षा</string>
+    <string name="settings_rotate_key">पहचान कुंजी बदलें</string>
+    <string name="settings_rotate_key_subtitle">एक नई हस्ताक्षर कुंजी उत्पन्न करें। ज्ञात पीयर अगले आदान-प्रदान पर परिवर्तन के बारे में जानेंगे।</string>
+    <string name="settings_rotate_key_confirm_title">अपनी पहचान कुंजी बदलें?</string>
+    <string name="settings_rotate_key_confirm_message">एक नई कुंजी उत्पन्न की जाएगी। आपके मौजूदा संपर्क प्रभावित नहीं होंगे, लेकिन पीयर अगले आदान-प्रदान में एक नई कुंजी देखेंगे।</string>
+    <string name="settings_rotate_key_done">पहचान कुंजी बदली गई</string>
+    <string name="settings_rotate_key_error">कुंजी बदलने में विफल — पुनः प्रयास करें</string>
+
+    <!-- आदान-प्रदान इतिहास (Phase 6.6) -->
+    <string name="settings_exchange_history">आदान-प्रदान इतिहास</string>
+    <string name="audit_title">आदान-प्रदान इतिहास</string>
+    <string name="audit_empty">अभी तक कोई आदान-प्रदान दर्ज नहीं हुआ</string>
+    <string name="audit_outcome_success">आदान-प्रदान हुआ</string>
+    <string name="audit_outcome_failed">विफल</string>
+    <string name="audit_outcome_blocked">अवरुद्ध</string>
+    <string name="audit_outcome_spoof">धोखाधड़ी का पता चला</string>
+    <string name="audit_outcome_timeout">समय समाप्त</string>
+    <string name="audit_outcome_sas_confirmed">SAS पुष्टि हुई</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">रूम (होस्ट)</string>
+    <string name="audit_channel_room_guest">रूम (अतिथि)</string>
+    <string name="audit_peer_unknown">अज्ञात पीयर</string>
+    <string name="audit_export_csv">लॉग निर्यात करें</string>
+    <string name="audit_export_done">लॉग डाउनलोड में सहेजा गया</string>
+    <string name="audit_clear">लॉग साफ़ करें</string>
+    <string name="audit_clear_confirm_title">आदान-प्रदान इतिहास साफ़ करें?</string>
+    <string name="audit_clear_confirm_message">सभी आदान-प्रदान इतिहास स्थायी रूप से हटा दिया जाएगा।</string>
+    <string name="audit_clear_done">आदान-प्रदान इतिहास साफ़ हो गया</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">सुरक्षा आइडेंटिकॉन – इस एक्सचेंज सत्र का दृश्य फिंगरप्रिंट</string>
+    <string name="sas_code_desc">सुरक्षा कोड</string>
+    <string name="sas_dialog_instruction">आप और आपका संपर्क दोनों एक ही कोड और आइडेंटिकॉन देखना चाहिए</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$s ने आपके पिछले आदान-प्रदान के बाद अपना कार्ड अपडेट किया।</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">पहचान की छाप — क्रिप्टोग्राफिक पहचान कुंजी का दृश्य प्रतिनिधित्व</string>
+    <string name="contact_identicon_label">पहचान की छाप</string>
+    <string name="action_share_card">कार्ड लिंक शेयर करें</string>
+    <string name="share_card_chooser_title">अपना AURA कार्ड शेयर करें</string>
+    <string name="share_card_text">यहाँ मेरा AURA कार्ड है: %1$s</string>
 </resources>

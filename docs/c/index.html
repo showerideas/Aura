@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA Card</title>
+  <meta name="description" content="View an AURA contact card shared via deeplink." />
+  <!--
+    Phase 6.8: AURA Share Card landing page.
+
+    URL format: https://aura.app/c/<base64url-encoded-json>
+    The payload is the path segment after /c/. It is decoded entirely
+    client-side — this page never sends the payload to any server.
+
+    The page also accepts the payload as a URL fragment (#...) for
+    setups where servers strip unknown path components.
+  -->
+  <style>
+    :root {
+      --bg: #0d0d1a;
+      --surface: #1a1a2e;
+      --border: #2a2a4a;
+      --purple: #8b5cf6;
+      --cyan: #22d3ee;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --error: #f87171;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-text {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.12em;
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .field-value {
+      font-size: 15px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .name-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.88; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .error-msg {
+      text-align: center;
+      color: var(--error);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    #card-content { display: none; }
+    #error-content { display: none; }
+
+    footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    footer a { color: var(--cyan); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-text">AURA</div>
+      <div class="logo-sub">Gesture-Authenticated Contact Exchange</div>
+    </div>
+
+    <hr class="divider" />
+
+    <div id="card-content">
+      <div class="field">
+        <div class="field-label">Name</div>
+        <div id="f-name" class="field-value name-value"></div>
+      </div>
+      <div id="row-title" class="field" style="display:none">
+        <div class="field-label">Title / Company</div>
+        <div id="f-title" class="field-value"></div>
+      </div>
+      <div id="row-phone" class="field" style="display:none">
+        <div class="field-label">Phone</div>
+        <div id="f-phone" class="field-value"></div>
+      </div>
+      <div id="row-email" class="field" style="display:none">
+        <div class="field-label">Email</div>
+        <div id="f-email" class="field-value"></div>
+      </div>
+      <div id="row-website" class="field" style="display:none">
+        <div class="field-label">Website</div>
+        <div id="f-website" class="field-value"></div>
+      </div>
+      <div id="row-bio" class="field" style="display:none">
+        <div class="field-label">Bio</div>
+        <div id="f-bio" class="field-value"></div>
+      </div>
+
+      <div class="actions">
+        <a id="btn-open-app" href="#" class="btn btn-primary">Open in AURA</a>
+        <button id="btn-copy" class="btn btn-secondary" onclick="copyCard()">Copy contact info</button>
+      </div>
+    </div>
+
+    <div id="error-content">
+      <p class="error-msg" id="error-msg">Unable to decode this AURA card link.</p>
+      <div class="actions">
+        <a href="https://github.com/showerideas/Aura" class="btn btn-secondary">
+          Get AURA
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Contact data decoded locally — never sent to any server.<br/>
+    <a href="https://github.com/showerideas/Aura">AURA on GitHub</a>
+  </footer>
+
+  <script>
+    (function () {
+      // Extract payload from URL path or fragment.
+      // Path: https://aura.app/c/<payload>
+      // Fragment fallback: https://aura.app/c/#<payload>
+      function extractPayload() {
+        var path = window.location.pathname;
+        // path is like /c/ABCDEF or /Aura/c/ABCDEF (GitHub Pages)
+        var match = path.match(/\/c\/([A-Za-z0-9\-_]+)/);
+        if (match && match[1]) return match[1];
+        // Fragment fallback
+        var hash = window.location.hash.replace(/^#/, '');
+        if (hash) return hash;
+        return null;
+      }
+
+      // Base64url → bytes → UTF-8 string
+      function base64urlDecode(str) {
+        // Add padding
+        var padded = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (padded.length % 4 !== 0) padded += '=';
+        var binary = atob(padded);
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder('utf-8').decode(bytes);
+      }
+
+      function showError(msg) {
+        document.getElementById('error-content').style.display = 'block';
+        if (msg) document.getElementById('error-msg').textContent = msg;
+      }
+
+      function setField(rowId, valueId, value) {
+        if (value) {
+          document.getElementById(rowId).style.display = 'block';
+          document.getElementById(valueId).textContent = value;
+        }
+      }
+
+      function buildCopyText(data) {
+        var lines = [];
+        if (data.n) lines.push(data.n);
+        var titleLine = [data.ti, data.co].filter(Boolean).join(' @ ');
+        if (titleLine) lines.push(titleLine);
+        if (data.ph) lines.push(data.ph);
+        if (data.em) lines.push(data.em);
+        if (data.we) lines.push(data.we);
+        if (data.bi) lines.push(data.bi);
+        return lines.join('\n');
+      }
+
+      var payload = extractPayload();
+      if (!payload) {
+        showError('No card payload found in this URL.');
+        return;
+      }
+
+      var data;
+      try {
+        var json = base64urlDecode(payload);
+        data = JSON.parse(json);
+      } catch (e) {
+        showError('This link appears to be malformed or expired.');
+        return;
+      }
+
+      // Render fields
+      document.getElementById('card-content').style.display = 'block';
+      document.getElementById('f-name').textContent = data.n || '(No name)';
+
+      var titleParts = [data.ti, data.co].filter(Boolean).join(' @ ');
+      setField('row-title', 'f-title', titleParts);
+      setField('row-phone', 'f-phone', data.ph);
+      setField('row-email', 'f-email', data.em);
+      setField('row-website', 'f-website', data.we);
+      setField('row-bio', 'f-bio', data.bi);
+
+      // Deep-link back to AURA app (Android intent URL)
+      var fullUrl = window.location.href;
+      document.getElementById('btn-open-app').href =
+        'intent://' + fullUrl.replace(/^https?:\/\//, '') +
+        '#Intent;scheme=https;package=com.showerideas.aura;end';
+
+      // Copy text
+      window.copyCard = function () {
+        var text = buildCopyText(data);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            document.getElementById('btn-copy').textContent = 'Copied!';
+            setTimeout(function () {
+              document.getElementById('btn-copy').textContent = 'Copy contact info';
+            }, 2000);
+          });
+        } else {
+          // Fallback for older browsers
+          var el = document.createElement('textarea');
+          el.value = text;
+          document.body.appendChild(el);
+          el.select();
+          document.execCommand('copy');
+          document.body.removeChild(el);
+          document.getElementById('btn-copy').textContent = 'Copied!';
+          setTimeout(function () {
+            document.getElementById('btn-copy').textContent = 'Copy contact info';
+          }, 2000);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentContactsBinding
 import com.showerideas.aura.utils.shareVCard
@@ -63,6 +64,10 @@ class ContactsFragment : Fragment() {
                                 "aura_contacts.vcf"
                             )
                         }
+                        true
+                    }
+                    R.id.action_exchange_history -> {
+                        findNavController().navigate(R.id.action_contacts_to_audit)
                         true
                     }
                     else -> false

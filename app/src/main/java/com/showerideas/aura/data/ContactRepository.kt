@@ -2,6 +2,8 @@ package com.showerideas.aura.data
 
 import com.showerideas.aura.data.local.ContactDao
 import com.showerideas.aura.model.Contact
+import com.showerideas.aura.model.MergeEvent
+import com.showerideas.aura.utils.ContactDiffEngine
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,28 +45,49 @@ class ContactRepository @Inject constructor(
      *
      * If [contact.identityKeyHash] is non-null and we already have a contact
      * with that hash, the existing record is updated in-place (preserving its
-     * original [Contact.id], [Contact.receivedAt], and [Contact.isFavorite]
-     * so the contact retains its history and favourite status).
+     * original [Contact.id], [Contact.receivedAt], [Contact.isFavorite], and
+     * [Contact.notes] so the contact retains its history and favourite status).
      *
      * Falls back to a plain insert when no hash is available (e.g. legacy
      * contacts from before identity-key tracking was added in DB v4).
+     *
+     * @return A [MergeEvent] if an existing contact was updated and any visible
+     *   fields changed — the caller should show the merge review UI.
+     *   Returns null on a fresh insert or when all fields are identical.
      */
-    suspend fun saveDeduped(contact: Contact) {
+    suspend fun saveDeduped(contact: Contact): MergeEvent? {
         val existing = contact.identityKeyHash
             ?.takeIf { it.isNotBlank() }
             ?.let { contactDao.findByIdentityKeyHash(it) }
-        if (existing != null) {
+
+        return if (existing != null) {
+            // Compute diff BEFORE we overwrite the record
+            val event = ContactDiffEngine.diff(previous = existing, incoming = contact)
             // Merge: refresh mutable fields, preserve immutable record identity
-            contactDao.update(
-                contact.copy(
-                    id         = existing.id,
-                    receivedAt = existing.receivedAt,
-                    isFavorite = existing.isFavorite,
-                    notes      = existing.notes
-                )
+            val merged = contact.copy(
+                id         = existing.id,
+                receivedAt = existing.receivedAt,
+                isFavorite = existing.isFavorite,
+                notes      = existing.notes
             )
+            contactDao.update(merged)
+            // Only surface a MergeEvent if something actually changed
+            if (event.hasChanges) event.copy(preserved = merged) else null
         } else {
             contactDao.insert(contact)
+            null
         }
+    }
+
+    /**
+     * Apply per-field [selections] chosen by the user in the merge UI and
+     * persist the resulting contact to Room.
+     *
+     * @param base       The currently-saved (merged) contact.
+     * @param selections Map of fieldName → chosen value (old or new).
+     */
+    suspend fun applyMergeSelections(base: Contact, selections: Map<String, String>) {
+        val updated = ContactDiffEngine.applySelections(base, selections)
+        contactDao.update(updated)
     }
 }

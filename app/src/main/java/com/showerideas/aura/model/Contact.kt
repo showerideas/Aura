@@ -34,7 +34,15 @@ data class Contact(
      * Used by the "Block device" action so blocking keys on identity hash,
      * not ephemeral endpoint ID.
      */
-    val identityKeyHash: String? = null
+    val identityKeyHash: String? = null,
+    /**
+     * The [Profile.version] received from the peer at exchange time.
+     * Used by Phase 6.7 to surface the "Card updated" banner when a returning
+     * contact's version is higher than [KnownPeer.lastSeenProfileVersion].
+     * Added in DB v8 (MIGRATION_7_8). DEFAULT 0 for backward compat.
+     */
+    @androidx.room.ColumnInfo(name = "profile_version")
+    val profileVersion: Int = 0
 ) {
     companion object {
         fun fromMap(id: String, map: Map<String, String>, endpointId: String, rssi: Int = 0): Contact =
@@ -48,7 +56,8 @@ data class Contact(
                 website = map["website"].orEmpty(),
                 bio = map["bio"].orEmpty(),
                 sourceEndpointId = endpointId,
-                rssiAtExchange = rssi
+                rssiAtExchange = rssi,
+                profileVersion = map["version"]?.toIntOrNull() ?: 0
             )
     }
 }

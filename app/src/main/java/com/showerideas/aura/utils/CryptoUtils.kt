@@ -324,4 +324,87 @@ object CryptoUtils {
             false
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Key rotation (Phase 6.5)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Rotate the device identity key.
+     *
+     * Sequence:
+     * 1. Get the current identity [KeyPair] (to sign the rotation certificate).
+     * 2. Delete the existing Keystore alias.
+     * 3. Generate a new identity key under the same alias via [getOrCreateDeviceIdentityKey].
+     * 4. Sign `newPublicKey.encoded || timestampBytes` with the OLD private key
+     *    to produce a [RotationCertificate] that proves continuity of identity.
+     *
+     * The rotation certificate is returned so callers can:
+     * - Persist it in [KnownPeer.rotationCertificate] for outbound broadcast.
+     * - Pass it to [IdentityRotationDetector] on the receiving side.
+     *
+     * @return [RotationCertificate] containing the new public key bytes and the
+     *         ECDSA signature over them produced by the old private key.
+     * @throws SecurityException if the Keystore operation fails.
+     */
+    fun rotateDeviceIdentityKey(): RotationCertificate {
+        val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
+
+        // 1. Get current key (need private key for signing before deletion)
+        val oldKeyPair = getOrCreateDeviceIdentityKey()
+        val oldPrivateKey = ks.getKey(KEYSTORE_ALIAS_DEVICE_ID, null) as PrivateKey
+
+        // 2. Delete old alias
+        ks.deleteEntry(KEYSTORE_ALIAS_DEVICE_ID)
+        Timber.i("Identity key rotation: old key deleted from Keystore")
+
+        // 3. Generate new key under the same alias
+        val newKeyPair = getOrCreateDeviceIdentityKey()
+        val newPublicKeyBytes = newKeyPair.public.encoded
+        Timber.i("Identity key rotation: new key created")
+
+        // 4. Sign (newPublicKeyBytes || bigEndianTimestamp) with the old private key
+        val timestamp = System.currentTimeMillis()
+        val timestampBytes = java.nio.ByteBuffer.allocate(8).putLong(timestamp).array()
+        val payload = newPublicKeyBytes + timestampBytes
+
+        val signature = java.security.Signature.getInstance("SHA256withECDSA").run {
+            initSign(oldPrivateKey)
+            update(payload)
+            sign()
+        }
+        Timber.i("Identity key rotation: rotation certificate signed (${signature.size} bytes)")
+
+        return RotationCertificate(
+            oldPublicKeyBytes = oldKeyPair.public.encoded,
+            newPublicKeyBytes = newPublicKeyBytes,
+            signatureBytes    = signature,
+            rotatedAtMs       = timestamp
+        )
+    }
+
+    /**
+     * A rotation certificate proving that the holder of the old identity key
+     * authorises the new key as their legitimate successor.
+     *
+     * Wire format (for [KnownPeer.rotationCertificate]):
+     * Serialise as DER or JSON — the service layer handles encoding.
+     */
+    data class RotationCertificate(
+        /** X.509 SPKI bytes of the old identity public key. */
+        val oldPublicKeyBytes: ByteArray,
+        /** X.509 SPKI bytes of the new identity public key. */
+        val newPublicKeyBytes: ByteArray,
+        /** ECDSA-SHA256 signature over (newPublicKeyBytes || bigEndianTimestamp). */
+        val signatureBytes: ByteArray,
+        /** Epoch ms when the rotation occurred. */
+        val rotatedAtMs: Long
+    ) {
+        override fun equals(other: Any?) = other is RotationCertificate &&
+                oldPublicKeyBytes.contentEquals(other.oldPublicKeyBytes) &&
+                newPublicKeyBytes.contentEquals(other.newPublicKeyBytes) &&
+                signatureBytes.contentEquals(other.signatureBytes) &&
+                rotatedAtMs == other.rotatedAtMs
+        override fun hashCode() = oldPublicKeyBytes.contentHashCode()
+    }
 }

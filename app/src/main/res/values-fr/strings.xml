@@ -102,6 +102,7 @@
     <string name="room_join_action">Rejoindre</string>
     <string name="room_guest_done">Carte de l\'hôte reçue !</string>
     <string name="room_hold_to_confirm">Maintenez le bouton d\'action pour confirmer avec votre geste.</string>
+    <string name="profile_change_avatar_desc">Modifier la photo de profil</string>
     <string name="profile_avatar_desc">Appuyez pour choisir une photo de profil</string>
     <string name="profile_avatar_too_large">L\'image était trop grande — essayez une image plus petite.</string>
     <string name="home_greeting">Salut, %1$s</string>
@@ -220,4 +221,82 @@
     <string name="settings_volume_test_success">✓ Triple appui détecté — cet appareil est compatible</string>
     <string name="settings_volume_wake_warning">⚠ Le triple appui sur le volume fonctionne sur Pixel et Android standard. Il peut ne pas fonctionner sur Samsung, Xiaomi, OPPO ou d\'autres versions personnalisées d\'Android en raison de l\'interception des touches au niveau du système. Utilise le bouton ci-dessous pour vérifier ton appareil.</string>
     <string name="status_verifying">Vérifier le code avec ton contact…</string>
+    <!-- AuraAccessibilityService -->
+    <string name="accessibility_service_description">Active l\'activation fiable par triple pression du volume sur tous les appareils Android, y compris Samsung, MIUI et ColorOS. AURA ne lit jamais le contenu des autres apps.</string>
+    <string name="settings_accessibility_mode">Mode accessibilité (recommandé)</string>
+    <string name="settings_accessibility_enabled">Actif — fonctionne sur tous les appareils ✓</string>
+    <string name="settings_accessibility_disabled">Appuyez pour activer dans les paramètres d\'accessibilité</string>
+    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="exchange_nfc_active">NFC actif — échange de clé plus rapide</string>
+    <string name="exchange_nfc_active_desc">Cet échange a été initié via NFC — la poignée de main ECDH est pré-amorcée</string>
+
+    <!-- Contact merge review bottom sheet (Phase 6.3) -->
+    <string name="merge_title">Carte mise à jour</string>
+    <string name="merge_action_accept">Accepter les modifications</string>
+    <string name="merge_action_revert">Tout annuler</string>
+    <string name="merge_field_toggle_desc">Activer/désactiver la conservation de la nouvelle valeur pour %1$s</string>
+
+    <plurals name="merge_subtitle">
+        <item quantity="one">%1$s a envoyé une nouvelle carte. 1 champ modifié.</item>
+        <item quantity="other">%1$s a envoyé une nouvelle carte. %2$d champs modifiés.</item>
+    </plurals>
+
+    <!-- Sélecteur de profil (Phase 6.4) -->
+    <string name="profile_type_personal">Personnel</string>
+    <string name="profile_type_work">Professionnel</string>
+    <string name="profile_type_custom">Personnalisé</string>
+    <string name="profile_switcher_title">Profil actif</string>
+    <string name="profile_switcher_hint">Appuyer pour changer de carte active</string>
+    <string name="profile_add">Ajouter un profil</string>
+    <string name="profile_add_work">Ajouter un profil professionnel</string>
+    <string name="profile_delete">Supprimer le profil</string>
+    <string name="profile_delete_confirm_title">Supprimer ce profil ?</string>
+    <string name="profile_delete_confirm_message">Le profil sera définitivement supprimé. Vos contacts ne seront pas affectés.</string>
+    <string name="profile_set_active">Définir comme actif</string>
+    <string name="profile_active">Actif</string>
+    <string name="profile_card_hint">Cette carte sera partagée lors de votre prochain échange</string>
+
+    <!-- Rotation de clé — Paramètres > Sécurité (Phase 6.5) -->
+    <string name="settings_section_security">Sécurité</string>
+    <string name="settings_rotate_key">Renouveler la clé d\'identité</string>
+    <string name="settings_rotate_key_subtitle">Génère une nouvelle clé de signature. Les pairs connus seront informés du renouvellement lors de votre prochain échange.</string>
+    <string name="settings_rotate_key_confirm_title">Renouveler votre clé d\'identité ?</string>
+    <string name="settings_rotate_key_confirm_message">Une nouvelle clé sera générée. Vos contacts existants ne seront pas affectés, mais les pairs verront une nouvelle clé lors de votre prochain échange.</string>
+    <string name="settings_rotate_key_done">Clé d\'identité renouvelée</string>
+    <string name="settings_rotate_key_error">Échec du renouvellement de clé — réessayez</string>
+
+    <!-- Historique des échanges (Phase 6.6) -->
+    <string name="settings_exchange_history">Historique des échanges</string>
+    <string name="audit_title">Historique des échanges</string>
+    <string name="audit_empty">Aucun échange enregistré pour l\'instant</string>
+    <string name="audit_outcome_success">Échangé</string>
+    <string name="audit_outcome_failed">Échec</string>
+    <string name="audit_outcome_blocked">Bloqué</string>
+    <string name="audit_outcome_spoof">Usurpation détectée</string>
+    <string name="audit_outcome_timeout">Délai expiré</string>
+    <string name="audit_outcome_sas_confirmed">SAS confirmé</string>
+    <string name="audit_channel_nearby">Nearby</string>
+    <string name="audit_channel_nfc">NFC</string>
+    <string name="audit_channel_qr">QR</string>
+    <string name="audit_channel_room_host">Salle (hôte)</string>
+    <string name="audit_channel_room_guest">Salle (invité)</string>
+    <string name="audit_peer_unknown">Pair inconnu</string>
+    <string name="audit_export_csv">Exporter le journal</string>
+    <string name="audit_export_done">Journal enregistré dans Téléchargements</string>
+    <string name="audit_clear">Effacer le journal</string>
+    <string name="audit_clear_confirm_title">Effacer l\'historique des échanges ?</string>
+    <string name="audit_clear_confirm_message">Tout l\'historique des échanges sera définitivement supprimé.</string>
+    <string name="audit_clear_done">Historique des échanges effacé</string>
+    <!-- Phase 6.9 / 6.8 -->
+    <string name="sas_identicon_desc">Identicon de sécurité – empreinte visuelle de cette session d\'échange</string>
+    <string name="sas_code_desc">Code de sécurité</string>
+    <string name="sas_dialog_instruction">Vous et votre contact devez voir le même code et identicon</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$s a mis à jour sa carte depuis votre dernier échange.</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">Empreinte d\'identité — représentation visuelle de la clé cryptographique d\'identité</string>
+    <string name="contact_identicon_label">Empreinte d\'identité</string>
+    <string name="action_share_card">Partager le lien de la carte</string>
+    <string name="share_card_chooser_title">Partager votre carte AURA</string>
+    <string name="share_card_text">Voici ma carte AURA : %1$s</string>
 </resources>

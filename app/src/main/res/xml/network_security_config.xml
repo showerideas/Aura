@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PR-22: AURA never makes outbound network calls in production.
+    AURA network security configuration.
 
-    Profile/contact exchange happens exclusively over local Nearby Connections
-    transports (BLE / Wi-Fi P2P / hotspot fallback). We therefore disallow
-    cleartext (HTTP) traffic app-wide and pin the trust store to the system
-    certificate set, in case any future dependency attempts an HTTPS call.
+    Base: cleartext disabled app-wide (HTTPS only).
+    Phase 5.7: domain-config for the QR relay endpoint with certificate pinning.
+    Replace PLACEHOLDER_PIN_HASH_* with the real SHA-256 SPKI hashes of the
+    relay server TLS leaf certificate before production deployment.
+    See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
@@ -13,4 +14,21 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+
+    <!-- QR relay endpoint — Phase 5.7 certificate pinning.
+         expiration triggers a fallback to the system CA store after this date
+         so the app keeps working if the pin is not rotated in time. Rotate
+         before the expiry using the process in docs/QR_RELAY_SETUP.md. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">relay.example.com</domain>
+        <pin-set expiration="2027-06-01">
+            <!-- Primary leaf certificate public key hash (SHA-256 of SubjectPublicKeyInfo DER).
+                 Run: openssl s_client -connect relay.example.com:443 | \
+                      openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER | \
+                      openssl dgst -sha256 -binary | base64 -->
+            <pin digest="SHA-256">PLACEHOLDER_REPLACE_WITH_REAL_PRIMARY_PIN_HASH=</pin>
+            <!-- Backup pin — a different key pair kept offline for rotation. -->
+            <pin digest="SHA-256">PLACEHOLDER_REPLACE_WITH_REAL_BACKUP_PIN_HASH=</pin>
+        </pin-set>
+    </domain-config>
 </network-security-config>

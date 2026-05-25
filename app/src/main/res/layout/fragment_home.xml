@@ -29,6 +29,24 @@
         app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
 
     <!--
+      Phase 6.4: Profile switcher chip — shows current active profile type.
+      Tap opens ProfileSwitcherBottomSheet to switch between Personal / Work cards.
+    -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chip_active_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@string/profile_switcher_hint"
+        android:text="@string/profile_type_personal"
+        android:textSize="13sp"
+        app:chipBackgroundColor="@color/surface_variant"
+        app:chipStrokeColor="@color/aura_purple"
+        app:chipStrokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
+
+    <!--
       PR-18: pulsing activate button. The FrameLayout holds two layers:
         - pulse_ring  decorative ring animated by HomeFragment (scale + alpha).
         - btn_activate  the actual tappable AURA button on top.
@@ -101,5 +119,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_qr_fallback" />
+
+    <!--
+      Phase 6.8: Share card deeplink button.
+      Generates an https://aura.app/c/<base64url-json> URL and fires the
+      Android share sheet. Disabled until a profile with a display name is loaded.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_share_card"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@string/action_share_card"
+        android:enabled="false"
+        android:text="@string/action_share_card"
+        android:textColor="@color/aura_cyan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_room_mode" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

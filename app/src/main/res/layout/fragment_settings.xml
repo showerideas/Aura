@@ -128,6 +128,94 @@
             android:textSize="15sp"
             android:visibility="gone" />
 
+        <!--
+          Accessibility mode row — shown when bg activation is enabled.
+          Opens Android Accessibility settings so the user can enable
+          AuraAccessibilityService for OEM-reliable volume-button activation.
+        -->
+        <LinearLayout
+            android:id="@+id/row_accessibility_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_accessibility_mode"
+                    android:textColor="@color/on_surface"
+                    android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/tv_accessibility_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_accessibility_disabled"
+                    android:textColor="@color/on_surface_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="@color/on_surface_secondary"
+                android:textSize="20sp"
+                android:paddingStart="8dp" />
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:layout_marginVertical="16dp" android:background="#222" />
+
+        <!-- SECURITY SECTION (Phase 6.5 key rotation + Phase 6.6 audit history) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/settings_section_security"
+            android:textColor="@color/aura_purple_light"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/row_rotate_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:orientation="vertical"
+            android:paddingVertical="12dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_rotate_key"
+                android:textColor="@color/on_surface"
+                android:textSize="15sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/settings_rotate_key_subtitle"
+                android:textColor="@color/on_surface_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/row_exchange_history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="14dp"
+            android:text="@string/settings_exchange_history"
+            android:textColor="@color/on_surface"
+            android:textSize="15sp" />
+
         <View android:layout_width="match_parent" android:layout_height="1dp"
             android:layout_marginVertical="16dp" android:background="#222" />
 

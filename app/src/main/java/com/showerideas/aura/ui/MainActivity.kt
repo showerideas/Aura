@@ -20,6 +20,7 @@ import com.showerideas.aura.R
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
+import com.showerideas.aura.service.AuraHceService
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.service.NfcExchangeHelper
 import com.showerideas.aura.service.VolumeButtonListenerService
@@ -105,13 +106,19 @@ class MainActivity : AppCompatActivity() {
         // and store it in the service companion so NfcExchangeHelper can advertise
         // our public key over NFC.  A new pair is generated on every onResume so
         // we never reuse keys across sessions.
+        val sessionUuid = java.util.UUID.randomUUID().toString()
         val kp = CryptoUtils.generateEphemeralECDHKeyPair()
         NearbyExchangeService.nfcLocalKeyPair = kp
-        NfcExchangeHelper.enable(this, kp.public, java.util.UUID.randomUUID().toString())
+        NfcExchangeHelper.enable(this, kp.public, sessionUuid)
+        // Phase 6.1 — also push the same key into HCE so we respond over NFC
+        // in both directions (we act as reader via NfcExchangeHelper, as card
+        // via AuraHceService).
+        AuraHceService.setLocalKey(kp.public.encoded, sessionUuid)
     }
 
     override fun onPause() {
         NfcExchangeHelper.disable(this)
+        AuraHceService.clearLocalKey()
         super.onPause()
     }
 
@@ -125,6 +132,9 @@ class MainActivity : AppCompatActivity() {
         if (navController.currentDestination?.id != R.id.exchangeFragment) {
             navController.navigate(R.id.exchangeFragment)
         }
+    
+        // Phase 6.8 — handle incoming Share AURA deeplinks (https://aura.app/c/*)
+        handleDeeplink(intent)
     }
 
     override fun onDestroy() {
@@ -232,5 +242,23 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    /**
+     * Phase 6.8 — route incoming https://aura.app/c/* App Links to the
+     * contact-import flow. DeeplinkUtils decodes the base64url JSON payload;
+     * we then navigate to the contacts screen so the user can save the card.
+     */
+    private fun handleDeeplink(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val url = intent.data?.toString() ?: return
+        val fields = com.showerideas.aura.utils.DeeplinkUtils.decodeShareUrl(url) ?: return
+        Timber.i("Deeplink received: %d fields", fields.size)
+        // Navigate to contacts and pass the pre-filled data via the back-stack entry
+        // The contacts flow can pick up the fields map and show a pre-filled merge sheet
+        val bundle = android.os.Bundle().apply {
+            putSerializable("deeplink_fields", HashMap(fields))
+        }
+        navController.navigate(R.id.contactsFragment, bundle)
     }
 }

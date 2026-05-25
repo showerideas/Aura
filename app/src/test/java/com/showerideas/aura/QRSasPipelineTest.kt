@@ -175,7 +175,7 @@ class QRSasPipelineTest {
         val key = CryptoUtils.deriveSharedAESKey(aliceEcdh.private, bobEcdh.public)
         val cipher = CryptoUtils.encrypt(key, "hello".toByteArray())
         // Flip a byte in the middle of the ciphertext to break the GCM tag
-        cipher[cipher.size / 2] = cipher[cipher.size / 2].xor(0xFF.toByte())
+        cipher[cipher.size / 2] = (cipher[cipher.size / 2].toInt() xor 0xFF).toByte()
         CryptoUtils.decrypt(key, cipher)  // must throw
     }
 

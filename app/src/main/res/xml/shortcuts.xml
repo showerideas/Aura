@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phase 6.11 — Static launcher shortcuts.
+    Accessible via long-press on the AURA launcher icon.
+    See https://developer.android.com/develop/ui/views/launch/shortcuts/creating-shortcuts
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="start_exchange"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_start_exchange_short"
+        android:shortcutLongLabel="@string/shortcut_start_exchange_long"
+        android:shortcutDisabledMessage="@string/shortcut_disabled">
+        <intent
+            android:action="com.showerideas.aura.ACTION_START_EXCHANGE"
+            android:targetPackage="com.showerideas.aura"
+            android:targetClass="com.showerideas.aura.ui.MainActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

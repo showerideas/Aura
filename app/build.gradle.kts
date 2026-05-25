@@ -33,6 +33,11 @@ android {
         val relayBaseUrl = System.getenv("RELAY_BASE_URL")?.takeIf { it.isNotBlank() }
             ?: "https://relay.example.com"
         buildConfigField("String", "RELAY_BASE_URL", "\"$relayBaseUrl\"")
+        // Phase 5.7 — TLS certificate pin expiry epoch (milliseconds since Unix epoch).
+        // RelayClient logs a warning when within 30 days of expiry.
+        // Rotate the pin AND update this value before the expiry date.
+        // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
+        buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
@@ -75,6 +80,42 @@ android {
             keyAlias = System.getenv("KEYSTORE_KEY_ALIAS").orEmpty()
             keyPassword = System.getenv("KEYSTORE_KEY_PASSWORD").orEmpty()
         }
+    }
+
+    // Phase 6.2: transport flavor dimension.
+    //
+    // gms  (default) — uses Google Nearby Connections (requires Play Services).
+    //                   Ships to Google Play. Current production variant.
+    // foss            — uses WifiDirectTransport (no GMS dependency).
+    //                   Eligible for F-Droid distribution.
+    //                   Requires Phase 6.2 to complete the NearbyExchangeService
+    //                   transport-injection refactor before foss is fully functional.
+    //
+    // Build GMS variant:   ./gradlew assembleGmsRelease
+    // Build FOSS variant:  ./gradlew assembleFossRelease
+    flavorDimensions += "transport"
+    productFlavors {
+        create("gms") {
+            dimension = "transport"
+            // No applicationId suffix — GMS is the canonical Play Store variant.
+        }
+        create("foss") {
+            dimension = "transport"
+            applicationIdSuffix = ".foss"
+            versionNameSuffix = "-foss"
+            // FOSS builds exclude the Nearby Connections dependency declared
+            // in the gms sourceSet's build.gradle inclusion (see flavors/gms/).
+            // Until the full transport-injection refactor lands, the FOSS variant
+            // compiles cleanly but WifiDirectTransport is injected instead of
+            // NearbyConnectionsTransport at runtime via TransportModule.
+        }
+    }
+
+    // Phase 6.2: flavor-specific source sets must be declared AFTER productFlavors
+    // so that AGP has already registered the "gms" and "foss" AndroidSourceSet objects.
+    sourceSets {
+        getByName("gms").java.srcDirs("src/gms/java")
+        getByName("foss").java.srcDirs("src/foss/java")
     }
 
     buildTypes {
@@ -135,7 +176,22 @@ android {
     // ABI filter.
     splits {
         abi {
-            isEnable = true
+            // Enable ABI splits only for release assemble tasks so that:
+            //  1. bundleRelease avoids AGP bug #402800800 (ABI splits + AAB conflict).
+            //  2. connectedAndroidTest tasks can install on the x86_64 CI emulator
+            //     (which has no arm64/armeabi APK when splits are active).
+            //  3. Release APKs are still sliced per-ABI for Play Store distribution.
+            val taskNames = gradle.startParameter.taskNames
+            val isAssembleRelease = taskNames.any { t ->
+                t.contains("assemble", ignoreCase = true) &&
+                t.contains("release", ignoreCase = true)
+            }
+            val isBundleOrTestTask = taskNames.any { t ->
+                t.contains("bundle", ignoreCase = true) ||
+                t.contains("connected", ignoreCase = true) ||
+                t.contains("test", ignoreCase = true)
+            }
+            isEnable = isAssembleRelease && !isBundleOrTestTask
             reset()
             include("arm64-v8a", "armeabi-v7a")
             isUniversalApk = false
@@ -172,8 +228,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
 
-    // Google Nearby Connections
-    implementation(libs.play.services.nearby)
+    // Google Nearby Connections — gms flavor only (foss uses WifiDirectTransport)
+    "gmsImplementation"(libs.play.services.nearby)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
@@ -213,8 +269,16 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // org.json stubs in android.jar throw RuntimeException("Stub!") in JVM unit tests.
+    // This real implementation overrides the stub so JSONObject works in QRSasPipelineTest.
+    testImplementation("org.json:json:20231013")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.robolectric:robolectric:4.13")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // GrantPermissionRule — pre-grants dangerous permissions before Espresso tests
+    // launch activities (prevents system permission dialog from pausing the activity).
+    androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
 }
 
@@ -389,7 +453,7 @@ afterEvaluate {
 // Run:  ./gradlew jacocoTestReport
 //       ./gradlew jacocoTestCoverageVerification   ← fails if branch drops below gate
 //
-// The report is generated from testDebugUnitTest execution data.
+// The report is generated from testGmsDebugUnitTest execution data (GMS flavor).
 // Classes from DI modules, Room DAOs/Entities, generated Hilt code, and the
 // Android resource-generated R class are excluded — they have trivial coverage
 // and add noise to the report.
@@ -424,7 +488,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     group = "verification"
     description = "Generate JaCoCo coverage report from debug unit test execution data."
 
-    dependsOn("testDebugUnitTest")
+    dependsOn("testGmsDebugUnitTest")
 
     reports {
         xml.required.set(true)
@@ -441,7 +505,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("jacoco/testGmsDebugUnitTest.exec", "outputs/unit_test_code_coverage/gmsDebugUnitTest/testGmsDebugUnitTest.exec")
     })
 }
 
@@ -460,7 +524,7 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     classDirectories.setFrom(files(javaClasses, kotlinClasses))
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
-        include("jacoco/testDebugUnitTest.exec", "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("jacoco/testGmsDebugUnitTest.exec", "outputs/unit_test_code_coverage/gmsDebugUnitTest/testGmsDebugUnitTest.exec")
     })
 
     violationRules {
@@ -471,8 +535,30 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
                 value = "COVEREDRATIO"
                 // Prompt-10: 40% branch coverage floor.
                 // Raise in 5-point increments: 40 → 45 → 50 → ... target 70%.
-                minimum = "0.45".toBigDecimal()
+                minimum = "0.50".toBigDecimal()
             }
         }
+    }
+}
+
+// Phase 5.8 — verify SHA-256 of bundled gesture model asset before building.
+// Run: ./gradlew verifyGestureModel
+val GESTURE_MODEL_SHA256 = "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
+tasks.register("verifyGestureModel") {
+    description = "Verifies the SHA-256 hash of the bundled MediaPipe gesture model."
+    group = "verification"
+    doLast {
+        val modelFile = file("src/main/assets/gesture_recognizer.task")
+        if (!modelFile.exists()) {
+            println("WARNING: gesture_recognizer.task not found in assets/ — model must be present before release")
+            return@doLast
+        }
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(modelFile.readBytes())
+            .joinToString("") { "%02x".format(it) }
+        if (hash != GESTURE_MODEL_SHA256) {
+            throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
+        }
+        println("gesture_recognizer.task SHA-256 OK: $hash")
     }
 }
