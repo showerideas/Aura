@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 7.4 — Enterprise MDM choice-restriction arrays -->
+<resources>
+    <string-array name="auth_method_entries">
+        <item>Gesture only</item>
+        <item>Biometric only</item>
+        <item>Both (gesture or biometric)</item>
+    </string-array>
+    <string-array name="auth_method_values">
+        <item>gesture</item>
+        <item>biometric</item>
+        <item>both</item>
+    </string-array>
+</resources>
