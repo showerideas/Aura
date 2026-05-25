@@ -77,6 +77,35 @@ android {
         }
     }
 
+    // Phase 6.2: transport flavor dimension.
+    //
+    // gms  (default) — uses Google Nearby Connections (requires Play Services).
+    //                   Ships to Google Play. Current production variant.
+    // foss            — uses WifiDirectTransport (no GMS dependency).
+    //                   Eligible for F-Droid distribution.
+    //                   Requires Phase 6.2 to complete the NearbyExchangeService
+    //                   transport-injection refactor before foss is fully functional.
+    //
+    // Build GMS variant:   ./gradlew assembleGmsRelease
+    // Build FOSS variant:  ./gradlew assembleFossRelease
+    flavorDimensions += "transport"
+    productFlavors {
+        create("gms") {
+            dimension = "transport"
+            // No applicationId suffix — GMS is the canonical Play Store variant.
+        }
+        create("foss") {
+            dimension = "transport"
+            applicationIdSuffix = ".foss"
+            versionNameSuffix = "-foss"
+            // FOSS builds exclude the Nearby Connections dependency declared
+            // in the gms sourceSet's build.gradle inclusion (see flavors/gms/).
+            // Until the full transport-injection refactor lands, the FOSS variant
+            // compiles cleanly but WifiDirectTransport is injected instead of
+            // NearbyConnectionsTransport at runtime via TransportModule.
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
