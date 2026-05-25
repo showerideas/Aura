@@ -51,6 +51,19 @@ interface NearbyTransport {
      */
     var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)?
 
+    /**
+     * Register a callback invoked when an incoming connection is initiated
+     * but before it has been accepted or rejected.
+     *
+     * [NearbyExchangeService] uses this to run the async blocklist check
+     * before deciding whether to call [acceptConnection] or [rejectConnection].
+     *
+     * For Nearby Connections: fires from [ConnectionLifecycleCallback.onConnectionInitiated].
+     * For Wi-Fi Direct: fires from [WifiDirectTransport.onPeerSocketReady] (OS already
+     * established the connection; rejecting calls removeGroup()).
+     */
+    var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)?
+
     /** Start advertising under [localName] and [serviceId]. */
     fun startAdvertising(localName: String, serviceId: String)
 
