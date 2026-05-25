@@ -228,3 +228,32 @@ gate. That implementation was replaced with the current CameraX + MediaPipe
 approach. All documentation referring to "DTW", "accelerometer",
 "resample", "variance gate", "magnitude", or "50-point sequence" describes
 the **removed** pipeline.
+
+
+---
+
+## Phase 5.8 — Bundled Model (Offline / FOSS)
+
+### Model source
+- **File**: `app/src/main/assets/gesture_recognizer.task`
+- **Source**: MediaPipe Solutions — [gesture_recognizer.task (0.10.14)](https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task)
+- **SHA-256**: `f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c` *(verify before shipping)*
+
+### CI model verification (build.gradle.kts)
+The `verifyGestureModel` Gradle task checks the SHA-256 of the bundled model
+and fails the build if it doesn't match the expected hash recorded above.
+
+### Loading strategy
+`CameraHandEmbedder` uses `BaseOptions.builder().setModelAssetPath("gesture_recognizer.task")`
+which loads from the Android `assets/` folder at runtime — no network required.
+
+For the **gms** flavor, a runtime CDN download is available as fallback if the
+bundled file is absent (supports model updates without a full app release).
+For the **foss** flavor, the bundled asset is the only source — no CDN fallback.
+
+### Model rotation process
+1. Download the new model from the MediaPipe Models repository.
+2. Compute SHA-256: `sha256sum gesture_recognizer.task`
+3. Update the hash in `build.gradle.kts` (`GESTURE_MODEL_SHA256`).
+4. Replace `app/src/main/assets/gesture_recognizer.task`.
+5. Run `./gradlew verifyGestureModel` — must pass before committing.
