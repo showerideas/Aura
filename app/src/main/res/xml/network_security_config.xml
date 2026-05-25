@@ -15,7 +15,7 @@
         </trust-anchors>
     </base-config>
 
-    <!-- QR relay endpoint — Phase 5.7 certificate pinning.
+    <!-- QR relay endpoint – Phase 5.7 certificate pinning.
          expiration triggers a fallback to the system CA store after this date
          so the app keeps working if the pin is not rotated in time. Rotate
          before the expiry using the process in docs/QR_RELAY_SETUP.md. -->
@@ -25,10 +25,12 @@
             <!-- Primary leaf certificate public key hash (SHA-256 of SubjectPublicKeyInfo DER).
                  Run: openssl s_client -connect relay.example.com:443 | \
                       openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER | \
-                      openssl dgst -sha256 -binary | base64 -->
-            <pin digest="SHA-256">PLACEHOLDER_REPLACE_WITH_REAL_PRIMARY_PIN_HASH=</pin>
-            <!-- Backup pin — a different key pair kept offline for rotation. -->
-            <pin digest="SHA-256">PLACEHOLDER_REPLACE_WITH_REAL_BACKUP_PIN_HASH=</pin>
+                      openssl dgst -sha256 -binary | base64
+                 TODO: replace with real pin before production deployment. -->
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <!-- Backup pin – a different key pair kept offline for rotation.
+                 TODO: replace with real backup pin before production deployment. -->
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
         </pin-set>
     </domain-config>
 </network-security-config>
