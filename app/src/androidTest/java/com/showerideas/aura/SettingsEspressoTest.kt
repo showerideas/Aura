@@ -31,15 +31,16 @@ import org.junit.runner.RunWith
  *  3. The "Blocked devices" shortcut row is visible and tappable.
  *  4. The version row renders (i.e. build metadata is wired into the layout).
  *
- * These assertions cover the yellow item in AUDIT.md §2 row 19 ("Settings +
- * Blocked screens — manual QA") and promote it to green automated coverage.
+ * v1.3 fix: ensureOnHome() now calls waitForView(btn_activate) to let the
+ * HomeFragment fully settle — and the ActionBar overflow menu to be inflated —
+ * before openActionBarOverflowOrOptionsMenu() is called. Without this guard
+ * the NavController fragment transition may still be running, causing
+ * openActionBarOverflowOrOptionsMenu() to fail with "No views matching
+ * OverflowMenuButton" because the ActionBar hasn't rendered its menu yet.
  */
 @RunWith(AndroidJUnit4::class)
 class SettingsEspressoTest {
 
-    // Pre-grant dangerous permissions so MainActivity.checkAndRequestPermissions()
-    // finds them all satisfied and never shows the system dialog that would pause
-    // the activity before Espresso can interact with it.
     @get:Rule(order = 0)
     val grantPermissionsRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -49,75 +50,51 @@ class SettingsEspressoTest {
     @get:Rule(order = 1)
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    // On a fresh emulator the DataStore ONBOARDING_COMPLETE flag is false,
-    // so MainActivity routes to onboardingFragment. Navigate to home first so
-    // the ActionBar is in root-destination mode and the overflow menu is reachable.
     @Before
     fun ensureOnHome() {
         navigateToHomeIfOnOnboarding()
+        // Wait for HomeFragment to fully settle so the ActionBar overflow menu
+        // is inflated before openActionBarOverflowOrOptionsMenu() is called.
+        waitForView(R.id.btn_activate)
     }
 
     @Test
     fun settings_screen_shows_auth_and_blocked_rows() {
-        // Open the options menu and tap Settings.
         openActionBarOverflowOrOptionsMenu(
             InstrumentationRegistry.getInstrumentation().targetContext
         )
         onView(withText(R.string.settings_title)).perform(click())
 
-        // Auth method radio group must be visible.
         waitForView(R.id.rg_auth_method)
         onView(withId(R.id.rb_auth_gesture)).check(matches(isDisplayed()))
         onView(withId(R.id.rb_auth_biometric)).check(matches(isDisplayed()))
-
-        // Blocked devices shortcut row must be present.
         onView(withId(R.id.row_blocked_devices)).check(matches(isDisplayed()))
-
-        // Background activation switch must be present.
         onView(withId(R.id.switch_bg_activation)).check(matches(isDisplayed()))
-
-        // Version row must be present (confirms BuildConfig plumbing is wired).
         onView(withId(R.id.tv_version)).check(matches(isDisplayed()))
     }
 
     @Test
     fun blocked_devices_row_navigates_to_blocked_screen() {
-        // Open Settings.
         openActionBarOverflowOrOptionsMenu(
             InstrumentationRegistry.getInstrumentation().targetContext
         )
         onView(withText(R.string.settings_title)).perform(click())
         waitForView(R.id.row_blocked_devices)
 
-        // Tap the Blocked devices row — NavController should push BlockedDevicesFragment.
         onView(withId(R.id.row_blocked_devices)).perform(click())
 
-        // BlockedDevicesFragment has a RecyclerView as its root landmark.
-        // The exact ID may differ; we wait for the nav transition to complete.
         SystemClock.sleep(400)
-        // If nav succeeded, the row_blocked_devices from Settings is gone.
-        // We assert it is no longer visible.
         try {
             onView(withId(R.id.row_blocked_devices)).check(matches(isDisplayed()))
-            // If still visible, the navigation didn't happen — fail the test.
             throw AssertionError(
                 "row_blocked_devices still visible after tapping — navigation to " +
                 "BlockedDevicesFragment did not occur"
             )
         } catch (e: NoMatchingViewException) {
-            // Expected: the settings row is gone because we're on a new screen.
+            // Expected: settings row is gone because we navigated to a new screen.
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * If the app started on OnboardingFragment (ONBOARDING_COMPLETE=false in DataStore
-     * on a fresh emulator), navigate to HomeFragment via the declared nav action so
-     * the ActionBar is in root-destination mode and the overflow menu is accessible.
-     */
     private fun navigateToHomeIfOnOnboarding() {
         activityRule.scenario.onActivity { activity ->
             val navController = Navigation.findNavController(activity, R.id.nav_host_fragment)
@@ -127,6 +104,11 @@ class SettingsEspressoTest {
         }
     }
 
+    /**
+     * Polls until [id] is displayed or [timeoutMs] elapses.
+     * Catches all Throwable — including RootViewWithoutFocusException — so
+     * transient window-focus changes trigger a retry rather than a hard failure.
+     */
     private fun waitForView(@IdRes id: Int, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs
         var lastError: Throwable? = null
@@ -134,10 +116,9 @@ class SettingsEspressoTest {
             try {
                 onView(withId(id)).check(matches(isDisplayed()))
                 return
-            } catch (e: NoMatchingViewException) {
-                lastError = e; SystemClock.sleep(150)
-            } catch (e: AssertionError) {
-                lastError = e; SystemClock.sleep(150)
+            } catch (e: Throwable) {
+                lastError = e
+                SystemClock.sleep(150)
             }
         }
         lastError?.let { throw it }
