@@ -1,0 +1,26 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ "main", "phase/**" ]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "ios/**"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build AuraCore Swift package
+        run: |
+          cd ios
+          swift build
+      - name: Run AuraCore tests
+        run: |
+          cd ios
+          swift test
