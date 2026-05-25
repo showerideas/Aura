@@ -553,12 +553,13 @@ tasks.register("verifyGestureModel") {
             println("WARNING: gesture_recognizer.task not found in assets/ — model must be present before release")
             return@doLast
         }
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         val hash = digest.digest(modelFile.readBytes())
-            .joinToString("") { "%02x".format(it) }
+            .joinToString("") { b -> "%02x".format(b.toInt() and 0xff) }
         if (hash != GESTURE_MODEL_SHA256) {
             throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
         }
         println("gesture_recognizer.task SHA-256 OK: $hash")
     }
 }
+
