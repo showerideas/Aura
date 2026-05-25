@@ -269,6 +269,10 @@ dependencies {
     // Android Auto — Car App Library (Phase 7.3)
     implementation("androidx.car.app:app:1.4.0")
 
+    // Wear OS tiles (Phase 7.2)
+    implementation("androidx.wear.tiles:tiles:1.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
