@@ -291,6 +291,9 @@
     <string name="sas_identicon_desc">सुरक्षा आइडेंटिकॉन – इस एक्सचेंज सत्र का दृश्य फिंगरप्रिंट</string>
     <string name="sas_code_desc">सुरक्षा कोड</string>
     <string name="sas_dialog_instruction">आप और आपका संपर्क दोनों एक ही कोड और आइडेंटिकॉन देखना चाहिए</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">पहचान की छाप — क्रिप्टोग्राफिक पहचान कुंजी का दृश्य प्रतिनिधित्व</string>
+    <string name="contact_identicon_label">पहचान की छाप</string>
     <string name="action_share_card">कार्ड लिंक शेयर करें</string>
     <string name="share_card_chooser_title">अपना AURA कार्ड शेयर करें</string>
     <string name="share_card_text">यहाँ मेरा AURA कार्ड है: %1$s</string>

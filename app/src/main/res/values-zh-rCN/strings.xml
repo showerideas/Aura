@@ -289,6 +289,9 @@
     <string name="sas_identicon_desc">安全标识图标 – 此交换会话的视觉指纹</string>
     <string name="sas_code_desc">安全码</string>
     <string name="sas_dialog_instruction">您和您的联系人必须看到相同的代码和标识图标</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">身份指纹 — 此联系人加密身份密钥的视觉表示</string>
+    <string name="contact_identicon_label">身份指纹</string>
     <string name="action_share_card">分享名片链接</string>
     <string name="share_card_chooser_title">分享我的AURA名片</string>
     <string name="share_card_text">这是我的AURA名片：%1$s</string>
