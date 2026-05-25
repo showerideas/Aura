@@ -289,6 +289,8 @@
     <string name="sas_identicon_desc">セキュリティ識別子 – この交換セッションの視覚的フィンガープリント</string>
     <string name="sas_code_desc">セキュリティコード</string>
     <string name="sas_dialog_instruction">あなたとあなたの連絡先は同じコードと識別子を表示する必要があります</string>
+    <!-- Phase 6.7 -->
+    <string name="contact_card_updated">%1$sが前回の交換以降にカードを更新しました。</string>
     <!-- Phase 6.9 -->
     <string name="contact_identicon_desc">ID フィンガープリント — この連絡先の暗号化 ID キーの視覚的表現</string>
     <string name="contact_identicon_label">ID フィンガープリント</string>
