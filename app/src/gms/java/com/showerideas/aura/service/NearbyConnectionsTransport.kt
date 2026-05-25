@@ -47,11 +47,16 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
     override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
-    /**
-     * Callback for incoming STREAM payloads (avatar transfer). Not part of [NearbyTransport].
-     * Set by [NearbyExchangeService.wireTransportCallbacks] after downcasting.
-     */
-    var onStreamPayload: ((endpointId: String, payload: Payload) -> Unit)? = null
+    // -------------------------------------------------------------------------
+    // Avatar streaming — NearbyTransport optional extension (gms only)
+    // -------------------------------------------------------------------------
+
+    private var _onAvatarStreamReceived: ((endpointId: String, stream: java.io.InputStream) -> Unit)? = null
+
+    /** Bridges the GMS [Payload.Type.STREAM] callback to a plain [InputStream]. */
+    override var onAvatarStreamReceived: ((endpointId: String, stream: java.io.InputStream) -> Unit)?
+        get() = _onAvatarStreamReceived
+        set(value) { _onAvatarStreamReceived = value }
 
     // -------------------------------------------------------------------------
     // Internal state
@@ -77,7 +82,10 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
                     val bytes = payload.asBytes() ?: return
                     if (bytes.isNotEmpty()) onPayloadReceived?.invoke(endpointId, bytes)
                 }
-                Payload.Type.STREAM -> onStreamPayload?.invoke(endpointId, payload)
+                Payload.Type.STREAM -> {
+                    val stream = payload.asStream()?.asInputStream() ?: return
+                    _onAvatarStreamReceived?.invoke(endpointId, stream)
+                }
                 else -> Timber.d("NearbyConnectionsTransport: ignoring payload type ${payload.type} from $endpointId")
             }
         }
@@ -189,15 +197,26 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
     }
 
     /**
-     * Send a Nearby Connections STREAM [payload] (avatar JPEG) to [endpointId].
+     * Wrap [inputStream] in a Nearby Connections STREAM [Payload] and send it to [endpointId].
      *
-     * Only available on this transport — called by [NearbyExchangeService.sendAvatarIfPresent]
-     * after downcasting from [NearbyTransport]. Wi-Fi Direct does not support STREAM payloads.
+     * Implements [NearbyTransport.sendAvatarStream] for the gms flavor.
+     * Wi-Fi Direct / test doubles use the default no-op that returns false.
      */
-    fun sendStreamPayload(endpointId: String, payload: Payload) {
-        client.sendPayload(endpointId, payload)
-            .addOnSuccessListener { Timber.d("NearbyConnectionsTransport: STREAM sent to $endpointId") }
-            .addOnFailureListener { e -> Timber.e(e, "NearbyConnectionsTransport: STREAM send failed to $endpointId") }
+    override fun sendAvatarStream(
+        endpointId: String,
+        inputStream: java.io.InputStream,
+        lengthHint: Long,
+    ): Boolean {
+        return try {
+            val payload = Payload.fromStream(inputStream)
+            client.sendPayload(endpointId, payload)
+                .addOnSuccessListener { Timber.d("NearbyConnectionsTransport: STREAM sent to $endpointId") }
+                .addOnFailureListener { e -> Timber.e(e, "NearbyConnectionsTransport: STREAM send failed to $endpointId") }
+            true
+        } catch (e: Exception) {
+            Timber.e(e, "NearbyConnectionsTransport: sendAvatarStream failed to $endpointId")
+            false
+        }
     }
 
     companion object {

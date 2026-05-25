@@ -87,4 +87,40 @@ interface NearbyTransport {
 
     /** Disconnect all endpoints and clean up. */
     fun stopAllEndpoints()
+
+    // -------------------------------------------------------------------------
+    // Optional streaming (avatar) — gms only; no-ops on foss / test doubles
+    // -------------------------------------------------------------------------
+
+    /**
+     * Send an avatar as a raw byte stream.
+     *
+     * The concrete transport wraps it in whatever mechanism it supports
+     * (Nearby Connections STREAM payload for gms; WifiDirect is bytes-only).
+     *
+     * Returns true if the stream transfer was initiated; false if the transport
+     * does not support streaming (FOSS / test doubles). Callers skip avatar send
+     * when false is returned.
+     *
+     * Default: no-op, returns false. Override in gms transport only.
+     */
+    fun sendAvatarStream(
+        endpointId: String,
+        inputStream: java.io.InputStream,
+        lengthHint: Long,
+    ): Boolean = false
+
+    /**
+     * Callback for an incoming avatar byte-stream.
+     *
+     * The transport unwraps its internal stream type and delivers a plain
+     * [java.io.InputStream] so callers are GMS-free.
+     *
+     * Default: no-op getter / setter. Transports that do not support streaming
+     * never invoke this callback and silently discard the setter assignment.
+     * Override in gms transport only.
+     */
+    var onAvatarStreamReceived: ((endpointId: String, stream: java.io.InputStream) -> Unit)?
+        get() = null
+        set(_) {}
 }

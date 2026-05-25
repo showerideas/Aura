@@ -178,14 +178,6 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var auditRepository: ExchangeAuditRepository
     @Inject lateinit var authPreferences: AuthPreferences
 
-    /**
-     * Convenience downcast — non-null on the `gms` flavor only.
-     * Used exclusively for STREAM payload (avatar) operations which are
-     * Nearby Connections-specific and not part of the [NearbyTransport] interface.
-     */
-    private val nearbyTransport: NearbyConnectionsTransport?
-        get() = transport as? NearbyConnectionsTransport
-
     @Volatile private var gestureVerified: Boolean = false
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -413,10 +405,10 @@ class NearbyExchangeService : Service() {
         }
 
         // ------------------------------------------------------------------
-        // Avatar STREAM — gms flavor only (NearbyConnectionsTransport)
+        // Avatar STREAM — gms flavor only; no-op on foss / test doubles
         // ------------------------------------------------------------------
-        nearbyTransport?.onStreamPayload = { endpointId, payload ->
-            handleIncomingAvatarStream(endpointId, payload)
+        transport.onAvatarStreamReceived = { endpointId, stream ->
+            handleIncomingAvatarStream(endpointId, stream)
         }
     }
 
@@ -1017,10 +1009,6 @@ class NearbyExchangeService : Service() {
      */
     private fun sendAvatarIfPresent(endpointId: String, avatarPath: String) {
         if (avatarPath.isBlank()) return
-        val nearby = nearbyTransport ?: run {
-            Timber.d("Avatar streaming skipped — transport does not support STREAM payloads")
-            return
-        }
 
         if (avatarPath.startsWith("content://")) {
             try {
@@ -1033,11 +1021,13 @@ class NearbyExchangeService : Service() {
                     Timber.w("content:// avatar exceeds size limit (${pfd.statSize}B) — skipping")
                     pfd.close(); return
                 }
-                nearby.sendBytes(endpointId, byteArrayOf(MSG_TYPE_AVATAR))
-                nearby.sendStreamPayload(
+                transport.sendBytes(endpointId, byteArrayOf(MSG_TYPE_AVATAR))
+                val sent = transport.sendAvatarStream(
                     endpointId,
-                    com.google.android.gms.nearby.connection.Payload.fromStream(pfd)
+                    pfd.inputStream(),
+                    pfd.statSize,
                 )
+                if (!sent) Timber.d("Avatar streaming skipped — transport does not support STREAM payloads")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to send avatar via content URI")
             }
@@ -1052,15 +1042,14 @@ class NearbyExchangeService : Service() {
             Timber.w("Avatar exceeds ${MAX_AVATAR_BYTES}B — skipping"); return
         }
         try {
-            nearby.sendBytes(endpointId, byteArrayOf(MSG_TYPE_AVATAR))
-            val pfd = android.os.ParcelFileDescriptor.open(
-                file, android.os.ParcelFileDescriptor.MODE_READ_ONLY
-            )
-            nearby.sendStreamPayload(
+            transport.sendBytes(endpointId, byteArrayOf(MSG_TYPE_AVATAR))
+            val sent = transport.sendAvatarStream(
                 endpointId,
-                com.google.android.gms.nearby.connection.Payload.fromStream(pfd)
+                file.inputStream(),
+                file.length(),
             )
-            Timber.d("Avatar stream sent (${file.length()}B) to $endpointId")
+            if (sent) Timber.d("Avatar stream sent (${file.length()}B) to $endpointId")
+            else Timber.d("Avatar streaming skipped — transport does not support STREAM payloads")
         } catch (e: Exception) {
             Timber.e(e, "Failed to open avatar for stream send")
         }
@@ -1068,13 +1057,12 @@ class NearbyExchangeService : Service() {
 
     private fun handleIncomingAvatarStream(
         endpointId: String,
-        payload: com.google.android.gms.nearby.connection.Payload
+        inputStream: java.io.InputStream,
     ) {
         if (!awaitingAvatarStream.contains(endpointId)) {
             Timber.w("STREAM from $endpointId without preceding MSG_TYPE_AVATAR — dropping")
             return
         }
-        val inputStream = payload.asStream()?.asInputStream() ?: return
         scope.launch {
             val safeEp = endpointId.replace(Regex("[^A-Za-z0-9_-]"), "_").take(16)
             val tmp = java.io.File.createTempFile("avatar-incoming-${safeEp}-", ".jpg", cacheDir)
