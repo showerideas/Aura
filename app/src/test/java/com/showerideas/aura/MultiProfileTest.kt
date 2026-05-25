@@ -142,12 +142,15 @@ class MultiProfileTest {
     }
 
     @Test
-    fun shareableMap_empty_shareFields_returns_empty_map() {
+    fun shareableMap_empty_shareFields_returns_only_version() {
         val profile = Profile(
             displayName = "Dave",
             shareFields = ""
         )
-        assertTrue(profile.toShareableMap().isEmpty())
+        // No user fields enabled → only the always-present version sentinel is sent
+        val map = profile.toShareableMap()
+        assertEquals(1, map.size)
+        assertTrue("version should always be present", map.containsKey("version"))
     }
 
     // -------------------------------------------------------------------------

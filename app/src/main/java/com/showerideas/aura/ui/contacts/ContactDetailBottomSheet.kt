@@ -19,6 +19,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.showerideas.aura.databinding.BottomSheetContactDetailBinding
 import com.showerideas.aura.utils.AvatarUtils
+import com.showerideas.aura.utils.IdenticonGenerator
 import com.showerideas.aura.utils.shareVCard
 import com.showerideas.aura.utils.toVCard
 import com.showerideas.aura.utils.toast
@@ -74,6 +75,16 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     )
                     binding.ivAvatar.setImageBitmap(avatarBitmap)
                     binding.ivAvatar.visibility = View.VISIBLE
+
+                    // Phase 6.9: cryptographic identity fingerprint — always derived
+                    // from identityKeyHash (stable across reconnections), falling back
+                    // to sourceEndpointId for contacts pre-dating the identity-key field.
+                    // Shown at 48 dp as a security indicator, not as a decorative avatar.
+                    val identiconSeed = contact.identityKeyHash?.takeIf { it.isNotBlank() }
+                        ?: contact.sourceEndpointId
+                    binding.ivIdenticon.setImageBitmap(
+                        IdenticonGenerator.generate(identiconSeed, size = 192)
+                    )
                     binding.tvTitle.text = buildString {
                         if (contact.title.isNotBlank()) append(contact.title)
                         if (contact.title.isNotBlank() && contact.company.isNotBlank()) append(" @ ")

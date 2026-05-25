@@ -76,6 +76,24 @@ class KnownPeerRepository @Inject constructor(
     /** Remove the record for [endpointId] (e.g. user forgets/resets a device). */
     suspend fun delete(endpointId: String) = knownPeerDao.delete(endpointId)
 
+    /**
+     * Retrieve the last-seen profile version for [endpointId], or 0 if unknown.
+     *
+     * Used immediately before saving an incoming contact to decide whether a
+     * "Card updated" Snackbar should be shown ([Contact.profileVersion] > stored version).
+     */
+    suspend fun getLastSeenProfileVersion(endpointId: String): Int =
+        knownPeerDao.get(endpointId)?.lastSeenProfileVersion ?: 0
+
+    /**
+     * Persist the most recently received [profileVersion] for [endpointId].
+     *
+     * Call after every successful exchange so the next exchange can detect bumps.
+     * No-op if the endpoint is not yet in the TOFU registry (unknown peer).
+     */
+    suspend fun updateLastSeenProfileVersion(endpointId: String, profileVersion: Int) =
+        knownPeerDao.updateLastSeenProfileVersion(endpointId, profileVersion)
+
     // -------------------------------------------------------------------------
     // Encoding helpers
     // -------------------------------------------------------------------------

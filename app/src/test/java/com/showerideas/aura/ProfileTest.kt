@@ -57,15 +57,18 @@ class ProfileTest {
     fun `shareableMap with no fields enabled returns only non-blank shareFields`() {
         val profile = fullProfile.copy(shareFields = "")
         val map = profile.toShareableMap()
-        // No fields enabled → empty map
-        assertTrue(map.isEmpty())
+        // No user fields enabled → only the always-present version sentinel is sent
+        assertEquals(1, map.size)
+        assertTrue("version should always be present", map.containsKey("version"))
     }
 
     @Test
     fun `displayName is always included when non-blank and enabled`() {
         val profile = fullProfile.copy(shareFields = "displayName")
         val map = profile.toShareableMap()
-        assertEquals(1, map.size)
+        // displayName + always-present version
+        assertEquals(2, map.size)
         assertEquals("Alice Dev", map["displayName"])
+        assertTrue("version should always be present", map.containsKey("version"))
     }
 }
