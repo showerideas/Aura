@@ -288,7 +288,7 @@
     <string name="audit_clear_confirm_message">Todo el historial de intercambios se eliminará permanentemente.</string>
     <string name="audit_clear_done">Historial de intercambios borrado</string>
     <!-- Phase 6.9 / 6.8 -->
-    <string name="sas_identicon_desc">Identicon de seguridad &#x2013; huella visual de esta sesión de intercambio</string>
+    <string name="sas_identicon_desc">Identicon de seguridad – huella visual de esta sesión de intercambio</string>
     <string name="sas_code_desc">Código de seguridad</string>
     <string name="sas_dialog_instruction">Usted y su contacto deben ver el mismo código e identicon</string>
     <string name="action_share_card">Compartir enlace de tarjeta</string>
