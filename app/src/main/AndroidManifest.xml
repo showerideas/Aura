@@ -115,6 +115,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/vnd.aura.key-bootstrap" />
             </intent-filter>
+                    <!-- Phase 6.8 — Share AURA deeplink: https://aura.app/c/{base64-payload}
+                 autoVerify enables App Links so the OS routes these URLs
+                 directly to AURA without an app-chooser dialog. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="aura.app" android:pathPrefix="/c/" />
+            </intent-filter>
         </activity>
 
         <!-- Volume Button Foreground Service -->
