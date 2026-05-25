@@ -291,6 +291,9 @@
     <string name="sas_identicon_desc">Sicherheits-Identicon – visueller Fingerabdruck dieser Austauschsitzung</string>
     <string name="sas_code_desc">Sicherheitscode</string>
     <string name="sas_dialog_instruction">Sie und Ihr Kontakt müssen denselben Code und dasselbe Identicon sehen</string>
+    <!-- Phase 6.9 -->
+    <string name="contact_identicon_desc">Identitäts-Fingerabdruck — visuelle Darstellung des kryptographischen Identitätsschlüssels</string>
+    <string name="contact_identicon_label">Identitäts-Fingerabdruck</string>
     <string name="action_share_card">Karten-Link teilen</string>
     <string name="share_card_chooser_title">AURA-Karte teilen</string>
     <string name="share_card_text">Hier ist meine AURA-Karte: %1$s</string>

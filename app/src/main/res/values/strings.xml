@@ -355,6 +355,10 @@
     <string name="sas_code_desc">Security code</string>
     <string name="sas_dialog_instruction">Both you and your contact must see the same code and identicon</string>
 
+    <!-- Phase 6.9 — contact detail identicon fingerprint -->
+    <string name="contact_identicon_desc">Identity fingerprint — visual representation of this contact\'s cryptographic identity key</string>
+    <string name="contact_identicon_label">Identity fingerprint</string>
+
     <!-- Phase 6.8 — share card deeplink -->
     <string name="action_share_card">Share card link</string>
     <string name="share_card_chooser_title">Share your AURA card</string>
