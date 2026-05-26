@@ -1,0 +1,196 @@
+package com.showerideas.aura.crypto
+
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumKeyGenerationParameters
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumKeyPairGenerator
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumParameters
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumPrivateKeyParameters
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumPublicKeyParameters
+import org.bouncycastle.pqc.crypto.crystals.dilithium.DilithiumSigner
+import timber.log.Timber
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
+import java.security.SecureRandom
+import java.security.Signature
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECGenParameterSpec
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Task 48 — ML-DSA (FIPS 204) hybrid identity key.
+ *
+ * AURA identity key is now a hybrid pair: (P-256/ECDSA, ML-DSA-65/Dilithium-3).
+ * Both are used to sign every payload; both must verify for a signature to be accepted.
+ *
+ * ## Post-quantum rationale
+ * NIST finalized ML-DSA (CRYSTALS-Dilithium, FIPS 204) in August 2024 as the primary
+ * post-quantum signature standard. CNSA 2.0 mandates adoption by 2030. AURA begins
+ * migration now with a hybrid: both classical (P-256) and PQ (ML-DSA-65) signatures
+ * are produced. An adversary must break BOTH to forge an AURA identity signature.
+ *
+ * ## Storage
+ * ML-DSA-65 private key is stored in encrypted DataStore (Keystore-backed AES wrapping).
+ * Note: Android Keystore does not yet support ML-DSA natively; the key is software-backed
+ * with AES-256-GCM wrapping via [androidx.security.crypto.EncryptedSharedPreferences].
+ *
+ * ## Wire protocol v9
+ * [HybridKemEngine.WIRE_V9] adds the optional `HYBRID_SIG_V9` TLV carrying the ML-DSA-65
+ * co-signature. Receivers on v8 verify only P-256; v9 receivers verify both.
+ *
+ * See: [nvlpubs.nist.gov/nistpubs/fips/nist.fips.204.pdf]
+ * See: [github.com/MichaelsPlayground/PostQuantumCryptographyBc172]
+ */
+@Singleton
+class HybridIdentityKey @Inject constructor() {
+
+    private var ecPriv: ECPrivateKey? = null
+    private var ecPub: ECPublicKey? = null
+    private var mlDsaPriv: DilithiumPrivateKeyParameters? = null
+    private var mlDsaPub: DilithiumPublicKeyParameters? = null
+
+    private val rng = SecureRandom()
+
+    /** Generate a fresh hybrid identity key pair. Must be called once at enrolment. */
+    fun generate() {
+        // P-256 key pair via Android/JCA
+        val ecGen = KeyPairGenerator.getInstance("EC")
+        ecGen.initialize(ECGenParameterSpec("secp256r1"), rng)
+        val ecPair = ecGen.generateKeyPair()
+        ecPriv = ecPair.private as ECPrivateKey
+        ecPub  = ecPair.public  as ECPublicKey
+
+        // ML-DSA-65 (Dilithium mode 3) via BouncyCastle
+        val mlGen = DilithiumKeyPairGenerator()
+        mlGen.init(DilithiumKeyGenerationParameters(rng, DilithiumParameters.dilithium3))
+        val mlPair = mlGen.generateKeyPair()
+        mlDsaPriv = mlPair.private  as DilithiumPrivateKeyParameters
+        mlDsaPub  = mlPair.public   as DilithiumPublicKeyParameters
+
+        Timber.d("HybridIdentityKey generated — P-256 + ML-DSA-65 (Dilithium-3)")
+    }
+
+    /**
+     * Load key material from encoded bytes (e.g. loaded from encrypted DataStore).
+     * @param ecPrivDer   PKCS#8 DER of P-256 private key
+     * @param ecPubDer    X.509 DER of P-256 public key
+     * @param mlPrivBytes Raw ML-DSA-65 private key bytes
+     * @param mlPubBytes  Raw ML-DSA-65 public key bytes
+     */
+    fun load(
+        ecPrivDer: ByteArray,
+        ecPubDer: ByteArray,
+        mlPrivBytes: ByteArray,
+        mlPubBytes: ByteArray
+    ) {
+        val kf = KeyFactory.getInstance("EC")
+        ecPriv = kf.generatePrivate(PKCS8EncodedKeySpec(ecPrivDer)) as ECPrivateKey
+        ecPub  = kf.generatePublic(X509EncodedKeySpec(ecPubDer)) as ECPublicKey
+        mlDsaPriv = DilithiumPrivateKeyParameters(DilithiumParameters.dilithium3, mlPrivBytes)
+        mlDsaPub  = DilithiumPublicKeyParameters(DilithiumParameters.dilithium3, mlPubBytes)
+        Timber.d("HybridIdentityKey loaded")
+    }
+
+    /**
+     * Sign [data] with both P-256 and ML-DSA-65.
+     * @return [HybridSignature] containing both signatures.
+     * @throws IllegalStateException if keys have not been generated or loaded.
+     */
+    fun sign(data: ByteArray): HybridSignature {
+        val priv = ecPriv   ?: error("HybridIdentityKey not initialised")
+        val mlPriv = mlDsaPriv ?: error("HybridIdentityKey not initialised")
+
+        // P-256 signature (SHA256withECDSA → raw R||S via conversion)
+        val ecSig = Signature.getInstance("SHA256withECDSA").also {
+            it.initSign(priv, rng)
+            it.update(data)
+        }.sign()
+        // DER → raw 64-byte R||S
+        val p256Raw = derToRawEcSig(ecSig)
+
+        // ML-DSA-65 signature
+        val signer = DilithiumSigner()
+        signer.init(true, mlPriv)
+        val mlSig = signer.generateSignature(data)
+
+        return HybridSignature(p256Raw, mlSig)
+    }
+
+    /**
+     * Verify a [HybridSignature] against [data]. Both signatures must be valid.
+     * @param data       The signed data.
+     * @param sig        The [HybridSignature] to verify.
+     * @param ecPubKey   P-256 public key of the signer.
+     * @param mlDsaPubKey ML-DSA-65 public key of the signer.
+     * @return `true` only if both signatures are valid.
+     */
+    fun verify(
+        data: ByteArray,
+        sig: HybridSignature,
+        ecPubKey: ECPublicKey,
+        mlDsaPubKey: DilithiumPublicKeyParameters
+    ): Boolean {
+        return try {
+            // Verify P-256
+            val ecOk = Signature.getInstance("SHA256withECDSA").also {
+                it.initVerify(ecPubKey)
+                it.update(data)
+            }.verify(rawToDerEcSig(sig.p256Sig))
+
+            // Verify ML-DSA-65
+            val verifier = DilithiumSigner()
+            verifier.init(false, mlDsaPubKey)
+            val mlOk = verifier.verifySignature(data, sig.mlDsaSig)
+
+            if (!ecOk)   Timber.w("HybridIdentityKey: P-256 verification FAILED")
+            if (!mlOk)   Timber.w("HybridIdentityKey: ML-DSA-65 verification FAILED")
+            ecOk && mlOk
+        } catch (e: Exception) {
+            Timber.e(e, "HybridIdentityKey verification exception")
+            false
+        }
+    }
+
+    /** Expose local public keys for distribution in PreKeyBundle / WireProtocol v9. */
+    fun ecPublicKey(): ECPublicKey =
+        ecPub ?: error("HybridIdentityKey not initialised")
+
+    fun mlDsaPublicKey(): DilithiumPublicKeyParameters =
+        mlDsaPub ?: error("HybridIdentityKey not initialised")
+
+    /** Encoded forms for storage. */
+    fun ecPrivateDer(): ByteArray  = ecPriv?.encoded  ?: error("not init")
+    fun ecPublicDer(): ByteArray   = ecPub?.encoded   ?: error("not init")
+    fun mlDsaPrivBytes(): ByteArray = mlDsaPriv?.encoded ?: error("not init")
+    fun mlDsaPubBytes(): ByteArray  = mlDsaPub?.encoded  ?: error("not init")
+
+    // -----------------------------------------------------------------------
+    // DER ↔ raw R||S helpers for P-256 signatures
+    // -----------------------------------------------------------------------
+
+    /** Convert DER-encoded ECDSA signature to fixed 64-byte raw R||S. */
+    private fun derToRawEcSig(der: ByteArray): ByteArray {
+        // Minimal ASN.1 parse: SEQUENCE { INTEGER r, INTEGER s }
+        var i = 2 // skip SEQUENCE tag + length
+        val rLen = der[i + 1].toInt() and 0xFF; i += 2
+        val rBytes = der.copyOfRange(i, i + rLen); i += rLen
+        val sLen = der[i + 1].toInt() and 0xFF; i += 2
+        val sBytes = der.copyOfRange(i, i + sLen)
+        val raw = ByteArray(64)
+        rBytes.copyInto(raw, 32 - rBytes.size.coerceAtMost(32))
+        sBytes.copyInto(raw, 64 - sBytes.size.coerceAtMost(32))
+        return raw
+    }
+
+    /** Convert fixed 64-byte raw R||S to DER-encoded ECDSA signature. */
+    private fun rawToDerEcSig(raw: ByteArray): ByteArray {
+        val r = raw.copyOfRange(0, 32).let { if (it[0] < 0) byteArrayOf(0) + it else it }
+        val s = raw.copyOfRange(32, 64).let { if (it[0] < 0) byteArrayOf(0) + it else it }
+        val len = 2 + r.size + 2 + s.size
+        return byteArrayOf(0x30, len.toByte(),
+            0x02, r.size.toByte()) + r +
+            byteArrayOf(0x02, s.size.toByte()) + s
+    }
+}
