@@ -324,4 +324,19 @@
     <string name="settings_tor_proxy_subtitle">Orbot की ज़रूरत है। QR relay ट्रैफ़िक को Tor के ज़रिए अनामित करता है।</string>
     <string name="settings_tor_proxy_orbot_missing">Orbot इंस्टॉल नहीं है — Tor सक्षम करने के लिए F-Droid से इंस्टॉल करें।</string>
 
+
+    <!-- Phase 9.2 — Analytics -->
+    <string name="analytics_title">विश्लेषण</string>
+    <string name="analytics_total">कुल एक्सचेंज</string>
+    <string name="analytics_success_rate">सफलता दर</string>
+    <string name="analytics_weekly_header">पिछले 7 दिन</string>
+    <string name="analytics_top_contacts_header">शीर्ष संपर्क</string>
+    <string name="analytics_empty">अभी तक कोई एक्सचेंज डेटा नहीं।</string>
+    <string name="analytics_no_data_this_week">इस सप्ताह कोई एक्सचेंज नहीं।</string>
+    <string name="analytics_no_recurring">अभी तक कोई नियमित संपर्क नहीं।</string>
+    <string name="analytics_export_csv">CSV निर्यात करें</string>
+    <string name="analytics_export_done">CSV Downloads में सहेजा गया</string>
+    <string name="analytics_export_empty">निर्यात के लिए कोई डेटा नहीं।</string>
+    <string name="analytics_export_failed">निर्यात विफल — संग्रहण अनुमति जांचें।</string>
+
 </resources>

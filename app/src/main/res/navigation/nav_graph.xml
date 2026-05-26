@@ -90,6 +90,17 @@
     <fragment
         android:id="@+id/auditFragment"
         android:name="com.showerideas.aura.ui.audit.AuditFragment"
-        android:label="Exchange history" />
+        android:label="Exchange history">
+        <action
+            android:id="@+id/action_audit_to_analytics"
+            app:destination="@id/analyticsFragment" />
+    </fragment>
+
+
+    <!-- Phase 9.2: On-device analytics screen -->
+    <fragment
+        android:id="@+id/analyticsFragment"
+        android:name="com.showerideas.aura.ui.audit.AnalyticsFragment"
+        android:label="Analytics" />
 
 </navigation>
