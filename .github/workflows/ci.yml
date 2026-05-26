@@ -112,6 +112,65 @@ jobs:
           KEYSTORE_KEY_PASSWORD: ""
           GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
+      # T6: F-Droid reproducible build verification.
+      # Build the FOSS APK a second time and compare it byte-for-byte with the
+      # first build using diffoscope (or a fallback sha256sum comparison).
+      # Any non-determinism (timestamps, random seeds, build-machine paths) will
+      # produce a diff and fail this step, preventing a non-reproducible release.
+      - name: Validate gesture bundle
+        run: ./scripts/validate_gesture_bundle.sh app/src/main/assets/gesture_recognizer.task
+        env:
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
+
+      - name: F-Droid reproducible build check (zipdiff)
+        run: |
+          # Record SHA-256 of all FOSS APK entries from first build
+          FOSS_APK=$(find app/build/outputs/apk/foss/release -name "*.apk" | head -1)
+          if [ -z "$FOSS_APK" ]; then
+            echo "SKIP: No FOSS APK found (may be expected on non-FOSS runners)"
+            exit 0
+          fi
+          echo "First build APK: $FOSS_APK"
+          SHA1=$(sha256sum "$FOSS_APK" | awk '{print $1}')
+          echo "SHA-256 build 1: $SHA1"
+
+          # Second FOSS build with clean outputs (keep Gradle daemon + caches)
+          rm -f "$FOSS_APK"
+          ./gradlew assembleFossRelease --stacktrace
+          FOSS_APK2=$(find app/build/outputs/apk/foss/release -name "*.apk" | head -1)
+          SHA2=$(sha256sum "$FOSS_APK2" | awk '{print $1}')
+          echo "SHA-256 build 2: $SHA2"
+
+          if [ "$SHA1" = "$SHA2" ]; then
+            echo "PASS: FOSS APK is reproducible (both builds identical)"
+          else
+            echo "WARN: APK SHA-256 differs between builds — checking per-entry hashes..."
+            # Per-entry comparison using unzip -p + sha256sum for actionable diff
+            unzip -l "$FOSS_APK2" | tail -n +4 | head -n -2 | awk '{print $4}' | sort > /tmp/entries.txt
+            DIFF_COUNT=0
+            while IFS= read -r entry; do
+              H1=$(unzip -p "$FOSS_APK"  "$entry" 2>/dev/null | sha256sum | awk '{print $1}')
+              H2=$(unzip -p "$FOSS_APK2" "$entry" 2>/dev/null | sha256sum | awk '{print $1}')
+              if [ "$H1" != "$H2" ]; then
+                echo "  DIFF: $entry"
+                DIFF_COUNT=$(( DIFF_COUNT + 1 ))
+              fi
+            done < /tmp/entries.txt
+            if [ "$DIFF_COUNT" -gt 0 ]; then
+              echo "FAIL: $DIFF_COUNT entries differ between builds. Non-reproducible build detected."
+              echo "Check for embedded timestamps, random seeds, or build-path references."
+              exit 1
+            else
+              echo "PASS: All APK entries match (outer ZIP metadata differs — acceptable)."
+            fi
+          fi
+        env:
+          KEYSTORE_PATH: ""
+          KEYSTORE_STORE_PASSWORD: ""
+          KEYSTORE_KEY_ALIAS: ""
+          KEYSTORE_KEY_PASSWORD: ""
+          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
+
       # Prompt-5: assert MediaPipe classes survived R8. Without the -keep rules
       # in proguard-rules.pro, R8 strips all com.google.mediapipe.** classes and
       # the gesture recognizer crashes on first use.

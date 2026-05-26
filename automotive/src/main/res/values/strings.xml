@@ -17,4 +17,14 @@
     <string name="auto_auth_failed_body">Authentication failed. Tap Start Exchange to try again.</string>
     <!-- Phase G1 — voice action labels -->
     <string name="auto_voice_action_label">Start AURA Exchange</string>
+
+    <!-- T36 — Contact list screen -->
+    <string name="auto_contacts_title">Recent Contacts</string>
+    <string name="auto_contacts_empty">No contacts yet. Exchange with someone first.</string>
+
+    <!-- T36 — TTS announcements (driving-safe, screen-free feedback) -->
+    <string name="auto_tts_advertising">AURA is ready to exchange. Hold your device near a peer.</string>
+    <string name="auto_tts_exchange_complete">Contact received from %1$s.</string>
+    <string name="auto_tts_cancelled">Exchange cancelled.</string>
+    <string name="auto_tts_sas_required">Verify the security code on both devices before confirming.</string>
 </resources>

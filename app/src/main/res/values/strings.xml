@@ -507,4 +507,9 @@
         <item quantity="other">%1$d contacts</item>
     </plurals>
 
+
+    <!-- T10 — Room exchange service notifications -->
+    <string name="room_service_notification_title">AURA Room Active</string>
+    <string name="room_service_notification_body">Multi-party exchange in progress…</string>
+
 </resources>
