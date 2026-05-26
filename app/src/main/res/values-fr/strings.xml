@@ -299,4 +299,61 @@
     <string name="action_share_card">Partager le lien de la carte</string>
     <string name="share_card_chooser_title">Partager votre carte AURA</string>
     <string name="share_card_text">Voici ma carte AURA : %1$s</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
+    <string name="cd_btn_exchange">Start exchange</string>
+    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_qr_scan">Scan QR code</string>
+    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_btn_profile_switch">Switch profile</string>
+
+    <!-- Phase 6.11 — Home screen shortcut labels -->
+    <string name="shortcut_start_exchange_short">Exchange</string>
+    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
+    <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Acheminer le relais via Tor</string>
+    <string name="settings_tor_proxy_subtitle">Nécessite Orbot. Achemine le trafic du relais QR anonymement via Tor.</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbot non installé — installez-le depuis F-Droid pour activer Tor.</string>
+
+
+    <!-- Phase 9.2 — Analytics -->
+    <string name="analytics_title">Analytiques</string>
+    <string name="analytics_total">Échanges totaux</string>
+    <string name="analytics_success_rate">Taux de réussite</string>
+    <string name="analytics_weekly_header">Les 7 derniers jours</string>
+    <string name="analytics_top_contacts_header">Contacts fréquents</string>
+    <string name="analytics_empty">Aucune donnée d'échange pour l'instant.</string>
+    <string name="analytics_no_data_this_week">Aucun échange cette semaine.</string>
+    <string name="analytics_no_recurring">Aucun contact récurrent pour l'instant.</string>
+    <string name="analytics_export_csv">Exporter CSV</string>
+    <string name="analytics_export_done">CSV enregistré dans Téléchargements</string>
+    <string name="analytics_export_empty">Aucune donnée à exporter.</string>
+    <string name="analytics_export_failed">Échec de l'export — vérifiez la permission de stockage.</string>
+
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">Bibliothèque de gestes</string>
+    <string name="gesture_library_enrolled">Enregistré</string>
+    <string name="gesture_library_empty_slot">Vide</string>
+    <string name="gesture_library_enroll">Enregistrer un geste</string>
+    <string name="gesture_library_enroll_hint">Allez dans Profil pour enregistrer le geste %1$d.</string>
+    <string name="gesture_library_test">Tester</string>
+    <string name="gesture_library_test_coming_soon">Le test en direct arrivera dans une prochaine mise à jour.</string>
+    <string name="gesture_library_rename">Renommer</string>
+    <string name="gesture_library_rename_title">Renommer le geste</string>
+    <string name="gesture_library_delete">Supprimer</string>
+    <string name="gesture_library_delete_title">Supprimer le geste ?</string>
+    <string name="gesture_library_delete_message">Supprimer « %1$s » ? Vous devrez vous réinscrire pour utiliser cet emplacement.</string>
+    <string name="gesture_library_deleted">Geste supprimé</string>
+    <string name="gesture_library_enrolled_at">Enregistré le %1$s</string>
+
 </resources>

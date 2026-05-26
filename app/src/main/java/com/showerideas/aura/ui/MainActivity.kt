@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Phase 6.8 — route incoming https://aura.app/c/* App Links to the
+     * Phase 6.8 — route incoming https://aura.app/c/{token} App Links to the
      * contact-import flow. DeeplinkUtils decodes the base64url JSON payload;
      * we then navigate to the contacts screen so the user can save the card.
      */

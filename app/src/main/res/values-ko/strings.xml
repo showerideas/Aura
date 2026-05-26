@@ -297,4 +297,61 @@
     <string name="action_share_card">카드 링크 공유</string>
     <string name="share_card_chooser_title">AURA 카드 공유</string>
     <string name="share_card_text">내 AURA 카드입니다: %1$s</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
+    <string name="cd_btn_exchange">Start exchange</string>
+    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_qr_scan">Scan QR code</string>
+    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_btn_profile_switch">Switch profile</string>
+
+    <!-- Phase 6.11 — Home screen shortcut labels -->
+    <string name="shortcut_start_exchange_short">Exchange</string>
+    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
+    <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Tor를 통해 릴레이</string>
+    <string name="settings_tor_proxy_subtitle">Orbot 필요. QR 릴레이 트래픽을 Tor를 통해 익명으로 처리합니다.</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbot이 설치되지 않았습니다 — Tor를 활성화하려면 F-Droid에서 설치하세요.</string>
+
+
+    <!-- Phase 9.2 — Analytics -->
+    <string name="analytics_title">분석</string>
+    <string name="analytics_total">총 교환 수</string>
+    <string name="analytics_success_rate">성공률</string>
+    <string name="analytics_weekly_header">지난 7일</string>
+    <string name="analytics_top_contacts_header">상위 연락처</string>
+    <string name="analytics_empty">아직 교환 데이터가 없습니다.</string>
+    <string name="analytics_no_data_this_week">이번 주 교환이 없습니다.</string>
+    <string name="analytics_no_recurring">아직 단골 연락처가 없습니다.</string>
+    <string name="analytics_export_csv">CSV 내보내기</string>
+    <string name="analytics_export_done">CSV가 다운로드에 저장되었습니다</string>
+    <string name="analytics_export_empty">내보낼 데이터가 없습니다.</string>
+    <string name="analytics_export_failed">내보내기 실패 — 저장소 권한을 확인하세요.</string>
+
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">제스처 라이브러리</string>
+    <string name="gesture_library_enrolled">등록됨</string>
+    <string name="gesture_library_empty_slot">비어 있음</string>
+    <string name="gesture_library_enroll">제스처 등록</string>
+    <string name="gesture_library_enroll_hint">제스처 %1$d를 녹화하려면 프로필로 이동하세요.</string>
+    <string name="gesture_library_test">테스트</string>
+    <string name="gesture_library_test_coming_soon">라이브 테스트는 향후 업데이트에서 제공됩니다.</string>
+    <string name="gesture_library_rename">이름 변경</string>
+    <string name="gesture_library_rename_title">제스처 이름 변경</string>
+    <string name="gesture_library_delete">삭제</string>
+    <string name="gesture_library_delete_title">제스처를 삭제하시겠습니까?</string>
+    <string name="gesture_library_delete_message">"%1$s"를 삭제하시겠습니까? 이 슬롯을 사용하려면 다시 등록해야 합니다.</string>
+    <string name="gesture_library_deleted">제스처가 삭제되었습니다</string>
+    <string name="gesture_library_enrolled_at">%1$s에 등록됨</string>
+
 </resources>

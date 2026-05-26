@@ -47,7 +47,11 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.showerideas.aura.ui.profile.ProfileFragment"
-        android:label="Profile" />
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profile_to_gesture_library"
+            app:destination="@id/gestureLibraryFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/contactsFragment"
@@ -79,6 +83,9 @@
         <action
             android:id="@+id/action_settings_to_audit"
             app:destination="@id/auditFragment" />
+        <action
+            android:id="@+id/action_settings_to_backup"
+            app:destination="@id/backupFragment" />
     </fragment>
 
     <fragment
@@ -90,6 +97,31 @@
     <fragment
         android:id="@+id/auditFragment"
         android:name="com.showerideas.aura.ui.audit.AuditFragment"
-        android:label="Exchange history" />
+        android:label="Exchange history">
+        <action
+            android:id="@+id/action_audit_to_analytics"
+            app:destination="@id/analyticsFragment" />
+    </fragment>
+
+
+    <!-- Phase 9.2: On-device analytics screen -->
+    <fragment
+        android:id="@+id/analyticsFragment"
+        android:name="com.showerideas.aura.ui.audit.AnalyticsFragment"
+        android:label="Analytics" />
+
+
+    <!-- Phase 9.3: Gesture Library -->
+    <fragment
+        android:id="@+id/gestureLibraryFragment"
+        android:name="com.showerideas.aura.ui.profile.GestureLibraryFragment"
+        android:label="Gesture Library" />
+
+
+    <!-- Phase 6.10: Encrypted backup screen -->
+    <fragment
+        android:id="@+id/backupFragment"
+        android:name="com.showerideas.aura.ui.settings.BackupFragment"
+        android:label="Backup &amp; Restore" />
 
 </navigation>

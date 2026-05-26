@@ -376,4 +376,113 @@
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
     <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Route relay via Tor</string>
+    <string name="settings_tor_proxy_subtitle">Requires Orbot. Routes QR relay traffic anonymously via Tor.</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbot app not installed — install it from F-Droid to enable Tor routing.</string>
+
+
+    <!-- Phase 9.2 — On-device analytics screen -->
+    <string name="analytics_title">Analytics</string>
+    <string name="analytics_total">Total exchanges</string>
+    <string name="analytics_success_rate">Success rate</string>
+    <string name="analytics_weekly_header">Last 7 days</string>
+    <string name="analytics_top_contacts_header">Top contacts</string>
+    <string name="analytics_empty">No exchange data yet.</string>
+    <string name="analytics_no_data_this_week">No exchanges this week.</string>
+    <string name="analytics_no_recurring">No recurring contacts yet.</string>
+    <string name="analytics_export_csv">Export CSV</string>
+    <string name="analytics_export_done">Analytics CSV saved to Downloads</string>
+    <string name="analytics_export_empty">No data to export.</string>
+    <string name="analytics_export_failed">Export failed — check storage permission.</string>
+
+    <plurals name="analytics_exchanges_count">
+        <item quantity="one">1 exchange</item>
+        <item quantity="other">%d exchanges</item>
+    </plurals>
+
+    <!-- Phase 9.3 — Gesture Library screen -->
+    <string name="gesture_library_title">Gesture Library</string>
+    <string name="gesture_library_enrolled">Enrolled</string>
+    <string name="gesture_library_empty_slot">Empty</string>
+    <string name="gesture_library_enroll">Enroll gesture</string>
+    <string name="gesture_library_enroll_hint">Go to Profile to record gesture %1$d.</string>
+    <string name="gesture_library_test">Test</string>
+    <string name="gesture_library_test_coming_soon">Live test coming in a future update.</string>
+    <string name="gesture_library_rename">Rename</string>
+    <string name="gesture_library_rename_title">Rename gesture</string>
+    <string name="gesture_library_delete">Delete</string>
+    <string name="gesture_library_delete_title">Delete gesture?</string>
+    <string name="gesture_library_delete_message">Delete "%1$s"? You will need to re-enroll to use this slot again.</string>
+    <string name="gesture_library_deleted">Gesture deleted</string>
+    <string name="gesture_library_enrolled_at">Enrolled %1$s</string>
+
+
+    <!-- Phase 6.10 — Encrypted backup / restore -->
+    <string name="backup_title">Backup &amp; Restore</string>
+    <string name="backup_description">Export your contacts as an encrypted file. Choose a strong passphrase — lost passphrases cannot be recovered.</string>
+    <string name="backup_export_title">Export backup</string>
+    <string name="backup_export_subtitle">Save all contacts to an encrypted .aurbak file.</string>
+    <string name="backup_restore_title">Restore backup</string>
+    <string name="backup_restore_subtitle">Import contacts from a previously exported .aurbak file. Existing contacts with the same ID will be updated.</string>
+    <string name="backup_action_export">Export encrypted backup</string>
+    <string name="backup_action_restore">Import from backup</string>
+    <string name="backup_passphrase_hint">Encryption passphrase</string>
+    <string name="backup_passphrase_export_title">Set backup passphrase</string>
+    <string name="backup_passphrase_export_message">Choose a strong passphrase to encrypt your backup. You will need it to restore.</string>
+    <string name="backup_passphrase_restore_title">Enter backup passphrase</string>
+    <string name="backup_passphrase_restore_message">Enter the passphrase you used when creating this backup.</string>
+    <string name="backup_passphrase_empty">Passphrase cannot be empty.</string>
+    <string name="settings_backup_restore">Backup &amp; restore</string>
+
+
+<!-- Phase 7.4 Enterprise/MDM -->
+    <string name="enterprise_managed">Device managed by your organisation</string>
+    <string name="enterprise_unmanaged">No MDM policy active</string>
+    <string name="enterprise_enforced">Enforced by policy</string>
+    <string name="enterprise_not_enforced">Not enforced</string>
+    <string name="enterprise_settings_title">Enterprise Policy</string>
+    <string name="enterprise_max_attempts">Max auth attempts</string>
+    <string name="enterprise_retention_days">Audit log retention (days)</string>
+    <string name="enterprise_require_sas">Require SAS verification</string>
+    <string name="enterprise_backup_disabled">Backup disabled</string>
+    <string name="enterprise_tor_disabled">Tor proxy disabled</string>
+    <string name="enterprise_pin_lock">PIN lock before exchange</string>
+
+    <!-- Phase 10.4 — Backup/restore polish -->
+    <string name="backup_passphrase_hint">Passphrase</string>
+    <string name="backup_passphrase_confirm_hint">Confirm passphrase</string>
+    <string name="backup_passphrase_mismatch">Passphrases do not match — please try again.</string>
+    <string name="backup_restore_confirm_title">Restore contacts?</string>
+    <string name="backup_status_no_contacts">No contacts to export.</string>
+    <string name="backup_status_export_failed">Export failed: %1$s</string>
+    <string name="backup_status_read_failed">Could not read backup file.</string>
+    <string name="backup_status_restore_wrong_passphrase">Restore failed — check your passphrase and try again.</string>
+    <string name="backup_status_restore_failed">Restore failed: %1$s</string>
+
+    <plurals name="backup_status_export_success">
+        <item quantity="one">Backup saved — %1$d contact exported.</item>
+        <item quantity="other">Backup saved — %1$d contacts exported.</item>
+    </plurals>
+    <plurals name="backup_status_restore_success">
+        <item quantity="one">Restored %1$d contact successfully.</item>
+        <item quantity="other">Restored %1$d contacts successfully.</item>
+    </plurals>
+    <plurals name="backup_restore_confirm_message">
+        <item quantity="one">This will merge %1$d contact from the backup into your current contacts. Existing contacts with the same ID will be updated.</item>
+        <item quantity="other">This will merge %1$d contacts from the backup into your current contacts. Existing contacts with the same IDs will be updated.</item>
+    </plurals>
+    <plurals name="backup_contact_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
+
 </resources>

@@ -8,6 +8,7 @@ import com.showerideas.aura.data.local.ContactDao
 import com.showerideas.aura.data.local.ExchangeAuditDao
 import com.showerideas.aura.data.local.KnownPeerDao
 import com.showerideas.aura.data.local.Migrations
+import com.showerideas.aura.data.SharePresetDao
 import com.showerideas.aura.data.local.ProfileDao
 import dagger.Module
 import dagger.Provides
@@ -50,4 +51,9 @@ object DatabaseModule {
     @Provides
     fun provideExchangeAuditDao(db: AppDatabase): ExchangeAuditDao =
         db.exchangeAuditDao()
+
+    /** v9: Share preset DAO (Phase 9.1). */
+    @Provides
+    fun provideSharePresetDao(db: AppDatabase): SharePresetDao =
+        db.sharePresetDao()
 }

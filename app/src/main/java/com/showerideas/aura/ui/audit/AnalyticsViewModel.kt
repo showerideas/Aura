@@ -22,9 +22,8 @@ class AnalyticsViewModel @Inject constructor(
 
     data class AnalyticsState(
         val weeklyExchangeCounts: List<Pair<String, Int>> = emptyList(),  // day label → count
-        val topContacts: List<Pair<String, Int>> = emptyList(),           // name → count
+        val topContacts: List<Pair<String, Int>> = emptyList(),           // identity key hash → count
         val successRate: Float = 0f,
-        val avgSessionDurationMs: Long = 0L,
         val totalExchanges: Int = 0
     )
 
@@ -37,7 +36,7 @@ class AnalyticsViewModel @Inject constructor(
 
     private fun loadAnalytics() {
         viewModelScope.launch {
-            auditRepository.getAllEntries().collect { entries ->
+            auditRepository.allEntries.collect { entries ->
                 if (entries.isEmpty()) {
                     _state.value = AnalyticsState()
                     return@collect
@@ -46,36 +45,30 @@ class AnalyticsViewModel @Inject constructor(
                 val weekAgo = now - 7L * 24 * 60 * 60 * 1000
 
                 // Weekly counts by day (last 7 days)
-                val weeklyEntries = entries.filter { it.startedAt >= weekAgo }
+                val weeklyEntries = entries.filter { it.timestampMs >= weekAgo }
                 val dayBuckets = mutableMapOf<String, Int>()
                 weeklyEntries.forEach { entry ->
-                    val label = android.text.format.DateFormat.format("E", entry.startedAt).toString()
+                    val label = android.text.format.DateFormat.format("E", entry.timestampMs).toString()
                     dayBuckets[label] = (dayBuckets[label] ?: 0) + 1
                 }
 
-                // Top-10 recurring contacts
-                val contactCounts = entries
-                    .groupBy { it.peerDisplayName ?: "Unknown" }
-                    .mapValues { it.value.size }
-                    .entries.sortedByDescending { it.value }
+                // Top-10 recurring contacts (by identity key hash)
+                val contactCounts: List<Pair<String, Int>> = entries
+                    .groupBy { it.peerIdentityKeyHash ?: "Unknown" }
+                    .mapValues { (_, v) -> v.size }
+                    .entries
+                    .sortedByDescending { (_, count) -> count }
                     .take(10)
-                    .map { it.key to it.value }
+                    .map { (key, count) -> key to count }
 
                 // Success rate
                 val successCount = entries.count { it.outcome == "SUCCESS" }
                 val successRate = if (entries.isNotEmpty()) successCount.toFloat() / entries.size else 0f
 
-                // Average session duration
-                val durations = entries.mapNotNull {
-                    if (it.durationMs > 0) it.durationMs else null
-                }
-                val avgDuration = if (durations.isNotEmpty()) durations.average().toLong() else 0L
-
                 _state.value = AnalyticsState(
-                    weeklyExchangeCounts = dayBuckets.entries.map { it.key to it.value },
+                    weeklyExchangeCounts = dayBuckets.entries.map { (k, v) -> k to v },
                     topContacts = contactCounts,
                     successRate = successRate,
-                    avgSessionDurationMs = avgDuration,
                     totalExchanges = entries.size
                 )
             }
@@ -84,10 +77,10 @@ class AnalyticsViewModel @Inject constructor(
 
     fun exportToCsv(outputFile: File) {
         viewModelScope.launch {
-            auditRepository.getAllEntries().collect { entries ->
-                val sb = StringBuilder("timestamp,peer,outcome,durationMs\n")
+            auditRepository.allEntries.collect { entries ->
+                val sb = StringBuilder("timestamp,peerKeyHash,outcome,channel\n")
                 entries.forEach { e ->
-                    sb.append("${e.startedAt},${e.peerDisplayName ?: ""},${e.outcome},${e.durationMs}\n")
+                    sb.append("${e.timestampMs},${e.peerIdentityKeyHash ?: ""},${e.outcome},${e.channel}\n")
                 }
                 outputFile.writeText(sb.toString())
             }

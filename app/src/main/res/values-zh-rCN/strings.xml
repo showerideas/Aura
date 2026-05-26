@@ -297,4 +297,61 @@
     <string name="action_share_card">分享名片链接</string>
     <string name="share_card_chooser_title">分享我的AURA名片</string>
     <string name="share_card_text">这是我的AURA名片：%1$s</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
+    <string name="cd_btn_exchange">Start exchange</string>
+    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_qr_scan">Scan QR code</string>
+    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_btn_profile_switch">Switch profile</string>
+
+    <!-- Phase 6.11 — Home screen shortcut labels -->
+    <string name="shortcut_start_exchange_short">Exchange</string>
+    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
+    <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">通过Tor路由中继</string>
+    <string name="settings_tor_proxy_subtitle">需要Orbot。通过Tor匿名路由QR中继流量。</string>
+    <string name="settings_tor_proxy_orbot_missing">未安装Orbot — 从F-Droid安装以启用Tor路由。</string>
+
+
+    <!-- Phase 9.2 — Analytics -->
+    <string name="analytics_title">分析</string>
+    <string name="analytics_total">总交换次数</string>
+    <string name="analytics_success_rate">成功率</string>
+    <string name="analytics_weekly_header">过去7天</string>
+    <string name="analytics_top_contacts_header">常用联系人</string>
+    <string name="analytics_empty">暂无交换数据。</string>
+    <string name="analytics_no_data_this_week">本周无交换记录。</string>
+    <string name="analytics_no_recurring">暂无常用联系人。</string>
+    <string name="analytics_export_csv">导出CSV</string>
+    <string name="analytics_export_done">CSV已保存至下载</string>
+    <string name="analytics_export_empty">没有可导出的数据。</string>
+    <string name="analytics_export_failed">导出失败 — 请检查存储权限。</string>
+
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">手势库</string>
+    <string name="gesture_library_enrolled">已注册</string>
+    <string name="gesture_library_empty_slot">空</string>
+    <string name="gesture_library_enroll">注册手势</string>
+    <string name="gesture_library_enroll_hint">前往个人资料录制手势 %1$d。</string>
+    <string name="gesture_library_test">测试</string>
+    <string name="gesture_library_test_coming_soon">实时测试将在未来更新中提供。</string>
+    <string name="gesture_library_rename">重命名</string>
+    <string name="gesture_library_rename_title">重命名手势</string>
+    <string name="gesture_library_delete">删除</string>
+    <string name="gesture_library_delete_title">删除手势？</string>
+    <string name="gesture_library_delete_message">删除"%1$s"？您需要重新注册才能使用此插槽。</string>
+    <string name="gesture_library_deleted">手势已删除</string>
+    <string name="gesture_library_enrolled_at">注册于 %1$s</string>
+
 </resources>

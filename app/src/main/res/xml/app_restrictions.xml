@@ -1,45 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Phase 7.4 — Enterprise MDM managed configuration keys.
-    Push these via your EMM (Managed Google Play, SOTI, VMware, etc.)
+    Phase 7.4 / 7.5 — Managed App Configuration schema.
+
+    EMM administrators configure these restrictions via the managed app config
+    in their MDM console (e.g. VMware Workspace ONE, Microsoft Intune,
+    Google endpoint management). The Android RestrictionsManager delivers the
+    values to EnterprisePolicy at runtime.
+
+    F-Droid note: this file is included in the FOSS flavor and has no GMS
+    dependency — RestrictionsManager is part of AOSP.
 -->
 <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
 
     <restriction
-        android:key="allowed_auth_methods"
-        android:title="Allowed Authentication Methods"
-        android:restrictionType="choice"
-        android:description="Restrict which authentication methods employees may use."
-        android:defaultValue="both"
-        android:entries="@array/auth_method_entries"
-        android:entryValues="@array/auth_method_values" />
+        android:key="max_gesture_attempts"
+        android:title="Maximum gesture authentication attempts"
+        android:description="Number of failed gesture attempts before lockout. Range: 1–10."
+        android:restrictionType="integer"
+        android:defaultValue="5" />
 
     <restriction
-        android:key="qr_relay_enabled"
-        android:title="Enable QR Code Relay"
+        android:key="require_sas_verification"
+        android:title="Require SAS verification"
+        android:description="When enabled, exchanges cannot complete without SAS code confirmation."
         android:restrictionType="bool"
-        android:description="Allow QR code relay for contact exchange."
-        android:defaultValue="true" />
+        android:defaultValue="false" />
 
     <restriction
-        android:key="min_gesture_similarity"
-        android:title="Minimum Gesture Similarity Threshold"
-        android:restrictionType="string"
-        android:description="Float 0.0–1.0. Higher = stricter gesture match required."
-        android:defaultValue="0.75" />
+        android:key="disable_backup"
+        android:title="Disable encrypted backup"
+        android:description="Hides and blocks the backup/restore feature."
+        android:restrictionType="bool"
+        android:defaultValue="false" />
 
     <restriction
         android:key="audit_log_retention_days"
-        android:title="Audit Log Retention (days)"
+        android:title="Audit log retention (days)"
+        android:description="Number of days to keep exchange audit records. 0 = keep forever."
         android:restrictionType="integer"
-        android:description="Number of days to retain exchange audit log entries."
         android:defaultValue="90" />
 
     <restriction
-        android:key="force_key_rotation_days"
-        android:title="Force Key Rotation (days)"
-        android:restrictionType="integer"
-        android:description="Force identity key rotation after N days. 0 = disabled."
-        android:defaultValue="0" />
+        android:key="disable_tor_proxy"
+        android:title="Disable Tor/Orbot proxy"
+        android:description="Hides the Tor anonymisation toggle and prevents proxy use."
+        android:restrictionType="bool"
+        android:defaultValue="false" />
+
+    <restriction
+        android:key="enforce_pin_lock"
+        android:title="Enforce PIN lock before exchange"
+        android:description="Requires the user to re-authenticate with device PIN before each exchange."
+        android:restrictionType="bool"
+        android:defaultValue="false" />
 
 </restrictions>

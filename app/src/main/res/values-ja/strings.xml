@@ -297,4 +297,61 @@
     <string name="action_share_card">カードリンクを共有</string>
     <string name="share_card_chooser_title">AURAカードを共有</string>
     <string name="share_card_text">私のAURAカードはこちら: %1$s</string>
+
+    <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
+    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
+    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
+    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
+    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
+    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
+    <string name="cd_btn_exchange">Start exchange</string>
+    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_qr_scan">Scan QR code</string>
+    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_btn_profile_switch">Switch profile</string>
+
+    <!-- Phase 6.11 — Home screen shortcut labels -->
+    <string name="shortcut_start_exchange_short">Exchange</string>
+    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
+    <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Tor経由でリレー</string>
+    <string name="settings_tor_proxy_subtitle">Orbotが必要です。QRリレーのトラフィックをTor経由で匿名化します。</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbotがインストールされていません — F-DroidからインストールしてTorを有効にしてください。</string>
+
+
+    <!-- Phase 9.2 — Analytics -->
+    <string name="analytics_title">分析</string>
+    <string name="analytics_total">総交換数</string>
+    <string name="analytics_success_rate">成功率</string>
+    <string name="analytics_weekly_header">過去7日間</string>
+    <string name="analytics_top_contacts_header">上位の連絡先</string>
+    <string name="analytics_empty">まだ交換データがありません。</string>
+    <string name="analytics_no_data_this_week">今週の交換はありません。</string>
+    <string name="analytics_no_recurring">まだ常連連絡先はありません。</string>
+    <string name="analytics_export_csv">CSVをエクスポート</string>
+    <string name="analytics_export_done">CSVをダウンロードに保存しました</string>
+    <string name="analytics_export_empty">エクスポートするデータがありません。</string>
+    <string name="analytics_export_failed">エクスポート失敗 — ストレージ権限を確認してください。</string>
+
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">ジェスチャーライブラリ</string>
+    <string name="gesture_library_enrolled">登録済み</string>
+    <string name="gesture_library_empty_slot">空き</string>
+    <string name="gesture_library_enroll">ジェスチャーを登録</string>
+    <string name="gesture_library_enroll_hint">ジェスチャー%1$dを録画するにはプロフィールへ。</string>
+    <string name="gesture_library_test">テスト</string>
+    <string name="gesture_library_test_coming_soon">ライブテストは将来のアップデートで追加されます。</string>
+    <string name="gesture_library_rename">名前変更</string>
+    <string name="gesture_library_rename_title">ジェスチャーの名前変更</string>
+    <string name="gesture_library_delete">削除</string>
+    <string name="gesture_library_delete_title">ジェスチャーを削除しますか？</string>
+    <string name="gesture_library_delete_message">「%1$s」を削除しますか？このスロットを使用するには再登録が必要です。</string>
+    <string name="gesture_library_deleted">ジェスチャーを削除しました</string>
+    <string name="gesture_library_enrolled_at">%1$sに登録</string>
+
 </resources>

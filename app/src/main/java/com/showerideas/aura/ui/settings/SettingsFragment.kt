@@ -66,6 +66,7 @@ class SettingsFragment : Fragment() {
         wireActivationSection()
         wireAccessibilitySection()
         wireSecuritySection()
+        wireTorSection()
         wireDataSection()
         wireAboutSection()
     }
@@ -240,7 +241,42 @@ class SettingsFragment : Fragment() {
         }
     }
 
+
+    // -------------------------------------------------------------------------
+    // Phase 8.3 — Tor/Orbot anonymization proxy
+    // -------------------------------------------------------------------------
+
+    private fun wireTorSection() {
+        val orbotInstalled = viewModel.isOrbotInstalled
+
+        // Update subtitle to reflect Orbot install status
+        binding.tvTorProxySubtitle.text = if (orbotInstalled) {
+            getString(R.string.settings_tor_proxy_subtitle)
+        } else {
+            getString(R.string.settings_tor_proxy_orbot_missing)
+        }
+        binding.switchTorProxy.isEnabled = orbotInstalled
+
+        // Observe persisted preference and keep switch in sync
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.torProxyEnabled.collect { enabled ->
+                    if (binding.switchTorProxy.isChecked != enabled) {
+                        binding.switchTorProxy.isChecked = enabled
+                    }
+                }
+            }
+        }
+
+        binding.switchTorProxy.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setTorProxyEnabled(isChecked)
+        }
+    }
+
     private fun wireDataSection() {
+        binding.rowBackupRestore.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_backup)
+        }
         binding.rowBlockedDevices.setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_blocked_devices)
         }

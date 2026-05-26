@@ -174,6 +174,21 @@ object Migrations {
         }
     }
 
+
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS share_presets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    fieldSet TEXT NOT NULL,
+                    lastUsedAt INTEGER NOT NULL DEFAULT 0,
+                    isDefault INTEGER NOT NULL DEFAULT 0
+                )"""
+            )
+        }
+    }
+
     /** Ordered list of every migration — passed to Room.databaseBuilder. */
     val ALL: Array<Migration> = arrayOf(
         MIGRATION_1_2,
