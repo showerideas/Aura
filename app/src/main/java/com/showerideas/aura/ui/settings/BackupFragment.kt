@@ -13,23 +13,26 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentBackupBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
- * Phase 6.10 — Encrypted backup / restore screen.
+ * Phase 10.4 — Encrypted backup / restore screen (polished).
  *
- * Allows the user to:
- *   - Export all contacts to an AES-256-GCM encrypted file in Downloads.
- *   - Restore contacts from a previously exported backup file.
- *
- * Both operations require a passphrase. The passphrase never leaves the device
- * and is zeroed from memory as soon as the key derivation is complete.
- *
- * Navigation: Settings → Data section → "Backup & restore".
+ * Improvements over Phase 6.10 baseline:
+ * - Export filename includes the current date: `aura_backup_YYYYMMDD.aurbak`
+ * - Passphrase confirmation field on the export dialog catches typos before
+ *   the key derivation runs (a typo locks the user out of their own backup).
+ * - Progress overlay driven by [BackupViewModel.isLoading] blocks both buttons
+ *   during the ~1 s PBKDF2 operation.
+ * - Contact count displayed on the screen so the user can see how many
+ *   contacts will be included before starting the export.
+ * - Pre-restore confirmation dialog: "This will update N contacts. Proceed?"
  */
 @AndroidEntryPoint
 class BackupFragment : Fragment() {
@@ -39,7 +42,6 @@ class BackupFragment : Fragment() {
 
     private val viewModel: BackupViewModel by viewModels()
 
-    // SAF file pickers
     private val exportFilePicker = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri: Uri? ->
@@ -65,7 +67,7 @@ class BackupFragment : Fragment() {
         binding.toolbarBackup.setNavigationOnClickListener { findNavController().navigateUp() }
 
         binding.btnExportBackup.setOnClickListener {
-            exportFilePicker.launch("aura_backup.aurbak")
+            exportFilePicker.launch(exportFileName())
         }
 
         binding.btnImportBackup.setOnClickListener {
@@ -80,60 +82,121 @@ class BackupFragment : Fragment() {
                 }
             }
         }
+
+        // Progress overlay — disable buttons while crypto is running
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isLoading.collect { loading ->
+                binding.progressBackup.visibility = if (loading) View.VISIBLE else View.GONE
+                binding.btnExportBackup.isEnabled = !loading
+                binding.btnImportBackup.isEnabled = !loading
+            }
+        }
+
+        // Live contact count
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.contactCount.collect { count ->
+                binding.tvContactCount.text = resources.getQuantityString(
+                    R.plurals.backup_contact_count, count, count
+                )
+            }
+        }
     }
 
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
     // Passphrase dialogs
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Export dialog: two passphrase fields — entry + confirmation.
+     * Confirms the passphrases match before launching the export operation.
+     */
     private fun promptPassphraseForExport(destUri: Uri) {
-        showPassphraseDialog(
-            titleRes   = R.string.backup_passphrase_export_title,
-            messageRes = R.string.backup_passphrase_export_message,
-            confirmRes = R.string.backup_action_export
-        ) { passphrase ->
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.exportContacts(destUri, passphrase)
-            }
-        }
-    }
-
-    private fun promptPassphraseForRestore(srcUri: Uri) {
-        showPassphraseDialog(
-            titleRes   = R.string.backup_passphrase_restore_title,
-            messageRes = R.string.backup_passphrase_restore_message,
-            confirmRes = R.string.backup_action_restore
-        ) { passphrase ->
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.restoreContacts(srcUri, passphrase)
-            }
-        }
-    }
-
-    private fun showPassphraseDialog(
-        titleRes: Int, messageRes: Int, confirmRes: Int,
-        onConfirm: (CharArray) -> Unit
-    ) {
-        val inputLayout = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_passphrase_input, null)
-        val textInput = inputLayout.findViewById<TextInputEditText>(R.id.et_passphrase)
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_passphrase_export, null)
+        val etPassphrase = dialogView.findViewById<TextInputEditText>(R.id.et_passphrase)
+        val etConfirm    = dialogView.findViewById<TextInputEditText>(R.id.et_passphrase_confirm)
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(titleRes)
-            .setMessage(messageRes)
-            .setView(inputLayout)
-            .setPositiveButton(confirmRes) { _, _ ->
-                val passphrase = textInput.text.toString().toCharArray()
-                // Zero the EditText content immediately
-                textInput.text?.clear()
-                if (passphrase.isEmpty()) {
-                    Toast.makeText(requireContext(), R.string.backup_passphrase_empty, Toast.LENGTH_SHORT).show()
-                } else {
-                    onConfirm(passphrase)
+            .setTitle(R.string.backup_passphrase_export_title)
+            .setMessage(R.string.backup_passphrase_export_message)
+            .setView(dialogView)
+            .setPositiveButton(R.string.backup_action_export) { _, _ ->
+                val pass    = etPassphrase.text.toString()
+                val confirm = etConfirm.text.toString()
+                etPassphrase.text?.clear()
+                etConfirm.text?.clear()
+
+                when {
+                    pass.isEmpty() ->
+                        Toast.makeText(requireContext(), R.string.backup_passphrase_empty, Toast.LENGTH_SHORT).show()
+                    pass != confirm ->
+                        Toast.makeText(requireContext(), R.string.backup_passphrase_mismatch, Toast.LENGTH_SHORT).show()
+                    else ->
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            viewModel.exportContacts(destUri, pass.toCharArray())
+                        }
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    /**
+     * Restore dialog: single passphrase field, followed by a confirmation dialog
+     * that shows the contact count about to be merged.
+     */
+    private fun promptPassphraseForRestore(srcUri: Uri) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_passphrase_input, null)
+        val etPassphrase = dialogView.findViewById<TextInputEditText>(R.id.et_passphrase)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.backup_passphrase_restore_title)
+            .setMessage(R.string.backup_passphrase_restore_message)
+            .setView(dialogView)
+            .setPositiveButton(R.string.backup_action_restore) { _, _ ->
+                val pass = etPassphrase.text.toString().toCharArray()
+                etPassphrase.text?.clear()
+                if (pass.isEmpty()) {
+                    Toast.makeText(requireContext(), R.string.backup_passphrase_empty, Toast.LENGTH_SHORT).show()
+                } else {
+                    showRestoreConfirmation(srcUri, pass)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Confirmation dialog shown before restore: "This will update your contacts. Proceed?"
+     * Gives the user one last chance to cancel before data is merged.
+     */
+    private fun showRestoreConfirmation(srcUri: Uri, passphrase: CharArray) {
+        val count = viewModel.contactCount.value
+        val msg   = resources.getQuantityString(R.plurals.backup_restore_confirm_message, count, count)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.backup_restore_confirm_title)
+            .setMessage(msg)
+            .setPositiveButton(R.string.backup_action_restore) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.restoreContacts(srcUri, passphrase)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ ->
+                passphrase.fill('\u0000')  // zero passphrase if user cancels
+            }
+            .show()
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    /** Generate a date-stamped filename: `aura_backup_20260526.aurbak` */
+    private fun exportFileName(): String {
+        val date = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+        return "aura_backup_$date.aurbak"
     }
 
     override fun onDestroyView() {
