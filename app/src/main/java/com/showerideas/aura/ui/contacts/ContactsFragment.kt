@@ -42,6 +42,17 @@ class ContactsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Phase 6.8 / C1 — show pre-filled sheet when launched from a deeplink.
+        @Suppress("UNCHECKED_CAST")
+        val deeplinkFields = arguments
+            ?.getSerializable(DeeplinkContactSheet.KEY_DEEPLINK_FIELDS) as? HashMap<String, String>
+        if (!deeplinkFields.isNullOrEmpty() && savedInstanceState == null) {
+            DeeplinkContactSheet.newInstance(deeplinkFields)
+                .show(childFragmentManager, DeeplinkContactSheet.TAG)
+            // Clear args so the sheet isn't shown again on config change.
+            arguments?.remove(DeeplinkContactSheet.KEY_DEEPLINK_FIELDS)
+        }
+
         // "Export all" toolbar action.
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {

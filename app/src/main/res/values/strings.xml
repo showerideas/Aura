@@ -366,6 +366,13 @@
     <string name="share_card_chooser_title">Share your AURA card</string>
     <string name="share_card_text">Here\'s my AURA card: %1$s</string>
 
+    <!-- Phase 6.8 / C1 — Deeplink contact import sheet -->
+    <string name="deeplink_sheet_title">Add Contact</string>
+    <string name="deeplink_sheet_subtitle">Someone shared their AURA card with you</string>
+    <string name="deeplink_sheet_save">Save Contact</string>
+    <string name="deeplink_sheet_name_required">Name is required</string>
+    <string name="deeplink_sheet_saved">Contact saved</string>
+
     <!-- Phase 5.3 â Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>
     <string name="cd_btn_nfc">NFC tap exchange</string>

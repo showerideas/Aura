@@ -298,6 +298,13 @@
     <string name="share_card_chooser_title">AURAカードを共有</string>
     <string name="share_card_text">私のAURAカードはこちら: %1$s</string>
 
+    <!-- Phase 6.8 / C1 — Deeplink contact import sheet -->
+    <string name="deeplink_sheet_title">連絡先を追加</string>
+    <string name="deeplink_sheet_subtitle">誰かがAURAカードをあなたと共有しました</string>
+    <string name="deeplink_sheet_save">連絡先を保存</string>
+    <string name="deeplink_sheet_name_required">名前は必須です</string>
+    <string name="deeplink_sheet_saved">連絡先を保存しました</string>
+
     <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
     <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
     <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>

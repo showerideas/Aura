@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.model.Contact
+import timber.log.Timber
+import java.util.UUID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -70,6 +72,24 @@ class ContactsViewModel @Inject constructor(
     fun deleteContact(contact: Contact) {
         viewModelScope.launch {
             contactRepository.delete(contact)
+        }
+    }
+
+    /**
+     * Phase 6.8 / C1 — Save a contact decoded from an AURA share deeplink.
+     *
+     * [fields] is the map produced by [com.showerideas.aura.utils.DeeplinkUtils.decodeShareUrl].
+     * Uses [ContactRepository.saveDeduped] so returning contacts merge instead of duplicate.
+     */
+    fun saveDeeplinkContact(fields: Map<String, String>) {
+        viewModelScope.launch {
+            val contact = Contact.fromMap(
+                id         = UUID.randomUUID().toString(),
+                map        = fields,
+                endpointId = "deeplink"
+            )
+            Timber.i("ContactsViewModel: saving deeplink contact %s", contact.displayName)
+            contactRepository.saveDeduped(contact)
         }
     }
 }
