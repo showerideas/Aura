@@ -227,20 +227,48 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         val serviceRequest = WifiP2pDnsSdServiceRequest.newInstance()
         manager.addServiceRequest(channel, serviceRequest, object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
-                manager.discoverServices(channel, object : WifiP2pManager.ActionListener {
-                    override fun onSuccess() { Timber.d("WifiDirect: service discovery started") }
-                    override fun onFailure(reason: Int) {
-                        Timber.w("WifiDirect: discoverServices failed (reason=$reason) — falling back to peer discovery")
-                        // Fallback: plain peer discovery (no DNS-SD)
-                        manager.discoverPeers(channel, object : WifiP2pManager.ActionListener {
-                            override fun onSuccess() { Timber.d("WifiDirect: fallback peer discovery started") }
-                            override fun onFailure(r: Int) { Timber.e("WifiDirect: discoverPeers also failed (reason=$r)") }
-                        })
-                    }
-                })
+                startDiscoveryWithBusyRetry(attempt = 0)
             }
             override fun onFailure(reason: Int) {
                 Timber.e("WifiDirect: addServiceRequest failed (reason=$reason)")
+            }
+        })
+    }
+
+    /**
+     * Calls [WifiP2pManager.discoverServices] with a Samsung/MIUI BUSY-error retry loop.
+     *
+     * On some OEM ROMs (Samsung One UI, Xiaomi MIUI) `discoverServices` returns
+     * [WifiP2pManager.BUSY] (reason=2) if called too soon after a previous discovery
+     * session. We retry up to [DISCOVERY_BUSY_MAX_RETRIES] times with a fixed
+     * [DISCOVERY_BUSY_RETRY_DELAY_MS] delay before falling back to plain peer
+     * discovery so the app keeps working even if DNS-SD is unavailable.
+     */
+    private fun startDiscoveryWithBusyRetry(attempt: Int) {
+        manager.discoverServices(channel, object : WifiP2pManager.ActionListener {
+            override fun onSuccess() {
+                Timber.d("WifiDirect: service discovery started (attempt=${attempt + 1})")
+            }
+            override fun onFailure(reason: Int) {
+                if (reason == WifiP2pManager.BUSY && attempt < DISCOVERY_BUSY_MAX_RETRIES) {
+                    Timber.w(
+                        "WifiDirect: discoverServices BUSY (attempt=${attempt + 1}/$DISCOVERY_BUSY_MAX_RETRIES)" +
+                        " — retrying in ${DISCOVERY_BUSY_RETRY_DELAY_MS}ms"
+                    )
+                    scope.launch {
+                        kotlinx.coroutines.delay(DISCOVERY_BUSY_RETRY_DELAY_MS)
+                        startDiscoveryWithBusyRetry(attempt + 1)
+                    }
+                } else {
+                    Timber.w(
+                        "WifiDirect: discoverServices failed (reason=$reason) — falling back to peer discovery"
+                    )
+                    // Fallback: plain peer discovery (no DNS-SD)
+                    manager.discoverPeers(channel, object : WifiP2pManager.ActionListener {
+                        override fun onSuccess() { Timber.d("WifiDirect: fallback peer discovery started") }
+                        override fun onFailure(r: Int) { Timber.e("WifiDirect: discoverPeers also failed (reason=$r)") }
+                    })
+                }
             }
         })
     }
@@ -373,9 +401,12 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
 
     private suspend fun startTcpServer(peerMac: String) {
         try {
-            val ss = ServerSocket(DATA_PORT).also { serverSocket = it }
-            Timber.d("WifiDirect: TCP server listening on port $DATA_PORT")
-            val socket = ss.accept()
+            val ss = ServerSocket(DATA_PORT).also {
+                it.soTimeout = SERVER_ACCEPT_TIMEOUT_MS
+                serverSocket = it
+            }
+            Timber.d("WifiDirect: TCP server listening on port $DATA_PORT (accept timeout=${SERVER_ACCEPT_TIMEOUT_MS}ms)")
+            val socket = ss.accept().also { it.soTimeout = READ_TIMEOUT_MS }
             val remoteName = discoveredPeers[peerMac] ?: peerMac
             onPeerSocketReady(peerMac, remoteName, socket, isIncoming = true)
         } catch (e: IOException) {
@@ -387,7 +418,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         // Retry a few times — the GO may not have its server socket ready yet
         repeat(MAX_CONNECT_RETRIES) { attempt ->
             try {
-                val socket = Socket(goAddress, DATA_PORT)
+                val socket = Socket(goAddress, DATA_PORT).also { it.soTimeout = READ_TIMEOUT_MS }
                 val remoteName = discoveredPeers[peerMac] ?: peerMac
                 onPeerSocketReady(peerMac, remoteName, socket, isIncoming = false)
                 return
@@ -513,6 +544,34 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
 
         /** Milliseconds between TCP connect retry attempts. */
         private const val CONNECT_RETRY_DELAY_MS = 600L
+
+        /**
+         * SO_TIMEOUT for [ServerSocket.accept]. If no client connects within this
+         * window the server socket is closed and the exchange times out gracefully.
+         * 30 s is generous for a local P2P link.
+         */
+        private const val SERVER_ACCEPT_TIMEOUT_MS = 30_000
+
+        /**
+         * SO_TIMEOUT applied to every data [Socket]. Prevents the receive loop from
+         * blocking indefinitely if the peer stops sending without closing the connection
+         * (e.g. process killed on Samsung/MIUI without a TCP FIN). 60 s covers the
+         * typical AURA exchange duration with room to spare.
+         */
+        private const val READ_TIMEOUT_MS = 60_000
+
+        /**
+         * Maximum retries for [WifiP2pManager.discoverServices] when the OS returns
+         * [WifiP2pManager.BUSY] (reason=2). Samsung One UI and Xiaomi MIUI routinely
+         * return BUSY if discovery is restarted within a few seconds.
+         */
+        private const val DISCOVERY_BUSY_MAX_RETRIES = 3
+
+        /**
+         * Delay between [WifiP2pManager.BUSY] discovery retries. 2 s gives the
+         * framework time to fully stop the previous discovery session.
+         */
+        private const val DISCOVERY_BUSY_RETRY_DELAY_MS = 2_000L
 
         /**
          * Returns true if Wi-Fi Direct is supported and currently enabled on [context]'s device.
