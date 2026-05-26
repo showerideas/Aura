@@ -68,6 +68,7 @@ class SettingsFragment : Fragment() {
         wireSecuritySection()
         wireTorSection()
         wireDataSection()
+        wireWearSection()
         wireAboutSection()
     }
 
@@ -312,6 +313,17 @@ class SettingsFragment : Fragment() {
                     }
                     .show()
             }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase F1 — Wear OS companion pairing
+    // -------------------------------------------------------------------------
+
+    private fun wireWearSection() {
+        binding.rowWearCompanion.setOnClickListener {
+            WearPairingBottomSheet()
+                .show(childFragmentManager, WearPairingBottomSheet.TAG)
         }
     }
 
