@@ -26,8 +26,15 @@ let package = Package(
         // MultipeerConnectivity is also system — included below via target linking.
     ],
     targets: [
+        // AuraCore — crypto primitives + profile model (no MPC dep; testable on macOS CI)
+        .target(
+            name: "AuraCore",
+            path: "Sources/AuraCore"
+        ),
+        // AuraCompanion — transport layer + exchange coordinator
         .target(
             name: "AuraCompanion",
+            dependencies: ["AuraCore"],
             path: "Sources/AuraCompanion",
             linkerSettings: [
                 // MultipeerConnectivity for Nearby-style peer discovery
@@ -36,10 +43,11 @@ let package = Package(
                 .linkedFramework("CryptoKit"),
             ]
         ),
+        // AuraCoreTests — pure logic tests; run on macOS CI without iOS simulator
         .testTarget(
-            name: "AuraCompanionTests",
-            dependencies: ["AuraCompanion"],
-            path: "Tests/AuraCompanionTests"
+            name: "AuraCoreTests",
+            dependencies: ["AuraCore"],
+            path: "Tests/AuraCoreTests"
         ),
     ]
 )
