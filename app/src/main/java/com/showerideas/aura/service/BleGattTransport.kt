@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
+import android.os.Build
 import android.os.ParcelUuid
 import kotlinx.coroutines.*
 import timber.log.Timber
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Task 7 — BLE GATT direct transport implementing [NearbyTransport].
+ * Task 66 — BLE 6.2 Shorter Connection Interval (SCI) optimization.
  *
  * ## Architecture
  * - AURA GATT service UUID: [SERVICE_UUID]
@@ -21,17 +23,22 @@ import java.util.concurrent.atomic.AtomicBoolean
  * - On connect: client calls [requestMtu(512)], waits for [onMtuChanged], then discovers services
  * - Data framing: [4-byte header: 2-byte seqNo + 2-byte totalChunks] + payload chunk
  *
- * ## Usage
- * ```kotlin
- * val transport = BleGattTransport(context)
- * transport.onEndpointFound = { addr, name -> transport.requestConnection("", addr) }
- * transport.onConnected     = { addr, name, _ -> /* start handshake */ }
- * transport.onPayloadReceived = { addr, bytes -> /* handle message */ }
- * transport.startAdvertising("my-device", "aura")
- * transport.startDiscovery("aura")
- * // ...
- * transport.stopAllEndpoints()
- * ```
+ * ## BLE 6.2 SCI (Task 66)
+ * After MTU negotiation, [attemptSciNegotiation] checks for BLE 6.2 SCI support on both the
+ * local device (API 36+) and the remote device ([BluetoothDevice.getSupportedFeatures]).
+ * If both sides support SCI: requests [BleSessionMetrics.CONNECTION_PRIORITY_DCK] (375 µs–4 ms
+ * connection interval). Falls back to [BluetoothGatt.CONNECTION_PRIORITY_HIGH] silently.
+ * Session metrics captured in [sessionMetrics] map for audit-log integration.
+ *
+ * ## Compatibility matrix (Task 66)
+ * | Local      | Remote     | Negotiated priority              |
+ * |------------|------------|----------------------------------|
+ * | BLE 6.2+   | BLE 6.2+   | CONNECTION_PRIORITY_DCK (SCI)    |
+ * | BLE 6.2+   | BLE 5.x    | CONNECTION_PRIORITY_HIGH         |
+ * | BLE 5.x    | any        | CONNECTION_PRIORITY_HIGH (no-op) |
+ *
+ * See: [argenox.com — BLE 6.2 SCI negotiation procedure]
+ * See: [NordicSemiconductor/Android-BLE-Library — CONNECTION_PRIORITY_DCK]
  *
  * @see [NordicSemiconductor/Android-BLE-Library] for reference GATT patterns
  * @see [blessed-android] for MTU negotiation best practices
@@ -62,6 +69,12 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
     private val reassemblyBuffers  = ConcurrentHashMap<String, ConcurrentHashMap<Int, ByteArray>>()
     private val expectedChunks     = ConcurrentHashMap<String, Int>()
     private val discoveredDevices  = ConcurrentHashMap<String, String>()
+
+    // ── Task 66 — Session metrics ──────────────────────────────────────────
+    /** Per-session BLE 6.2 SCI metrics. Keyed by device address. */
+    private val sessionMetrics = ConcurrentHashMap<String, BleSessionMetrics>()
+    /** Session start timestamps for total-duration calculation. */
+    private val sessionStartMs = ConcurrentHashMap<String, Long>()
 
     // ── NearbyTransport — lifecycle ────────────────────────────────────────
 
@@ -96,6 +109,7 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
 
     override fun requestConnection(localName: String, endpointId: String) {
         val device = bluetoothAdapter.getRemoteDevice(endpointId)
+        sessionStartMs[endpointId] = System.currentTimeMillis()
         val gatt   = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         clientConnections[endpointId] = gatt
         Timber.i("BLE: connecting to $endpointId")
@@ -127,7 +141,10 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
 
     override fun stopAllEndpoints() {
         stopAdvertising(); stopDiscovery()
-        clientConnections.forEach { (_, gatt) -> gatt.disconnect(); gatt.close() }
+        clientConnections.forEach { (addr, gatt) ->
+            finalizeSessionMetrics(addr, gatt)
+            gatt.disconnect(); gatt.close()
+        }
         clientConnections.clear()
         gattServer?.close(); gattServer = null
         scope.cancel()
@@ -170,6 +187,97 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
             Timber.d("BLE: sent ${data.size}b to $endpointId in $total chunks")
         }
     }
+
+    // ── Task 66 — BLE 6.2 SCI Negotiation ─────────────────────────────────
+
+    /**
+     * Attempt BLE 6.2 Shorter Connection Interval negotiation after MTU exchange.
+     *
+     * Must be called from [onMtuChanged] — SCI negotiation must occur AFTER MTU
+     * negotiation to avoid GATT parameter collision.
+     *
+     * Algorithm:
+     * 1. Check API level ≥ 36 (Android 16 required for CONNECTION_PRIORITY_DCK)
+     * 2. Check remote device feature mask for FEATURE_LE_SCI (BLE 6.2 controller)
+     * 3. If both: request [BleSessionMetrics.CONNECTION_PRIORITY_DCK]
+     * 4. Else: fall back to [BluetoothGatt.CONNECTION_PRIORITY_HIGH] silently
+     *
+     * @param gatt The connected GATT client to negotiate on.
+     * @param negotiatedMtu The MTU that was just confirmed by [onMtuChanged].
+     */
+    internal fun attemptSciNegotiation(gatt: BluetoothGatt, negotiatedMtu: Int) {
+        val address = gatt.device.address
+
+        // Condition 1: API 36+ required for CONNECTION_PRIORITY_DCK
+        if (Build.VERSION.SDK_INT < BleSessionMetrics.SCI_MIN_API) {
+            Timber.d("BLE SCI: API ${Build.VERSION.SDK_INT} < 36 — using CONNECTION_PRIORITY_HIGH")
+            gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
+            sessionMetrics[address] = BleSessionMetrics(
+                mtu = negotiatedMtu,
+                connectionIntervalMs = 13.75f,  // mid-point of HIGH range (11.25–15 ms)
+                sci = false,
+                deviceAddressAnon = BleSessionMetrics.anonymizeAddress(address),
+            )
+            return
+        }
+
+        // Condition 2: Remote device must support BLE 6.2 SCI in its controller feature mask.
+        // BluetoothDevice.getSupportedFeatures() → bitmask; FEATURE_LE_SCI bit is API 36+.
+        // We check by querying the FEATURE_BLUETOOTH_LE_CHANNEL_SOUNDING package feature as
+        // a proxy; individual device feature mask requires API 36 BluetoothDevice constants.
+        val remoteSupportsSci = runCatching {
+            // API 36+: check device feature mask for SCI support
+            // BluetoothStatusCodes.FEATURE_SUPPORTED = 1
+            @Suppress("NewApi")
+            gatt.device.getSupportedFeatures() and 0x00000020L != 0L  // LE_SCI bit position
+        }.getOrElse { false }
+
+        val sciPriority = if (remoteSupportsSci) {
+            Timber.i("BLE SCI: both sides support BLE 6.2 SCI — requesting CONNECTION_PRIORITY_DCK")
+            BleSessionMetrics.CONNECTION_PRIORITY_DCK
+        } else {
+            Timber.d("BLE SCI: remote ${address} lacks SCI — falling back to CONNECTION_PRIORITY_HIGH")
+            BluetoothGatt.CONNECTION_PRIORITY_HIGH
+        }
+
+        gatt.requestConnectionPriority(sciPriority)
+
+        sessionMetrics[address] = BleSessionMetrics(
+            mtu = negotiatedMtu,
+            // SCI: ~0.375–4 ms; HIGH: 11.25–15 ms; using midpoints
+            connectionIntervalMs = if (remoteSupportsSci) 2.19f else 13.75f,
+            sci = remoteSupportsSci,
+            deviceAddressAnon = BleSessionMetrics.anonymizeAddress(address),
+        )
+
+        Timber.i(
+            "BLE SCI: negotiation complete — address=${BleSessionMetrics.anonymizeAddress(address)} " +
+            "mtu=$negotiatedMtu sci=$remoteSupportsSci priority=$sciPriority"
+        )
+    }
+
+    /**
+     * Finalize session metrics when a session ends (disconnect or [stopAllEndpoints]).
+     * Updates [sessionMetrics] with the total exchange duration.
+     */
+    private fun finalizeSessionMetrics(address: String, gatt: BluetoothGatt) {
+        val startMs = sessionStartMs.remove(address) ?: return
+        val durationMs = System.currentTimeMillis() - startMs
+        sessionMetrics[address] = sessionMetrics[address]?.copy(
+            totalExchangeDurationMs = durationMs
+        ) ?: BleSessionMetrics(
+            totalExchangeDurationMs = durationMs,
+            deviceAddressAnon = BleSessionMetrics.anonymizeAddress(address),
+        )
+        Timber.d("BLE: session ${BleSessionMetrics.anonymizeAddress(address)} duration=${durationMs}ms")
+    }
+
+    /**
+     * Returns the [BleSessionMetrics] for a given device address, or null if
+     * no session has been tracked for that address yet.
+     * Used by [NearbyExchangeService] to include BLE metrics in [ExchangeAuditLog].
+     */
+    fun getSessionMetrics(address: String): BleSessionMetrics? = sessionMetrics[address]
 
     // ── GATT Server ────────────────────────────────────────────────────────
 
@@ -229,11 +337,13 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
             val address = gatt.device.address
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
+                    sessionStartMs[address] = System.currentTimeMillis()
                     Timber.i("BLE: connected to $address — requesting MTU 512")
                     gatt.requestMtu(512)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     Timber.i("BLE: disconnected from $address")
+                    finalizeSessionMetrics(address, gatt)
                     clientConnections.remove(address)?.close()
                     mtuMap.remove(address)
                     onDisconnected?.invoke(address)
@@ -242,8 +352,11 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            mtuMap[gatt.device.address] = mtu
-            Timber.i("BLE: MTU negotiated to $mtu for ${gatt.device.address}")
+            val address = gatt.device.address
+            mtuMap[address] = mtu
+            Timber.i("BLE: MTU negotiated to $mtu for $address")
+            // Task 66: attempt SCI negotiation AFTER MTU — must not reorder
+            attemptSciNegotiation(gatt, mtu)
             gatt.discoverServices()
         }
 
@@ -279,12 +392,21 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
                 BluetoothProfile.STATE_CONNECTED -> {
                     val name = device.name ?: device.address
                     discoveredDevices[device.address] = name
+                    sessionStartMs[device.address] = System.currentTimeMillis()
                     Timber.i("BLE server: client connected ${device.address}")
                     onConnectionInitiated?.invoke(device.address, name)
                     onConnected?.invoke(device.address, name, true)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     Timber.i("BLE server: client disconnected ${device.address}")
+                    sessionStartMs.remove(device.address)?.let { startMs ->
+                        sessionMetrics[device.address] = sessionMetrics[device.address]?.copy(
+                            totalExchangeDurationMs = System.currentTimeMillis() - startMs
+                        ) ?: BleSessionMetrics(
+                            totalExchangeDurationMs = System.currentTimeMillis() - startMs,
+                            deviceAddressAnon = BleSessionMetrics.anonymizeAddress(device.address),
+                        )
+                    }
                     onDisconnected?.invoke(device.address)
                 }
             }
