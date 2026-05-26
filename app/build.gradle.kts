@@ -266,6 +266,10 @@ dependencies {
     // 3-attempt retry — see the task registration below.
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
+
+    // Phase 8.1 — BouncyCastle PQC: ML-KEM-768 post-quantum KEM
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    implementation("org.bouncycastle:bcpqc-jdk18on:1.78.1")
     // Android Auto — Car App Library (Phase 7.3)
     implementation("androidx.car.app:app:1.4.0")
 
