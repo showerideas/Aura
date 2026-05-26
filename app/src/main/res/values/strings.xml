@@ -443,4 +443,17 @@
     <string name="backup_passphrase_empty">Passphrase cannot be empty.</string>
     <string name="settings_backup_restore">Backup &amp; restore</string>
 
+
+<!-- Phase 7.4 Enterprise/MDM -->
+    <string name="enterprise_managed">Device managed by your organisation</string>
+    <string name="enterprise_unmanaged">No MDM policy active</string>
+    <string name="enterprise_enforced">Enforced by policy</string>
+    <string name="enterprise_not_enforced">Not enforced</string>
+    <string name="enterprise_settings_title">Enterprise Policy</string>
+    <string name="enterprise_max_attempts">Max auth attempts</string>
+    <string name="enterprise_retention_days">Audit log retention (days)</string>
+    <string name="enterprise_require_sas">Require SAS verification</string>
+    <string name="enterprise_backup_disabled">Backup disabled</string>
+    <string name="enterprise_tor_disabled">Tor proxy disabled</string>
+    <string name="enterprise_pin_lock">PIN lock before exchange</string>
 </resources>

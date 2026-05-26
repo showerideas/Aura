@@ -1,43 +1,67 @@
+# F-Droid metadata for AURA — Gesture-biometric contact exchange
+# See: https://f-droid.org/docs/Build_Metadata_Reference/
+#
+# Phase 7.5: reproducible build configuration for the FOSS flavor.
+# Build server: Ubuntu 22.04 (F-Droid buildserver), JDK 17, Android SDK 35.
+
 Categories:
   - Security
-
-AuthorName: showerideas
-AuthorEmail: https://github.com/showerideas/Aura/issues
-SourceCode: https://github.com/showerideas/Aura
-IssueTracker: https://github.com/showerideas/Aura/issues
+  - Connectivity
 
 License: MIT
 
-AutoName: AURA
-Summary: Gesture-biometric contact exchange
-Description: |-
-  AURA is a gesture-biometric contact exchange app for Android. Share your
-  contact card with nearby peers using a hand gesture, NFC tap, or QR code —
-  with end-to-end encryption and Short Authentication String verification to
-  prevent MITM attacks.
+SourceCode: https://github.com/showerideas/Aura
+IssueTracker: https://github.com/showerideas/Aura/issues
+Changelog: https://github.com/showerideas/Aura/releases
 
-  All data stays on-device. No cloud accounts, no tracking, no ads.
+AutoName: AURA
+Summary: Gesture-biometric proximity contact exchange
+
+Description: |
+  AURA authenticates contact exchange using your hand geometry as a biometric.
+  Two people perform the same hand gesture simultaneously; MediaPipe extracts
+  a 63-float hand-landmark embedding for each device. The embeddings seed a
+  Double Ratchet key exchange (X3DH + per-message forward secrecy) so that
+  profile data is always encrypted in transit.
+
+  Exchange channels: Nearby Connections (GMS), Wi-Fi Direct (FOSS), QR relay
+  (HTTPS fallback), NFC (planned).
+
+  The FOSS flavor ships without Google Play Services. It uses WifiDirectTransport
+  for proximity exchange and downloads the MediaPipe model at first launch,
+  verifying the SHA-256 before use.
 
   Features:
-  * Gesture authentication via MediaPipe hand tracking
-  * Nearby Connections (Wi-Fi Direct) transport for FOSS flavor
-  * NFC tap-to-exchange bootstrap
-  * QR code fallback relay (encrypted, HTTPS only)
-  * Short Authentication String (SAS) for first-meet MITM protection
-  * Encrypted contact storage via Room + Android Keystore
+  * Gesture biometric authentication (21-landmark hand embedding)
+  * Double Ratchet encrypted exchange protocol
+  * Short Authentication String (SAS) cross-device verification
+  * Liveness detection (multi-frame drift guard against static photos)
+  * Encrypted backup / restore (PBKDF2 + AES-256-GCM)
+  * Wear OS tile — live exchange status on your wrist
+  * Android Auto screens — SAS verification on head unit display
+  * Enterprise MDM policy support (RestrictionsManager)
 
 RepoType: git
 Repo: https://github.com/showerideas/Aura
 
 Builds:
-  - versionName: '2.0.0'
-    versionCode: 3
+  - versionName: 2.0.0-foss
+    versionCode: 2
     commit: v2.0.0
     subdir: app
     gradle:
-      - foss
+      - fossRelease
+    # F-Droid build server pre-build hook: download and verify the MediaPipe model.
+    # The SHA-256 is pinned in build.gradle.kts (GESTURE_MODEL_SHA256 variable).
+    # F-Droid sets GESTURE_MODEL_SHA256 as a build-server environment variable.
+    prebuild: ./gradlew downloadGestureModel
+    # Ensure reproducible output: remove build timestamp from BuildConfig.
+    # Gradle 8 respects SOURCE_DATE_EPOCH for reproducible builds.
+    build: SOURCE_DATE_EPOCH=0 ./gradlew assembleFossRelease
+    ndk: r26d
 
-AutoUpdateMode: Version
-UpdateCheckMode: Tags
-CurrentVersion: '2.0.0'
-CurrentVersionCode: 3
+# Update automatically when a new tag matching v*.*.* is pushed.
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+CurrentVersion: 2.0.0
+CurrentVersionCode: 2

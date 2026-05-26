@@ -20,6 +20,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
+import com.showerideas.aura.auth.ModelDownloadManager
+import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -49,7 +51,8 @@ import kotlin.math.sqrt
  */
 @Singleton
 class CameraHandEmbedder @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val modelDownloadManager: ModelDownloadManager
 ) {
 
     // -------------------------------------------------------------------------
@@ -220,11 +223,33 @@ class CameraHandEmbedder @Inject constructor(
     // Private helpers
     // -------------------------------------------------------------------------
 
+
+    /**
+     * Phase 5.8 — Resolve the model file path.
+     *
+     * GMS flavor: model is in assets/ (bundled at build time by downloadGestureModel).
+     * FOSS flavor: model is downloaded to internal storage by [ModelDownloadManager]
+     *              before CameraHandEmbedder is first used.
+     *
+     * Uses a heuristic: if the downloaded file exists and is verified, prefer it;
+     * otherwise fall back to the assets/ path (works on GMS flavor immediately).
+     */
+    private fun resolveModelPath(): String =
+        if (modelDownloadManager.isModelReady()) {
+            // FOSS: use verified downloaded model
+            File(context.filesDir, MODEL_ASSET).absolutePath
+        } else {
+            // GMS: use bundled model from assets/
+            MODEL_ASSET
+        }
+
     private fun initRecognizer() {
         try {
+            // Phase 5.8 — resolve model path first (FOSS = internal storage, GMS = assets/)
+            val modelPath = resolveModelPath()
             val options = GestureRecognizer.GestureRecognizerOptions.builder()
                 .setBaseOptions(
-                    BaseOptions.builder().setModelAssetPath(MODEL_ASSET).build()
+                    BaseOptions.builder().setModelAssetPath(modelPath).build()
                 )
                 .setRunningMode(RunningMode.LIVE_STREAM)
                 .setMinHandDetectionConfidence(MIN_CONFIDENCE)
