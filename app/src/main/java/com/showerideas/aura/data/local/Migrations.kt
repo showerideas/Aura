@@ -189,6 +189,42 @@ object Migrations {
         }
     }
 
+    /**
+     * Task 8 — v10: Add room_sessions and room_members tables for multi-party exchange.
+     *
+     * room_sessions: holds the cryptographic room session (host/join, PIN, key, TTL).
+     * room_members: holds the participants in a room session (FK cascade on room close).
+     */
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS room_sessions (
+                    room_id TEXT NOT NULL PRIMARY KEY,
+                    room_key TEXT NOT NULL,
+                    pin TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    state TEXT NOT NULL DEFAULT 'ACTIVE',
+                    is_host INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS room_members (
+                    room_id TEXT NOT NULL,
+                    member_id TEXT NOT NULL,
+                    display_name TEXT NOT NULL,
+                    joined_at INTEGER NOT NULL,
+                    card_received INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (room_id, member_id),
+                    FOREIGN KEY (room_id) REFERENCES room_sessions(room_id) ON DELETE CASCADE
+                )
+            """.trimIndent())
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_room_members_room_id ON room_members(room_id)"
+            )
+        }
+    }
+
     /** Ordered list of every migration — passed to Room.databaseBuilder. */
     val ALL: Array<Migration> = arrayOf(
         MIGRATION_1_2,
@@ -197,6 +233,8 @@ object Migrations {
         MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7,
-        MIGRATION_7_8
+        MIGRATION_7_8,
+        MIGRATION_8_9,
+        MIGRATION_9_10
     )
 }
