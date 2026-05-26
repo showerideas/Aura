@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Custom view for the SAS (Short Authentication String) verification dialog.
+  T20 — SAS (Short Authentication String) verification dialog with countdown progress bar.
 
   Layout:
     ┌──────────────────────────────────┐
+    │  [━━━━━━━━━━━━━━━━━━━━━━━━━━━━]  │  countdown progress bar (30s → 0)
     │       [identicon 80dp]           │  visual fingerprint from the SAS code
     │         1 2 3 - 4 5 6           │  prominent 40sp monospace digits
     │  Both phones should show the     │  instruction text
@@ -11,13 +12,15 @@
     │  to read theirs aloud…           │
     └──────────────────────────────────┘
 
-  The identicon is generated from the SAS pin via IdenticonGenerator — since
-  both parties derive the same SAS, they will see the same identicon, providing
-  an additional visual verification channel alongside the 6-digit code.
+  Changes vs previous version (T20):
+  - Added pb_sas_countdown: a determinate horizontal progress bar that ticks
+    down from 30 to 0 so the user always knows how long they have.
+    Colour is @color/aura_cyan to match the SAS code display.
 
-  tv_sas_code has accessibilityLiveRegion="polite" so TalkBack announces the
-  code as soon as the dialog appears — users with visual impairments can complete
-  the verbal comparison without tapping around.
+  Accessibility notes:
+  - tv_sas_code has accessibilityLiveRegion="polite": TalkBack reads the code on appear.
+  - iv_sas_identicon: importantForAccessibility="yes" + contentDescription.
+  - pb_sas_countdown: importantForAccessibility="no" — decorative timing aid.
 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -25,8 +28,22 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingHorizontal="24dp"
-    android:paddingTop="20dp"
+    android:paddingTop="16dp"
     android:paddingBottom="8dp">
+
+    <!-- Countdown progress bar — drains right-to-left over 30 seconds -->
+    <ProgressBar
+        android:id="@+id/pb_sas_countdown"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginBottom="12dp"
+        android:max="300"
+        android:progress="300"
+        android:progressTint="#00E5FF"
+        android:progressBackgroundTint="#1A2A30"
+        android:importantForAccessibility="no"
+        android:contentDescription="" />
 
     <!-- Identicon — deterministic visual fingerprint for this exchange -->
     <ImageView

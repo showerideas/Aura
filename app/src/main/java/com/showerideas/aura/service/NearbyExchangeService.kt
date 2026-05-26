@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.showerideas.aura.service.NotificationChannels
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.showerideas.aura.R
@@ -83,7 +84,7 @@ class NearbyExchangeService : Service() {
         const val ACTION_GESTURE_VERIFIED = "com.showerideas.aura.nearby.GESTURE_VERIFIED"
 
         private const val SERVICE_ID         = "com.showerideas.aura"
-        private const val CHANNEL_ID         = "aura_exchange_channel"
+        private const val CHANNEL_ID = NotificationChannels.CHANNEL_EXCHANGE
         private const val NOTIFICATION_ID    = 1002
         private const val SESSION_TIMEOUT_MS = 30_000L
         private const val ROOM_TIMEOUT_MS    = 300_000L
@@ -1182,11 +1183,8 @@ class NearbyExchangeService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID, getString(R.string.notif_channel_name), NotificationManager.IMPORTANCE_LOW
-        ).apply { description = getString(R.string.notif_channel_desc) }
-        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-            .createNotificationChannel(channel)
+        // T44: delegate to centralized hardened channel registry
+        NotificationChannels.ensureChannels(this)
     }
 
     private fun buildNotification(status: String): Notification {
@@ -1199,6 +1197,8 @@ class NearbyExchangeService : Service() {
             .setSmallIcon(R.drawable.ic_aura_small)
             .setContentIntent(intent)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .build()
     }
 

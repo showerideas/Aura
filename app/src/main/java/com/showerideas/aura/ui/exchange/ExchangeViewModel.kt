@@ -10,7 +10,7 @@ import com.showerideas.aura.auth.GestureAuthManager
 import com.showerideas.aura.auth.LivenessGuard
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.ContactRepository
-import com.showerideas.aura.data.SharePresetDao
+import com.showerideas.aura.data.local.SharePresetDao
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.model.SharePreset

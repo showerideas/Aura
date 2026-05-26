@@ -8,7 +8,7 @@ import com.showerideas.aura.data.local.ContactDao
 import com.showerideas.aura.data.local.ExchangeAuditDao
 import com.showerideas.aura.data.local.KnownPeerDao
 import com.showerideas.aura.data.local.Migrations
-import com.showerideas.aura.data.SharePresetDao
+import com.showerideas.aura.data.local.SharePresetDao
 import com.showerideas.aura.data.local.ProfileDao
 import dagger.Module
 import dagger.Provides
