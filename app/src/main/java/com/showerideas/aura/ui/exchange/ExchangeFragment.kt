@@ -26,6 +26,7 @@ import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.ui.contacts.ContactMergeBottomSheet
+import com.showerideas.aura.ui.exchange.SharePresetBottomSheet
 import com.showerideas.aura.utils.IdenticonGenerator
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -88,10 +89,9 @@ class ExchangeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        when (viewModel.authMethod.value) {
-            AuthPreferences.METHOD_BIOMETRIC -> startBiometricGate()
-            else                             -> startGestureGate()
-        }
+        // Phase 9.1 — show share-preset picker before auth gate if presets exist.
+        // The picker is non-blocking: dismissal or selection both proceed to the auth gate.
+        showSharePresetPickerThenAuth()
 
         // NFC bootstrap indicator — show the chip if MainActivity set a pending
         // NFC bootstrap before navigating here. The bootstrap is consumed by
@@ -281,6 +281,46 @@ class ExchangeFragment : Fragment() {
                 viewModel.proceedWithoutGesture(); startServiceOnce()
             }
             .show()
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Phase 9.1 — Share preset picker
+    // -------------------------------------------------------------------------
+
+    /**
+     * Show [SharePresetBottomSheet] if the user has any presets defined.
+     * After the user picks a preset (or dismisses the sheet), proceed to the
+     * auth gate so exchange setup isn't blocked on the picker.
+     */
+    private fun showSharePresetPickerThenAuth() {
+        val presets = viewModel.sharePresets.value
+        if (presets.isNotEmpty()) {
+            val sheet = SharePresetBottomSheet(onPresetSelected = { _ ->
+                // Preset was applied via ExchangeViewModel.selectPreset() inside the sheet.
+                // Proceed to the auth gate.
+                startAuthGate()
+            })
+            sheet.show(childFragmentManager, SharePresetBottomSheet.TAG)
+            // Also start the auth gate immediately so the user isn't forced to interact
+            // with the sheet — they can dismiss it and the exchange is already proceeding.
+            sheet.lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+                override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+                    // Sheet dismissed without selecting — start auth gate if not already started.
+                    if (!serviceStarted && !gestureValidated) startAuthGate()
+                }
+            })
+        } else {
+            startAuthGate()
+        }
+    }
+
+    /** Kick off the appropriate auth gate (gesture or biometric) based on the current setting. */
+    private fun startAuthGate() {
+        when (viewModel.authMethod.value) {
+            AuthPreferences.METHOD_BIOMETRIC -> startBiometricGate()
+            else                             -> startGestureGate()
+        }
     }
 
     private fun startServiceOnce() {
