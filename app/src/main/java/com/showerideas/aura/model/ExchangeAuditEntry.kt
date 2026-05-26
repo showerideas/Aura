@@ -62,7 +62,16 @@ data class ExchangeAuditEntry(
      * "ROOM_HOST"  — multi-peer room session, this device was the host.
      * "ROOM_GUEST" — multi-peer room session, this device was a guest.
      */
-    val channel: String = CHANNEL_NEARBY
+    val channel: String = CHANNEL_NEARBY,
+    /**
+     * Physical transport layer used. Null for legacy records (pre-v11 migration).
+     * "BLE_GATT"    — direct BLE GATT (Task 7).
+     * "WIFI_DIRECT" — Wi-Fi Direct (Task 4/5).
+     * "LORA"        — LoRa via Meshtastic (Task 39).
+     * "NFC_HCE"     — NFC Host Card Emulation (Task 1/84).
+     * "NEARBY_AUTO" — Nearby Connections auto-selected transport.
+     */
+    val transport: String? = null
 ) {
     companion object {
         // Outcome constants — use these rather than raw strings
@@ -91,5 +100,12 @@ data class ExchangeAuditEntry(
         const val CHANNEL_QR         = "QR"
         const val CHANNEL_ROOM_HOST  = "ROOM_HOST"
         const val CHANNEL_ROOM_GUEST = "ROOM_GUEST"
+
+        // Transport layer constants (v11+)
+        const val TRANSPORT_BLE_GATT    = "BLE_GATT"
+        const val TRANSPORT_WIFI_DIRECT = "WIFI_DIRECT"
+        const val TRANSPORT_LORA        = "LORA"
+        const val TRANSPORT_NFC_HCE     = "NFC_HCE"
+        const val TRANSPORT_NEARBY_AUTO = "NEARBY_AUTO"
     }
 }
