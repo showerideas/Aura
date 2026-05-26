@@ -4,7 +4,7 @@
 > Written as a strictly ordered sequence of engineering tasks for a software team.
 > Tasks are sorted by dependency: each task may depend on those above it.
 > References are cited inline where they are relevant — there is no separate reference table.
-> Last rewrite: 2026-05-26
+> Last rewrite: 2026-05-26 | Deep audit pass: 2026-05-26
 
 ---
 
@@ -16,6 +16,7 @@ unlocks the most subsequent work. Read it top to bottom before starting any task
 
 Status markers:
 - `[DONE]` — shipped and merged to main
+- `[PARTIAL]` — scaffolded or substantially implemented but not production-complete; see task detail
 - `[ ]` — open, ready to implement
 - `[R&D]` — design/research phase only; no code until explicitly moved to `[ ]`
 
@@ -42,12 +43,72 @@ Wear OS + Android Auto shipped. F-Droid pipeline live. JaCoCo 60% floor. CI gree
 | CI | Green — lint + unit + JaCoCo + assembleRelease + APK size gate + iOS build/test |
 | Distribution | F-Droid reproducible build script (PR #99) + submission guide (PR #100) — live |
 | Signing | PKCS12 keystore in GitHub Secrets — signed AAB confirmed |
-| iOS | AuraCore companion — ContactProfile, SasVerifier, AuraExchangeCoordinator, 15 tests |
-| Wear OS | Pairing flow — WearPairingViewModel + BottomSheet + PhoneWearSender (PR #93) |
-| Android Auto | Voice action + biometric auth gate (PR #92) |
+| iOS | AuraCore companion — ContactProfile, SasVerifier, AuraExchangeCoordinator, WireProtocol.swift, MultipeerTransport.swift scaffold, 15 tests |
+| Wear OS | Pairing flow — WearPairingViewModel + BottomSheet + PhoneWearSender (PR #93); wearos/ Gradle module present with WearStateStore |
+| Android Auto | Voice action + biometric auth gate (PR #92); full screen library (Advertising/Completed/Idle/Sas screens) |
 | Deeplink | Deeplink → pre-filled Add Contact bottom sheet (PR #89) |
+| WifiDirectTransport | DNS-SD service discovery + TCP server/client + group owner negotiation — [PARTIAL] production-hardening needed |
+| FOSS flavor DI | foss/TransportModule.kt wired to WifiDirectTransport — [DONE] |
+| RoomExchangeFragment | Host/guest toggle UI + gesture gate wired — [PARTIAL] data layer (Task 8) is blocker |
+| GestureClassifier | Centroid-based classifier with spread radius + DataStore persistence — [PARTIAL] LSTM upgrade is Task 13 |
+| LivenessGuard | Drift-based passive liveness (micro-tremor detection) — [DONE]; active challenge-response is Task 14 |
+| HybridKEM engine | ML-KEM-768 + X25519 + HKDF-SHA256 via BouncyCastle bcpqc — [DONE]; wire protocol negotiation is Task 33 |
+| DoubleRatchetState | Symmetric ratchet (HMAC-SHA256 chain) implemented and tested — [PARTIAL] not wired into exchange sessions |
+| DB schema | Version 9 (migrations 1–9 present); Room system (Tasks 8–10) will add migration v10 |
+| IdentityRotationDetector | TOFU key-change detection (FirstContact / Matched / KeyRotated) — [DONE] |
+| ContactDiffEngine | Field-level diff engine + edge case tests — [DONE] |
+| SealedEnvelope (utils/) | Traffic analysis resistance via block-size padding (BLOCK_SIZE=256) — [DONE] |
+| SealedEnvelope (crypto/) | Sealed sender: X25519 ephemeral + AES-256-GCM + sender anonymity — [PARTIAL] wire integration pending |
+| TransparencyLogClient (security/) | Full Ed25519-verified Merkle blocklist client with BloomFilter + DataStore — [DONE] |
+| TransparencyLogClient (network/) | Thin submit/fetch/audit client (separate concern from security/ layer) — [DONE] |
+| EnterprisePolicy | 6 MDM restriction keys + RestrictionsManager reader — [DONE] |
+| EnterpriseSettingsFragment | Enterprise settings UI + ViewModel — [DONE] |
 
 ---
+
+## Deep Audit Findings (2026-05-26)
+
+Findings from a full source-tree + schema audit conducted against the remote `main` branch.
+These directly inform the status markers and additions throughout this document.
+
+**Database:** `AppDatabase.version = 9`. The `app/schemas/` directory shows JSON exports for
+versions 1–5, suggesting migrations 6–9 are additive but their schema files were not exported
+(or exports were pruned). All future Room system work (Tasks 8–10) targets migration v10.
+
+**WifiDirectTransport:** The file is substantially implemented — `WifiP2pDnsSdServiceInfo`
+service registration for `_aura._tcp`, DNS-SD discovery, `BroadcastReceiver` for P2P state,
+TCP `ServerSocket(8988)` for the group owner, and group-owner election via ECDH key comparison.
+Tasks 4/5 are more advanced than their `[ ]` status implies. Remaining gaps: production error
+recovery, Samsung One UI compatibility shims, and integration tests.
+
+**SealedEnvelope (dual implementation — intentional, not duplicate):**
+`utils/SealedEnvelope` provides traffic analysis resistance via deterministic block-size padding
+(256-byte blocks, max 4096 bytes). `crypto/SealedEnvelope` provides full sealed sender
+(X25519 ephemeral + AES-256-GCM, hides sender identity from relays and passive observers).
+These two serve distinct, complementary security properties and MUST both be retained. Task 32
+wires `utils/SealedEnvelope` into `WireProtocol`. Task 33-related work may wire
+`crypto/SealedEnvelope` for the relay path.
+
+**TransparencyLogClient (dual implementation — intentional, not duplicate):**
+`security/TransparencyLogClient` is the full-featured local blocklist engine: Ed25519 signature
+verification, Merkle proof verification via `MerkleVerifier`, `BloomFilter` maintenance with
+DataStore persistence. `network/TransparencyLogClient` is a thin HTTP submit/audit client for
+user-triggered reporting and Merkle audit queries. Both are used; neither is redundant.
+
+**HybridKEM engine is production-complete:** `crypto/HybridKEM.kt` implements the full
+ML-KEM-768 + X25519 hybrid construction using BouncyCastle bcpqc + bcprov. Wire layout:
+`[0x06][x25519_pub(32)][mlkem768_pub(1184)]` for public key, `[x25519_eph(32)][mlkem_ct(1088)]`
+for ciphertext. Task 33's open work is exclusively the wire protocol negotiation layer.
+
+**DoubleRatchetState is unconnected:** `utils/DoubleRatchetState.kt` implements the symmetric
+half of the Signal Double Ratchet (HMAC-SHA256 chain) with `nextMessageKey()` /
+`nextMessageKeyIndexed()`. It is unit-tested (`DoubleRatchetStateTest.kt`). However, the main
+exchange path in `NearbyExchangeService` uses the raw ECDH-derived session key for the entire
+session — the ratchet is not advanced per payload. Task 41 closes this gap.
+
+**ProGuard rules are absent for PQ crypto:** `proguard-rules.pro` does not contain explicit
+keep rules for BouncyCastle's PQ classes. R8's aggressive shrinking removes reflection-dependent
+PQ algorithm registries. This will silently break HybridKEM in release builds. Task 43 fixes this.
 
 ---
 
@@ -81,9 +142,22 @@ handoff pattern — exactly the architecture AURA uses (NFC for keying, BT for p
 - [DONE] AURA AID `F0 41 55 52 41 01` registered in `res/xml/apduservice.xml`
 - [DONE] `NfcExchangeHelper` public API
 - [ ] APDU chaining for payloads >255 bytes — frame reassembly on both sides
+  - Audit: `AuraHceService` currently uses `AtomicReference<Pair<String, String>?>` for
+    a single-frame key payload. Chaining implementation must replace this with an `APDUSession`
+    accumulator that buffers incoming `CONTINUE` command frames until the final `0x9000` SW
+  - Chaining protocol: when response exceeds 255 bytes, HCE sends SW `0x61XX` (XX = remaining
+    length); reader sends `0x00C0 0000 XX` (`GET RESPONSE`) to continue; final frame returns `0x9000`
+  - Device compatibility: check `IsoDep.maxTransceiveLength` on the reader side — can be as low
+    as 261 bytes on some devices; never assume extended length mode is available
+- [ ] SELECT AID response: add 2-byte protocol version prefix (`0x00 0x07` = v7) before the
+  `0x9000` SW — enables future protocol negotiation without a new AID registration
+- [ ] `AuraHceService.onDeactivated(reason: Int)` must call `clearLocalKey()` and reset any
+  partial `APDUSession` state — prevents stale keys surviving to the next tap session
 - [ ] After key exchange via NFC: pass `(sharedSecret, sessionNonce)` to `NearbyExchangeService`
 - [ ] NFC bootstraps the session — large-payload crypto stays on Nearby/BLE transport
 - [ ] Unit test: APDU framing/deframing for payloads 1–512 bytes
+- [ ] Unit test: chaining edge case — payload exactly 255 bytes (single frame, no chaining needed)
+- [ ] Unit test: `onDeactivated()` clears `APDUSession` and `AtomicReference` atomically
 - [ ] Instrumented test: real NFC device pair — SELECT AID → key exchange → Nearby session handoff
 
 ---
@@ -103,6 +177,14 @@ responder: ECDH → session seed → hand off to Nearby/BLE.
 
 - [ ] Implement `NfcAdapter.enableReaderMode` path in `ExchangeFragment` and/or `NfcExchangeHelper`
 - [ ] Handle `IsoDep` tag discovered → `connect()` → send `SELECT AID` → receive peer ephemeral key
+- [ ] `IsoDep.setTimeout(3000)` — set 3-second APDU timeout before `connect()`; default OEM value
+  can exceed 10s on Samsung devices causing ANR if the other device disappears mid-exchange
+- [ ] `IsoDep.maxTransceiveLength` check before each `transceive()` call — governs chaining frame
+  size; do NOT assume extended length; common values: 261 (basic) or 65535 (extended)
+- [ ] Wrap entire reader interaction in `try { } finally { isoDep.close() }` — leaked `IsoDep`
+  connections cause ANRs on Samsung One UI; `close()` must fire even on exceptions
+- [ ] `TagLostException` during `transceive()` — map to `NfcError.TagLost` →
+  `ExchangeFragment` shows "Hold steady — NFC connection interrupted" retry prompt
 - [ ] ECDH derivation from received public key — same flow as HCE responder side
 - [ ] Disable `enableReaderMode` in `onPause()` — foreground dispatch rules require this
 - [ ] Fallback chain: if NFC unavailable or timed out → fall through to volume button → QR relay
@@ -125,6 +207,9 @@ same `sessionToken` without any further communication — standard HKDF determin
 
 - [ ] Add `sessionNonce: ByteArray` (32 bytes, random) field to `EPHEMERAL_KEY_REQUEST` APDU frame
 - [ ] Both sides run `HKDF(ecdhShared || sessionNonce, salt=null, info="aura-room-v1")` → 32-byte token
+- [ ] NDEF tap path and APDU HCE path must produce identical `sessionToken` — both must include
+  `sessionNonce` in their respective payload formats so NFC path parity is maintained regardless
+  of which NFC mode initiated the tap
 - [ ] `NfcExchangeHelper.getSessionToken(): ByteArray` — exposes derived token to callers
 - [ ] `NearbyExchangeService`: accept optional `sessionToken` — gates session as NFC-bootstrapped
 - [ ] Token stored in memory only; cleared on session close or 10-minute TTL
@@ -156,16 +241,34 @@ Group formation and IP assignment in Meshrabiya are production-grade references.
 See: [github.com/mayfourth/WiFi-Direct-File-Transfer] for a minimal working reference of
 `WifiP2pManager` group owner + client TCP socket pattern on Android.
 
-- [ ] Implement `WifiDirectTransport.kt` satisfying the `NearbyTransport` interface
-- [ ] Use `WifiP2pManager` + `WifiP2pManager.Channel` for connection (not discovery)
-- [ ] Group owner election: lexicographic ordering on ECDH public key bytes as tiebreaker
-- [ ] Group owner: `ServerSocket(8743)` → `accept()` → `WireProtocol` framing over TCP
-- [ ] Group client: `requestConnectionInfo()` → connect to `groupOwnerAddress:8743`
-- [ ] TCP transfer: chunked writes with sequence numbers matching existing `WireProtocol` design
-- [ ] Register `WIFI_P2P_STATE_CHANGED_ACTION` broadcast receiver in the transport
-- [ ] Teardown: `removeGroup()` after session close; unregister broadcast receiver
-- [ ] `FakeWifiDirectTransport` test double — implements `NearbyTransport`, backed by in-memory queues
-- [ ] Unit tests via `FakeWifiDirectTransport`: connect, send, receive, disconnect, timeout
+**Audit: `WifiDirectTransport.kt` is substantially implemented.** DNS-SD service registration
+(`_aura._tcp`), `BroadcastReceiver` for P2P state changes, `ServerSocket(8988)` group-owner
+TCP server, group-owner election via ECDH key comparison, and coroutine-based send/receive are
+all present. `FakeWifiDirectTransport.kt` and `WifiDirectTransportTest.kt` confirm test coverage
+exists. Production-hardening items below are the remaining gaps.
+
+- [DONE] `WifiDirectTransport.kt` satisfying the `NearbyTransport` interface
+- [DONE] `WifiP2pManager` + `WifiP2pManager.Channel` for connection
+- [DONE] Group owner election: lexicographic ordering on ECDH public key bytes
+- [DONE] Group owner: `ServerSocket(8988)` → `accept()` → `WireProtocol` framing over TCP
+- [DONE] DNS-SD service registration (`_aura._tcp`) for peer discovery
+- [DONE] `WIFI_P2P_STATE_CHANGED_ACTION` broadcast receiver registered
+- [DONE] `FakeWifiDirectTransport` test double
+- [ ] `WifiP2pConfig.groupOwnerIntent`: explicitly set to `15` (force owner) if local ECDH public
+  key bytes > peer's; `0` (force client) otherwise — prevents both peers simultaneously
+  claiming group owner role in simultaneous `connect()` calls
+- [ ] `requestConnectionInfo()` retry loop: result can take up to 2s after group formation;
+  retry with 500ms backoff up to 5 times before surfacing `TransportError.ConnectionTimeout`
+- [ ] `WifiP2pManager.P2P_UNSUPPORTED` error path → `NearbyTransport.Error.UnsupportedHardware`
+  → automatic fallback to Nearby Connections transport
+- [ ] Samsung One UI 5+ workaround: `WifiP2pManager.connect()` silently fails when
+  `NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED` is absent; detect via
+  `connectivityManager.getNetworkCapabilities()` check and surface a user-visible hint
+- [ ] Teardown sequence: `cancelConnect()` → `removeGroup()` → `stopPeerDiscovery()` →
+  unregister `BroadcastReceiver` — must all fire in this order on transport close AND on
+  process kill via `WorkManager` cleanup task
+- [ ] Unit tests via `FakeWifiDirectTransport`: connect, send, receive, disconnect, timeout,
+  group owner election collision (both peers have identical key bytes — edge case)
 
 ---
 
@@ -179,13 +282,22 @@ excludes all GMS entirely and binds `WifiDirectTransport`. The `NearbyTransport`
 abstraction boundary — no code above it knows which transport is active. Hilt routes to the
 correct implementation per flavor via a `@Provides` binding in `TransportModule.kt`.
 
-- [ ] `flavorDimensions += "transport"` in `app/build.gradle.kts`
-- [ ] `gms` flavor: includes `play-services-nearby`, binds `NearbyExchangeServiceImpl`
-- [ ] `foss` flavor: excludes all `com.google.android.gms` dependencies, binds `WifiDirectTransport`
-- [ ] `TransportModule.kt` (Hilt): `@Provides` binding per flavor — no runtime `if` checks
+**Audit:** `app/src/foss/java/.../di/TransportModule.kt` is **fully wired** — it already binds
+`WifiDirectTransport` as `NearbyTransport`. `app/src/gms/java/.../di/TransportModule.kt` exists
+and binds `NearbyConnectionsTransport`. Flavor DI scaffolds are production-complete.
+`NearbyConnectionsTransport.kt` exists in the gms source set. Remaining open items are the
+`build.gradle.kts` flavor dimension declaration and CI build matrix.
+
+- [DONE] `foss` flavor: `TransportModule.kt` binds `WifiDirectTransport` — no GMS dependencies
+- [DONE] `gms` flavor: `TransportModule.kt` binds `NearbyConnectionsTransport`
+- [ ] `flavorDimensions += "transport"` in `app/build.gradle.kts` — flavor dimension declaration
+- [ ] Verify `foss` variant excludes all `com.google.android.gms` from its dependency tree;
+  run `./gradlew :app:dependencies --variant fossRelease` and audit the output
 - [ ] `app-foss` variant: bundle MediaPipe `.task` file in `assets/` — no CDN download at runtime
+  (`GestureModelLoader` already has the bundled-asset path; confirm it is included in the foss APK)
 - [ ] Update CI: build both `assembleGmsRelease` and `assembleFossRelease`
 - [ ] Update APK size gate to apply to both variants independently
+- [ ] Confirm `foss/TransportModule.kt` compiles cleanly with no GMS imports after flavor split
 
 ---
 
@@ -202,12 +314,20 @@ and the submission process.
 See: [github.com/meshtastic/Meshtastic-Android] and [github.com/localsend/localsend] — both
 F-Droid with reproducible build pipelines. Study their `build.gradle` and F-Droid metadata YAML.
 
+**Audit:** `reproducible_build_test.sh` exists at three locations: project root,
+`fdroid/reproducible_build_test.sh`, and `scripts/reproducible_build_test.sh`. These are
+separate files serving different invocation contexts (CI, F-Droid server, local developer).
+They should share logic via a common shell library but are not strictly redundant duplicates.
+`fdroid/com.showerideas.aura.yml` confirmed present.
+
 - [DONE] F-Droid reproducible build verification script (PR #99)
 - [DONE] F-Droid submission guide + v2.0.1 metadata entry (PR #100)
 - [ ] Replace `BuildConfig.BUILD_TIME = System.currentTimeMillis()` with git commit timestamp
 - [ ] Audit all `buildConfigField` entries — remove or determinize runtime-varying values
 - [ ] Verify `res/` generated files are deterministic across clean builds on different machines
 - [ ] `reproducible-build-check.sh` in CI: two independent builds → `zipdiff` unsigned APKs
+- [ ] Consolidate the three `reproducible_build_test.sh` copies into a shared `scripts/lib/`
+  shell library sourced by each caller — reduce divergence risk across locations
 
 ---
 
@@ -220,8 +340,9 @@ networking store-and-forward advertisement layer (Task 14).
 
 **Architecture:** AURA defines a custom GATT service with a fixed service UUID. The GATT server
 advertises this service; the GATT client scans for it. Peer discovery is out-of-scope here —
-NFC/gesture already pairs the devices. MTU negotiation is critical: request MTU=512 on connect
-(Android 5.0+ supports this) to avoid excessive fragmentation.
+NFC/gesture already pairs the devices. MTU negotiation is critical: request MTU=517 on connect
+(the Android BLE stack uses a 3-byte ATT header, so effective payload per write is `MTU - 3 = 514`
+bytes) to avoid excessive fragmentation.
 
 See: [github.com/NordicSemiconductor/Android-BLE-Library] — Nordic's production Android BLE
 library handles the deeply unreliable Android BLE stack: connection retries, MTU negotiation
@@ -232,17 +353,29 @@ See: [github.com/weliem/blessed-android] — BLESSED wraps the Android GATT API 
 ~3000 lines and directly copyable. Its `BluetoothCentralManager` + `BluetoothPeripheral` API
 maps cleanly to the AURA transport interface.
 
-- [ ] Define AURA GATT service UUID: `12345678-0000-1000-8000-AURA00000001`
+- [ ] Define AURA GATT service UUID: `F0415552-4100-1000-8000-AURA00000001`
+  (prefix `F0 41 55 52 41` = `F0AURA` in hex, consistent with AID `F0 41 55 52 41 01`)
   - Characteristic `EPHEMERAL_KEY` (write + read): 65-byte ECDH public key
-  - Characteristic `PAYLOAD_CHUNK` (write with response): 512-byte chunks, sequence-numbered
+  - Characteristic `PAYLOAD_CHUNK` (write with response): 514-byte chunks, sequence-numbered
   - Characteristic `SESSION_STATUS` (notify): CONNECTING / ACTIVE / COMPLETE / ERROR
 - [ ] GATT server: `BluetoothGattServer` advertising AURA service UUID
 - [ ] GATT client: `BluetoothLeScanner` filtering by AURA service UUID → `connectGatt()`
-- [ ] `requestMtu(512)` immediately on `onConnectionStateChange(CONNECTED)` — wait for callback
+- [ ] `requestMtu(517)` immediately on `onConnectionStateChange(CONNECTED)` — wait for
+  `onMtuChanged()` callback before sending the first write; effective payload = `MTU - 3 = 514`
+- [ ] `autoConnect = false` in `connectGatt()` — NEVER use `autoConnect = true` for AURA
+  ephemeral sessions; prevents phantom reconnect after exchange completes
+- [ ] Samsung GATT cache workaround: call `gatt.javaClass.getMethod("refresh").invoke(gatt)`
+  immediately after `onConnectionStateChange(CONNECTED)` to clear stale service discovery cache;
+  wrap in `try/catch(Exception)` — this is a non-public API
+- [ ] GATT bonding explicitly NOT required — if device is already bonded, `gatt.disconnect()` +
+  call `removeBond()` via reflection before AURA session; AURA keys are ephemeral and bonded
+  state creates persistent pairing confusion for the user
+- [ ] `PAYLOAD_CHUNK` write type: `WRITE_TYPE_DEFAULT` (write-with-response) NOT
+  `WRITE_TYPE_NO_RESPONSE` — ensures every chunk is ACKed before the next is sent
 - [ ] Chunked write: 2-byte sequence number + 2-byte total chunk count per chunk
-- [ ] Implement `BleGattTransport.kt` satisfying `NearbyTransport`
 - [ ] `FakeBleGattTransport` test double for unit tests
-- [ ] Unit tests: MTU fragmentation at 23/185/512 bytes; chunk reassembly with gap; timeout
+- [ ] Unit tests: MTU fragmentation at 23/185/517 bytes; chunk reassembly with gap; timeout;
+  Samsung GATT refresh path invoked on connection
 
 ---
 
@@ -258,7 +391,10 @@ stored encrypted via Android Keystore — never in plaintext in the Room DB. `Ro
 `OPEN` (accepting joins) | `ACTIVE` (exchange in progress) | `CLOSED` (completed or expired).
 TTL is 10 minutes from creation — enforced by the repository layer.
 
-- [ ] Add `Room` entity to Room DB (new migration):
+**Audit:** `AppDatabase` is at **version 9** (confirmed in source). The Room system entities add
+migration **v10**. There are likely unmigrated intermediate versions (6–9) covering prior sprints.
+
+- [ ] Add `Room` entity to Room DB — **migration v10**:
   ```
   roomId: ByteArray (32 bytes, PRIMARY KEY)
   roomKey: ByteArray (32 bytes, encrypted via Android Keystore at-rest)
@@ -268,18 +404,29 @@ TTL is 10 minutes from creation — enforced by the repository layer.
   state: RoomState (OPEN / ACTIVE / CLOSED)
   memberCount: Int
   ```
-- [ ] Add `RoomMember` entity:
+- [ ] Add `RoomMember` entity (same migration v10):
   ```
   memberId: Long (autoincrement, PK)
-  roomId: ByteArray (FK -> Room.roomId)
+  roomId: ByteArray (FK -> Room.roomId, ON DELETE CASCADE)
   identityKeyHash: ByteArray
   nickname: String
-  profileSnapshot: ByteArray (serialized vCard, encrypted to this member's public key)
+  profileSnapshot: ByteArray (serialized vCard, encrypted to member's public key)
   joinedAt: Long
+  status: MemberStatus (JOINING / ACTIVE / LEFT / TIMED_OUT)
   ```
-- [ ] `RoomDao`: `createRoom`, `joinRoom`, `addMember`, `getActiveRoom()`, `closeRoom`, `deleteExpiredRooms`
-- [ ] `RoomRepository`: wraps DAO, emits `StateFlow<RoomState>`, enforces 10-minute TTL
-- [ ] Database migration test: assert previous schema version preserves all existing records
+- [ ] Create index on `Room.expiresAt` for efficient TTL cleanup:
+  `CREATE INDEX idx_room_expires_at ON Room(expiresAt)` — required for `deleteExpiredRooms()`
+  performance at scale
+- [ ] Android Keystore alias per room: `"aura-room-${roomId.toHexString().take(16)}"` —
+  predictable pattern enables cleanup of orphaned Keystore entries when room expires
+- [ ] `RoomDao`: `createRoom`, `joinRoom`, `addMember`, `getActiveRoom()`, `closeRoom`,
+  `deleteExpiredRooms`, `getMembersByRoomId(roomId)`
+- [ ] `RoomRepository`: wraps DAO, emits `StateFlow<RoomState>`, enforces 10-minute TTL,
+  cancels BLE advertisement on TTL expiry
+- [ ] `@ForeignKey(onDelete = CASCADE)` on `RoomMember.roomId` — orphaned members auto-deleted
+  when the Room entity is deleted
+- [ ] Database migration test: `MigrationTest.kt` extended — assert v9→v10 preserves all
+  existing entity records and creates the new tables with correct column types
 
 ---
 
@@ -294,13 +441,22 @@ manufacturer-specific data. The QR code encodes `roomId + PIN-wrapped roomKey` a
 The PIN is shown to the room creator; joiners scan and enter PIN to decrypt `roomKey`. Neither
 QR nor BLE advertisement leaks `roomKey` in plaintext.
 
-- [ ] "Create Room" action in `HomeFragment` — new FAB secondary action
-- [ ] On create: generate `roomId` (32-byte secure random), derive `roomKey` (Task 3 derivation),
-  persist via `RoomRepository.createRoom()`, start BLE advertisement
+**Audit:** `RoomExchangeFragment.kt` and `RoomExchangeViewModel.kt` exist in the main source tree.
+The fragment implements a host/guest toggle, gesture gate (up to 3 attempts), and wires into
+`NearbyExchangeService.startRoomHost(context)`. The UI scaffold is substantially complete.
+The missing piece is the data layer (Task 8) — `RoomRepository.createRoom()` does not exist yet.
+After Task 8 completes, the fragment's `startHost()` call must be gated on `createRoom()` success.
+
+- [PARTIAL] `RoomExchangeFragment`: host/guest toggle, gesture gate, session state observation
+- [PARTIAL] `RoomExchangeViewModel`: wired to `NearbyExchangeService` state flows
+- [ ] `RoomExchangeViewModel`: replace direct `NearbyExchangeService.startRoomHost()` call with
+  `RoomRepository.createRoom()` → on success → start BLE advertisement + hand roomId to service
+- [ ] "Create Room" action in `HomeFragment` — new FAB secondary action linking to Room screen
 - [ ] Room host UI: QR code display + 6-digit PIN + live participant count via `StateFlow<RoomState>`
 - [ ] QR join path: scanner decodes `roomId` + PIN-wrapped `roomKey`, user enters PIN → decrypt
 - [ ] BLE scan join path: scan for AURA room advertisements → show room list → tap → enter PIN
 - [ ] NFC join path: host serves `roomId + roomKey` via HCE APDU (reuses `AuraHceService` Task 1)
+  — requires `android.permission.BLUETOOTH_ADVERTISE` (already declared in `AndroidManifest.xml`)
 - [ ] Room auto-closes after 10 minutes: `RoomRepository` cancels BLE advertisement, sets CLOSED
 - [ ] `RoomViewModel`: `roomState: StateFlow<RoomState>` + `members: StateFlow<List<RoomMember>>`
 
@@ -313,23 +469,28 @@ distribution logic. The room host orchestrates the exchange — members send car
 the host re-encrypts and forwards to all other members. Star topology by deliberate design: it is
 simpler, auditable, and avoids requiring pairwise sessions between all members before cards flow.
 
-**Architecture:** Every `Envelope` is standard `WireProtocol` framing — no new crypto primitives.
-Outer encryption uses the recipient's ECDH public key (exchanged during join). The host re-encrypts
-using proxy re-encryption without decrypting. No card is considered delivered until an ACK frame
-is received (Briar discipline).
+**Architecture decision — re-encryption model:** "Re-encrypt without decrypting" implies
+cryptographic Proxy Re-Encryption (PRE), which requires specialized primitives not available in
+BouncyCastle's standard API. The pragmatic and correct approach is: host decrypts envelopes in
+a Keystore-TEE-protected context (plaintext never reaches heap for more than one GC cycle), then
+re-encrypts to each member's public key. The host has momentary plaintext access — this is a
+trust property, not a cryptographic weakness, and is consistent with star topology. This
+architectural decision must be documented explicitly in `docs/ARCHITECTURE.md`.
 
 See: [code.briarproject.org] — Briar's `SyncProtocol` and message routing layer handle delivery
 guarantees and retry logic in a multi-party P2P context. Study their message store and
 transport-agnostic delivery model. AURA's star topology is simpler but should inherit Briar's
 delivery acknowledgment discipline.
 
+- [ ] Document re-encryption model in `docs/ARCHITECTURE.md` — TEE-bounded decrypt/re-encrypt
+  chosen over PRE; rationale: simplicity, Android Keystore compatibility, auditable trust model
 - [ ] `RoomExchangeService.kt`: manages multi-party card routing over the session transport
 - [ ] Member → Host: `Envelope(myProfile, encryptedFor: hostPublicKey)`
-- [ ] Host → Member: for each member M, forward all other envelopes re-encrypted as
-  `Envelope(otherProfile, encryptedFor: M.publicKey)`
-- [ ] Re-encryption: `ECDH(hostPrivKey, memberPublicKey)` → re-derive session key → re-wrap
+- [ ] Host → Member: for each member M, decrypt + re-encrypt `Envelope(otherProfile, encryptedFor: M.publicKey)`
 - [ ] Delivery ACK: host emits `ACK(memberId, deliveredCount)` after forwarding completes
 - [ ] On room close: all received profiles saved to `ContactDao`
+- [ ] Wire `ExchangeAuditRepository.recordExchange()` call on each delivery ACK — this repository
+  has been "dark" (rarely invoked); `RoomExchangeService` must be the first consistent caller
 - [ ] Unit tests: 2-member exchange, 5-member exchange, partial delivery with retry
 - [ ] Extend `ExchangeAuditLog`: add `roomId: ByteArray?` column — `AuditFragment` groups room exchanges
 
@@ -355,8 +516,13 @@ See: [github.com/Estimote/Android-Estimote-UWB-SDK] for production UWB ranging p
 particularly handling `RangingResult` streaming and distance smoothing (UWB measurements are
 noisy; apply a sliding-window average over the last 5 measurements).
 
-- [ ] Gate entire feature behind `PackageManager.FEATURE_UWB` runtime check
+- [ ] Gate entire feature behind `PackageManager.FEATURE_UWB` AND
+  `Manifest.permission.UWB_RANGING` (API 33+) runtime checks — both required
 - [ ] `UwbRangingManager.kt`: wraps `UwbManager.controleeSessionScope()`
+- [ ] UWB measurements are noisy (±5–15 cm); apply 5-sample sliding window average before
+  comparing against the 50 cm threshold — do not use raw single-measurement values
+- [ ] `UwbRangingSession` `RESULT_STATUS_SYSTEM_ERROR` is common on first ranging attempt;
+  implement retry with 500ms backoff × 3 before surfacing distance badge
 - [ ] BLE GATT `EPHEMERAL_KEY` characteristic payload extended with UWB session parameters
 - [ ] `ExchangeFragment`: show real-time distance badge ("34 cm") when UWB ranging is active
 - [ ] Auto-confirm: `if (distance < 50cm && sasMatch) → skipManualConfirmation()`
@@ -381,13 +547,23 @@ uses wrist-relative coordinates normalized by hand span before classification. A
 this normalization to make gestures lighting- and scale-invariant. The normalization is ~30 lines;
 port to Kotlin directly.
 
-- [ ] Change `enrollGesture(vector: LandmarkVector)` → `enrollGesture(samples: List<LandmarkVector>)`
+**Audit:** `GestureAuthManager` already has `MAX_ENROLLMENT_SAMPLES = 5` and `PREFS_KEY_SAMPLES`
+(pipe-delimited raw sample storage for centroid re-computation). `GestureClassifier.kt`
+implements centroid computation with `MIN_ENROLL_SAMPLES = 3` and `CONFIDENCE_GATE = 0.82f`.
+The centroid infrastructure is production-ready. Remaining open items are UI and quality feedback.
+
+- [DONE] `MAX_ENROLLMENT_SAMPLES = 5` in `GestureAuthManager`
+- [DONE] Multi-sample storage via `PREFS_KEY_SAMPLES` (pipe-delimited raw vectors)
+- [DONE] `GestureClassifier.kt`: centroid computation, spread radius, DataStore persistence
+- [DONE] `GestureClassifier.CONFIDENCE_GATE = 0.82f` and `MIN_ENROLL_SAMPLES = 3`
 - [ ] Enrollment UI: capture 5 samples, show per-sample quality score after each
-- [ ] Quality score: cosine similarity of new sample vs. running mean — reject below 0.80
-- [ ] Overall enrollment quality: mean pairwise similarity across all 5 accepted samples
-- [ ] Authentication: mean cosine similarity across all enrolled samples > threshold (default 0.87)
+  (quality = cosine similarity of new sample vs. running mean; reject below 0.80)
+- [ ] Overall enrollment quality display: mean pairwise similarity across all 5 accepted samples
 - [ ] Re-enrollment reminder: if 7-day auth failure rate exceeds 20%, surface in-app banner
+  in `HomeFragment` pointing to Settings → Gesture → Re-enroll
 - [ ] Migration: existing single-sample enrollments wrapped in a list of size 1 on read
+- [ ] `GestureClassifierABTest.kt` exists — use A/B test framework to verify centroid approach
+  outperforms single-sample baseline before removing the fallback path
 
 ---
 
@@ -417,13 +593,18 @@ See: [developers.google.com/mediapipe/solutions] for `.task` bundle export, trai
 int8 quantization configuration.
 
 - [ ] Create `tools/gesture-training/` in repo: Colab notebook + training script
+  - Use Colab TPU for faster training; the LSTM is small enough to train in <5 minutes on TPU v2
 - [ ] Model architecture: 2x LSTM(64 units) → Dropout(0.3) → Dense(gesture_count, softmax)
   Input shape: (30, 63) float32 after normalization
 - [ ] Target: <500 KB `.task`, <200 ms inference on Snapdragon 730G-class hardware
+- [ ] Model versioning: once trained, compute SHA-256 of the `.task` bundle and update
+  `GestureModelLoader.EXPECTED_SHA256` — the integrity verification hook is already wired
 - [ ] `GestureAuthManager`: replace cosine comparison with MediaPipe `GestureRecognizer` inference
   on 30-frame buffer; emit result when buffer is full (1 second at 30 fps)
 - [ ] `RecordingState`: add `COLLECTING_SEQUENCE` — UI shows a 1-second countdown during capture
-- [ ] CI gate: `downloadGestureModel` task validates `.task` bundle format
+- [ ] CI gate: `downloadGestureModel` task validates `.task` bundle magic bytes and schema version
+- [ ] Leverage `GestureClassifierABTest.kt` (already present) to A/B compare LSTM vs centroid
+  classifier on real devices before retiring the centroid path
 
 ---
 
@@ -443,11 +624,27 @@ image = hard fail.
 See: [github.com/suyashawari/deaf_speech] — Android app using MediaPipe + TensorFlow for ASL
 gesture recognition. Study their multi-gesture pipeline and sequential classifier chaining.
 
+**Audit — drift-based passive liveness is fully implemented:**
+`LivenessGuard.kt` is production-complete for the static-source attack vector:
+- `WINDOW_FRAMES = 12` (≈400 ms at 30 fps) rolling drift window
+- `MIN_MEAN_DRIFT = 0.003f` — calibrated on Pixel 7 Pro (live hand ≈ 0.012–0.060; photo ≈ 0.0002)
+- `Result.Collecting / Live(meanDrift) / Spoof(meanDrift)` sealed class
+- Injected into `GestureAuthManager` via liveness gate before cosine match
+
+The items below implement **active challenge-response** — a distinct, higher layer targeting
+dynamic pre-recorded video replay (an attacker recording the user performing the exact correct
+gesture and replaying in real time). The passive drift detection remains unchanged.
+
+- [DONE] `LivenessGuard.kt` drift-based passive liveness — photo/video static source detection
+- [DONE] `WINDOW_FRAMES = 12`, `MIN_MEAN_DRIFT = 0.003f`, `Result` sealed class
+- [DONE] `LivenessGuard` injected into `GestureAuthManager` liveness gate
+- [DONE] `LivenessGuardTest.kt` unit tests
 - [ ] `LivenessGuard.kt`: randomly select challenge gesture from set of 3 at session start
 - [ ] `ExchangeFragment`: display challenge instruction 300 ms before capture begins
 - [ ] Expand buffer to 60 frames: first 30 = challenge, second 30 = auth gesture
 - [ ] LSTM inference on challenge window: must match challenge class (confidence > 0.80)
 - [ ] Optical flow check: mean frame-to-frame landmark displacement < 3 pixels → fail
+  (supplements drift detection; catches high-quality looped videos that exhibit slight motion)
 - [ ] `livenessConfidence: Float` in auth result — stored in `ExchangeAuditLog`
 - [ ] `AuthFailReason.LIVENESS_FAILED` — distinct from gesture mismatch in UI messaging
 - [ ] Unit tests: mock landmark sequences with/without challenge compliance, zero-flow detection
@@ -465,13 +662,22 @@ field mutation. `KnownPeer.lastSeenProfileVersion: Int` tracks the version last 
 On each exchange: if `received.version > stored.lastSeenVersion` → surface "Card updated" banner
 with a field-level diff.
 
-- [ ] Add `version: Int` to `Profile` data class (default 1, auto-increment in setter)
+**Audit:** `ContactDiffEngine.kt` and `ContactDiff.kt` are fully implemented and tested
+(`ContactDiffEngineTest.kt`, `ContactDiffEngineEdgeCasesTest.kt`). The diff infrastructure
+is production-ready. The version integer and `ProfileDiffBottomSheet` integration remain open.
+
+- [DONE] `ContactDiffEngine.kt` field-level diff engine
+- [DONE] `ContactDiff.kt` diff model
+- [DONE] `ContactDiffEngineTest.kt` + edge case tests
+- [ ] Add `version: Int` to `Profile` data class (default 1, auto-increment in `ProfileRepository.updateField()`)
 - [ ] `ProfileRepository.updateField()`: increments `version` and persists in one transaction
-- [ ] Add `lastSeenProfileVersion: Int` to `KnownPeer` entity (new migration)
+- [ ] Add `lastSeenProfileVersion: Int` to `KnownPeer` entity (migration v11 if Tasks 8–10 land as v10)
 - [ ] `NearbyExchangeService`: emit `ExchangeEvent.ProfileUpdated(peer, oldVersion, newVersion, changedFields)`
 - [ ] `ExchangeFragment`: observe `ProfileUpdated` → non-blocking snackbar "Card updated — N fields changed"
 - [ ] `ProfileDiffBottomSheet`: per-field accept/reject with Material 3 color tokens
   (green = added, yellow = changed, red = removed)
+  — check if `ContactDetailBottomSheet.kt` (already present) can serve this role via extension,
+  or if a dedicated sheet is required
 
 ---
 
@@ -485,10 +691,17 @@ across multiple exchanges.
 identity anchor (does not change when name or email changes). If a peer with the same
 `identityKeyHash` already exists, diff the fields and surface a merge dialog. If not, insert directly.
 
-- [ ] `ContactDao.findByIdentityKeyHash(hash: ByteArray): KnownPeer?`
+**Audit:** `ContactMergeBottomSheet.kt` exists in the UI — merge dialog is scaffolded.
+`ContactDiffEngine.kt` is implemented (Task 15 notes). `DeduplicationEngine.kt` is NOT in
+the file tree — it must be created as a new class. `ContactDao.findByIdentityKeyHash()` needs
+to be verified in `ContactDao.kt`; the query is not confirmed present.
+
+- [PARTIAL] `ContactMergeBottomSheet.kt` UI scaffold
+- [ ] `ContactDao.findByIdentityKeyHash(hash: ByteArray): KnownPeer?` — add query if not present
 - [ ] `ContactDao.upsertByIdentity(received: KnownPeer)`: transactional merge
-- [ ] `DeduplicationEngine.kt`: emits `DeduplicationEvent` — MERGED, CONFLICT, NEW
+- [ ] `DeduplicationEngine.kt` (new class): emits `DeduplicationEvent` — MERGED, CONFLICT, NEW
 - [ ] Conflict resolution UI: `ContactMergeDialog` — split view, old vs. new, per-field accept/reject
+  (wire into existing `ContactMergeBottomSheet.kt` scaffold)
 - [ ] Auto-merge rule: all changed fields non-empty in received AND version higher → auto-merge
 - [ ] Unit tests: upsert on new identity, upsert with higher version, version conflict
 
@@ -499,11 +712,17 @@ identity anchor (does not change when name or email changes). If a peer with the
 **Why here:** `ExchangeAuditLog` already has all the data. Zero-network read-only aggregation.
 Can be parallelized with Tasks 12–16. Reads from the schema stabilized by Tasks 10 and 15.
 
+**Audit:** `AnalyticsFragment.kt` and `AnalyticsViewModel.kt` exist in the main source tree —
+the analytics UI is scaffolded. The `transport: TransportType` column addition to `ExchangeAuditLog`
+is still open (will be migration v11 or v12 depending on sequencing with Tasks 8–10 and 15).
+
+- [PARTIAL] `AnalyticsFragment.kt` and `AnalyticsViewModel.kt` — UI scaffold present
 - [ ] `AnalyticsFragment`: reads `ExchangeAuditLog` only — no network, no new DB writes
 - [ ] Metrics: total exchanges (week / month / all-time), transport breakdown (pie chart),
   exchange heatmap by day-of-week × hour-of-day, unique contacts count
 - [ ] Add `transport: TransportType` column to `ExchangeAuditLog` (new migration)
-- [ ] Export as PDF: local share sheet only — no cloud until user explicitly taps share
+- [ ] Export as PDF: use `android.print.PrintManager` or `PdfDocument` API for local generation —
+  no third-party PDF library required; share via standard `ACTION_SEND` intent
 - [ ] Room exchanges (Task 10) grouped separately: "N room sessions, M cards total"
 
 ---
@@ -517,10 +736,17 @@ Activating a preset sets the active field mask applied at serialization time in
 `WireProtocol.serializeProfile()`. Transient — applies to the next exchange only, then resets
 unless pinned.
 
+**Audit:** `SharePreset.kt` model and `SharePresetBottomSheet.kt` UI exist. `SharePresetDao.kt`
+is placed in `data/` rather than `data/local/` — inconsistent with all other DAOs. It should
+be moved to `data/local/` for architectural consistency (see also Task 42).
+
+- [PARTIAL] `SharePreset.kt` model, `SharePresetBottomSheet.kt` UI scaffold
 - [ ] `SharePreset` data class: `id, name, fieldMask: Map<ProfileField, Boolean>`
 - [ ] `PresetRepository`: CRUD via DataStore (up to 5 presets)
 - [ ] `HomeFragment`: long-press exchange FAB → preset picker bottom sheet
 - [ ] Quick-settings tile sub-action: cycle through presets from the notification shade
+- [ ] Move `SharePresetDao.kt` from `data/` to `data/local/` — consistency with all other DAOs
+  (update `AppDatabase.kt` import accordingly)
 - [ ] [R&D] Context auto-detect: calendar event title contains preset name keywords → suggest preset
 
 ---
@@ -533,7 +759,12 @@ the static web landing page and full round-trip testing.
 See: The vCard is in the URL fragment (`#`) which browsers do not send in HTTP requests — server
 sees zero plaintext profile content.
 
+**Audit:** `DeeplinkUtils.kt` and `DeeplinkUtilsTest.kt` exist. `DeeplinkContactSheet.kt` exists.
+The GitHub Pages landing page (`docs/deeplink-landing/`) is NOT in the file tree — confirmed open.
+
 - [DONE] Deeplink → pre-filled Add Contact bottom sheet (PR #89)
+- [DONE] `DeeplinkUtils.kt` + `DeeplinkUtilsTest.kt`
+- [DONE] `DeeplinkContactSheet.kt`
 - [ ] `docs/deeplink-landing/` GitHub Pages: `index.html` + JS decodes URL fragment
   → triggers `text/vcard` download with correct `Content-Disposition` header
 - [ ] `AndroidManifest.xml`: `<intent-filter>` for `https://aura.app/c/*` deeplink handling
@@ -545,11 +776,20 @@ sees zero plaintext profile content.
 
 **Why here:** `SasVerifierDialog` exists and works. This polishes it to production-grade.
 
+**Audit:** `SasVerifier.kt`, `SasVerifierEdgeCasesTest.kt`, `SasDialogEspressoTest.kt`,
+`dialog_sas_verification.xml`, and `SasScreen.kt` (automotive module) all confirmed present.
+The SAS dialog code path in the automotive `SasScreen.kt` should be validated against the same
+30-second countdown requirement.
+
 - [ ] 30-second countdown timer — progress indicator ring in dialog
 - [ ] Auto-abort with `SasOutcome.TIMEOUT` if countdown expires
+- [ ] Disable hardware back button during countdown: use
+  `onBackPressedDispatcher.addCallback(enabled = true) { /* no-op */ }` in Fragment —
+  prevents accidental dismissal during the 6-digit comparison
 - [ ] `VibrationEffect.createOneShot(200ms, AMPLITUDE_MAX)` haptic when dialog appears
 - [ ] `ExchangeAuditLog`: add `sasConfirmedAt: Long?` and `sasOutcome: SasOutcome` columns
 - [ ] Wire SAS dialog into QR relay exchange path (currently Nearby-only)
+- [ ] Apply same countdown/timeout behaviour to `SasScreen.kt` in automotive module
 - [ ] Espresso test: mock `NearbyExchangeService` broadcast → verify dialog + correct 6-digit code
 
 ---
@@ -563,10 +803,14 @@ Current floor: JaCoCo branch coverage 60% (achieved in v2.1.0).
   - `NearbyExchangeService` state transition tests using `FakeNearbyTransport`
   - `RoomExchangeService` multi-party tests: 2-party, 5-party, partial delivery + retry
   - `GestureAuthManager` LSTM inference path tests with mock `GestureRecognizer`
-  - `LivenessGuard` optical flow failure detection unit tests
+  - `LivenessGuard` active challenge-response unit tests (passive tests already exist)
+  - `WifiDirectTransport` error recovery paths: `P2P_UNSUPPORTED`, Samsung workaround,
+    `requestConnectionInfo()` retry loop
 - [ ] Raise floor to 80% — target: at completion of Task 17 (Analytics)
   - `QRExchangeViewModel` relay state machine tests
   - `ContactDao` upsert + dedup transaction tests
+  - `BleGattTransport` MTU fragmentation + chunk reassembly
+  - `RoomDao` migration v10 round-trip tests
 
 ---
 
@@ -581,6 +825,8 @@ patterns are established and propagated to new platforms at creation time, not r
 - [ ] `accessibilityLiveRegion="polite"` on SAS dialog 6-digit code display
 - [ ] `importantForAccessibility="no"` on decorative identicon thumbnails
 - [ ] TalkBack navigation test: complete an exchange start-to-finish — documented in `docs/TESTING.md`
+- [ ] Verify Wear OS `AuraTileService` and `ExchangeTile` (Task 35) meet Wear accessibility specs —
+  minimum touch target 48x48 dp applies to Wear OS as well
 
 ---
 
@@ -601,6 +847,8 @@ patterns are established and propagated to new platforms at creation time, not r
 - [ ] Second-pass native-speaker review focused on: gesture instruction text (precision critical),
   error messages (must be actionable), UI labels in narrow layouts (truncation risk)
 - [ ] Screenshot automation via Screengrab / Fastlane for all locales — catch layout truncation
+- [ ] Localization coverage test (`LocalizationCoverageTest.kt` exists) — extend to cover
+  all new strings added by Tasks 8–20
 
 ---
 
@@ -630,6 +878,8 @@ with TensorFlow. Study feature engineering as a complement to the Model Maker pa
 - [ ] `tools/gesture-training/README.md`: "How to add a new gesture class to AURA"
 - [ ] `BuildConfig.GESTURE_MODEL_URL`: overridable model registry URL for third-party builds
 - [ ] CI `downloadGestureModel` task: validate `.task` bundle magic bytes and schema version
+- [ ] Training data collection mode in `GestureLibraryFragment`: "collect training samples"
+  saves raw 30-frame landmark sequences to `filesDir/training/` for offline model improvement
 
 ---
 
@@ -645,6 +895,7 @@ profile-switching by gesture.
 - [ ] Winning gesture maps to different profile than current → auto-switch + snackbar
 - [ ] Settings → Gesture → Manage library: list view, add / delete / re-enroll / rename
 - [ ] Deletion: zero-fill enrolled landmark data before removing (sensitive biometric data)
+- [ ] [R&D] `GestureCoach.kt` — see R&D-E below; trigger only after Task 27 has usage data
 
 ---
 
@@ -660,10 +911,20 @@ throughout the app. Configuration is read-only from the app's perspective.
 
 See: [developer.android.com/work/managed-configurations] — official Managed Configuration docs.
 
+**Audit:** `EnterprisePolicy.kt` is fully implemented with 6 restriction keys
+(`max_gesture_attempts`, `require_sas_verification`, `disable_backup`, `audit_log_retention_days`,
+`disable_tor_proxy`, `enforce_pin_lock`). `EnterpriseSettingsFragment.kt` and
+`EnterpriseSettingsViewModel.kt` exist. `AuditRetentionWorker.kt` confirmed done (PR #91).
+`res/xml/app_restrictions.xml` and `EnterpriseConfigRepository.kt` are NOT in the file tree —
+these remain open.
+
+- [DONE] `EnterprisePolicy.kt` — 6 MDM restriction keys via `RestrictionsManager`
+- [DONE] `EnterpriseSettingsFragment.kt` + `EnterpriseSettingsViewModel.kt`
 - [DONE] Enterprise WorkManager audit-log retention cleanup job (PR #91)
 - [ ] `res/xml/app_restrictions.xml`: declare configurable keys:
   `allowed_transports`, `enforce_gesture_only`, `audit_log_retention_days`,
   `disable_deeplink`, `require_sas_confirmation`, `qr_relay_base_url`
+  — also add keys for new fields: `enforce_uwb_confirmation`, `max_room_members`
 - [ ] `EnterpriseConfigRepository.kt`: `RestrictionsManager` at startup → `StateFlow<EnterpriseConfig>`
 - [ ] `EnterpriseConfig` injected via Hilt into every service and ViewModel that enforces policy
 - [ ] `IS_ENTERPRISE` build config flag gates enterprise-only Settings UI sections
@@ -678,7 +939,9 @@ pre-provisioning and scheduled audit log export.
 - [ ] On first launch with managed config present: read pre-provisioned profile fields from config —
   skip onboarding for managed fields
 - [ ] Scheduled audit export: if `audit_export_endpoint` is set, POST CSV to that endpoint on schedule
-- [ ] Export signed with device attestation key — receiving endpoint can verify authenticity
+- [ ] Export signed with device attestation key via Android Keystore `setDevicePropertiesAttestationIncluded(true)` —
+  receiving endpoint can verify authenticity. Note: `DeviceAdminReceiver` may be required for
+  attestation challenge generation in fully managed device mode
 - [ ] `WorkManager` task: runs export, retries with exponential backoff on network failure
 
 ---
@@ -692,8 +955,17 @@ is generated and stored locally but never sent to existing contacts. This task c
 on the next exchange with any known peer. The peer verifies the certificate signature (must be
 signed by the old key to prove key continuity) before updating their TOFU registry.
 
-- [ ] `WireProtocol` v8 header: optional `ROTATION_CERT` field —
-  `oldKeyHash || newPublicKey || signature`
+**Audit:** `IdentityRotationDetector.kt` is fully implemented — it handles the detection side
+(FirstContact / Matched / KeyRotated events) and is unit-tested (`IdentityRotationDetectorTest.kt`,
+`KeyRotationTest.kt`). What's missing is the transmission side: broadcasting the rotation cert
+to existing contacts on next exchange. The `WireProtocol` v8 rotation cert header must use an
+optional TLV field (not mandatory) to remain backward-compatible with v7 receivers.
+
+- [DONE] `IdentityRotationDetector.kt` — TOFU key-change detection (FirstContact / Matched / KeyRotated)
+- [DONE] `IdentityRotationDetectorTest.kt` + `KeyRotationTest.kt`
+- [ ] `WireProtocol` v8 header: optional `ROTATION_CERT` TLV field —
+  `oldKeyHash(32) || newPublicKey(65) || signature(64)` — optional, skip if not rotated;
+  v7 receivers silently ignore unknown TLV fields
 - [ ] `NearbyExchangeService`: if local key was rotated since last exchange with this peer,
   include rotation cert in outbound frame header
 - [ ] Receiver: verify `signature = Ed25519Sign(oldPrivKey, newPublicKey || oldKeyHash)`
@@ -707,12 +979,19 @@ signed by the old key to prove key continuity) before updating their TOFU regist
 
 **Why here:** SPKI runtime pinning shipped in v2.0.1 (PR #85). This hardens operational aspects.
 
-- [ ] Auto-pin expiry check: at startup, parse pinned certificate `notAfter` →
-  if `notAfter - now < 30 days`, surface in-app banner
-- [ ] Two-pin configuration: `SPKI_PIN_PRIMARY` and `SPKI_PIN_BACKUP` in `BuildConfig`
+**Audit:** `RelayClient.kt` already implements: dual-pin check (PRIMARY + BACKUP), 30-day expiry
+warning via `RELAY_PIN_EXPIRY_EPOCH_MS` (Timber log), `SSLPeerUnverifiedException` path.
+Remaining open: surfacing the expiry warning in the app UI (not just Timber), and writing the
+SPKI_MISMATCH event to `ExchangeAuditLog` (currently only logged to Timber).
+
+- [DONE] `RelayClient.kt` dual-pin (PRIMARY + BACKUP) SPKI configuration
+- [DONE] 30-day expiry warning via `Timber.e` log on startup
+- [ ] Promote expiry warning to in-app banner: if `notAfter - now < 30 days`, show
+  `HomeFragment` warning card (not just Timber log) so operators see it in field builds
 - [ ] Pin violation logging: on `SSLPeerUnverifiedException`, write `ExchangeAuditLog` entry
-  with outcome `SPKI_MISMATCH` and observed certificate hash
-- [ ] Document pin rotation procedure in `docs/SECURITY.md`
+  with outcome `SPKI_MISMATCH` and observed certificate hash (currently only Timber logged)
+- [ ] Two-pin graceful rotation: document that both pins must be valid simultaneously during
+  rotation window in `docs/SECURITY.md` — add rotation procedure runbook
 
 ---
 
@@ -721,15 +1000,24 @@ signed by the old key to prove key continuity) before updating their TOFU regist
 **Why here:** Protocol-level privacy hardening before the post-quantum work (Task 33). Sealed
 sender is a simpler change and should ship first to give it time to soak.
 
-**Architecture:** Current wire frames have variable length correlated to profile size — a passive
-traffic observer can infer an exchange occurred and estimate profile size. Sealed sender pads all
-payloads to a fixed 2048-byte ciphertext block. Inner plaintext includes a 2-byte actual-length
-prefix; padding is random bytes. All AURA frames on-wire are identical length.
+**Architecture:** There are two complementary `SealedEnvelope` implementations — both serve
+distinct security properties and must both be wired:
+- `utils/SealedEnvelope.kt` (BLOCK_SIZE=256, MAX_SIZE=4096): pads payload to fixed block size.
+  Hides profile field count / content length from passive traffic observers.
+- `crypto/SealedEnvelope.kt` (X25519 ephemeral + AES-256-GCM, wire format v7): hides the
+  SENDER'S identity from relay servers and passive observers. Only the intended recipient
+  can learn who sent the message (after decryption).
 
-- [ ] `SealedEnvelope.kt`: wraps AES-256-GCM ciphertext in fixed-2048-byte outer envelope
-- [ ] `WireProtocol.serializePayload()`: always wraps in `SealedEnvelope`
-- [ ] `WireProtocol.deserializePayload()`: unwrap `SealedEnvelope`, trim padding using length prefix
-- [ ] Unit test: 50-byte and 1900-byte payloads both produce identical-length sealed envelopes
+`WireProtocol.serializePayload()` should wrap in `utils/SealedEnvelope` (padding layer) FIRST,
+then encrypt the padded payload via `crypto/SealedEnvelope` (anonymity layer). This two-layer
+approach provides both traffic analysis resistance and sender anonymity simultaneously.
+
+- [DONE] `utils/SealedEnvelope.kt` — block-size padding (256-byte blocks, MAX_SIZE=4096)
+- [PARTIAL] `crypto/SealedEnvelope.kt` — sealed sender encryption (X25519 ephemeral + AES-GCM)
+- [ ] `WireProtocol.serializePayload()`: wrap in `utils/SealedEnvelope` → encrypt with `crypto/SealedEnvelope`
+- [ ] `WireProtocol.deserializePayload()`: unwrap `crypto/SealedEnvelope` → trim `utils/SealedEnvelope` padding
+- [ ] Unit test: 50-byte and 1900-byte payloads both produce identical outer-layer ciphertext length
+- [ ] Unit test: sender identity is not recoverable from the outer wire frame without the recipient's private key
 
 ---
 
@@ -753,13 +1041,29 @@ finalized NIST standards, implementation libraries, and attack papers.
 See: [github.com/signalapp/libsignal] — Signal's cross-platform crypto primitives and PQXDH
 design for the hybrid approach rationale and protocol version negotiation patterns.
 
-- [ ] Add `org.bouncycastle:bcprov-jdk18on:1.78+` to `pq` build variant
-- [ ] `HybridKemEngine.kt`: `X25519 keypair || ML-KEM-768 keypair` → combined public key;
-  session key: `HKDF(x25519_shared || mlkem_shared, salt=sessionNonce, info="aura-pq-v1")`
+**Audit: `crypto/HybridKEM.kt` is production-complete.** Full implementation confirmed:
+ML-KEM-768 via `MLKEMEncapsulator / MLKEMDecapsulator` (BouncyCastle bcpqc), X25519 via
+`X25519Agreement` (BouncyCastle bcprov), combined HKDF-SHA256 shared secret. Wire layout:
+`[0x06 version][x25519_pub(32)][mlkem768_pub(1184)]` = 1217 bytes public key.
+BouncyCastle bcpqc dependency is already in the build. `HybridKEMUtils.kt` also exists in
+`utils/` as a helper wrapper around `crypto/HybridKEM`. The remaining work is exclusively
+the wire protocol negotiation layer.
+
+**Critical prerequisite (Task 43):** Before releasing PQ builds, `proguard-rules.pro` must
+include keep rules for BouncyCastle PQ classes — R8 removes reflection-dependent algorithm
+registries and will silently break `HybridKEM` in release builds.
+
+- [DONE] `crypto/HybridKEM.kt` — ML-KEM-768 + X25519 + HKDF-SHA256 hybrid KEM engine
+- [DONE] BouncyCastle bcpqc + bcprov dependencies in build
+- [DONE] `HybridKEMUtils.kt` helper wrapper
 - [ ] `WireProtocolNegotiator.kt`: version handshake — advertise v8 (PQ); fall back to v7 if needed
-- [ ] `WireProtocol` v8: extended public key field (65 bytes X25519 + 1184 bytes ML-KEM-768)
-- [ ] APK size gate: allow +1.5 MB for `pq` variant only
-- [ ] Wire protocol negotiation tests: v8 <-> v8 (PQ), v8 <-> v7 (fallback)
+- [ ] `WireProtocol` v8: extended public key field (65 bytes X25519 + 1184 bytes ML-KEM-768 = 1249 bytes)
+  and ciphertext field (32 bytes X25519 ephemeral + 1088 bytes ML-KEM-768 CT = 1120 bytes)
+- [ ] APK size gate: allow +1.5 MB for `pq` variant only; enforce separately in CI
+- [ ] Complete Task 43 (ProGuard rules) before releasing any build that uses `HybridKEM`
+- [ ] Wire protocol negotiation tests: v8 <-> v8 (PQ), v8 <-> v7 (graceful fallback to X25519-only)
+- [ ] Cross-check `crypto/SealedEnvelope.kt` vs `HybridKEM.kt` key derivation — both use X25519;
+  ensure the HKDF `info` labels are distinct to prevent key reuse across the two contexts
 
 ---
 
@@ -778,13 +1082,26 @@ AES-256-GCM (CryptoKit `AES.GCM`). SAS verifier: same truncated-HMAC-SHA256 → 
 See: [github.com/signalapp/libsignal] — Signal's approach to maintaining algorithmic parity
 across Swift, Kotlin, and Rust. Treat one implementation as the spec; the others are ports.
 
+**Audit:** The iOS module is more complete than the roadmap indicates:
+- `ios/Sources/AuraCompanion/MultipeerTransport.swift` — MultipeerConnectivity transport scaffold
+- `ios/Sources/AuraCompanion/WireProtocol.swift` — wire protocol Swift port present
+- `ios/Sources/AuraCompanion/AuraExchangeCoordinator.swift` — coordinator scaffold
+- `ios/Sources/AuraCore/AuraCrypto.swift` — crypto layer implemented (CryptoKit)
+- `ios/Sources/AuraCore/ContactProfile.swift` — profile model implemented
+- `ios/Sources/AuraCore/SasVerifier.swift` — SAS verifier implemented
+- Tests: `AuraCryptoTests.swift`, `ContactProfileTests.swift`
+
 - [DONE] AuraCore — ContactProfile, SasVerifier, AuraExchangeCoordinator + 15 tests (PR #97)
 - [DONE] iOS CI — cache, coverage, workflow_dispatch, 20-min timeout (PR #98)
-- [ ] NFC: `NFCTagReaderSession` in reader mode → send SELECT AID → receive peer key
-- [ ] MultipeerConnectivity transport for bulk payload — peer discovery via NFC handoff only
-- [ ] vCard payload: identical field names and ordering to Android — round-trip test
+- [DONE] `WireProtocol.swift` — wire protocol Swift port
+- [DONE] `MultipeerTransport.swift` scaffold — MultipeerConnectivity transport stub
+- [ ] `NFCTagReaderSession` in reader mode → send SELECT AID → receive peer key
+  (mirrors Task 2's Android reader path; reuse AID `F0 41 55 52 41 01`)
+- [ ] `MultipeerTransport.swift` production implementation — bulk payload over `MCSession`
+- [ ] vCard payload: identical field names and ordering to Android — add automated round-trip test
 - [ ] TOFU registry in CoreData — same logic as `KnownPeerDao` on Android
 - [ ] Cross-platform integration test: Android initiator → iOS responder → contact saved correctly
+- [ ] Verify `WireProtocol.swift` handles v8 PQ key fields (Task 33) once protocol is finalized
 
 ---
 
@@ -793,21 +1110,44 @@ across Swift, Kotlin, and Rust. Treat one implementation as the spec; the others
 **Why this follows Task 34:** Uses the same `WireProtocol` Kotlin code. Extracting the shared
 `:protocol` KMP module is easier after iOS because the cross-platform boundary is already defined.
 
+**Audit:** The `wearos/` Gradle module exists with more content than the roadmap indicates:
+- `wearos/src/main/java/.../wear/AuraTileService.kt` — Wear tile service in the wearos module
+  (distinct from `app/src/main/java/.../wearos/AuraWearTileService.kt` in the app module —
+  the app module's tile service is a stub; the wearos module's service is the production target)
+- `wearos/src/main/java/.../wear/WearPhoneBridge.kt` — Wear OS module bridge (the app module
+  `WearPhoneBridge.kt` is a stub that logs to `android.util.Log.d`)
+- `wearos/src/main/java/.../wear/WearStateStore.kt` — state store exists in wearos module
+
 - [DONE] Wear OS pairing flow — WearPairingViewModel + BottomSheet + PhoneWearSender (PR #93)
+- [DONE] `wearos/` Gradle module with `AuraTileService`, `WearPhoneBridge`, `WearStateStore`
 - [ ] Extract `WireProtocol`, `SasVerifier`, crypto primitives into `:protocol` KMP module
-- [ ] Wear OS `ExchangeTile`: "Ready" / "Active" states via Glance
+- [ ] `WearPhoneBridge.kt` (app module stub) → replace stub `Log.d` with real `ChannelClient` impl
+  wired to `wearos/WearPhoneBridge.kt`
+- [ ] Wear OS `ExchangeTile`: "Ready" / "Active" states via Glance — replace empty `AuraTileService`
+  tile builder with real state-driven Glance composable
 - [ ] Tile tap → sends activation `Intent` to paired phone via `ChannelClient`
 - [ ] Wrist-raise: `SensorManager` accelerometer → detect raise → trigger on phone (opt-in)
 - [ ] SAS PIN display on watch face — receive PIN via `ChannelClient`
+- [ ] Retire `app/src/main/java/.../wearos/AuraWearTileService.kt` stub once
+  `wearos/AuraTileService.kt` is production-complete
 
 ---
 
 ## Task 36 — Android Auto Full Integration
 
+**Audit:** The `automotive/` Gradle module has a full screen library:
+`AdvertisingScreen.kt`, `CompletedScreen.kt`, `IdleScreen.kt`, `SasScreen.kt`,
+`AuraBiometricAutoActivity.kt`, `AuraVoiceActivity.kt`. The Auto integration is more complete
+than the roadmap implies. Open items are the TTS announcement, contacts list screen, and
+gesture/NFC disable enforcement.
+
 - [DONE] Android Auto voice action + biometric auth gate (PR #92)
-- [ ] TTS announcement: "New contact received: [name], [title], [company]" via `CarContext`
+- [DONE] `automotive/` module: full screen library (Advertising/Completed/Idle/Sas screens)
+- [DONE] `AuraBiometricAutoActivity.kt` — biometric gate in Auto context
+- [ ] TTS announcement: "New contact received: [name], [title], [company]" via `CarContext.getSystemService(CarHardwareManager::class.java)` + `CarAudioManager`
 - [ ] `CarAppService` screen: last 5 received contacts — tap to confirm save
-- [ ] Explicit disable of gesture + NFC trigger when connected to Android Auto
+- [ ] Explicit disable of gesture + NFC trigger when connected to Android Auto —
+  detect via `UiModeManager.currentModeType == UI_MODE_TYPE_CAR`
 - [ ] Manual test recipe in `docs/TESTING.md` for Auto mode
 
 ---
@@ -828,16 +1168,21 @@ See: [code.briarproject.org] — Briar's `BrambleTransportProtocol` and message 
 Their privacy-preserving advertisement mechanism (hash of recipient ID in BLE advertisement) is
 exactly the model here. Briar's design specification is required reading before implementation.
 
+**Audit:** `BloomFilter.kt` in `security/` is fully implemented (65536 bits, 7 hash functions,
+~0.8% FPR for 10k entries) — directly reusable for the advertisement bloom filter in this task.
+
+- [DONE] `BloomFilter.kt` — probabilistic set membership filter reusable for advertisement layer
 - [ ] `PendingExchangeQueue` Room entity:
   `packetId`, `targetIdentityKeyHashBlind` (SHA256 of target hash), `encryptedPayload`,
   `createdAt`, `expiresAt` (TTL: 24 hours), `relayHopCount` (max 3)
 - [ ] BLE GATT advertisement: bloom filter of `targetIdentityKeyHashBlind` in manufacturer data
-  (Golomb-Rice bloom, ~64 bytes for 10 pending packets)
+  (use existing `BloomFilter.toBytes()` → ~8 KiB; BLE manufacturer data max is 31 bytes, so
+  compress the filter with Golomb-Rice encoding → ~64 bytes for 10 pending packets)
 - [ ] On seeing advertisement: check TOFU registry against bloom filter → if hit → connect →
   download matching packets → store in `PendingExchangeQueue`
 - [ ] On meeting a target: deliver pending packets before exchanging own card
 - [ ] `WorkManager` task: purge expired `PendingExchangeQueue` entries every 6 hours
-- [ ] Unit tests: bloom filter false-positive rate < 1%, packet relay to correct target
+- [ ] Unit tests: bloom filter false-positive rate < 1% at 10 entries, packet relay to correct target
 
 ---
 
@@ -907,6 +1252,136 @@ platform targets for hardware APIs) is the direct architectural reference.
 
 ---
 
+## Task 41 — Wire DoubleRatchetState into Exchange Sessions
+
+**Why this was not in the original sequence:** `DoubleRatchetState.kt` was identified as built but
+unconnected during the 2026-05-26 deep audit. The task is inserted after Task 33 (when the final
+wire protocol shape is known) because the ratchet must advance in sync with the wire framing.
+
+**What's built:** `DoubleRatchetState.kt` implements the symmetric ratchet half of the Signal
+Double Ratchet (Section 2.2 of the Signal specification). `nextMessageKey()` derives a one-time
+AES-256 key and advances the chain: `messageKey = HMAC-SHA256(chainKey, "AURA-MSG-KEY\x01")`;
+`nextChain = HMAC-SHA256(chainKey, "AURA-CHAIN-ADV\x02")`. It is unit-tested via
+`DoubleRatchetStateTest.kt`. However, `NearbyExchangeService` uses the raw ECDH-derived session
+key for the entire session — the ratchet is never advanced, providing no per-payload forward
+secrecy within a session.
+
+**Why this matters:** AURA sessions are typically short (seconds to minutes). Even so, wiring the
+ratchet costs nothing in overhead and provides session-internal forward secrecy — if a session key
+is somehow extracted from memory after the session ends, only that session's payloads are exposed,
+not any future session. This is defense-in-depth consistent with the existing Double Ratchet
+implementation already being in the codebase.
+
+**Note on the DH ratchet:** The DH ratchet half (break-in recovery) is intentionally omitted.
+AURA's single round-trip exchange model has no async message turns to carry new DH ratchet keys.
+The symmetric ratchet alone is the correct scope for AURA.
+
+- [DONE] `DoubleRatchetState.kt` — symmetric ratchet, HMAC-SHA256 chain
+- [DONE] `DoubleRatchetStateTest.kt` — unit test coverage
+- [ ] `NearbyExchangeService`: on session key derived (post-ECDH), call
+  `DoubleRatchetState.from(sessionKey)` → store as session-scoped ratchet instance
+- [ ] For each encrypted payload in the session, call `ratchet.nextMessageKey()` → use as
+  per-payload AES-256-GCM key instead of the raw session key
+- [ ] Receiver side: mirror the same advancement — both parties must call `nextMessageKey()`
+  exactly the same number of times in the same sequence
+- [ ] Session teardown: zero-fill `ratchet.chainKey` after session close —
+  `Arrays.fill(chainKeyBytes, 0)` before GC
+- [ ] Unit test: two-party ratchet sync — sender advances N times, receiver advances same N times,
+  both produce identical message key sequence
+- [ ] Integration test with `FakeNearbyTransport`: full profile exchange → verify each
+  payload was encrypted with a unique key
+
+---
+
+## Task 42 — Source Artifact Consolidation
+
+**Why here:** Code quality and architectural consistency. Discovered during 2026-05-26 deep audit.
+Should be done before major new transport or crypto work to avoid propagating inconsistencies.
+
+**Findings:**
+
+1. **`SharePresetDao.kt` placement:** Located in `data/` instead of `data/local/` — inconsistent
+   with all other DAOs (`ContactDao`, `ProfileDao`, `KnownPeerDao`, `ExchangeAuditDao`, etc.).
+
+2. **`WearPhoneBridge.kt` stub vs. implementation:** `app/src/main/java/.../wearos/WearPhoneBridge.kt`
+   is a stub (logs to `android.util.Log.d`). `wearos/src/main/java/.../wear/WearPhoneBridge.kt`
+   is the actual implementation target in the wearos module. The app-module stub should have its
+   purpose clarified via KDoc so future contributors understand the two-module bridge pattern.
+
+3. **`AuraCarAppService.kt` dual presence:** `app/src/main/java/.../automotive/AuraCarAppService.kt`
+   (in the main app module) coexists with `automotive/src/main/java/.../auto/AuraCarAppService.kt`
+   (in the automotive Gradle module). These serve different entry points (app module uses Car App
+   Library for in-car connection from the phone side; automotive module is the in-car system image
+   target). Not a duplication — but both must be explicitly documented.
+
+4. **`reproducible_build_test.sh` three copies:** At root, `fdroid/`, and `scripts/`. Not strictly
+   redundant (different CI invocation contexts) but logic should be consolidated into a shared
+   shell library to prevent divergence.
+
+- [ ] Move `SharePresetDao.kt` from `data/` to `data/local/`; update `AppDatabase.kt` import
+- [ ] Add KDoc to `app/src/main/.../wearos/WearPhoneBridge.kt` explaining it is a stub pending
+  Task 35 implementation; add `@Deprecated("Stub — use wearos module bridge", ReplaceWith("..."))`
+- [ ] Add KDoc to `app/src/main/.../automotive/AuraCarAppService.kt` clarifying its role vs
+  `automotive/src/main/.../auto/AuraCarAppService.kt` (phone-side Car App vs in-car system image)
+- [ ] Create `scripts/lib/reproducible_build_common.sh`: extract shared logic; have root and
+  `fdroid/` variants source it
+
+---
+
+## Task 43 — ProGuard / R8 Rules Audit for PQ Crypto and MediaPipe
+
+**Why here:** `crypto/HybridKEM.kt` is production-complete but `proguard-rules.pro` does not
+contain explicit keep rules for BouncyCastle's PQ algorithm registries. R8's aggressive code
+shrinking removes these classes (they are loaded by class name via reflection), silently breaking
+`HybridKEM` in release builds. This must be fixed before any release build that activates Task 33.
+
+**MediaPipe note:** `GestureModelLoader` loads MediaPipe classes; R8 may strip the JNI bridge
+classes if not kept. Verify existing ProGuard rules cover the MediaPipe consumer rules.
+
+- [ ] Add to `proguard-rules.pro`:
+  ```
+  # BouncyCastle PQ (ML-KEM-768 — HybridKEM.kt)
+  -keep class org.bouncycastle.pqc.** { *; }
+  -keep class org.bouncycastle.crypto.** { *; }
+  -keep class org.bouncycastle.math.** { *; }
+  -dontwarn org.bouncycastle.**
+  # MediaPipe (GestureModelLoader)
+  -keep class com.google.mediapipe.** { *; }
+  -keep class com.google.mediapipe.tasks.** { *; }
+  # DoubleRatchetState — SecretKeySpec reflection path
+  -keepclassmembers class com.showerideas.aura.utils.DoubleRatchetState { *; }
+  ```
+- [ ] Add `assembleRelease` + `./gradlew app:checkDebugDuplicateClasses` step in CI that
+  runs `HybridKEM` smoke test against the R8-shrunk release APK to catch future regression
+- [ ] Verify `SealedEnvelope` (both `utils/` and `crypto/`) survive R8 — both use no reflection
+  but verify with `apkanalyzer dex packages --defined-only` in CI
+- [ ] Document ProGuard rule source and rationale in a comment block above each rule
+
+---
+
+## Task 44 — Notification Architecture Hardening
+
+**Why here:** Android 14 tightened foreground service notification requirements significantly.
+AURA declares `FOREGROUND_SERVICE_CONNECTED_DEVICE` (API 34+) in `AndroidManifest.xml` but
+the actual notification channel setup and foreground notification content have not been
+systematically audited.
+
+- [ ] Audit `AuraApplication.kt` for `NotificationChannel` definitions — confirm all channels
+  required by foreground services are created on `Application.onCreate()`:
+  - `aura_exchange` channel: "AURA Exchange" (importance HIGH — tap to open ExchangeFragment)
+  - `aura_volume_trigger` channel: "Trigger Active" (importance DEFAULT, no sound)
+  - `aura_blocklist_sync` channel: "Security sync" (importance LOW — background worker)
+- [ ] `VolumeButtonListenerService` foreground notification: must show exchange state
+  ("Ready" / "Exchange active with [peer]") not a blank stub
+- [ ] `NearbyExchangeService` foreground notification (Android 14+ requirement): show during
+  active exchange with "Tap to view exchange" `PendingIntent`
+- [ ] `BlocklistRefreshWorker` verify notification channel is correct category
+  (`FOREGROUND_SERVICE_DATA_SYNC` not `CONNECTED_DEVICE`) per Android 14 categorization
+- [ ] Android 14 exact alarm permission: if any `AlarmManager.setExactAndAllowWhileIdle()` calls
+  exist, verify `SCHEDULE_EXACT_ALARM` permission is declared and gracefully degrades if denied
+
+---
+
 ## Tasks in Research / Design Phase
 
 The following are design-tracked. Each has an explicit trigger condition that moves it from
@@ -958,7 +1433,11 @@ See: [w3.org/TR/did-core] and [w3c-ccg.github.io/did-method-key].
 After enrollment, report per-landmark variance to help the user improve consistency.
 Uses the same LSTM landmark comparison engine (Task 13) in reporting mode.
 
-- [R&D] `GestureCoach.kt`: per-landmark standard deviation across enrolled samples
+See: [github.com/kinivi/hand-gesture-recognition-mediapipe] — per-landmark variance reporting
+is a natural extension of their normalization + centroid approach.
+
+- [R&D] `GestureCoach.kt`: per-landmark standard deviation across enrolled samples →
+  overlay on camera preview showing which joints drift most (low-cost visual coaching)
 - Trigger: schedule after gesture library (Task 27) has real-world usage data
 
 ### R&D-F — Wearable Biometric Fusion (HRV Second Factor)
@@ -992,6 +1471,43 @@ AURA packet must compress to < 160 characters (one SMS unit).
 - [R&D] LZ4 + base91 encoding — measure compressed size for typical profiles
 - Trigger: only after LoRa integration (Task 39) ships and demand for longer-range paths exists
 
+### R&D-I — App Shortcuts
+
+Static and dynamic home screen shortcuts for common AURA actions.
+
+See: [developer.android.com/develop/ui/views/launch/shortcuts/creating-shortcuts]
+
+- [R&D] `res/xml/shortcuts.xml`: static shortcuts for "Start Exchange" and "View Contacts" —
+  surfaced via long-press on the AURA launcher icon
+- [R&D] Dynamic shortcut: "Exchange with [last contact]" — updated after each successful exchange
+- Trigger: implement after Task 9 (Room UX) as a polish item during any low-velocity sprint
+
+### R&D-J — Predictive Back Gesture (Android 14+)
+
+Android 14 requires apps to support the predictive back gesture via
+`android:enableOnBackInvokedCallback="true"` in the manifest, replacing `onBackPressed()` overrides.
+AURA's `SasDialogHardening` (Task 20) already blocks back during countdown — ensure the
+`OnBackInvokedCallback` API is used, not the deprecated `onBackPressed()` override.
+
+See: [developer.android.com/guide/navigation/custom-back/predictive-back-gesture]
+
+- [R&D] Audit all `onBackPressed()` overrides in fragments and activities
+- [R&D] Replace with `onBackPressedDispatcher.addCallback(OnBackPressedCallback)` or
+  `OnBackInvokedDispatcher.registerOnBackInvokedCallback()` as appropriate
+- Trigger: required for Android 14+ polish certification; low-cost, implement any sprint
+
+### R&D-K — Android Health Connect HRV Integration
+
+Health Connect (Android 14+) provides read access to HRV data from any connected wearable —
+not just Wear OS. This is a prerequisite for R&D-F (HRV second factor) on non-Wear devices.
+
+See: [developer.android.com/health-and-fitness/guides/health-connect]
+
+- [R&D] Evaluate `READ_HEART_RATE_VARIABILITY_RMSSD` permission availability on key devices
+- [R&D] Assess HRV data freshness — Health Connect records may be up to 30 minutes stale,
+  which is too stale for real-time auth; assess practical freshness before investing
+- Trigger: evaluate only if R&D-F confirms HRV is viable as a biometric signal
+
 ---
 
 ## Version History
@@ -1022,6 +1538,7 @@ stronger by giving it a trust anchor that does not depend on software alone.
 *Transport independence:* Three fully FOSS transport implementations (Wi-Fi Direct, BLE GATT,
 LoRa via Meshtastic) give AURA zero dependency on Google Mobile Services. The app is F-Droid
 distributable and runs on any Android device including de-Googled LineageOS installations.
+The Wi-Fi Direct transport is substantially implemented; the FOSS flavor DI binding is wired.
 
 *Room exchanges:* N people in the same space tap in once and all business cards flow to everyone
 simultaneously. The conference table use case is fully covered with cryptographic isolation between
@@ -1029,10 +1546,17 @@ sessions and a 10-minute auto-expiry. The star-topology multi-party service (Tas
 up to N members with delivery acknowledgment, no pairwise session bootstrapping required.
 
 *Gesture authentication v2:* The gesture gate graduates from a single-frame cosine match to a
-temporal LSTM classifier with liveness challenge-response. Spoofing requires intercepting a real
-user's 60-frame motion sequence with correct challenge compliance in real time — practically
-infeasible. The gesture library (Task 27) enables up to 5 distinct gestures per user, each
-mapped to a different profile, enabling fluid persona switching via physical gesture alone.
+temporal LSTM classifier with two-layer liveness protection: passive drift-based detection
+(already shipped via `LivenessGuard.kt`) combined with active challenge-response (Task 14).
+Spoofing requires intercepting a real user's 60-frame motion sequence with correct challenge
+compliance in real time — practically infeasible. The gesture library (Task 27) enables up to
+5 distinct gestures per user, each mapped to a different profile, enabling fluid persona
+switching via physical gesture alone.
+
+*Session forward secrecy:* The `DoubleRatchetState` symmetric ratchet (already implemented, Task 41)
+wires per-payload forward secrecy into every exchange session — each profile field, avatar, and
+challenge response is encrypted with a unique one-time key. Combined with the session expiry
+model, the attack surface for key recovery from past session data is minimized.
 
 *Offline resilience:* Through store-and-forward (Task 37) and multi-hop mesh routing (Task 38),
 AURA exchanges work with no infrastructure. Two AURA devices meeting can relay cards for a third
@@ -1041,11 +1565,11 @@ self-contained identity exchange network. LoRa integration (Task 39) extends thi
 scale ranges using commodity Meshtastic hardware.
 
 *Post-quantum security:* The hybrid KEM (X25519 + ML-KEM-768) in Task 33 is harvest-now-decrypt-
-later resistant. An adversary who records AURA exchange ciphertext today cannot decrypt it with a
-future quantum computer because breaking the session requires breaking both classical and
-post-quantum algorithms simultaneously. Combined with sealed sender (Task 32), which pads all
-frames to a fixed 2048-byte length, AURA is resistant to both computational and traffic-analysis
-attacks at the transport layer.
+later resistant. The crypto engine (`HybridKEM.kt`) is already production-complete; Task 33's
+remaining work is the wire protocol negotiation layer and ProGuard rules (Task 43). Combined with
+`utils/SealedEnvelope` (traffic analysis resistance via block-size padding) and `crypto/SealedEnvelope`
+(sealed sender anonymity), AURA is resistant to computational, traffic-analysis, and identity-
+correlation attacks at the transport layer.
 
 *Enterprise readiness:* MDM-administered managed configuration, pre-provisioned profiles,
 scheduled signed audit export, and transport restriction policies (Tasks 28–29) make AURA
@@ -1059,6 +1583,8 @@ phones. The `:protocol` KMP module (Task 35) is the single source of truth for a
 
 ---
 
-*Last updated: 2026-05-26 — Full rewrite from phase-based to dependency-ordered task sequence.
-v3.2.0 stable on main. PRs #62–#101 merged. Next implementation target: Task 1 NFC APDU chaining,
-Task 4 Wi-Fi Direct transport, Task 8 Room schema.*
+*Last updated: 2026-05-26 — Deep audit pass on remote main (v3.2.0) added Tasks 41–44, R&D-I–K,
+audit findings section, corrected DB schema version (v9), updated [PARTIAL]/[DONE] status on
+WifiDirectTransport, FOSS DI, HybridKEM engine, LivenessGuard, GestureClassifier, and iOS module.
+Next implementation targets: Task 41 (DoubleRatchetState wiring), Task 43 (ProGuard PQ rules),
+Task 1 APDU chaining, Task 4 production hardening.*
