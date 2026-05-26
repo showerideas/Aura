@@ -105,6 +105,13 @@ class GestureAuthManager @Inject constructor(
          * to step 2. The UI should prompt: "Now show your second gesture."
          */
         data class AwaitingStep2(val step1: GesturePattern) : RecordingState()
+
+        /**
+         * T13 — Collecting the 30-frame temporal window for liveness + spoof check.
+         * Emitted after the initial centroid match passes; the temporal classifier
+         * is accumulating frames to verify real-hand motion.
+         */
+        data class CollectingSequence(val framesCollected: Int, val required: Int) : RecordingState()
         /** A stable gesture embedding is ready (single-step or sequence complete). */
         data class Complete(val pattern: GesturePattern) : RecordingState()
         /** Camera or model initialisation failed. */
