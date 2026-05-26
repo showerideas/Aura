@@ -37,7 +37,7 @@ class VolumeButtonListenerService : Service() {
 
     companion object {
         const val ACTION_AURA_ACTIVATE = "com.showerideas.aura.ACTIVATE"
-        private const val CHANNEL_ID = "aura_bg_channel"
+        private const val CHANNEL_ID = NotificationChannels.CHANNEL_BG_LISTENER
         private const val NOTIFICATION_ID = 1001
         private const val TRIPLE_PRESS_WINDOW_MS = 1500L   // 1.5 seconds
         private const val REQUIRED_PRESSES = 3
@@ -159,16 +159,8 @@ class VolumeButtonListenerService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "AURA Background",
-            NotificationManager.IMPORTANCE_MIN
-        ).apply {
-            description = "Keeps AURA ready for quick activation"
-            setShowBadge(false)
-        }
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(channel)
+        // T44: centralized hardened channel registry
+        NotificationChannels.ensureChannels(this)
     }
 
     private fun buildNotification(): Notification {

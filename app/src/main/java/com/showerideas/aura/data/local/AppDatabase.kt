@@ -3,7 +3,7 @@ package com.showerideas.aura.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.showerideas.aura.data.SharePresetDao
+import com.showerideas.aura.data.local.SharePresetDao
 import com.showerideas.aura.model.BlockedEndpoint
 import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeAuditEntry

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import timber.log.Timber
@@ -65,6 +66,8 @@ class ExchangeFragment : Fragment() {
     private var serviceStarted = false
     /** Coroutine job that auto-aborts the SAS dialog after 30 s of inaction. */
     private var sasTimeoutJob: Job? = null
+    /** Coroutine job that updates the progress-bar countdown tick every 100 ms. */
+    private var sasCountdownJob: Job? = null
     /** Guard: show the merge review sheet at most once per completed session. */
     private var mergeSheetShown = false
     /**
@@ -419,10 +422,10 @@ class ExchangeFragment : Fragment() {
      * to be considered verified — provides defence-in-depth against MITM.
      */
     private fun showSasDialog(pin: String) {
-        // Haptic pulse to draw attention.
+        // Haptic pulse to draw attention (T20 hardening).
         binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
-        // Inflate custom view with identicon + accessible code display.
+        // Inflate custom view with identicon + accessible code display + countdown bar.
         val dialogView = layoutInflater.inflate(R.layout.dialog_sas_verification, null)
         val identicon = IdenticonGenerator.generate(pin, size = 256)
         dialogView.findViewById<ImageView>(R.id.iv_sas_identicon).setImageBitmap(identicon)
@@ -434,20 +437,35 @@ class ExchangeFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.tv_sas_instruction)
             .text = getString(R.string.sas_dialog_instruction)
 
+        // T20: countdown progress bar (max=300 steps, 1 step per 100 ms = 30 s total)
+        val progressBar = dialogView.findViewById<ProgressBar>(R.id.pb_sas_countdown)
+
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.sas_dialog_title))
             .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton(getString(R.string.sas_dialog_confirm)) { _, _ ->
                 sasTimeoutJob?.cancel()
+                sasCountdownJob?.cancel()
                 viewModel.confirmSas()
             }
             .setNegativeButton(getString(R.string.sas_dialog_mismatch)) { _, _ ->
                 sasTimeoutJob?.cancel()
+                sasCountdownJob?.cancel()
                 viewModel.abortSas()
                 findNavController().navigateUp()
             }
             .show()
+
+        // Tick the progress bar every 100 ms
+        sasCountdownJob = viewLifecycleOwner.lifecycleScope.launch {
+            var remaining = 300
+            while (remaining > 0 && dialog.isShowing) {
+                delay(100)
+                remaining--
+                progressBar.progress = remaining
+            }
+        }
 
         // 30-second auto-abort — if user walks away without confirming,
         // abort the session rather than leaving it in a limbo VERIFYING state.
@@ -455,6 +473,7 @@ class ExchangeFragment : Fragment() {
             delay(SAS_DIALOG_TIMEOUT_MS)
             if (dialog.isShowing) {
                 Timber.w("SAS dialog timed out after ${SAS_DIALOG_TIMEOUT_MS / 1000}s — auto-aborting")
+                sasCountdownJob?.cancel()
                 dialog.dismiss()
                 viewModel.abortSas()
                 findNavController().navigateUp()
@@ -464,6 +483,7 @@ class ExchangeFragment : Fragment() {
 
     override fun onDestroyView() {
         sasTimeoutJob?.cancel()
+        sasCountdownJob?.cancel()
         viewModel.stopGestureCamera()
         super.onDestroyView()
         _binding = null

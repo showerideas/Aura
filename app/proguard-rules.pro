@@ -82,3 +82,37 @@
 -dontwarn javax.annotation.processing.**
 -dontwarn autovalue.shaded.com.squareup.javapoet.**
 -dontwarn com.google.auto.value.extension.memoized.processor.**
+# ---------------------------------------------------------------------------
+# T43: BouncyCastle PQ keep rules — CRITICAL for HybridKEM release builds
+#
+# HybridKEM.kt uses ML-KEM-768 (FIPS 203) + X25519 via org.bouncycastle.pqc.
+# R8 strips all BouncyCastle PQ classes without these rules, producing a
+# NoClassDefFoundError at the first PQ key generation on release builds.
+#
+# Rules cover:
+#   org.bouncycastle.pqc.**       — ML-KEM-768, Kyber, NTRU, SPHINCS+ families
+#   org.bouncycastle.crypto.**    — AES-GCM, HKDF, ECDH, X25519 providers
+#   org.bouncycastle.math.**      — ECC arithmetic (X25519 field operations)
+#   org.bouncycastle.asn1.**      — ASN.1 serialization for key encoding
+#   org.bouncycastle.jcajce.**    — JCA/JCE bridge provider
+#   org.bouncycastle.jce.**       — JCE provider registration
+#   org.bouncycastle.x509.**      — Certificate utilities
+#
+# Verification (run after assembleRelease):
+#   $ANDROID_HOME/tools/bin/apkanalyzer classes list app-release-unsigned.apk \
+#     | grep "bouncycastle.pqc"
+# Expected: org.bouncycastle.pqc.crypto.mlkem.* present.
+# ---------------------------------------------------------------------------
+-keep class org.bouncycastle.pqc.** { *; }
+-keep class org.bouncycastle.crypto.** { *; }
+-keep class org.bouncycastle.math.** { *; }
+-keep class org.bouncycastle.asn1.** { *; }
+-keep class org.bouncycastle.jcajce.** { *; }
+-keep class org.bouncycastle.jce.** { *; }
+-keep class org.bouncycastle.x509.** { *; }
+-keep class org.bouncycastle.util.** { *; }
+-keepclassmembers class org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
+
+# Timber — log wrapper; reflection-safe but dontwarn keeps R8 quiet.
+-dontwarn timber.log.**
