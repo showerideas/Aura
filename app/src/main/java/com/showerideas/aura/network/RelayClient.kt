@@ -1,5 +1,6 @@
 package com.showerideas.aura.network
 
+import com.showerideas.aura.BuildConfig
 import timber.log.Timber
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -30,13 +31,39 @@ class RelayClient @Inject constructor() {
     companion object {
         private const val CONNECT_TIMEOUT_MS = 10_000
         private const val READ_TIMEOUT_MS    = 30_000
+
+        /** Warn 30 days ahead of pin expiry so rotation can happen before the deadline. */
+        private const val PIN_EXPIRY_WARN_MS = 30L * 24 * 60 * 60 * 1_000
     }
 
-    /**
-     * Upload [encryptedBytes] to the relay slot owned by [endpoint].
-     *
-     * @return true on HTTP 2xx, false on any network or server error.
-     */
+    init {
+        // Phase 5.7 — certificate pin expiry early-warning.
+        // Logs a WARNING when within 30 days of expiry and an ERROR when already expired.
+        // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
+        val expiryMs = BuildConfig.RELAY_PIN_EXPIRY_EPOCH_MS
+        val nowMs    = System.currentTimeMillis()
+        val remaining = expiryMs - nowMs
+        when {
+            remaining <= 0 ->
+                Timber.e(
+                    "RELAY TLS PIN IS EXPIRED — rotate immediately! " +
+                    "Expiry was %s. See docs/QR_RELAY_SETUP.md.",
+                    java.util.Date(expiryMs)
+                )
+            remaining <= PIN_EXPIRY_WARN_MS ->
+                Timber.w(
+                    "Relay TLS pin expiring in %d day(s) — rotate soon! " +
+                    "Expiry: %s. See docs/QR_RELAY_SETUP.md.",
+                    remaining / (24 * 60 * 60 * 1_000),
+                    java.util.Date(expiryMs)
+                )
+            else ->
+                Timber.d(
+                    "RelayClient init: pin valid for %d more day(s).",
+                    remaining / (24 * 60 * 60 * 1_000)
+                )
+        }
+    }
 
     /** Phase 8.3 — SOCKS5 proxy address for Tor/Orbot anonymization. Null = direct. */
     @Volatile private var socksProxy: java.net.InetSocketAddress? = null
