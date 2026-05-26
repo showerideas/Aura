@@ -456,4 +456,33 @@
     <string name="enterprise_backup_disabled">Backup disabled</string>
     <string name="enterprise_tor_disabled">Tor proxy disabled</string>
     <string name="enterprise_pin_lock">PIN lock before exchange</string>
+
+    <!-- Phase 10.4 — Backup/restore polish -->
+    <string name="backup_passphrase_hint">Passphrase</string>
+    <string name="backup_passphrase_confirm_hint">Confirm passphrase</string>
+    <string name="backup_passphrase_mismatch">Passphrases do not match — please try again.</string>
+    <string name="backup_restore_confirm_title">Restore contacts?</string>
+    <string name="backup_status_no_contacts">No contacts to export.</string>
+    <string name="backup_status_export_failed">Export failed: %1$s</string>
+    <string name="backup_status_read_failed">Could not read backup file.</string>
+    <string name="backup_status_restore_wrong_passphrase">Restore failed — check your passphrase and try again.</string>
+    <string name="backup_status_restore_failed">Restore failed: %1$s</string>
+
+    <plurals name="backup_status_export_success">
+        <item quantity="one">Backup saved — %1$d contact exported.</item>
+        <item quantity="other">Backup saved — %1$d contacts exported.</item>
+    </plurals>
+    <plurals name="backup_status_restore_success">
+        <item quantity="one">Restored %1$d contact successfully.</item>
+        <item quantity="other">Restored %1$d contacts successfully.</item>
+    </plurals>
+    <plurals name="backup_restore_confirm_message">
+        <item quantity="one">This will merge %1$d contact from the backup into your current contacts. Existing contacts with the same ID will be updated.</item>
+        <item quantity="other">This will merge %1$d contacts from the backup into your current contacts. Existing contacts with the same IDs will be updated.</item>
+    </plurals>
+    <plurals name="backup_contact_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
+
 </resources>

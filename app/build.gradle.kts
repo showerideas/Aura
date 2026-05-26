@@ -38,6 +38,18 @@ android {
         // Rotate the pin AND update this value before the expiry date.
         // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
         buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
+        // Phase 10.2 — Runtime SPKI certificate pins for RelayClient's SpkiPinTrustManager.
+        // Set these in CI environment variables (RELAY_SPKI_PIN_PRIMARY / RELAY_SPKI_PIN_BACKUP).
+        // Generate with: openssl s_client -connect <relay-host>:443 < /dev/null |
+        //   openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER |
+        //   openssl dgst -sha256 -binary | base64
+        // See docs/QR_RELAY_SETUP.md for the full rotation runbook.
+        val spkiPrimary = System.getenv("RELAY_SPKI_PIN_PRIMARY")?.takeIf { it.isNotBlank() }
+            ?: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="   // placeholder — set in CI
+        val spkiBackup  = System.getenv("RELAY_SPKI_PIN_BACKUP")?.takeIf { it.isNotBlank() }
+            ?: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="   // placeholder — set in CI
+        buildConfigField("String", "RELAY_SPKI_PIN_PRIMARY", "\"$spkiPrimary\"")
+        buildConfigField("String", "RELAY_SPKI_PIN_BACKUP",  "\"$spkiBackup\"")
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
@@ -327,9 +339,14 @@ val gestureModelUrlFallback = "https://storage.googleapis.com/mediapipe-models/"
 // If blank/unset, checksum verification is skipped with a warning (safe for
 // local dev). The fallback literal here is the last known-good hash so that
 // local builds with the model already present never need the env var.
+// Phase 10.3 — Canonical SHA-256 of gesture_recognizer.task (float16/latest).
+// This single constant drives BOTH downloadGestureModel (integrity check after download)
+// AND verifyGestureModel (bundled asset verification before release builds).
+// Update when the model version changes; set GESTURE_MODEL_SHA256 in CI/Actions Variables.
+// Obtain with: sha256sum gesture_recognizer.task
 val gestureModelSha256 = System.getenv("GESTURE_MODEL_SHA256")
     ?.takeIf { it.isNotBlank() }   // treat empty string the same as not-set
-    ?: "97952348cf6a6a4915c2ea1496b4b37ebabc50cbbf80571435643c455f2b0482"
+    ?: "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
 
 tasks.register("downloadGestureModel") {
     description = "Download gesture_recognizer.task from MediaPipe model hub (Prompt-5: hermetic)"
@@ -559,7 +576,7 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
 
 // Phase 5.8 — verify SHA-256 of bundled gesture model asset before building.
 // Run: ./gradlew verifyGestureModel
-val GESTURE_MODEL_SHA256 = "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
+// Phase 10.3: canonical hash is now gestureModelSha256 declared above (unified).
 tasks.register("verifyGestureModel") {
     description = "Verifies the SHA-256 hash of the bundled MediaPipe gesture model."
     group = "verification"
@@ -572,8 +589,8 @@ tasks.register("verifyGestureModel") {
         val digest = MessageDigest.getInstance("SHA-256")
         val hash = digest.digest(modelFile.readBytes())
             .joinToString("") { b -> "%02x".format(b.toInt() and 0xff) }
-        if (hash != GESTURE_MODEL_SHA256) {
-            throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $GESTURE_MODEL_SHA256\nActual:   $hash")
+        if (hash != gestureModelSha256) {
+            throw GradleException("gesture_recognizer.task SHA-256 mismatch!\nExpected: $gestureModelSha256\nActual:   $hash")
         }
         println("gesture_recognizer.task SHA-256 OK: $hash")
     }
