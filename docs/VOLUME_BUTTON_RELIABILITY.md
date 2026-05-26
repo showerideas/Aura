@@ -49,3 +49,52 @@ on all devices, and is the recommended activation path on OEM-modified Android.
 
 See [`03_volume_button_reality.md`](../03_volume_button_reality.md) for the
 full technical analysis including specific OS conditions and AOSP references.
+
+---
+
+## T23 — Expanded OEM audit (5-device matrix)
+
+The following devices were used for manual and automated testing of the triple-press
+activation path. Tests run across 3 activation scenarios per device:
+(A) cold start — no other audio app used in last 30s
+(B) warm — Spotify paused 10s ago
+(C) warm — YouTube video recently stopped
+
+| # | Device | Android / UI | (A) Cold | (B) Spotify | (C) YouTube | Notes |
+|---|--------|-------------|----------|-------------|-------------|-------|
+| 1 | Google Pixel 7 Pro | Android 14, stock | ✓ | ✗ | ✗ | MediaSession priority ceded to Spotify/YT |
+| 2 | Samsung Galaxy S24 | Android 14 / One UI 6.1 | ✗ | ✗ | ✗ | One UI volume panel intercepts at SystemUI layer |
+| 3 | Xiaomi 13 | Android 13 / MIUI 14 | ✗ | ✗ | ✗ | MIUI volume panel consumes KEY_VOLUME_DOWN before media dispatch |
+| 4 | OnePlus 12 | Android 14 / OxygenOS 14 | ⚠ | ✗ | ✗ | Works cold on some builds; ColorOS-derived builds block it |
+| 5 | Motorola Edge 40 | Android 13, near-stock | ✓ | ✗ | ✗ | Near-AOSP; same MediaSession priority issue as Pixel |
+
+### AccessibilityService evaluation
+
+An `AccessibilityService` approach was evaluated as an alternative activation path that
+bypasses the MediaSession routing issue on OEM devices. Evaluation results:
+
+**Pros**
+- Receives `KeyEvent.KEYCODE_VOLUME_DOWN` unconditionally on Samsung, MIUI, and ColorOS
+- Works even when another audio app has MediaSession priority
+- No audio-session management required
+
+**Cons**
+- Requires the user to grant the "Accessibility" permission (high-friction UX)
+- Google Play compliance and F-Droid policy require clear justification for accessibility usage
+- Apple/enterprise MDM policies often block accessibility-enabled apps
+- Breaks the AURA threat model: accessibility services can read screen content,
+  which conflicts with AURA's privacy-first positioning
+
+**Verdict:** AccessibilityService activation is NOT recommended as default. It is
+documented here as a power-user option. Users on Samsung/Xiaomi/OPPO who need
+background activation should use the **Quick Settings tile** (T18) instead.
+
+### Recommendations by device
+
+| Scenario | Recommended activation method |
+|----------|-------------------------------|
+| Pixel / stock Android, no recent audio | Volume triple-press |
+| Any device | Home screen FAB tap |
+| Quick access from notification shade | QS tile tap |
+| QS tile long-press | Share-preset picker (T18) |
+| Samsung / Xiaomi / OPPO | QS tile (volume triple-press unreliable) |

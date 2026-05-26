@@ -27,6 +27,17 @@ class SharePresetBottomSheet(
 
     companion object {
         const val TAG = "SharePresetBottomSheet"
+
+        /**
+         * T18 — Show the preset picker from any [FragmentManager] context.
+         *
+         * Used by the home-screen FAB long-press and the QS tile settings shortcut
+         * so the user can quickly switch which fields to share before starting an exchange.
+         */
+        fun show(fm: androidx.fragment.app.FragmentManager, onPresetSelected: (SharePreset) -> Unit) {
+            if (fm.findFragmentByTag(TAG) != null) return  // already showing
+            SharePresetBottomSheet(onPresetSelected).show(fm, TAG)
+        }
     }
 
     private val viewModel: ExchangeViewModel by viewModels()

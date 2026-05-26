@@ -29,6 +29,8 @@ class AuraQsTileService : TileService() {
     companion object {
         /** Intent extra action broadcasted when tile is tapped */
         const val ACTION_START_EXCHANGE = "com.showerideas.aura.ACTION_START_EXCHANGE"
+        /** Intent action to open the share-preset picker from QS long-press (T18) */
+        const val ACTION_SHOW_PRESET_PICKER = "com.showerideas.aura.ACTION_SHOW_PRESET_PICKER"
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -67,6 +69,34 @@ class AuraQsTileService : TileService() {
             // API 34+: startActivityAndCollapse requires PendingIntent
             val pendingIntent = android.app.PendingIntent.getActivity(
                 this, 0, intent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            startActivityAndCollapse(pendingIntent)
+        } else {
+            @Suppress("StartActivityAndCollapseDeprecated")
+            startActivityAndCollapse(intent)
+        }
+    }
+
+
+    /**
+     * T18 — QS tile long-press sub-action (Android 11+, MIUI / OxygenOS surface it in edit mode).
+     *
+     * Long-pressing the tile opens a minimal preset-switch intent so the user can
+     * flip their active share preset without entering the full app. We launch
+     * MainActivity with ACTION_SHOW_PRESET_PICKER and let the main UI handle it.
+     */
+    override fun onLongClick() {
+        super.onLongClick()
+        Timber.i("AuraQsTileService: long-press — launching preset picker")
+        val intent = android.content.Intent(this, com.showerideas.aura.ui.MainActivity::class.java).apply {
+            action = ACTION_SHOW_PRESET_PICKER
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                    android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                this, 1, intent,
                 android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
             )
             startActivityAndCollapse(pendingIntent)

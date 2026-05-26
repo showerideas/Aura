@@ -366,6 +366,45 @@ class GestureAuthManager @Inject constructor(
      */
     fun enrolledSampleCount(): Int = loadEnrollmentSamples().size
 
+    /**
+     * T12 — Enrollment quality score in the range [0.0, 1.0].
+     *
+     * Computed as 1 − (mean pairwise variance across samples), where variance is the
+     * per-dimension standard deviation averaged over the embedding vector.
+     * A score of 1.0 means all samples are identical (perfect consistency).
+     * A score < 0.5 indicates high variability — the user should re-enroll.
+     *
+     * This is exposed to the enrollment UI so a progress indicator can tell the user
+     * whether their samples are consistent (e.g. "Good", "Acceptable", "Try again").
+     *
+     * @return Quality in [0.0, 1.0], or 0.0 if fewer than 2 samples are stored.
+     */
+    fun enrollmentQuality(): Float {
+        val samples = loadEnrollmentSamples()
+        if (samples.size < 2) return 0f
+
+        // Compute per-dimension mean
+        val mean = FloatArray(EXPECTED_EMBEDDING_SIZE)
+        for (s in samples) for (i in mean.indices) if (i < s.size) mean[i] += s[i]
+        val n = samples.size.toFloat()
+        for (i in mean.indices) mean[i] /= n
+
+        // Compute mean absolute deviation per dimension, then average across all dims
+        var totalDeviation = 0f
+        for (s in samples) {
+            var dimDeviation = 0f
+            for (i in mean.indices) if (i < s.size) dimDeviation += Math.abs(s[i] - mean[i])
+            totalDeviation += dimDeviation / EXPECTED_EMBEDDING_SIZE
+        }
+        val avgDeviation = totalDeviation / n
+
+        // avgDeviation is typically in [0, 0.3] for intra-person variance.
+        // Clamp to [0, 1] with a reasonable scale factor.
+        val quality = (1f - (avgDeviation / 0.3f)).coerceIn(0f, 1f)
+        Timber.d("Enrollment quality: %.3f (avgDeviation=%.4f, samples=${samples.size})".format(quality, avgDeviation))
+        return quality
+    }
+
     private fun loadEnrollmentSamples(): List<FloatArray> {
         val raw = encryptedPrefs.getString(PREFS_KEY_SAMPLES, null) ?: return emptyList()
         return raw.split("|").mapNotNull { sampleStr ->
