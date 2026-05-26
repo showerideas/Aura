@@ -383,4 +383,10 @@
     <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
     <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
     <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Route relay via Tor</string>
+    <string name="settings_tor_proxy_subtitle">Requires Orbot. Routes QR relay traffic anonymously via Tor.</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbot app not installed — install it from F-Droid to enable Tor routing.</string>
+
 </resources>
