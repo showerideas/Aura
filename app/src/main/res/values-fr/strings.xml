@@ -339,4 +339,21 @@
     <string name="analytics_export_empty">Aucune donnée à exporter.</string>
     <string name="analytics_export_failed">Échec de l'export — vérifiez la permission de stockage.</string>
 
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">Bibliothèque de gestes</string>
+    <string name="gesture_library_enrolled">Enregistré</string>
+    <string name="gesture_library_empty_slot">Vide</string>
+    <string name="gesture_library_enroll">Enregistrer un geste</string>
+    <string name="gesture_library_enroll_hint">Allez dans Profil pour enregistrer le geste %1$d.</string>
+    <string name="gesture_library_test">Tester</string>
+    <string name="gesture_library_test_coming_soon">Le test en direct arrivera dans une prochaine mise à jour.</string>
+    <string name="gesture_library_rename">Renommer</string>
+    <string name="gesture_library_rename_title">Renommer le geste</string>
+    <string name="gesture_library_delete">Supprimer</string>
+    <string name="gesture_library_delete_title">Supprimer le geste ?</string>
+    <string name="gesture_library_delete_message">Supprimer « %1$s » ? Vous devrez vous réinscrire pour utiliser cet emplacement.</string>
+    <string name="gesture_library_deleted">Geste supprimé</string>
+    <string name="gesture_library_enrolled_at">Enregistré le %1$s</string>
+
 </resources>

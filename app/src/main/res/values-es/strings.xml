@@ -339,4 +339,21 @@
     <string name="analytics_export_empty">No hay datos para exportar.</string>
     <string name="analytics_export_failed">Error al exportar — verifica el permiso de almacenamiento.</string>
 
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">Biblioteca de gestos</string>
+    <string name="gesture_library_enrolled">Registrado</string>
+    <string name="gesture_library_empty_slot">Vacío</string>
+    <string name="gesture_library_enroll">Registrar gesto</string>
+    <string name="gesture_library_enroll_hint">Ve a Perfil para grabar el gesto %1$d.</string>
+    <string name="gesture_library_test">Probar</string>
+    <string name="gesture_library_test_coming_soon">La prueba en vivo llegará en una actualización futura.</string>
+    <string name="gesture_library_rename">Renombrar</string>
+    <string name="gesture_library_rename_title">Renombrar gesto</string>
+    <string name="gesture_library_delete">Eliminar</string>
+    <string name="gesture_library_delete_title">¿Eliminar gesto?</string>
+    <string name="gesture_library_delete_message">¿Eliminar "%1$s"? Deberás registrarlo de nuevo para usar este espacio.</string>
+    <string name="gesture_library_deleted">Gesto eliminado</string>
+    <string name="gesture_library_enrolled_at">Registrado el %1$s</string>
+
 </resources>

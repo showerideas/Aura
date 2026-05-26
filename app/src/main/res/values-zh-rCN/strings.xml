@@ -337,4 +337,21 @@
     <string name="analytics_export_empty">没有可导出的数据。</string>
     <string name="analytics_export_failed">导出失败 — 请检查存储权限。</string>
 
+
+    <!-- Phase 9.3 — Gesture Library -->
+    <string name="gesture_library_title">手势库</string>
+    <string name="gesture_library_enrolled">已注册</string>
+    <string name="gesture_library_empty_slot">空</string>
+    <string name="gesture_library_enroll">注册手势</string>
+    <string name="gesture_library_enroll_hint">前往个人资料录制手势 %1$d。</string>
+    <string name="gesture_library_test">测试</string>
+    <string name="gesture_library_test_coming_soon">实时测试将在未来更新中提供。</string>
+    <string name="gesture_library_rename">重命名</string>
+    <string name="gesture_library_rename_title">重命名手势</string>
+    <string name="gesture_library_delete">删除</string>
+    <string name="gesture_library_delete_title">删除手势？</string>
+    <string name="gesture_library_delete_message">删除"%1$s"？您需要重新注册才能使用此插槽。</string>
+    <string name="gesture_library_deleted">手势已删除</string>
+    <string name="gesture_library_enrolled_at">注册于 %1$s</string>
+
 </resources>

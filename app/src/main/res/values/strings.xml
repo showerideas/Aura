@@ -408,4 +408,21 @@
         <item quantity="one">1 exchange</item>
         <item quantity="other">%d exchanges</item>
     </plurals>
+
+    <!-- Phase 9.3 — Gesture Library screen -->
+    <string name="gesture_library_title">Gesture Library</string>
+    <string name="gesture_library_enrolled">Enrolled</string>
+    <string name="gesture_library_empty_slot">Empty</string>
+    <string name="gesture_library_enroll">Enroll gesture</string>
+    <string name="gesture_library_enroll_hint">Go to Profile to record gesture %1$d.</string>
+    <string name="gesture_library_test">Test</string>
+    <string name="gesture_library_test_coming_soon">Live test coming in a future update.</string>
+    <string name="gesture_library_rename">Rename</string>
+    <string name="gesture_library_rename_title">Rename gesture</string>
+    <string name="gesture_library_delete">Delete</string>
+    <string name="gesture_library_delete_title">Delete gesture?</string>
+    <string name="gesture_library_delete_message">Delete "%1$s"? You will need to re-enroll to use this slot again.</string>
+    <string name="gesture_library_deleted">Gesture deleted</string>
+    <string name="gesture_library_enrolled_at">Enrolled %1$s</string>
+
 </resources>
