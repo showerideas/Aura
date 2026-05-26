@@ -12,4 +12,9 @@
     <string name="auto_completed_success_body">Exchange complete. Contact saved.</string>
     <string name="auto_completed_failure_body">Exchange rejected or failed.</string>
     <string name="auto_action_done">Done</string>
+
+    <!-- Phase G2 — biometric auth gate fallback (Automotive OS, no camera) -->
+    <string name="auto_auth_failed_body">Authentication failed. Tap Start Exchange to try again.</string>
+    <!-- Phase G1 — voice action labels -->
+    <string name="auto_voice_action_label">Start AURA Exchange</string>
 </resources>
