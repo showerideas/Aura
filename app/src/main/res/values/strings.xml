@@ -425,4 +425,22 @@
     <string name="gesture_library_deleted">Gesture deleted</string>
     <string name="gesture_library_enrolled_at">Enrolled %1$s</string>
 
+
+    <!-- Phase 6.10 — Encrypted backup / restore -->
+    <string name="backup_title">Backup &amp; Restore</string>
+    <string name="backup_description">Export your contacts as an encrypted file. Choose a strong passphrase — lost passphrases cannot be recovered.</string>
+    <string name="backup_export_title">Export backup</string>
+    <string name="backup_export_subtitle">Save all contacts to an encrypted .aurbak file.</string>
+    <string name="backup_restore_title">Restore backup</string>
+    <string name="backup_restore_subtitle">Import contacts from a previously exported .aurbak file. Existing contacts with the same ID will be updated.</string>
+    <string name="backup_action_export">Export encrypted backup</string>
+    <string name="backup_action_restore">Import from backup</string>
+    <string name="backup_passphrase_hint">Encryption passphrase</string>
+    <string name="backup_passphrase_export_title">Set backup passphrase</string>
+    <string name="backup_passphrase_export_message">Choose a strong passphrase to encrypt your backup. You will need it to restore.</string>
+    <string name="backup_passphrase_restore_title">Enter backup passphrase</string>
+    <string name="backup_passphrase_restore_message">Enter the passphrase you used when creating this backup.</string>
+    <string name="backup_passphrase_empty">Passphrase cannot be empty.</string>
+    <string name="settings_backup_restore">Backup &amp; restore</string>
+
 </resources>

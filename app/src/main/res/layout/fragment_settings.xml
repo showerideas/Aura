@@ -264,6 +264,17 @@
             android:textSize="13sp"
             android:textStyle="bold" />
 
+
+        <TextView
+            android:id="@+id/row_backup_restore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="14dp"
+            android:text="@string/settings_backup_restore"
+            android:textColor="@color/on_surface"
+            android:textSize="15sp" />
+
         <TextView
             android:id="@+id/row_blocked_devices"
             android:layout_width="match_parent"

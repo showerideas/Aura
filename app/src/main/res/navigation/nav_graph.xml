@@ -83,6 +83,9 @@
         <action
             android:id="@+id/action_settings_to_audit"
             app:destination="@id/auditFragment" />
+        <action
+            android:id="@+id/action_settings_to_backup"
+            app:destination="@id/backupFragment" />
     </fragment>
 
     <fragment
@@ -113,5 +116,12 @@
         android:id="@+id/gestureLibraryFragment"
         android:name="com.showerideas.aura.ui.profile.GestureLibraryFragment"
         android:label="Gesture Library" />
+
+
+    <!-- Phase 6.10: Encrypted backup screen -->
+    <fragment
+        android:id="@+id/backupFragment"
+        android:name="com.showerideas.aura.ui.settings.BackupFragment"
+        android:label="Backup &amp; Restore" />
 
 </navigation>
