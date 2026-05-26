@@ -56,7 +56,7 @@ import javax.net.ssl.X509TrustManager
  * session key before handing bytes to this class.
  */
 @Singleton
-class RelayClient @Inject constructor() {
+open class RelayClient @Inject constructor() {
 
     companion object {
         private const val CONNECT_TIMEOUT_MS = 10_000
@@ -102,7 +102,7 @@ class RelayClient @Inject constructor() {
         Timber.i("RelayClient proxy: ${socksAddress?.let { "${it.hostString}:${it.port}" } ?: "direct"}")
     }
 
-    fun postSlot(baseUrl: String, endpoint: String, encryptedBytes: ByteArray): Boolean {
+    open fun postSlot(baseUrl: String, endpoint: String, encryptedBytes: ByteArray): Boolean {
         return try {
             val conn = openConnection("$baseUrl/v1/slots/$endpoint", "PUT")
             conn.setRequestProperty("Content-Type", "application/octet-stream")
@@ -122,7 +122,7 @@ class RelayClient @Inject constructor() {
         }
     }
 
-    fun getSlot(baseUrl: String, endpoint: String): ByteArray? {
+    open fun getSlot(baseUrl: String, endpoint: String): ByteArray? {
         return try {
             val conn = openConnection("$baseUrl/v1/slots/$endpoint", "GET")
             val code = conn.responseCode
