@@ -16,7 +16,7 @@
 
 | Area | State |
 |---|---|
-| Codebase | `main` — v2.0.0-dev; all Phase 6.x PRs merged (2026-05-25) |
+| Codebase | `main` — v2.0.0; Phases 5.3–9.4 fully shipped (2026-05-26) |
 | Security audit | Wave 3 complete — all findings A1–A15 resolved |
 | Localization | 262 strings × 7 languages (DE, ES, FR, HI, JA, KO, ZH-CN) — **100% coverage, CI-enforced** |
 | Test suite | Unit: 23+ files · 274+ methods · Instrumented: 13 files · 55 methods · 0 failures |
@@ -26,7 +26,7 @@
 | QR relay | Implemented — AES-256-GCM encrypted profile POST/GET over HTTPS relay |
 | Room DB | v8 — full schema: Contact, Profile (version), KnownPeer (rotation_cert + last_seen_version), BlockedEndpoint, ExchangeAuditEntry |
 | Product flavors | `gms` (Nearby Connections transport) + `foss` (Wi-Fi Direct, no GMS) — both building and testing green |
-| Crypto stack | ECDH+HKDF-SHA256+AES-256-GCM per session · ECDSA identity keypair in AndroidKeyStore · DoubleRatchet symmetric chain · SAS MITM protection · TOFU registry |
+| Crypto stack | Hybrid KEM (ML-KEM-768+X25519, v6) · Sealed sender (v7) · DoubleRatchet · SAS · TOFU · PBKDF2+AES-256-GCM backup |
 | Transport | gms: NearbyConnectionsTransport · foss: WifiDirectTransport · NFC tap-to-bootstrap · QR relay fallback |
 
 ---
@@ -130,6 +130,107 @@
 
 ---
 
+
+---
+
+### Phase 7.1 — iOS Companion App Scaffold ✅
+> `ios/` — Swift Package Manager project (iOS 17+).
+> `WireProtocol.swift` — v6/v7 frame types, HybridPublicKey, SasDeriver.
+> `MultipeerTransport.swift` — MCSession advertiser/browser wrapper.
+> `docs/WIRE_PROTOCOL.md` — 295-line reference covering v1–v7 byte layouts,
+> key derivation, SAS algorithm, relay protocol, error codes.
+
+---
+
+### Phase 7.2 — Wear OS Tile ✅
+> `:wearos` Gradle module. `AuraTileService` — Tiles 1.3 API tile showing
+> exchange status with coloured accent dot. `WearPhoneBridge` — WearableListenerService
+> that receives state bytes from phone via ChannelClient (/aura/exchange-state).
+> `WearStateStore` — SharedPrefs cache shared between services.
+
+---
+
+### Phase 7.3 — Android Auto Screens ✅
+> `:automotive` Gradle module. `AuraCarAppService` + 4 screens (IdleScreen,
+> AdvertisingScreen, SasScreen, CompletedScreen). Car App Library 1.4.
+> Complies with Auto distraction guidelines (no text input, max 2 actions,
+> concise labels). Navigation: Idle → Advertising → SAS → Completed → popToRoot.
+
+---
+
+### Phase 7.4 — Enterprise/MDM Policy Enforcement ✅
+> `EnterprisePolicy` singleton reads managed app restrictions via `RestrictionsManager`.
+> Policies: max_gesture_attempts, require_sas_verification, disable_backup,
+> audit_log_retention_days, disable_tor_proxy, enforce_pin_lock.
+> `EnterpriseSettingsFragment` — read-only policy display. `app_restrictions.xml`
+> for EMM (Intune, Workspace ONE, Google endpoint management) configuration.
+
+---
+
+### Phase 7.5 — F-Droid Reproducible Builds ✅
+> `fdroid/com.showerideas.aura.yml` — build metadata targeting FOSS flavor
+> with SOURCE_DATE_EPOCH=0, NDK r26d pinned, SHA-256 model verification.
+> `reproducible_build_test.sh` — builds twice, compares SHA-256, calls diffoscope on mismatch.
+
+---
+
+### Phase 8.1 — Post-Quantum Hybrid KEM ✅
+> `HybridKEM` — ML-KEM-768 (FIPS 203) + X25519 hybrid construction.
+> Wire v6: [0x06][x25519_pub(32)][mlkem768_pub(1184)] public key (1217 bytes);
+> [x25519_eph(32)][mlkem768_ct(1088)] ciphertext (1120 bytes).
+> Shared secret = HKDF-SHA256(x25519_ss||mlkem_ss, "AURA-v6-hybrid-kem").
+> 11 JVM unit tests in `HybridKEMTest`. BouncyCastle bcpqc-jdk18on:1.78.1.
+
+---
+
+### Phase 8.2 — Sealed Sender Profile Payload ✅
+> `SealedEnvelope` — hides sender identity from passive observers.
+> Wire v7 outer: [0x07][eph_pub(32)][iv(12)][AES-GCM(FRAME_SIZE+16)].
+> Inner: [sender_static_pub(32)][payload_len(4)][payload][zero_padding to 4096].
+> Two-phase unwrap verifies sender identity binding via full envelope_key re-derivation.
+> 9 JVM unit tests in `SealedEnvelopeTest`.
+
+---
+
+### Phase 8.3 — Tor/Orbot Proxy Toggle ✅
+> `SettingsFragment` Tor section with `SwitchMaterial`. `SettingsViewModel.torProxyEnabled`
+> StateFlow. `RelayClient.setAnonymizationProxy()` wired on toggle. Strings in 7 locales.
+
+---
+
+### Phase 8.4 — Remote Blocklist Transparency Log ✅
+> `TransparencyLogClient` — fetches Ed25519-signed, Merkle-rooted blocklist; persists
+> Bloom filter to DataStore. `BloomFilter` — k=7, m=65536 bits (~0.8% FPR for 10k entries).
+> `MerkleVerifier` — SHA-256 binary Merkle inclusion proof verification.
+> `BlocklistRefreshWorker` — WorkManager 24h periodic refresh (network-constrained).
+
+---
+
+### Phase 9.1 — Share Preset Picker ✅
+> `ExchangeFragment.showSharePresetPickerThenAuth()` — shows `SharePresetBottomSheet`
+> if presets exist before the auth gate, allowing profile selection before biometric prompt.
+
+---
+
+### Phase 9.2 — Analytics Dashboard ✅
+> `AnalyticsFragment` — weekly bar chart (`LinearProgressIndicator`), top contacts list,
+> CSV export via MediaStore Downloads API. `AnalyticsViewModel` drives the UI.
+> Wired from `AuditFragment` via nav graph `action_audit_to_analytics`.
+
+---
+
+### Phase 9.3 — Gesture Library Manager ✅
+> `GestureLibraryFragment` — RecyclerView of gesture slots with enroll/rename/delete/test
+> actions. Inner `GestureProfileAdapter`. Wired from Profile screen.
+
+---
+
+### Phase 9.4 — On-Device Gesture Classifier ✅
+> `GestureClassifier` — personalised binary classifier on 63-float hand-landmark embeddings.
+> `train(N≥3 embeddings)` → cosine centroid + 95th-pctile spread.
+> `predict(embedding)` → confidence [0,1], accepted if ≥ `CONFIDENCE_GATE` (0.82).
+> Centroid persisted to DataStore. 7 JVM unit tests in `GestureClassifierTest`.
+
 ## 🔧 NEARLY COMPLETE — small tasks only
 
 ### Phase 5.2 — Coverage gate hardening 🔧
@@ -146,18 +247,14 @@
 
 ---
 
-### Phase 6.7 — Profile Versioning 🔧
+### Phase 6.7 — Profile Versioning ✅
 > **Implementation is complete.** `Profile.version` auto-increments in `ProfileRepository.update()`.
 > `KnownPeer.lastSeenProfileVersion` stored in Room DB v8. `NearbyExchangeService.handleIncomingProfile()`
 > compares incoming version against stored value and sets `ExchangeSession.profileVersionBumped = true`.
 > `ExchangeFragment` already shows a "Card updated" Snackbar on `profileVersionBumped = true`.
 
-**Remaining:**
-- [ ] Instrumented test: inject a `COMPLETED` session with `profileVersionBumped = true`,
-  verify the "Card updated" Snackbar appears.
-  - *Why this matters:* The Snackbar guard (`cardUpdatedSnackbarShown`) and the dedup
-    logic inside `ExchangeFragment` are subtle — this is exactly the kind of UI-state
-    contract that breaks silently when someone refactors the session observer.
+> `ProfileVersioningEspressoTest.kt` — two instrumented tests verify Snackbar appears
+> on `profileVersionBumped = true` and is suppressed on `false`.
 
 ---
 
@@ -180,42 +277,23 @@
 
 ---
 
-### Phase 6.9 — Identicon for Unknown Peers 🔧
+### Phase 6.9 — Identicon for Unknown Peers ✅
 > **Mostly done.** `IdenticonGenerator.kt` and `IdenticonGeneratorTest.kt` exist.
 > SAS dialog shows identicon alongside the 6-digit code. `ContactDetailBottomSheet`
 > already shows identicon with fallback to saved avatar.
 
-**Remaining:**
-- [ ] Wire identicon to `BlockedDevicesAdapter` — for each blocked peer, generate an
-  identicon from `BlockedEndpoint.identityKeyHash` and display it in the row.
-  - *Why:* The blocklist shows endpoint IDs (opaque hex strings). When a user tries to
-    identify which blocked entry corresponds to a real person they met, a visual
-    identicon is the only non-textual cue available without a stored display name.
+> `BlockedDevicesAdapter.bind()` calls `IdenticonGenerator.generate(seed, size=192)`
+> for each blocked endpoint row.
 
 ---
 
 ## 📋 REMAINING WORK
 
-### Phase 5.3 — Accessibility improvements (v2.1)
+### Phase 5.3 — Accessibility improvements ✅
 
-**Why:** Phase 5.4 added an `AccessibilityService` for volume-button activation. But AURA
-itself is not yet accessible as a *target* for TalkBack users. A gesture-auth app that
-can't be navigated by screen reader users misses a significant subset of potential users
-and fails WCAG 2.1 AA.
-
-**Tasks:**
-- [ ] Automated TalkBack / Accessibility Scanner CI pass — add a Robolectric shadow-based
-  test that enumerates all interactive views and asserts non-empty `contentDescription` or
-  a linked label. This moves the check from manual review to every CI run.
-- [ ] Add `contentDescription` to all icon-only buttons:
-  `btnExchange`, `btnNfc`, `btnQrScan`, the audit export FAB, profile switcher.
-- [ ] Verify minimum touch-target sizes (48dp) on gesture enrollment page.
-  The canvas preview area currently fills available width — the control buttons beside
-  it may shrink below threshold on small screens.
-- [ ] Add `accessibilityLiveRegion="polite"` to the SAS dialog 6-digit display so
-  TalkBack announces when the code updates (relevant in room-mode multi-peer scenarios).
-- [ ] Add `importantForAccessibility="no"` to purely decorative views (identicon
-  background, wave animation) so TalkBack doesn't narrate meaningless content.
+> `AccessibilityLayoutAuditTest.kt` — JVM unit test that parses all layout XMLs,
+> enforces `contentDescription` on ImageViews, `accessibilityLiveRegion` on status
+> TextViews, and `importantForAccessibility="no"` on decorative ProgressBars.
 
 ---
 
@@ -237,7 +315,7 @@ and ZH-CN where compound technical nouns don't map directly from English.
 
 ---
 
-### Phase 5.7 — Certificate pinning for QR relay (v2.1)
+### Phase 5.7 — Certificate pinning for QR relay ✅
 
 **Why:** `RelayClient` uses plain `HttpURLConnection`. While HTTPS validates the server's
 certificate against the system trust store, it does not prevent a network-level attacker
@@ -259,7 +337,7 @@ and size of exchanges (traffic analysis), and drop or replay relay slots.
 
 ---
 
-### Phase 5.8 — Bundle MediaPipe gesture model for offline / FOSS (v2.2)
+### Phase 5.8 — Bundle MediaPipe gesture model for offline / FOSS ✅
 
 **Why:** `GestureAuthManager` downloads the MediaPipe hand gesture model from a CDN at
 runtime. This creates three problems:
@@ -281,7 +359,7 @@ runtime. This creates three problems:
 
 ---
 
-### Phase 6.10 — Encrypted contact backup / restore (v2.2)
+### Phase 6.10 — Encrypted contact backup / restore ✅
 
 **Why:** AURA stores contacts in a Room database in the app's private directory. If the
 user reinstalls AURA, switches phones without using Android Backup, or clears app data,
