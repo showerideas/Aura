@@ -38,6 +38,18 @@ android {
         // Rotate the pin AND update this value before the expiry date.
         // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
         buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
+        // Phase 10.2 — Runtime SPKI certificate pins for RelayClient's SpkiPinTrustManager.
+        // Set these in CI environment variables (RELAY_SPKI_PIN_PRIMARY / RELAY_SPKI_PIN_BACKUP).
+        // Generate with: openssl s_client -connect <relay-host>:443 < /dev/null |
+        //   openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER |
+        //   openssl dgst -sha256 -binary | base64
+        // See docs/QR_RELAY_SETUP.md for the full rotation runbook.
+        val spkiPrimary = System.getenv("RELAY_SPKI_PIN_PRIMARY")?.takeIf { it.isNotBlank() }
+            ?: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="   // placeholder — set in CI
+        val spkiBackup  = System.getenv("RELAY_SPKI_PIN_BACKUP")?.takeIf { it.isNotBlank() }
+            ?: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="   // placeholder — set in CI
+        buildConfigField("String", "RELAY_SPKI_PIN_PRIMARY", "\"$spkiPrimary\"")
+        buildConfigField("String", "RELAY_SPKI_PIN_BACKUP",  "\"$spkiBackup\"")
 
         // PR-04: Export Room schemas so future migrations can be tested
         // against the historical schema files. The schemas directory is
