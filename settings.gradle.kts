@@ -20,3 +20,4 @@ dependencyResolutionManagement {
 rootProject.name = "Aura"
 include(":app")
 include(":wearos")
+include(":automotive")

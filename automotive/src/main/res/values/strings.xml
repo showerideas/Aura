@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auto_app_name">AURA</string>
+    <string name="auto_idle_body">Ready to exchange contact profiles via Nearby Connections.</string>
+    <string name="auto_action_start">Start Exchange</string>
+    <string name="auto_advertising_body">Broadcasting… waiting for a nearby AURA device to connect.</string>
+    <string name="auto_action_cancel">Cancel</string>
+    <string name="auto_sas_title">Verify Code</string>
+    <string name="auto_sas_body">Confirm both devices show: %1$s</string>
+    <string name="auto_action_confirm">Codes Match</string>
+    <string name="auto_action_reject">Codes Differ</string>
+    <string name="auto_completed_success_body">Exchange complete. Contact saved.</string>
+    <string name="auto_completed_failure_body">Exchange rejected or failed.</string>
+    <string name="auto_action_done">Done</string>
+</resources>
