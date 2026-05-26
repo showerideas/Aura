@@ -26,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *  v5 → v6: profile_type, is_active, custom_label columns on profile
  *  v6 → v7: rotation_certificate column on known_peers (Phase 6.5)
  *  v7 → v8: version column on profile, profile_version on contacts,
+ *  v10 → v11: transport column on exchange_audit_log (T17)
  *           last_seen_profile_version on known_peers (Phase 6.7)
  */
 object Migrations {
@@ -225,6 +226,19 @@ object Migrations {
         }
     }
 
+    /**
+     * v10 → v11: T17 — Add [transport] column to exchange_audit_log.
+     * Records the physical transport layer used (BLE_GATT, WIFI_DIRECT, LORA, etc.).
+     * Nullable with no default so legacy records have NULL transport.
+     */
+    val MIGRATION_10_11: Migration = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "ALTER TABLE exchange_audit_log ADD COLUMN transport TEXT DEFAULT NULL"
+            )
+        }
+    }
+
     /** Ordered list of every migration — passed to Room.databaseBuilder. */
     val ALL: Array<Migration> = arrayOf(
         MIGRATION_1_2,
@@ -235,6 +249,7 @@ object Migrations {
         MIGRATION_6_7,
         MIGRATION_7_8,
         MIGRATION_8_9,
-        MIGRATION_9_10
+        MIGRATION_9_10,
+        MIGRATION_10_11
     )
 }
