@@ -316,4 +316,10 @@
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
     <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">通过Tor路由中继</string>
+    <string name="settings_tor_proxy_subtitle">需要Orbot。通过Tor匿名路由QR中继流量。</string>
+    <string name="settings_tor_proxy_orbot_missing">未安装Orbot — 从F-Droid安装以启用Tor路由。</string>
+
 </resources>

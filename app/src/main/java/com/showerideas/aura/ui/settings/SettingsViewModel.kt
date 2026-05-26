@@ -44,6 +44,9 @@ class SettingsViewModel @Inject constructor(
     val bgActivationEnabled: StateFlow<Boolean> = authPreferences.bgActivationEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val torProxyEnabled: StateFlow<Boolean> = authPreferences.torProxyEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun setAuthMethod(method: String) {
         viewModelScope.launch { authPreferences.setAuthMethod(method) }
     }

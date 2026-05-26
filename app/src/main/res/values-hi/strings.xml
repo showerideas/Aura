@@ -318,4 +318,10 @@
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
     <string name="shortcut_disabled">AURA is not available</string>
+
+    <!-- Phase 8.3 — Tor/Orbot proxy settings -->
+    <string name="settings_tor_proxy">Tor के ज़रिए relay रूट करें</string>
+    <string name="settings_tor_proxy_subtitle">Orbot की ज़रूरत है। QR relay ट्रैफ़िक को Tor के ज़रिए अनामित करता है।</string>
+    <string name="settings_tor_proxy_orbot_missing">Orbot इंस्टॉल नहीं है — Tor सक्षम करने के लिए F-Droid से इंस्टॉल करें।</string>
+
 </resources>
