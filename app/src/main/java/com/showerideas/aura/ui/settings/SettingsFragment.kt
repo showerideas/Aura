@@ -274,6 +274,9 @@ class SettingsFragment : Fragment() {
     }
 
     private fun wireDataSection() {
+        binding.rowBackupRestore.setOnClickListener {
+            findNavController().navigate(R.id.action_settings_to_backup)
+        }
         binding.rowBlockedDevices.setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_blocked_devices)
         }
