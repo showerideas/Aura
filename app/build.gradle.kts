@@ -286,6 +286,9 @@ dependencies {
 
     // Phase 8.4 — WorkManager for periodic blocklist refresh
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+
+    // T11 — UWB proximity confirmation (API 31+, Pixel 6+ and select OEM devices)
+    implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
     implementation("androidx.hilt:hilt-work:1.2.0")
     kapt("androidx.hilt:hilt-compiler:1.2.0")
     // Phase 8.1 — BouncyCastle PQC: ML-KEM-768 post-quantum KEM

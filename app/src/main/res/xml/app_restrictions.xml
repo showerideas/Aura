@@ -54,4 +54,50 @@
         android:restrictionType="bool"
         android:defaultValue="false" />
 
+
+    <!-- T29 — Zero-touch enrollment: pre-filled profile fields from MDM -->
+    <restriction
+        android:key="pre_fill_display_name"
+        android:title="Pre-fill display name"
+        android:description="User's full name pre-populated from the corporate directory."
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="pre_fill_email"
+        android:title="Pre-fill email"
+        android:description="User's work email pre-populated from the corporate directory."
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="pre_fill_org"
+        android:title="Pre-fill organization"
+        android:description="Department or company name pre-populated."
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="pre_fill_job_title"
+        android:title="Pre-fill job title"
+        android:description="User job title pre-populated."
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="pre_fill_phone"
+        android:title="Pre-fill phone"
+        android:description="Work phone number pre-populated."
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="pre_fill_profile_type"
+        android:title="Pre-fill profile type"
+        android:description="Profile type: WORK or PERSONAL. Default: WORK for managed devices."
+        android:restrictionType="choice"
+        android:defaultValue="WORK"
+        android:entries="@array/profile_type_entries"
+        android:entryValues="@array/profile_type_values" />
+
 </restrictions>
