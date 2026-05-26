@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.showerideas.aura.R
 import com.showerideas.aura.data.ContactRepository
 import com.showerideas.aura.utils.BackupUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,9 +20,17 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Phase 6.10 — ViewModel backing [BackupFragment].
+ * Phase 10.4 — ViewModel backing [BackupFragment] (polished).
  *
- * Runs export/restore on [Dispatchers.IO], posts status messages via [statusMessage].
+ * Improvements over the Phase 6.10 baseline:
+ * - [isLoading] StateFlow drives a progress indicator in the UI so the user
+ *   knows when the ~1 s PBKDF2 derivation is running.
+ * - Status messages use string resources (via [Context.getString]) rather than
+ *   hardcoded English literals, making them translatable.
+ * - [contactCount] exposes the current contact count so the backup screen can
+ *   show "N contacts" without querying the repo from the Fragment.
+ * - Export / restore operations remain on [Dispatchers.IO]; [isLoading] is
+ *   toggled on the main thread via [kotlinx.coroutines.flow.MutableStateFlow].
  */
 @HiltViewModel
 class BackupViewModel @Inject constructor(
@@ -32,61 +41,85 @@ class BackupViewModel @Inject constructor(
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
 
+    /** True while export or restore is in progress (PBKDF2 derivation + crypto). */
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    /** Live count of contacts in the repository. Updated whenever the DB changes. */
+    val contactCount: StateFlow<Int> = MutableStateFlow(0).also { count ->
+        viewModelScope.launch {
+            contactRepository.allContacts.collect { count.value = it.size }
+        }
+    }
+
     fun clearStatus() { _statusMessage.value = null }
 
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
     // Export
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
 
     fun exportContacts(destUri: Uri, passphrase: CharArray) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
+            _isLoading.value = true
             try {
-                val contacts = contactRepository.allContacts.first()
+                val contacts = withContext(Dispatchers.IO) {
+                    contactRepository.allContacts.first()
+                }
                 if (contacts.isEmpty()) {
-                    _statusMessage.value = "No contacts to export."
-                    passphrase.fill('\u0000')
+                    _statusMessage.value = context.getString(R.string.backup_status_no_contacts)
                     return@launch
                 }
-                context.contentResolver.openOutputStream(destUri)?.use { out ->
-                    BackupUtils.export(contacts, passphrase, out)
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(destUri)?.use { out ->
+                        BackupUtils.export(contacts, passphrase, out)
+                    }
                 }
-                _statusMessage.value = "Backup saved — ${contacts.size} contact(s) exported."
-                Timber.i("BackupUtils: exported ${contacts.size} contacts")
+                _statusMessage.value = context.resources.getQuantityString(
+                    R.plurals.backup_status_export_success, contacts.size, contacts.size
+                )
+                Timber.i("BackupUtils: exported %d contacts", contacts.size)
             } catch (e: Exception) {
                 Timber.e(e, "BackupUtils: export failed")
-                _statusMessage.value = "Export failed: ${e.message}"
+                _statusMessage.value = context.getString(R.string.backup_status_export_failed, e.message)
             } finally {
                 passphrase.fill('\u0000')
+                _isLoading.value = false
             }
         }
     }
 
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
     // Restore
-    // -------------------------------------------------------------------------
+    // ─────────────────────────────────────────────────────────────────────
 
     fun restoreContacts(srcUri: Uri, passphrase: CharArray) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
+            _isLoading.value = true
             try {
-                val contacts = context.contentResolver.openInputStream(srcUri)?.use { input ->
-                    BackupUtils.restore(passphrase, input)
+                val contacts = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(srcUri)?.use { input ->
+                        BackupUtils.restore(passphrase, input)
+                    }
                 } ?: run {
-                    _statusMessage.value = "Could not read backup file."
-                    passphrase.fill('\u0000')
+                    _statusMessage.value = context.getString(R.string.backup_status_read_failed)
                     return@launch
                 }
-                // Upsert: contacts with matching IDs are updated, new ones inserted.
-                contactRepository.upsertAll(contacts)
-                _statusMessage.value = "Restored ${contacts.size} contact(s) successfully."
-                Timber.i("BackupUtils: restored ${contacts.size} contacts")
+                withContext(Dispatchers.IO) {
+                    contactRepository.upsertAll(contacts)
+                }
+                _statusMessage.value = context.resources.getQuantityString(
+                    R.plurals.backup_status_restore_success, contacts.size, contacts.size
+                )
+                Timber.i("BackupUtils: restored %d contacts", contacts.size)
             } catch (e: BackupUtils.BackupException) {
                 Timber.w(e, "BackupUtils: restore failed (bad passphrase or corrupted file)")
-                _statusMessage.value = "Restore failed — check your passphrase and try again."
+                _statusMessage.value = context.getString(R.string.backup_status_restore_wrong_passphrase)
             } catch (e: Exception) {
                 Timber.e(e, "BackupUtils: restore failed unexpectedly")
-                _statusMessage.value = "Restore failed: ${e.message}"
+                _statusMessage.value = context.getString(R.string.backup_status_restore_failed, e.message)
             } finally {
                 passphrase.fill('\u0000')
+                _isLoading.value = false
             }
         }
     }
