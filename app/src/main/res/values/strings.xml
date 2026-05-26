@@ -192,6 +192,7 @@
     <string name="settings_section_activation">Activation</string>
     <string name="settings_section_data">Data</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_section_wear">Wear OS</string>
     <string name="settings_auth_method">Auth method</string>
     <string name="settings_auth_gesture">Gesture</string>
     <string name="settings_auth_biometric">Biometric</string>
@@ -365,6 +366,27 @@
     <string name="action_share_card">Share card link</string>
     <string name="share_card_chooser_title">Share your AURA card</string>
     <string name="share_card_text">Here\'s my AURA card: %1$s</string>
+
+    <!-- Phase 6.8 / C1 — Deeplink contact import sheet -->
+    <string name="deeplink_sheet_title">Add Contact</string>
+    <string name="deeplink_sheet_subtitle">Someone shared their AURA card with you</string>
+    <string name="deeplink_sheet_save">Save Contact</string>
+    <string name="deeplink_sheet_name_required">Name is required</string>
+    <string name="deeplink_sheet_saved">Contact saved</string>
+
+    <!-- Phase F1 — Wear OS companion pairing -->
+    <string name="wear_pairing_title">Wear OS Companion</string>
+    <string name="wear_pairing_scanning">Scanning for connected watches…</string>
+    <string name="wear_pairing_not_available">Wear OS pairing is not available on this build.</string>
+    <string name="wear_pairing_no_watches">No Wear OS watch connected.\nPair your watch in the Wear OS app first.</string>
+    <string name="wear_pairing_how_to">1. Install the Wear OS app on your phone\n2. Pair your watch\n3. Install AURA on your watch\n4. Return here to verify the connection</string>
+    <string name="wear_pairing_refresh">Refresh</string>
+    <string name="settings_wear_row_title">Wear OS</string>
+    <string name="settings_wear_row_subtitle">Manage watch companion pairing</string>
+    <plurals name="wear_pairing_connected">
+        <item quantity="one">%1$d watch connected\n%2$s</item>
+        <item quantity="other">%1$d watches connected\n%2$s</item>
+    </plurals>
 
     <!-- Phase 5.3 â Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>

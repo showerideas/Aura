@@ -300,24 +300,31 @@
     <string name="share_card_chooser_title">अपना AURA कार्ड शेयर करें</string>
     <string name="share_card_text">यहाँ मेरा AURA कार्ड है: %1$s</string>
 
+    <!-- Phase 6.8 / C1 — Deeplink contact import sheet -->
+    <string name="deeplink_sheet_title">संपर्क जोड़ें</string>
+    <string name="deeplink_sheet_subtitle">किसी ने अपना AURA कार्ड आपके साथ साझा किया</string>
+    <string name="deeplink_sheet_save">संपर्क सहेजें</string>
+    <string name="deeplink_sheet_name_required">नाम आवश्यक है</string>
+    <string name="deeplink_sheet_saved">संपर्क सहेजा गया</string>
+
     <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
-    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
-    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
-    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
-    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
-    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+    <string name="mdm_desc_allowed_auth_methods">कर्मचारी किन प्रमाणीकरण विधियों का उपयोग कर सकते हैं, यह प्रतिबंधित करें।</string>
+    <string name="mdm_desc_qr_relay_enabled">संपर्क आदान-प्रदान के लिए QR कोड रिले की अनुमति दें।</string>
+    <string name="mdm_desc_min_gesture_similarity">दशमलव 0.0&#8211;1.0. अधिक मान सख्त जेस्चर मिलान आवश्यक करते हैं।</string>
+    <string name="mdm_desc_audit_log_retention_days">ऑडिट लॉग प्रविष्टियों को बनाए रखने के दिनों की संख्या।</string>
+    <string name="mdm_desc_force_key_rotation_days">N दिनों के बाद पहचान कुंजी रोटेशन बाध्य करें। 0 = अक्षम।</string>
 
     <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>
-    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_nfc">NFC टैप एक्सचेंज</string>
     <string name="cd_btn_qr_scan">Scan QR code</string>
-    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_fab_export_audit">ऑडिट लॉग निर्यात करें</string>
     <string name="cd_btn_profile_switch">Switch profile</string>
 
     <!-- Phase 6.11 — Home screen shortcut labels -->
     <string name="shortcut_start_exchange_short">Exchange</string>
-    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
-    <string name="shortcut_disabled">AURA is not available</string>
+    <string name="shortcut_start_exchange_long">AURA एक्सचेंज शुरू करें</string>
+    <string name="shortcut_disabled">AURA उपलब्ध नहीं है</string>
 
     <!-- Phase 8.3 — Tor/Orbot proxy settings -->
     <string name="settings_tor_proxy">Tor के ज़रिए relay रूट करें</string>

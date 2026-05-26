@@ -308,6 +308,26 @@
         <View android:layout_width="match_parent" android:layout_height="1dp"
             android:layout_marginVertical="16dp" android:background="#222" />
 
+        <!-- WEAR OS SECTION (Phase F1) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/settings_section_wear"
+            android:textColor="@color/aura_purple_light"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/row_wear_companion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="14dp"
+            android:text="@string/settings_wear_row_title"
+            android:textColor="@color/on_surface"
+            android:textSize="15sp" />
+
         <!-- ABOUT SECTION -->
         <TextView
             android:layout_width="match_parent"

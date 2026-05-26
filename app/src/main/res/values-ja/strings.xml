@@ -298,24 +298,31 @@
     <string name="share_card_chooser_title">AURAカードを共有</string>
     <string name="share_card_text">私のAURAカードはこちら: %1$s</string>
 
+    <!-- Phase 6.8 / C1 — Deeplink contact import sheet -->
+    <string name="deeplink_sheet_title">連絡先を追加</string>
+    <string name="deeplink_sheet_subtitle">誰かがAURAカードをあなたと共有しました</string>
+    <string name="deeplink_sheet_save">連絡先を保存</string>
+    <string name="deeplink_sheet_name_required">名前は必須です</string>
+    <string name="deeplink_sheet_saved">連絡先を保存しました</string>
+
     <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
-    <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>
-    <string name="mdm_desc_qr_relay_enabled">Allow QR code relay for contact exchange.</string>
-    <string name="mdm_desc_min_gesture_similarity">Float 0.0&#8211;1.0. Higher values require stricter gesture match.</string>
-    <string name="mdm_desc_audit_log_retention_days">Number of days to retain exchange audit log entries.</string>
-    <string name="mdm_desc_force_key_rotation_days">Force identity key rotation after N days. 0 = disabled.</string>
+    <string name="mdm_desc_allowed_auth_methods">従業員が使用できる認証方法を制限します。</string>
+    <string name="mdm_desc_qr_relay_enabled">連絡先交換のためのQRコードリレーを許可します。</string>
+    <string name="mdm_desc_min_gesture_similarity">小数 0.0&#8211;1.0。値が高いほど、より厳格なジェスチャー一致が必要です。</string>
+    <string name="mdm_desc_audit_log_retention_days">交換監査ログエントリを保持する日数。</string>
+    <string name="mdm_desc_force_key_rotation_days">N日後にIDキーのローテーションを強制します。0 = 無効。</string>
 
     <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>
-    <string name="cd_btn_nfc">NFC tap exchange</string>
+    <string name="cd_btn_nfc">NFCタップ交換</string>
     <string name="cd_btn_qr_scan">Scan QR code</string>
-    <string name="cd_fab_export_audit">Export audit log</string>
+    <string name="cd_fab_export_audit">監査ログをエクスポート</string>
     <string name="cd_btn_profile_switch">Switch profile</string>
 
     <!-- Phase 6.11 — Home screen shortcut labels -->
     <string name="shortcut_start_exchange_short">Exchange</string>
-    <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
-    <string name="shortcut_disabled">AURA is not available</string>
+    <string name="shortcut_start_exchange_long">AURA交換を開始</string>
+    <string name="shortcut_disabled">AURAは利用できません</string>
 
     <!-- Phase 8.3 — Tor/Orbot proxy settings -->
     <string name="settings_tor_proxy">Tor経由でリレー</string>

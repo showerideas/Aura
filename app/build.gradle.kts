@@ -243,6 +243,10 @@ dependencies {
     // Google Nearby Connections — gms flavor only (foss uses WifiDirectTransport)
     "gmsImplementation"(libs.play.services.nearby)
 
+    // Wearable Data Layer — phone-side sender for Wear OS tile integration (Phase F1).
+    // Optional dependency: the app degrades gracefully when no watch is paired.
+    "gmsImplementation"("com.google.android.gms:play-services-wearable:18.2.0")
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
