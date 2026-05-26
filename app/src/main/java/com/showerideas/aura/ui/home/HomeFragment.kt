@@ -21,6 +21,7 @@ import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.model.Profile
 import com.showerideas.aura.model.ProfileType
 import com.showerideas.aura.service.NearbyExchangeService
+import com.showerideas.aura.ui.exchange.SharePresetBottomSheet
 import com.showerideas.aura.utils.DeeplinkUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -64,8 +65,11 @@ class HomeFragment : Fragment() {
         binding.btnRoomMode.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_room)
         }
+        // T18: long-press the exchange FAB to quickly pick a share preset
         binding.btnActivate.setOnLongClickListener {
-            findNavController().navigate(R.id.action_home_to_room)
+            SharePresetBottomSheet.show(childFragmentManager) { _ ->
+                // Preset selected — user can now tap to start an exchange with this preset active
+            }
             true
         }
 
