@@ -8,6 +8,7 @@ import com.showerideas.aura.data.local.ContactDao
 import com.showerideas.aura.data.local.ExchangeAuditDao
 import com.showerideas.aura.data.local.KnownPeerDao
 import com.showerideas.aura.data.local.Migrations
+import com.showerideas.aura.data.local.RoomSessionDao
 import com.showerideas.aura.data.local.SharePresetDao
 import com.showerideas.aura.data.local.ProfileDao
 import dagger.Module
@@ -56,5 +57,10 @@ object DatabaseModule {
     @Provides
     fun provideSharePresetDao(db: AppDatabase): SharePresetDao =
         db.sharePresetDao()
+
+    /** Room exchange session DAO. */
+    @Provides
+    fun provideRoomSessionDao(db: AppDatabase): RoomSessionDao =
+        db.roomSessionDao()
 }
 
