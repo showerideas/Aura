@@ -308,6 +308,8 @@
     <!-- Phase 6.11 — Home screen shortcut labels -->
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">Iniciar intercambio AURA</string>
+    <string name="shortcut_last_exchange_short">Intercambiar c. %1$s</string>
+    <string name="shortcut_last_exchange_long">Intercambiar con %1$s</string>
     <string name="shortcut_disabled">AURA no está disponible</string>
 
     <!-- Phase 8.3 — Tor/Orbot proxy settings -->

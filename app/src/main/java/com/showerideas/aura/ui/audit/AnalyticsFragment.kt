@@ -223,7 +223,7 @@ class AnalyticsFragment : Fragment() {
                 OutputStreamWriter(stream, Charsets.UTF_8).use { writer ->
                     writer.write("timestamp,peer_key_hash,outcome,channel,duration_ms\n")
                     entries.forEach { e ->
-                        writer.write("${e.timestampMs},${e.peerIdentityKeyHash ?: ""},${e.outcome},${e.channel},${e.durationMs ?: ""}\n")
+                        writer.write("${e.timestampMs},${e.peerIdentityKeyHash ?: ""},${e.outcome},${e.channel},\n")
                     }
                 }
             }

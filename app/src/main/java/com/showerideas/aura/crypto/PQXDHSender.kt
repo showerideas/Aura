@@ -5,7 +5,7 @@ import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMEncapsulator
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMGenerator
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMKeyGenerationParameters
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMParameters
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMPublicKeyParameters
@@ -143,9 +143,8 @@ object PQXDHSender {
 
     private fun mlkem768Encapsulate(publicKeyBytes: ByteArray): Pair<ByteArray, ByteArray> {
         val pubKey = MLKEMPublicKeyParameters(MLKEMParameters.ml_kem_768, publicKeyBytes)
-        val encapsulator = MLKEMEncapsulator(MLKEMParameters.ml_kem_768)
-        encapsulator.init(pubKey)
-        val encResult = encapsulator.encapsulate()
+        val generator = MLKEMGenerator(java.security.SecureRandom())
+        val encResult = generator.generateEncapsulated(pubKey)
         return Pair(encResult.encapsulation, encResult.secret)
     }
 

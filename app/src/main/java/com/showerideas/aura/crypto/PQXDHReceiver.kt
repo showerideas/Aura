@@ -3,7 +3,7 @@ package com.showerideas.aura.crypto
 import org.bouncycastle.crypto.agreement.X25519Agreement
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMDecapsulator
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMExtractor
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMParameters
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMPrivateKeyParameters
 import timber.log.Timber
@@ -125,10 +125,9 @@ object PQXDHReceiver {
 
     private fun mlkem768Decapsulate(privateKeyBytes: ByteArray, ciphertext: ByteArray): ByteArray {
         return runCatching {
-            val privKey     = MLKEMPrivateKeyParameters(MLKEMParameters.ml_kem_768, privateKeyBytes)
-            val decapsulator = MLKEMDecapsulator(MLKEMParameters.ml_kem_768)
-            decapsulator.init(privKey)
-            decapsulator.decapsulate(ciphertext)
+            val privKey      = MLKEMPrivateKeyParameters(MLKEMParameters.ml_kem_768, privateKeyBytes)
+            val extractor    = MLKEMExtractor(privKey)
+            extractor.extractSecret(ciphertext)
         }.getOrElse { e ->
             Timber.e(e, "PQXDH receiver: ML-KEM-768 decapsulation failed")
             ByteArray(32) { 0 }

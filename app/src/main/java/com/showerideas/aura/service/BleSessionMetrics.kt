@@ -1,7 +1,5 @@
 package com.showerideas.aura.service
 
-import com.squareup.moshi.JsonClass
-
 /**
  * Task 66 — BLE 6.2 SCI metrics captured per GATT session.
  *
@@ -19,7 +17,6 @@ import com.squareup.moshi.JsonClass
  * See: [argenox.com — BLE 6.2 deep-dive, SCI negotiation procedure]
  * See: [NordicSemiconductor/Android-BLE-Library — CONNECTION_PRIORITY_DCK]
  */
-@JsonClass(generateAdapter = true)
 data class BleSessionMetrics(
     /** Negotiated MTU in bytes (517 max on Android). */
     val mtu: Int = 0,

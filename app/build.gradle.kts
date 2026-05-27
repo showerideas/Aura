@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.navigation.safeargs)
+    alias(libs.plugins.kotlin.compose)
     // Prompt-10: JaCoCo coverage reporting for JVM unit tests.
     jacoco
 }
@@ -160,6 +161,7 @@ android {
     }
 
     buildFeatures {
+        compose = true
         viewBinding = true
         buildConfig = true
     }
@@ -258,7 +260,7 @@ dependencies {
     // Optional dependency: the app degrades gracefully when no watch is paired.
     "gmsImplementation"("com.google.android.gms:play-services-wearable:18.2.0")
     // Required for kotlinx.coroutines.tasks.await() on Play Services Task<T>
-    "gmsImplementation"(libs.kotlinx.coroutines.play.services)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
@@ -311,6 +313,13 @@ dependencies {
     // Phase 7 (T83) — FIDO2 CredentialManager provider (AuraCredentialProviderService + PasskeyGestureGateActivity)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+
+    // Compose (XrExchangeActivity + SpatialContactCard)
+    val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
+    implementation(composeBom)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose:1.9.2")
 
     // Android Auto — Car App Library (Phase 7.3)
     implementation("androidx.car.app:app:1.4.0")

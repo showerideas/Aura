@@ -1,7 +1,7 @@
 package com.showerideas.aura.crypto
 
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMDecapsulator
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMEncapsulator
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMExtractor
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMGenerator
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMKeyGenerationParameters
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMKeyPairGenerator
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMParameters
@@ -130,9 +130,8 @@ class SpqrState(
         // Receiver-side SPQR step: fold inbound PQ KEM into chain
         if (inboundPqCiphertext != null) {
             val priv = localPqPriv ?: error("SpqrState: local PQ key not initialized")
-            val dec = MLKEMDecapsulator(MLKEMParameters.ml_kem_768)
-            dec.init(priv)
-            val pqShared = dec.decapsulate(inboundPqCiphertext)
+            val dec = MLKEMExtractor(priv)
+            val pqShared = dec.extractSecret(inboundPqCiphertext)
             chainKey = hkdf(chainKey, pqShared, HKDF_INFO_PQ)
             generateLocalPqKeyPair()  // rotate our PQ key after use
             Timber.d("SpqrState: PQ ratchet step applied (receiver)")
@@ -140,11 +139,10 @@ class SpqrState(
 
         // Sender-side SPQR step: if interval hit, schedule new ML-KEM ciphertext
         if (messageCounter > 0 && messageCounter % SPQR_STEP_INTERVAL == 0L && localPqPub != null) {
-            val enc = MLKEMEncapsulator(MLKEMParameters.ml_kem_768)
-            enc.init(localPqPub!!)
-            val ct = ByteArray(enc.encapsulationLength)
-            val shared = ByteArray(enc.secretSize)
-            enc.encapsulate(ct, 0, ct.size, shared, 0, shared.size)
+            val enc = MLKEMGenerator(rng)
+            val encResult = enc.generateEncapsulated(localPqPub!!)
+            val ct = encResult.encapsulation
+            val shared = encResult.secret
             chainKey = hkdf(chainKey, shared, HKDF_INFO_PQ)
             pendingPqCiphertext = ct
             generateLocalPqKeyPair()  // rotate after encapsulation

@@ -5,8 +5,8 @@ import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMEncapsulator
-import org.bouncycastle.pqc.crypto.mlkem.MLKEMDecapsulator
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMGenerator
+import org.bouncycastle.pqc.crypto.mlkem.MLKEMExtractor
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMKeyGenerationParameters
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMKeyPairGenerator
 import org.bouncycastle.pqc.crypto.mlkem.MLKEMParameters
@@ -101,11 +101,11 @@ object HybridKEM {
         val agreement = X25519Agreement().apply { init(x25519EphPriv) }
         agreement.calculateAgreement(x25519RecipPub, x25519SharedSecret, 0)
 
-        // ML-KEM-768 encapsulation
-        val encapsulator = MLKEMEncapsulator(MLKEMParameters.ml_kem_768, rng)
-        encapsulator.init(mlkemRecipPub)
-        val mlkemCiphertext    = ByteArray(MLKEM_CT_BYTES)
-        val mlkemSharedSecret  = encapsulator.encapsulate(mlkemCiphertext, 0, mlkemCiphertext.size)
+        // ML-KEM-768 encapsulation (BC 1.79: MLKEMGenerator replaces MLKEMEncapsulator)
+        val kemGenerator = MLKEMGenerator(rng)
+        val kemResult    = kemGenerator.generateEncapsulated(mlkemRecipPub)
+        val mlkemSharedSecret  = kemResult.secret
+        val mlkemCiphertext    = kemResult.encapsulation
 
         // Combine ciphertext: [x25519_ephemeral_pub(32) || mlkem_ct(1088)]
         val ciphertext = ByteArray(CIPHERTEXT_BYTES).also { ct ->
@@ -141,11 +141,10 @@ object HybridKEM {
         X25519Agreement().apply { init(keyPair.x25519Private) }
             .calculateAgreement(x25519EphPub, x25519SharedSecret, 0)
 
-        // ML-KEM-768 decapsulation
+        // ML-KEM-768 decapsulation (BC 1.79: MLKEMExtractor replaces MLKEMDecapsulator)
         val mlkemCiphertext = ciphertextBytes.copyOfRange(X25519_PUB_BYTES, CIPHERTEXT_BYTES)
-        val decapsulator = MLKEMDecapsulator(MLKEMParameters.ml_kem_768)
-        decapsulator.init(keyPair.mlkemPrivate)
-        val mlkemSharedSecret = decapsulator.decapsulate(mlkemCiphertext, 0, mlkemCiphertext.size)
+        val kemExtractor = MLKEMExtractor(keyPair.mlkemPrivate)
+        val mlkemSharedSecret = kemExtractor.extractSecret(mlkemCiphertext)
 
         return hkdfCombine(x25519SharedSecret, mlkemSharedSecret)
     }

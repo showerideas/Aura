@@ -306,6 +306,8 @@
     <!-- Phase 6.11 — Home screen shortcut labels -->
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">启动 AURA 交换</string>
+    <string name="shortcut_last_exchange_short">与%1$s交换</string>
+    <string name="shortcut_last_exchange_long">与%1$s交换名片</string>
     <string name="shortcut_disabled">AURA 不可用</string>
 
     <!-- Phase 8.3 — Tor/Orbot proxy settings -->

@@ -311,7 +311,7 @@ class RoomExchangeService : Service() {
     // Notification
 
     private fun buildNotification() = NotificationCompat.Builder(this, NotificationChannels.CHANNEL_EXCHANGE)
-        .setSmallIcon(R.drawable.ic_aura_notification)
+        .setSmallIcon(R.drawable.ic_aura_small)
         .setContentTitle(getString(R.string.room_service_notification_title))
         .setContentText(getString(R.string.room_service_notification_body))
         .setPriority(NotificationCompat.PRIORITY_LOW)

@@ -139,8 +139,8 @@ class PasskeyGestureGateActivity : FragmentActivity() {
 
             // Iterate credential requests for the public-key option that carries
             // the FIDO2 assertion options JSON (rpId, challenge, allowCredentials).
-            for (req in request.credentialRequests) {
-                val optJson = req.credentialRetrievalData
+            for (req in request.credentialOptions) {
+                val optJson = req.requestData
                     .getString(BUNDLE_KEY_REQUEST_JSON) ?: continue
                 rpId = parseTopField(optJson, "rpId") ?: rpId
                 val challengeB64 = parseTopField(optJson, "challenge") ?: continue

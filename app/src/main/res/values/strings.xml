@@ -381,6 +381,8 @@
     <string name="shortcut_start_exchange_short">Exchange</string>
     <string name="shortcut_start_exchange_long">Start AURA Exchange</string>
     <string name="shortcut_disabled">AURA is not available</string>
+    <string name="shortcut_last_exchange_short">Exchange w/ %1$s</string>
+    <string name="shortcut_last_exchange_long">Exchange with %1$s</string>
 
     <!-- Phase 7.4 — Enterprise MDM restriction descriptions -->
     <string name="mdm_desc_allowed_auth_methods">Restrict which authentication methods employees may use.</string>

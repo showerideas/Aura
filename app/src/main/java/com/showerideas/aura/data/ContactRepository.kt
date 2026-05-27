@@ -86,6 +86,14 @@ class ContactRepository @Inject constructor(
      * @param base       The currently-saved (merged) contact.
      * @param selections Map of fieldName → chosen value (old or new).
      */
+    /**
+     * Insert-or-replace a list of contacts in bulk (e.g. restoring from backup).
+     * Uses ContactDao.insert which has OnConflictStrategy.REPLACE.
+     */
+    suspend fun upsertAll(contacts: List<Contact>) {
+        contacts.forEach { contactDao.insert(it) }
+    }
+
     suspend fun applyMergeSelections(base: Contact, selections: Map<String, String>) {
         val updated = ContactDiffEngine.applySelections(base, selections)
         contactDao.update(updated)

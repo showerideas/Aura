@@ -113,7 +113,7 @@ class GestureEnrollmentFragment : Fragment() {
                 binding.tvEnrollmentHint.setText(R.string.enrollment_hint_waiting_for_palm)
                 binding.tvEnrollmentHint.contentDescription =
                     getString(R.string.enrollment_hint_waiting_for_palm)
-                binding.enrollmentProgressArc.isVisible = false
+                binding.enrollmentProgressArc.root.isVisible = false
                 binding.viewCameraBorder.setBackgroundResource(R.drawable.bg_camera_border_cyan)
             }
             is EnrollmentCaptureState.AnchorFailed -> {
@@ -130,18 +130,18 @@ class GestureEnrollmentFragment : Fragment() {
                 binding.tvEnrollmentHint.setText(R.string.enrollment_hint_capturing)
                 binding.tvEnrollmentHint.contentDescription =
                     getString(R.string.enrollment_hint_capturing)
-                binding.enrollmentProgressArc.isVisible = true
-                binding.enrollmentProgressArc.progress = (state.progressFraction * 100).toInt()
+                binding.enrollmentProgressArc.root.isVisible = true
+                binding.enrollmentProgressArc.arcProgress.progress = (state.progressFraction * 100).toInt()
                 // Announce progress for accessibility (polite)
                 ViewCompat.setAccessibilityLiveRegion(
-                    binding.enrollmentProgressArc,
+                    binding.enrollmentProgressArc.root,
                     ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE
                 )
                 binding.viewCameraBorder.setBackgroundResource(R.drawable.bg_camera_border_green)
             }
             is EnrollmentCaptureState.CaptureComplete -> {
                 binding.tvEnrollmentHint.setText(R.string.enrollment_hint_processing)
-                binding.enrollmentProgressArc.isVisible = false
+                binding.enrollmentProgressArc.root.isVisible = false
                 binding.progressSpinner.isVisible = true
             }
         }

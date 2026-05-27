@@ -69,7 +69,7 @@ object FiraSessionConfig {
             sessionId       = sessionId,
             sessionKeyInfo  = sessionKey,
             complexChannel  = complexChannel,
-            peerDevices     = listOf(androidx.core.uwb.RangingDevice(peerAddress)),
+            peerDevices     = listOf(androidx.core.uwb.UwbDevice(peerAddress)),
             updateRateType  = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
         )
     }

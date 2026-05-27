@@ -224,15 +224,10 @@ class BleGattTransport(private val context: Context) : NearbyTransport {
         }
 
         // Condition 2: Remote device must support BLE 6.2 SCI in its controller feature mask.
-        // BluetoothDevice.getSupportedFeatures() → bitmask; FEATURE_LE_SCI bit is API 36+.
-        // We check by querying the FEATURE_BLUETOOTH_LE_CHANNEL_SOUNDING package feature as
-        // a proxy; individual device feature mask requires API 36 BluetoothDevice constants.
-        val remoteSupportsSci = runCatching {
-            // API 36+: check device feature mask for SCI support
-            // BluetoothStatusCodes.FEATURE_SUPPORTED = 1
-            @Suppress("NewApi")
-            gatt.device.getSupportedFeatures() and 0x00000020L != 0L  // LE_SCI bit position
-        }.getOrElse { false }
+        // BluetoothDevice.getSupportedFeatures() is API 36+ and not available at compileSdk 35.
+        // Conservative fallback: assume remote device does not support SCI; connection priority
+        // falls back to HIGH. This is safe — the platform rejects unknown priority values.
+        val remoteSupportsSci = false
 
         val sciPriority = if (remoteSupportsSci) {
             Timber.i("BLE SCI: both sides support BLE 6.2 SCI — requesting CONNECTION_PRIORITY_DCK")

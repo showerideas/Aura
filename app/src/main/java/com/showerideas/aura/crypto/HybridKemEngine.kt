@@ -65,7 +65,7 @@ class HybridKemEngine @Inject constructor() {
     data class KemSession(
         val sessionId        : String,
         val negotiatedVersion: Int,
-        val localKeyPair     : HybridKEM.HybridKeyPair?,
+        val localKeyPair     : HybridKeyPair?,
         var sharedSecret     : ByteArray? = null
     ) {
         val isPostQuantum: Boolean get() = negotiatedVersion >= WIRE_V8

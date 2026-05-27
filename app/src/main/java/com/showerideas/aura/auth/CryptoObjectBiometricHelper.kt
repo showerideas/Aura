@@ -101,13 +101,28 @@ object CryptoObjectBiometricHelper {
             return
         }
 
-        val cryptoObject = BiometricPrompt.CryptoObject(keyAgreement)
+        // BiometricPrompt.CryptoObject(KeyAgreement) is API 36+; use reflection to avoid
+        // compile-time failure at compileSdk 35.
+        val cryptoObject = runCatching {
+            BiometricPrompt.CryptoObject::class.java
+                .getConstructor(KeyAgreement::class.java)
+                .newInstance(keyAgreement) as BiometricPrompt.CryptoObject
+        }.getOrElse { e ->
+            Timber.e(e, "CryptoObject: KeyAgreement constructor unavailable")
+            onFailure("CryptoObject(KeyAgreement) not supported on this device: ${e.message}")
+            return
+        }
         val executor = ContextCompat.getMainExecutor(fragment.requireContext())
         val ctx = fragment.requireContext()
 
         val callback = object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                val authorizedKa = result.cryptoObject?.keyAgreement
+                // CryptoObject.keyAgreement is API 36+; access via reflection
+                val authorizedKa = runCatching {
+                    result.cryptoObject?.let { co ->
+                        co.javaClass.getMethod("getKeyAgreement").invoke(co) as? KeyAgreement
+                    }
+                }.getOrNull()
                 if (authorizedKa == null) {
                     onFailure("CryptoObject KeyAgreement not returned after authentication")
                     return
