@@ -292,23 +292,23 @@
     <string name="deeplink_sheet_saved">Contact enregistré</string>
 
     <!-- Phase 7.4 — Enterprise MDM restriction descriptions (admin-facing; en placeholder) -->
-    <string name="mdm_desc_allowed_auth_methods">Limitez les méthodes d'authentification que les employés peuvent utiliser.</string>
-    <string name="mdm_desc_qr_relay_enabled">Autoriser le relais de code QR pour l'échange de contacts.</string>
+    <string name="mdm_desc_allowed_auth_methods">Limitez les méthodes d\'authentification que les employés peuvent utiliser.</string>
+    <string name="mdm_desc_qr_relay_enabled">Autoriser le relais de code QR pour l\'échange de contacts.</string>
     <string name="mdm_desc_min_gesture_similarity">Décimal 0,0&#8211;1,0. Des valeurs plus élevées exigent une correspondance de geste plus stricte.</string>
-    <string name="mdm_desc_audit_log_retention_days">Nombre de jours de conservation des entrées du journal d'audit.</string>
-    <string name="mdm_desc_force_key_rotation_days">Forcer la rotation de la clé d'identité après N jours. 0 = désactivé.</string>
+    <string name="mdm_desc_audit_log_retention_days">Nombre de jours de conservation des entrées du journal d\'audit.</string>
+    <string name="mdm_desc_force_key_rotation_days">Forcer la rotation de la clé d\'identité après N jours. 0 = désactivé.</string>
 
     <!-- Phase 5.3 — Accessibility content descriptions for icon-only buttons -->
     <string name="cd_btn_exchange">Start exchange</string>
     <string name="cd_btn_nfc">Échange par touche NFC</string>
     <string name="cd_btn_qr_scan">Scan QR code</string>
-    <string name="cd_fab_export_audit">Exporter le journal d'audit</string>
+    <string name="cd_fab_export_audit">Exporter le journal d\'audit</string>
     <string name="cd_btn_profile_switch">Switch profile</string>
 
     <!-- Phase 6.11 — Home screen shortcut labels -->
     <string name="shortcut_start_exchange_short">Exchange</string>
-    <string name="shortcut_start_exchange_long">Démarrer l'échange AURA</string>
-    <string name="shortcut_disabled">AURA n'est pas disponible</string>
+    <string name="shortcut_start_exchange_long">Démarrer l\'échange AURA</string>
+    <string name="shortcut_disabled">AURA n\'est pas disponible</string>
 
     <!-- Phase 8.3 — Tor/Orbot proxy settings -->
     <string name="settings_tor_proxy">Acheminer le relais via Tor</string>
@@ -322,13 +322,13 @@
     <string name="analytics_success_rate">Taux de réussite</string>
     <string name="analytics_weekly_header">Les 7 derniers jours</string>
     <string name="analytics_top_contacts_header">Contacts fréquents</string>
-    <string name="analytics_empty">Aucune donnée d'échange pour l'instant.</string>
+    <string name="analytics_empty">Aucune donnée d\'échange pour l\'instant.</string>
     <string name="analytics_no_data_this_week">Aucun échange cette semaine.</string>
-    <string name="analytics_no_recurring">Aucun contact récurrent pour l'instant.</string>
+    <string name="analytics_no_recurring">Aucun contact récurrent pour l\'instant.</string>
     <string name="analytics_export_csv">Exporter CSV</string>
     <string name="analytics_export_done">CSV enregistré dans Téléchargements</string>
     <string name="analytics_export_empty">Aucune donnée à exporter.</string>
-    <string name="analytics_export_failed">Échec de l'export — vérifiez la permission de stockage.</string>
+    <string name="analytics_export_failed">Échec de l\'export — vérifiez la permission de stockage.</string>
 
 
     <!-- Phase 9.3 — Gesture Library -->
