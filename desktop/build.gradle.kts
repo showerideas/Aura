@@ -13,6 +13,9 @@ plugins {
     // Using alias(libs.plugins.kotlin.jvm) here would include an explicit version
     // and trigger Gradle 8.13's "already on classpath with unknown version" error.
     id("org.jetbrains.kotlin.jvm")
+    // Kotlin 2.0+ requires kotlin.plugin.compose alongside org.jetbrains.compose.
+    // Both are preloaded in root build.gradle.kts (apply false); no version needed here.
+    id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.compose") version "1.6.10"
 }
 
