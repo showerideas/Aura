@@ -13,6 +13,12 @@ plugins {
     jacoco
 }
 
+// Kotlin 2.0 + kapt: correctErrorTypes prevents stub-generation failures when
+// kapt falls back to 1.9 mode and encounters K2-compiled metadata.
+kapt {
+    correctErrorTypes = true
+}
+
 android {
     namespace = "com.showerideas.aura"
     compileSdk = 35
