@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit
  */
 @HiltWorker
 class BlocklistRefreshWorker @AssistedInject constructor(
-    @Assisted appContext: WorkerParameters,
+    @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val logClient: TransparencyLogClient
-) : CoroutineWorker(appContext as Context, workerParams) {
+) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
         private const val WORK_NAME            = "aura_blocklist_refresh"

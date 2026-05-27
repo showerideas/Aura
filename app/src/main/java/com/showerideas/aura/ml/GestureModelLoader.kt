@@ -55,14 +55,13 @@ class GestureModelLoader @Inject constructor(
         private const val EXPECTED_SHA256 =
             "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
     }
- *
+
     /** Resolved absolute path to the model file (set once, reused). */
     @Volatile private var resolvedModelPath: String? = null
- *
+
     // ─────────────────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────────────────
- *
     /**
      * Build and return a [GestureRecognizer] configured with the best available model.
      *
