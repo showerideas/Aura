@@ -303,9 +303,10 @@ dependencies {
     implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
     implementation("androidx.hilt:hilt-work:1.2.0")
     kapt("androidx.hilt:hilt-compiler:1.2.0")
-    // Phase 8.1 — BouncyCastle PQC: ML-KEM-768 post-quantum KEM
+    // Phase 8.1 — BouncyCastle PQC: ML-KEM-768 post-quantum KEM + Dilithium
+    // bcprov-jdk18on includes org.bouncycastle.pqc.* (mlkem, crystals.dilithium) since 1.72+.
+    // bcpqc-jdk18on does not exist as a separate Maven Central artifact.
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
-    implementation("org.bouncycastle:bcpqc-jdk18on:1.78.1")
     // Phase 7 (T83) — FIDO2 CredentialManager provider (AuraCredentialProviderService + PasskeyGestureGateActivity)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
