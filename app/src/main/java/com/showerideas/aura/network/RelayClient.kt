@@ -69,7 +69,7 @@ import javax.net.ssl.X509TrustManager
  */
 @Singleton
 open class RelayClient @Inject constructor(
-    private val privacyPassClient: PrivacyPassClient? = null
+    private val privacyPassClient: PrivacyPassClient
 ) {
 
     companion object {

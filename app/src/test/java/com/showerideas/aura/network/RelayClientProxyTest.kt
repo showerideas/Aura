@@ -1,8 +1,10 @@
 package com.showerideas.aura.network
 
+import com.showerideas.aura.relay.privacypass.PrivacyPassClient
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.mockito.kotlin.mock
 import java.net.InetSocketAddress
 
 /**
@@ -15,7 +17,7 @@ import java.net.InetSocketAddress
  */
 class RelayClientProxyTest {
 
-    private val client = RelayClient()
+    private val client = RelayClient(mock<PrivacyPassClient>())
 
     @Test
     fun setProxy_configuresOrbot() {
