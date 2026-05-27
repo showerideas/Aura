@@ -65,8 +65,10 @@ public enum FrameType: UInt8 {
     case keyAcknowledge    = 0x11
     case sasChallenge      = 0x20
     case sasResponse       = 0x21
+    case sasConfirmation   = 0x22    // both peers confirm SAS match (iOS exchange path)
     case profilePayload    = 0x30
     case sealedProfile     = 0x31
+    case encryptedProfile  = 0x32    // AES-GCM encrypted profile (iOS simplified exchange)
     case ack               = 0xF0
     case error             = 0xFF
 }
