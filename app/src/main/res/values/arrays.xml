@@ -11,4 +11,13 @@
         <item>biometric</item>
         <item>both</item>
     </string-array>
+    <!-- Profile type choice for app_restrictions.xml pre_fill_profile_type -->
+    <string-array name="profile_type_entries">
+        <item>Work</item>
+        <item>Personal</item>
+    </string-array>
+    <string-array name="profile_type_values">
+        <item>WORK</item>
+        <item>PERSONAL</item>
+    </string-array>
 </resources>

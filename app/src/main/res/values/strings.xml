@@ -541,6 +541,10 @@
     <string name="ar_settings_xr_ambient_label">XR ambient mode</string>
     <string name="ar_settings_xr_ambient_summary">Show contact cards automatically on XR headsets without explicit activation</string>
 
+    <!-- Phase 6.11 — Launcher shortcut labels (shortcuts.xml) -->
+    <string name="shortcut_my_card_short">My card</string>
+    <string name="shortcut_my_card_long">View my AURA profile card</string>
+
     <!-- Phase 7.4 — MDM app_restrictions.xml description strings (must be @string refs, not inline) -->
     <string name="restriction_desc_max_gesture_attempts">Number of failed gesture attempts before lockout. Range: 1\u201310.</string>
     <string name="restriction_desc_require_sas">When enabled, exchanges cannot complete without SAS code confirmation.</string>
