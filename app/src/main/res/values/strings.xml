@@ -495,4 +495,20 @@
     <string name="room_service_notification_title">AURA Room Active</string>
     <string name="room_service_notification_body">Multi-party exchange in progress…</string>
 
+    <!-- Exchange success bottom sheet -->
+    <string name="exchange_success_title">Contact Shared</string>
+    <string name="exchange_success_subtitle">Tap a contact to view their full profile.</string>
+
+    <!-- Contacts screen tabs -->
+    <string name="tab_my_contacts">My Contacts</string>
+    <string name="tab_history">History</string>
+
+    <!-- Exchange history tab -->
+    <string name="exchange_history_empty">No exchange history yet.\nContacts shared via AURA will appear here.</string>
+    <string name="history_view_contact">View</string>
+    <string name="history_add_to_phone">Add to Phone</string>
+
+    <!-- Generic actions -->
+    <string name="action_close">Close</string>
+
 </resources>

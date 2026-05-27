@@ -15,7 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
+import com.google.android.material.tabs.TabLayout
 import com.showerideas.aura.R
 import com.showerideas.aura.databinding.FragmentContactsBinding
 import com.showerideas.aura.utils.shareVCard
@@ -53,7 +53,21 @@ class ContactsFragment : Fragment() {
             arguments?.remove(DeeplinkContactSheet.KEY_DEEPLINK_FIELDS)
         }
 
-        // "Export all" toolbar action.
+        // Tab strip — My Contacts (0) / History (1)
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.tab_my_contacts))
+        binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.tab_history))
+        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> showContactsTab()
+                    1 -> showHistoryTab()
+                }
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
+            override fun onTabReselected(tab: TabLayout.Tab?) = Unit
+        })
+
+        // "Export all" toolbar action (History menu item removed — it's now a tab).
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.contacts_menu, menu)
@@ -75,10 +89,6 @@ class ContactsFragment : Fragment() {
                                 "aura_contacts.vcf"
                             )
                         }
-                        true
-                    }
-                    R.id.action_exchange_history -> {
-                        findNavController().navigate(R.id.action_contacts_to_audit)
                         true
                     }
                     else -> false
@@ -115,6 +125,26 @@ class ContactsFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Tab helpers
+    // ─────────────────────────────────────────────────────────────────
+
+    private fun showContactsTab() {
+        binding.contactsContent.visibility = View.VISIBLE
+        binding.historyContainer.visibility = View.GONE
+    }
+
+    private fun showHistoryTab() {
+        binding.contactsContent.visibility = View.GONE
+        binding.historyContainer.visibility = View.VISIBLE
+        // Inflate ExchangeHistoryFragment into the container lazily on first selection.
+        if (childFragmentManager.findFragmentById(R.id.history_container) == null) {
+            childFragmentManager.beginTransaction()
+                .replace(R.id.history_container, ExchangeHistoryFragment())
+                .commit()
         }
     }
 

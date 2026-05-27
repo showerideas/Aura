@@ -27,6 +27,7 @@ import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.ui.contacts.ContactMergeBottomSheet
+import com.showerideas.aura.ui.exchange.ExchangeSuccessBottomSheet
 import com.showerideas.aura.ui.exchange.SharePresetBottomSheet
 import com.showerideas.aura.utils.IdenticonGenerator
 import com.google.android.material.snackbar.Snackbar
@@ -78,6 +79,8 @@ class ExchangeFragment : Fragment() {
     private var gestureValidated = false
     /** Guard: show the "card updated" Snackbar at most once per completed session. */
     private var cardUpdatedSnackbarShown = false
+    /** Guard: show the exchange-success sheet at most once per completed session. */
+    private var successSheetShown = false
     // sasDialogShown has been moved to ExchangeViewModel to survive configuration
     // changes (rotation, theme switch). The fragment-level variable was reset to
     // false on every recreation, causing the SAS dialog to appear twice.
@@ -359,6 +362,18 @@ class ExchangeFragment : Fragment() {
             binding.btnCancel.setOnClickListener {
                 findNavController().navigate(R.id.action_exchange_to_contacts)
             }
+
+            // Show exchange-success sheet exactly once — primary completion UX.
+            val receivedId = session.receivedContact?.id
+            if (receivedId != null && !successSheetShown) {
+                successSheetShown = true
+                val sheet = ExchangeSuccessBottomSheet.newInstance(receivedId)
+                sheet.onClose = {
+                    findNavController().popBackStack(R.id.homeFragment, false)
+                }
+                sheet.show(childFragmentManager, ExchangeSuccessBottomSheet.TAG)
+            }
+
             // Show merge review sheet when a returning contact updated their card.
             val mergeEvent: MergeEvent? = session.mergeEvent
             if (mergeEvent != null && mergeEvent.hasChanges && !mergeSheetShown) {

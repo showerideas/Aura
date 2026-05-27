@@ -6,8 +6,5 @@
         android:title="@string/action_export_all"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_exchange_history"
-        android:title="@string/settings_exchange_history"
-        app:showAsAction="never" />
+    <!-- History is now the second tab in ContactsFragment — no overflow item needed. -->
 </menu>
