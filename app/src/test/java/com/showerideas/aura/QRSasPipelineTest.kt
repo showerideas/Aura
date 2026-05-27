@@ -41,9 +41,7 @@ class QRSasPipelineTest {
         bobEcdh   = CryptoUtils.generateEphemeralECDHKeyPair()
     }
 
-    // -------------------------------------------------------------------------
     // 1. ECDH symmetry
-    // -------------------------------------------------------------------------
 
     @Test
     fun `QR ECDH both sides derive the same session key`() {
@@ -52,9 +50,7 @@ class QRSasPipelineTest {
         assertArrayEquals(aliceKey.encoded, bobKey.encoded)
     }
 
-    // -------------------------------------------------------------------------
     // 2. Encrypt-then-decrypt round-trip
-    // -------------------------------------------------------------------------
 
     @Test
     fun `encrypted profile can be decrypted by peer`() {
@@ -65,9 +61,7 @@ class QRSasPipelineTest {
         assertEquals(payload, plain)
     }
 
-    // -------------------------------------------------------------------------
     // 3. SAS symmetry (both sides see the same 6-digit code)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `SAS is symmetric -- both parties derive the same code`() {
@@ -77,9 +71,7 @@ class QRSasPipelineTest {
         assertEquals("SAS must be identical on both sides", aliceSas, bobSas)
     }
 
-    // -------------------------------------------------------------------------
     // 4. SAS MITM detection — substituted key gives different SAS
-    // -------------------------------------------------------------------------
 
     @Test
     fun `MITM substituting their key produces a different SAS`() {
@@ -99,9 +91,7 @@ class QRSasPipelineTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 5. SAS uses ephemeral keys (not identity keys)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `different ephemeral sessions produce different SAS codes`() {
@@ -115,9 +105,7 @@ class QRSasPipelineTest {
         assertNotEquals("Independent sessions must produce fresh SAS codes", sas1, sas2)
     }
 
-    // -------------------------------------------------------------------------
     // 6. Mutual exchange — both Alice and Bob can send + receive
-    // -------------------------------------------------------------------------
 
     @Test
     fun `mutual encrypted exchange both parties can read each other's profile`() {
@@ -139,9 +127,7 @@ class QRSasPipelineTest {
         assertEquals(bobPayload,   bobDecrypted)
     }
 
-    // -------------------------------------------------------------------------
     // 7. Contact.fromMap round-trip (post-decrypt contact construction)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `decrypted profile JSON produces correct Contact fields`() {
@@ -166,9 +152,7 @@ class QRSasPipelineTest {
         assertEquals(endpoint,         contact.sourceEndpointId)
     }
 
-    // -------------------------------------------------------------------------
     // 8. Tampered ciphertext — must throw, not return garbage
-    // -------------------------------------------------------------------------
 
     @Test(expected = Exception::class)
     fun `tampered ciphertext throws during decryption`() {
@@ -179,9 +163,7 @@ class QRSasPipelineTest {
         CryptoUtils.decrypt(key, cipher)  // must throw
     }
 
-    // -------------------------------------------------------------------------
     // 9. Empty profile fields — Contact.fromMap handles empty map gracefully
-    // -------------------------------------------------------------------------
 
     @Test
     fun `empty profile map produces Contact with blank fields, no crash`() {
@@ -191,9 +173,7 @@ class QRSasPipelineTest {
         assertEquals("ep-0", contact.sourceEndpointId)
     }
 
-    // -------------------------------------------------------------------------
     // 10. SAS range — always exactly 6 digits in [0, 10^6)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `SAS is always a 6-digit zero-padded decimal string`() {
@@ -207,9 +187,7 @@ class QRSasPipelineTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun sampleProfileJson(name: String, email: String) =
         JSONObject(mapOf("displayName" to name, "email" to email, "phone" to "+1555")).toString()

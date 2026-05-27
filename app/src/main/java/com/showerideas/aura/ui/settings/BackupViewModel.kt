@@ -20,9 +20,9 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Phase 10.4 — ViewModel backing [BackupFragment] (polished).
+ * ViewModel backing [BackupFragment] (polished).
  *
- * Improvements over the Phase 6.10 baseline:
+ * Improvements over the baseline:
  * - [isLoading] StateFlow drives a progress indicator in the UI so the user
  *   knows when the ~1 s PBKDF2 derivation is running.
  * - Status messages use string resources (via [Context.getString]) rather than
@@ -124,3 +124,4 @@ class BackupViewModel @Inject constructor(
         }
     }
 }
+

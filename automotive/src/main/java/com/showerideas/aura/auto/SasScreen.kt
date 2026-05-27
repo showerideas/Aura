@@ -8,7 +8,7 @@ import androidx.car.app.model.MessageTemplate
 import androidx.car.app.model.Template
 
 /**
- * Phase 7.3 — Android Auto SAS (Short Authentication String) verification screen.
+ * Android Auto SAS (Short Authentication String) verification screen.
  *
  * Displays the 6-digit SAS code that both devices compute from the key exchange.
  * The driver verbally confirms with the other person whether their codes match

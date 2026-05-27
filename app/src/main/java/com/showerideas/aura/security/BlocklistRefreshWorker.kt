@@ -15,13 +15,13 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
- * Phase 8.4 — WorkManager periodic worker that refreshes the remote blocklist.
+ * WorkManager periodic worker that refreshes the remote blocklist.
  *
  * Scheduled as a [PeriodicWorkRequest] every 24 hours, constrained to run
  * only when the device has network connectivity. On each run it calls
  * [TransparencyLogClient.refresh] and logs the outcome.
  *
- * ## Scheduling
+ * Scheduling
  * Call [enqueue] from `Application.onCreate()` or the Hilt
  * `ApplicationComponent` initializer. WorkManager deduplicates by [WORK_NAME]
  * so multiple calls are safe.

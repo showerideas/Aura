@@ -6,7 +6,7 @@ import timber.log.Timber
 import java.util.Locale
 
 /**
- * T36 — Thin TTS wrapper for Android Auto exchange announcements.
+ * Thin TTS wrapper for Android Auto exchange announcements.
  *
  * Wraps [TextToSpeech] to announce key exchange lifecycle events so the
  * driver does not need to look at the screen:
@@ -15,11 +15,11 @@ import java.util.Locale
  * - "Contact received from <name>"→ when the exchange completes
  * - "Exchange cancelled"          → when the driver cancels or auto-aborts
  *
- * ## Threading
+ * Threading
  * [TextToSpeech] callbacks arrive on an arbitrary thread. All public methods
  * are safe to call from the Car App Session thread or a background coroutine.
  *
- * ## Lifecycle
+ * Lifecycle
  * Call [init] when the Car App session starts.
  * Call [shutdown] when the session ends.
  */
@@ -29,9 +29,7 @@ class AutoTtsAnnouncer(private val context: Context) : TextToSpeech.OnInitListen
     private var ready = false
     private val pendingQueue = ArrayDeque<String>()
 
-    // -------------------------------------------------------------------------
     // Lifecycle
-    // -------------------------------------------------------------------------
 
     /** Initialise the TTS engine. Must be called before any speak methods. */
     fun init() {
@@ -58,9 +56,7 @@ class AutoTtsAnnouncer(private val context: Context) : TextToSpeech.OnInitListen
         pendingQueue.clear()
     }
 
-    // -------------------------------------------------------------------------
     // Announcement methods
-    // -------------------------------------------------------------------------
 
     /** Announce that AURA is advertising and waiting for a nearby device. */
     fun announceAdvertising() {
@@ -85,9 +81,7 @@ class AutoTtsAnnouncer(private val context: Context) : TextToSpeech.OnInitListen
         speak(context.getString(R.string.auto_tts_sas_required))
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun speak(text: String) {
         if (!ready) {
@@ -105,3 +99,4 @@ class AutoTtsAnnouncer(private val context: Context) : TextToSpeech.OnInitListen
         }
     }
 }
+

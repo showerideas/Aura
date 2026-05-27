@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * JVM unit tests for multi-profile domain logic (Phase 6.4).
+ * JVM unit tests for multi-profile domain logic.
  *
  * Covers:
  * - ProfileType display names
@@ -20,9 +20,7 @@ import org.junit.Test
  */
 class MultiProfileTest {
 
-    // -------------------------------------------------------------------------
     // ProfileType
-    // -------------------------------------------------------------------------
 
     @Test
     fun profileType_personal_displayName() {
@@ -46,9 +44,7 @@ class MultiProfileTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Profile entity
-    // -------------------------------------------------------------------------
 
     @Test
     fun profile_defaults_to_personal_and_active() {
@@ -89,9 +85,7 @@ class MultiProfileTest {
         assertEquals(p1, p2)
     }
 
-    // -------------------------------------------------------------------------
     // toShareableMap — shares only enabled fields
-    // -------------------------------------------------------------------------
 
     @Test
     fun shareableMap_personal_only_shares_enabled_fields() {
@@ -153,9 +147,7 @@ class MultiProfileTest {
         assertTrue("version should always be present", map.containsKey("version"))
     }
 
-    // -------------------------------------------------------------------------
     // isActive state transitions
-    // -------------------------------------------------------------------------
 
     @Test
     fun profile_copy_can_toggle_active() {

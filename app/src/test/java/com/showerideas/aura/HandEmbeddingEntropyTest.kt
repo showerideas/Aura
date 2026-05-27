@@ -45,17 +45,13 @@ import kotlin.math.sqrt
  */
 class HandEmbeddingEntropyTest {
 
-    // -------------------------------------------------------------------------
     // Constants mirrored from production (CameraHandEmbedder / GestureAuthManager)
-    // -------------------------------------------------------------------------
 
     private val EMBEDDING_SIZE = 63        // 21 landmarks × (x, y, z) — depth included
     private val THRESHOLD = 0.88f          // GestureAuthManager.SIMILARITY_THRESHOLD
     private val TRIAL_COUNT = 1_000
 
-    // -------------------------------------------------------------------------
     // Cosine similarity — inlined to avoid MediaPipe native-library dependency
-    // -------------------------------------------------------------------------
 
     private fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
         if (a.size != b.size) return 0f
@@ -106,9 +102,7 @@ class HandEmbeddingEntropyTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Distribution measurement helpers
-    // -------------------------------------------------------------------------
 
     data class DistributionStats(
         val min: Float, val max: Float, val mean: Float, val stdDev: Float,
@@ -134,9 +128,7 @@ class HandEmbeddingEntropyTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     /**
      * Intra-person, same gesture: successive repetitions of the same hand

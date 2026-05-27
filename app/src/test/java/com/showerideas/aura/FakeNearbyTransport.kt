@@ -41,9 +41,7 @@ class FakeNearbyTransport(
 
     val sentPayloads: LinkedBlockingQueue<Pair<String, ByteArray>> = LinkedBlockingQueue()
 
-    // -------------------------------------------------------------------------
     // NearbyTransport implementation
-    // -------------------------------------------------------------------------
 
     override fun sendBytes(endpointId: String, data: ByteArray) {
         sentPayloads.add(endpointId to data.copyOf())
@@ -99,9 +97,7 @@ class FakeNearbyTransport(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Test helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Simulate a connection being established from this side.

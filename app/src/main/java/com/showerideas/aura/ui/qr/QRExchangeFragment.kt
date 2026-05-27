@@ -144,7 +144,7 @@ class QRExchangeFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
                 viewModel.consumePairingResult()
-                // Show merge review sheet if a returning contact updated their card (Phase 6.3/6.7).
+                // Show merge review sheet if a returning contact updated their card.
                 val mergeEvent = result.mergeEvent
                 if (mergeEvent != null && mergeEvent.hasChanges) {
                     ContactMergeBottomSheet.newInstance(mergeEvent) { selections ->
@@ -196,7 +196,7 @@ class QRExchangeFragment : Fragment() {
      * discarded without being saved.
      */
     /**
-     * Custom SAS dialog with identicon + accessible code display (Phase 5.3 / 6.9).
+     * Custom SAS dialog with identicon + accessible code display.
      * Both parties derive the same identicon from the SAS pin — provides a secondary
      * visual verification channel alongside the 6-digit code.
      */

@@ -10,7 +10,7 @@ import com.showerideas.aura.databinding.FragmentEnterpriseSettingsBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Phase 7.4 — Enterprise Settings screen.
+ * Enterprise Settings screen.
  *
  * Read-only display of the MDM-enforced policy values.  Administrators set
  * these via their EMM console; end users can see what is enforced but cannot

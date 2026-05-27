@@ -9,13 +9,7 @@ import androidx.room.Update
 import com.showerideas.aura.model.SharePreset
 import kotlinx.coroutines.flow.Flow
 
-/**
- * T42 — DAO for [SharePreset] entities, relocated to data/local/ alongside all
- * other Room DAOs (was erroneously placed in data/ in Phase 9.1).
- *
- * The companion stub in data/SharePresetDao.kt is deprecated and will be
- * removed once all import sites have been migrated.
- */
+/** DAO for [SharePreset] entities. */
 @Dao
 interface SharePresetDao {
     @Query("SELECT * FROM share_presets ORDER BY lastUsedAt DESC, id ASC")

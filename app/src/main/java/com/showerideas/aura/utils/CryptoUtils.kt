@@ -41,9 +41,7 @@ object CryptoUtils {
     private const val GCM_IV_SIZE = 12
     private const val GCM_TAG_SIZE = 128
 
-    // -------------------------------------------------------------------------
     // Ephemeral ECDH (per-session key agreement)
-    // -------------------------------------------------------------------------
 
     /**
      * Generate a fresh ephemeral EC keypair for one exchange session.
@@ -90,9 +88,7 @@ object CryptoUtils {
         return SecretKeySpec(okm, "AES")
     }
 
-    // -------------------------------------------------------------------------
     // AES-GCM encryption / decryption
-    // -------------------------------------------------------------------------
 
     /**
      * Encrypt [plaintext] with [key] using AES-256-GCM.
@@ -119,15 +115,12 @@ object CryptoUtils {
         return cipher.doFinal(ciphertext)
     }
 
-    // -------------------------------------------------------------------------
     // Android Keystore — long-lived device identity
-    // -------------------------------------------------------------------------
 
     /**
      * Get or create the device identity keypair in the Android Keystore.
      * Used to sign challenge tokens during peer authentication.
      */
-    // -------------------------------------------------------------------------
     // ECDSA challenge / response
     //
     // The device identity key returned by [getOrCreateDeviceIdentityKey] is
@@ -135,7 +128,6 @@ object CryptoUtils {
     // can prove they hold the same private key they presented as part of
     // any prior pairing. This catches MITM endpoint substitution and
     // tampered re-binds of an endpoint ID to a different identity.
-    // -------------------------------------------------------------------------
 
     /**
      * Sign a 32-byte random challenge with the device's long-lived ECDSA
@@ -176,9 +168,7 @@ object CryptoUtils {
         return java.util.Base64.getEncoder().encodeToString(digest.digest(publicKey.encoded))
     }
 
-    // -------------------------------------------------------------------------
     // Sub-key derivation (directional key separation)
-    // -------------------------------------------------------------------------
 
     /**
      * Derive a domain-separated 256-bit AES sub-key from an existing [SecretKey].
@@ -206,9 +196,7 @@ object CryptoUtils {
         return SecretKeySpec(hmac.doFinal(), "AES")
     }
 
-    // -------------------------------------------------------------------------
     // Double Ratchet helpers (thin wrappers — main logic in DoubleRatchetState)
-    // -------------------------------------------------------------------------
 
     /**
      * Create a new [DoubleRatchetState] seeded from an ECDH-derived session key.
@@ -243,9 +231,7 @@ object CryptoUtils {
     fun ratchetDecrypt(ratchet: DoubleRatchetState, blob: ByteArray): ByteArray =
         decrypt(ratchet.nextMessageKey(), blob)
 
-    // -------------------------------------------------------------------------
     // Android Keystore — long-lived device identity
-    // -------------------------------------------------------------------------
 
     /**
      * Get or create the device identity keypair in the Android Keystore.
@@ -325,9 +311,7 @@ object CryptoUtils {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Key rotation (Phase 6.5)
-    // -------------------------------------------------------------------------
+    // Key rotation
 
     /**
      * Rotate the device identity key.
@@ -408,3 +392,4 @@ object CryptoUtils {
         override fun hashCode() = oldPublicKeyBytes.contentHashCode()
     }
 }
+

@@ -9,7 +9,7 @@ import java.security.KeyPairGenerator
 import java.security.spec.ECGenParameterSpec
 
 /**
- * Edge-case tests for [SasVerifier] — Phase 5.2 coverage hardening.
+ * Edge-case tests for [SasVerifier] coverage hardening.
  *
  * The primary [SasVerifierTest] validates determinism, range, and uniqueness.
  * This file focuses on:
@@ -24,9 +24,7 @@ class SasVerifierEdgeCasesTest {
         initialize(ECGenParameterSpec("secp256r1"))
     }.generateKeyPair()
 
-    // -------------------------------------------------------------------------
     // Format invariants
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derived pin is exactly 6 characters`() {
@@ -55,9 +53,7 @@ class SasVerifierEdgeCasesTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Ordering invariance — derive(A, B) == derive(B, A)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derive is commutative - same result regardless of key order`() {
@@ -81,9 +77,7 @@ class SasVerifierEdgeCasesTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Determinism — same inputs always produce same output
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derive is deterministic - calling twice with same keys gives same pin`() {
@@ -94,9 +88,7 @@ class SasVerifierEdgeCasesTest {
         assertEquals("SAS derivation must be deterministic", pin1, pin2)
     }
 
-    // -------------------------------------------------------------------------
     // Avalanche effect — different keys → different pins (with high probability)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derive produces different pins for different key pairs`() {
@@ -119,9 +111,7 @@ class SasVerifierEdgeCasesTest {
         assertTrue(pin.all { it.isDigit() })
     }
 
-    // -------------------------------------------------------------------------
     // Range gate — pin must be in [0, 999_999]
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derived pin as integer is within 0 to 999999`() {
@@ -135,9 +125,7 @@ class SasVerifierEdgeCasesTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Uniqueness across many samples
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derive produces diverse pins across 30 random key pairs`() {

@@ -26,9 +26,7 @@ class FakeNearbyTransportTest {
         transport = FakeNearbyTransport()
     }
 
-    // -------------------------------------------------------------------------
     // startAdvertising / stopAdvertising
-    // -------------------------------------------------------------------------
 
     @Test
     fun `startAdvertising records localName and serviceId`() {
@@ -52,9 +50,7 @@ class FakeNearbyTransportTest {
         assertTrue(transport.advertisingStopped)
     }
 
-    // -------------------------------------------------------------------------
     // startDiscovery / stopDiscovery
-    // -------------------------------------------------------------------------
 
     @Test
     fun `startDiscovery records serviceId`() {
@@ -69,9 +65,7 @@ class FakeNearbyTransportTest {
         assertTrue(transport.discoveryStopped)
     }
 
-    // -------------------------------------------------------------------------
     // requestConnection / acceptConnection / rejectConnection
-    // -------------------------------------------------------------------------
 
     @Test
     fun `requestConnection records localName and endpointId`() {
@@ -92,9 +86,7 @@ class FakeNearbyTransportTest {
         assertEquals(listOf("ep-99"), transport.rejectedConnections)
     }
 
-    // -------------------------------------------------------------------------
     // stopAllEndpoints
-    // -------------------------------------------------------------------------
 
     @Test
     fun `stopAllEndpoints sets allEndpointsStopped flag`() {
@@ -103,9 +95,7 @@ class FakeNearbyTransportTest {
         assertTrue(transport.allEndpointsStopped)
     }
 
-    // -------------------------------------------------------------------------
     // sendBytes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `sendBytes records payload for endpointId`() {
@@ -157,9 +147,7 @@ class FakeNearbyTransportTest {
         assertNull(transport.lastSentTo("ep-never"))
     }
 
-    // -------------------------------------------------------------------------
     // Callback simulation
-    // -------------------------------------------------------------------------
 
     @Test
     fun `simulateEndpointFound fires onEndpointFound callback`() {
@@ -207,9 +195,7 @@ class FakeNearbyTransportTest {
         transport.simulateDisconnected("ep")
     }
 
-    // -------------------------------------------------------------------------
     // Initial state
-    // -------------------------------------------------------------------------
 
     @Test
     fun `initial state has empty captured call lists`() {

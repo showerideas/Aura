@@ -21,8 +21,8 @@ android {
         applicationId = "com.showerideas.aura"
         minSdk = 26           // BLE + Nearby Connections baseline
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 4
+        versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -37,7 +37,7 @@ android {
         // RelayClient logs a warning when within 30 days of expiry.
         // Rotate the pin AND update this value before the expiry date.
         // See docs/QR_RELAY_SETUP.md for the pin rotation runbook.
-        buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1780300800000L") // 2026-06-01
+        buildConfigField("Long", "RELAY_PIN_EXPIRY_EPOCH_MS", "1874908800000L") // 2029-06-01
         // Phase 10.2 — Runtime SPKI certificate pins for RelayClient's SpkiPinTrustManager.
         // Set these in CI environment variables (RELAY_SPKI_PIN_PRIMARY / RELAY_SPKI_PIN_BACKUP).
         // Generate with: openssl s_client -connect <relay-host>:443 < /dev/null |
@@ -66,10 +66,10 @@ android {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 
-    // Issue-51: all 7 locale bundles (de, es, fr, hi, ja, ko, zh-rCN) are now
-    // at 209/209 strings — 100% coverage. MissingTranslation is re-enabled so
-    // any future key added to values/strings.xml without a matching entry in
-    // every locale immediately fails lint/CI.
+    // All 7 locale bundles (de, es, fr, hi, ja, ko, zh-rCN) are at 365 strings —
+    // 100% coverage. MissingTranslation is re-enabled so any future key added to
+    // values/strings.xml without a matching entry in every locale immediately
+    // fails lint/CI.
     lint {
         abortOnError = true
         warningsAsErrors = false

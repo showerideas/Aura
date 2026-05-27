@@ -11,20 +11,20 @@ import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
 /**
- * T24 — Locale screenshot automation for all supported locales.
+ * Locale screenshot automation for all supported locales.
  *
  * These tests are run via `./scripts/screengrab_locales.sh` (backed by the
  * fastlane Screengrab gem). They are NOT run as part of the standard CI
  * `./gradlew connectedAndroidTest` — they require a real device or emulator
  * with Developer Options → Disable animations enabled.
  *
- * ## Supported locales
+ * Supported locales
  * de, es, fr, hi, ja, ko, zh-CN, en-US
  *
- * ## Output
+ * Output
  * fastlane/metadata/android/<locale>/images/phoneScreenshots/
  *
- * ## Running manually
+ * Running manually
  * 1. Connect a device / start emulator
  * 2. `./scripts/screengrab_locales.sh`
  * 3. Review screenshots and update locale strings as needed

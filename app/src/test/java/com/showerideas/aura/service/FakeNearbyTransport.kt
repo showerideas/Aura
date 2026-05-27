@@ -8,7 +8,7 @@ package com.showerideas.aura.service
  *  - Inspect what bytes the system-under-test sent
  *  - Drive connection/disconnection callbacks deterministically
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * val transport = FakeNearbyTransport()
  * // Wire up SUT that depends on NearbyTransport …
@@ -21,9 +21,7 @@ package com.showerideas.aura.service
  */
 class FakeNearbyTransport : NearbyTransport {
 
-    // -------------------------------------------------------------------------
     // NearbyTransport callbacks (wired by the system-under-test)
-    // -------------------------------------------------------------------------
 
     override var onPayloadReceived: ((endpointId: String, data: ByteArray) -> Unit)? = null
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
@@ -31,9 +29,7 @@ class FakeNearbyTransport : NearbyTransport {
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
     override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
-    // -------------------------------------------------------------------------
     // Captured calls — inspected by tests
-    // -------------------------------------------------------------------------
 
     /** Sequence of (localName, serviceId) pairs passed to startAdvertising. */
     val advertisingStartedWith = mutableListOf<Pair<String, String>>()
@@ -62,9 +58,7 @@ class FakeNearbyTransport : NearbyTransport {
     /** True once stopAllEndpoints has been called. */
     var allEndpointsStopped = false
 
-    // -------------------------------------------------------------------------
     // NearbyTransport — implementation
-    // -------------------------------------------------------------------------
 
     override fun startAdvertising(localName: String, serviceId: String) {
         advertisingStartedWith.add(Pair(localName, serviceId))
@@ -102,9 +96,7 @@ class FakeNearbyTransport : NearbyTransport {
         sentPayloads.getOrPut(endpointId) { mutableListOf() }.add(data)
     }
 
-    // -------------------------------------------------------------------------
     // Simulation helpers — called by tests to drive state
-    // -------------------------------------------------------------------------
 
     /** Simulate the transport discovering a remote endpoint. */
     fun simulateEndpointFound(endpointId: String, remoteName: String) {
@@ -134,9 +126,7 @@ class FakeNearbyTransport : NearbyTransport {
         onDisconnected?.invoke(endpointId)
     }
 
-    // -------------------------------------------------------------------------
     // Convenience accessors
-    // -------------------------------------------------------------------------
 
     /** The last payload sent to [endpointId], or null if none. */
     fun lastSentTo(endpointId: String): ByteArray? =
@@ -146,3 +136,4 @@ class FakeNearbyTransport : NearbyTransport {
     val totalSentCount: Int
         get() = sentPayloads.values.sumOf { it.size }
 }
+

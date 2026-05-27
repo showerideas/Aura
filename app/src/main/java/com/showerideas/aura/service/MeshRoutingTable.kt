@@ -4,9 +4,9 @@ import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * T38 — Multi-hop Wi-Fi Direct mesh routing table with TTL enforcement.
+ * Multi-hop Wi-Fi Direct mesh routing table with TTL enforcement.
  *
- * ## Architecture
+ * Architecture
  * AURA's mesh layer extends the point-to-point [WifiDirectTransport] into a
  * store-and-forward multi-hop network. Each device maintains a routing table
  * of known mesh peers, tracking the best next-hop and current TTL.
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  *                              └── Device A sends to D via B→C→D (2 hops)
  * ```
  *
- * ## Packet format (prepended to every routed payload)
+ * Packet format (prepended to every routed payload)
  * ```
  * ┌────────────────────────────────────────────────────────────┐
  * │ originId (64 chars hex)  │ destId (64 chars hex)           │
@@ -26,17 +26,17 @@ import java.util.concurrent.ConcurrentHashMap
  * └────────────────────────────────────────────────────────────┘
  * ```
  *
- * ## TTL semantics
+ * TTL semantics
  * - [DEFAULT_TTL] = 7 hops — sufficient for most encounter graphs
  * - Each relay decrements TTL by 1; packets with TTL == 0 are dropped
  * - [MAX_TTL] = 15 caps values from untrusted sources
  *
- * ## Loop prevention
+ * Loop prevention
  * A rolling [SEEN_CACHE_SIZE]-entry cache of recently-forwarded message IDs
  * prevents forwarding the same packet twice. Entries expire after
  * [SEEN_CACHE_TTL_MS] (60 s).
  *
- * ## Local hotspot underlay
+ * Local hotspot underlay
  * When the device is acting as a Wi-Fi Direct Group Owner it can also open a
  * standard Wi-Fi hotspot (via [requestLocalHotspot]) so devices that don't
  * support Wi-Fi Direct can still connect as regular Wi-Fi clients. The
@@ -65,9 +65,7 @@ class MeshRoutingTable {
         const val MAX_HOP_COUNT: Int = MAX_TTL
     }
 
-    // -------------------------------------------------------------------------
     // Data types
-    // -------------------------------------------------------------------------
 
     /**
      * A single routing-table entry for a known mesh peer.
@@ -118,9 +116,7 @@ class MeshRoutingTable {
         val channel   : Int = 6
     )
 
-    // -------------------------------------------------------------------------
     // State
-    // -------------------------------------------------------------------------
 
     /** Primary routing table: destId → best route entry. */
     private val routes = ConcurrentHashMap<String, RouteEntry>(MAX_ROUTES)
@@ -132,9 +128,7 @@ class MeshRoutingTable {
     @Volatile
     private var hotspotConfig: HotspotConfig? = null
 
-    // -------------------------------------------------------------------------
     // Route management
-    // -------------------------------------------------------------------------
 
     /**
      * Add or update a route. If a route to [destId] already exists, only
@@ -177,9 +171,7 @@ class MeshRoutingTable {
     /** Number of active routes. */
     fun size(): Int = routes.size
 
-    // -------------------------------------------------------------------------
     // Packet forwarding
-    // -------------------------------------------------------------------------
 
     /**
      * Decide whether and where to forward [packet].
@@ -232,9 +224,7 @@ class MeshRoutingTable {
         data class Drop(val reason: String) : ForwardDecision()
     }
 
-    // -------------------------------------------------------------------------
     // Packet serialisation
-    // -------------------------------------------------------------------------
 
     /**
      * Serialise [packet] to bytes for wire transmission.
@@ -298,9 +288,7 @@ class MeshRoutingTable {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Local hotspot underlay
-    // -------------------------------------------------------------------------
 
     /**
      * Record the active local hotspot configuration so the mesh layer can
@@ -318,9 +306,7 @@ class MeshRoutingTable {
     /** Current local hotspot config, or null if no hotspot is active. */
     fun getHotspotConfig(): HotspotConfig? = hotspotConfig
 
-    // -------------------------------------------------------------------------
     // Seen-packet cache
-    // -------------------------------------------------------------------------
 
     private fun hasSeen(msgId: String): Boolean {
         pruneSeenCache()
@@ -337,9 +323,7 @@ class MeshRoutingTable {
         seenCache.entries.removeIf { it.value < cutoff }
     }
 
-    // -------------------------------------------------------------------------
     // Route eviction
-    // -------------------------------------------------------------------------
 
     /**
      * Evict the oldest route when the table is at capacity.

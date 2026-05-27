@@ -94,9 +94,7 @@ class KnownPeerRepository @Inject constructor(
     suspend fun updateLastSeenProfileVersion(endpointId: String, profileVersion: Int) =
         knownPeerDao.updateLastSeenProfileVersion(endpointId, profileVersion)
 
-    // -------------------------------------------------------------------------
     // Encoding helpers
-    // -------------------------------------------------------------------------
 
     private fun encodePublicKey(key: PublicKey): String =
         Base64.getEncoder().encodeToString(key.encoded)

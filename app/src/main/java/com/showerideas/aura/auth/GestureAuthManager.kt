@@ -74,9 +74,7 @@ class GestureAuthManager @Inject constructor(
         private const val EXPECTED_EMBEDDING_SIZE = CameraHandEmbedder.EMBEDDING_SIZE
     }
 
-    // -------------------------------------------------------------------------
     // Liveness guard — anti-spoofing (photo / video replay attack defence)
-    // -------------------------------------------------------------------------
 
     /**
      * Tracks frame-to-frame embedding drift to detect static sources (photos/videos).
@@ -91,9 +89,7 @@ class GestureAuthManager @Inject constructor(
     private val _livenessResult = MutableStateFlow<LivenessGuard.Result>(LivenessGuard.Result.Collecting)
     val livenessResult: StateFlow<LivenessGuard.Result> = _livenessResult
 
-    // -------------------------------------------------------------------------
     // Public state
-    // -------------------------------------------------------------------------
 
     sealed class RecordingState {
         /** Camera not started or stopped. */
@@ -107,7 +103,7 @@ class GestureAuthManager @Inject constructor(
         data class AwaitingStep2(val step1: GesturePattern) : RecordingState()
 
         /**
-         * T13 — Collecting the 30-frame temporal window for liveness + spoof check.
+         * Collecting the 30-frame temporal window for liveness + spoof check.
          * Emitted after the initial centroid match passes; the temporal classifier
          * is accumulating frames to verify real-hand motion.
          */
@@ -118,9 +114,7 @@ class GestureAuthManager @Inject constructor(
         data class Error(val message: String) : RecordingState()
     }
 
-    // -------------------------------------------------------------------------
     // Gesture sequence mode
-    // -------------------------------------------------------------------------
 
     /**
      * Two-step sequence authentication state.
@@ -172,9 +166,7 @@ class GestureAuthManager @Inject constructor(
     val liveVariance: StateFlow<Float> get() = _liveVariance
     private val _liveVariance = MutableStateFlow(0f)
 
-    // -------------------------------------------------------------------------
     // Internals
-    // -------------------------------------------------------------------------
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var storedPattern: GesturePattern? = null
@@ -267,9 +259,7 @@ class GestureAuthManager @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Public API — camera lifecycle
-    // -------------------------------------------------------------------------
 
     /**
      * Start the camera and gesture detection pipeline.
@@ -314,13 +304,9 @@ class GestureAuthManager @Inject constructor(
         _liveVariance.value = 0f
     }
 
-    // -------------------------------------------------------------------------
     // Public API — pattern storage (unchanged external contract)
-    // -------------------------------------------------------------------------
 
-    // -------------------------------------------------------------------------
     // Public API — pattern storage
-    // -------------------------------------------------------------------------
 
     /**
      * Persist [pattern] as the authoritative gesture key for this device.
@@ -374,7 +360,7 @@ class GestureAuthManager @Inject constructor(
     fun enrolledSampleCount(): Int = loadEnrollmentSamples().size
 
     /**
-     * T12 — Enrollment quality score in the range [0.0, 1.0].
+     * Enrollment quality score in the range [0.0, 1.0].
      *
      * Computed as 1 − (mean pairwise variance across samples), where variance is the
      * per-dimension standard deviation averaged over the embedding vector.
@@ -479,9 +465,7 @@ class GestureAuthManager @Inject constructor(
             .apply()
     }
 
-    // -------------------------------------------------------------------------
     // Gesture sequence — step 2 storage & matching
-    // -------------------------------------------------------------------------
 
     /**
      * Persist the step-2 embedding for 2-step sequence authentication.

@@ -14,7 +14,7 @@ import androidx.car.app.model.Template
 import timber.log.Timber
 
 /**
- * Phase 7.3 / G2 — Android Auto IDLE screen with biometric-only auth gate.
+ * Android Auto IDLE screen with biometric-only auth gate.
  *
  * • **Camera available** (Android Auto projection): navigate directly to
  *   [AdvertisingScreen] — gesture auth runs there.

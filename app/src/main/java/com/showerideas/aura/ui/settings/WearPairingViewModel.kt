@@ -13,7 +13,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Phase F1 — ViewModel for [WearPairingBottomSheet].
+ * ViewModel for [WearPairingBottomSheet].
  *
  * Discovers connected Wear OS nodes via the Wearable Data Layer and exposes
  * the result as a [UiState] flow. Handles the case where the GMS Wearable
@@ -60,3 +60,4 @@ class WearPairingViewModel @Inject constructor(
         }
     }
 }
+

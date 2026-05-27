@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 /**
- * T21 — Coverage: unit tests for [LoRaTransport] compression helpers.
+ * Coverage: unit tests for [LoRaTransport] compression helpers.
  *
  * Tests DEFLATE compress/decompress round-trip and MAX_PAYLOAD_BYTES budget.
  * (AIDL service binding is not testable in unit scope — tested separately.)

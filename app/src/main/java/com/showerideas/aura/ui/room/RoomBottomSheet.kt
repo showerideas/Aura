@@ -12,7 +12,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * Task 9 — Bottom sheet for creating or displaying an active exchange room.
+ * Bottom sheet for creating or displaying an active exchange room.
  *
  * Host path: shows room PIN + live participant count via [RoomViewModel.roomState].
  * Join path: caller passes PIN to [RoomViewModel.joinRoom] before showing this sheet.

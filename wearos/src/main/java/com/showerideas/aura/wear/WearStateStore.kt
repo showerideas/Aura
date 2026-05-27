@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 
 /**
- * Phase 7.2 — Lightweight state cache for the current exchange status on the
+ * Lightweight state cache for the current exchange status on the
  * Wear OS device.
  *
  * [WearPhoneBridge] writes here when it receives a state update from the phone.

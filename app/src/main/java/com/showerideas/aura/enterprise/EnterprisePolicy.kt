@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Phase 7.4 — Enterprise / MDM policy reader.
+ * Enterprise / MDM policy reader.
  *
  * Reads managed app restrictions delivered via the Android [RestrictionsManager]
  * (set by an EMM/MDM through `android.app.action.APPLICATION_RESTRICTIONS_CHANGED`
@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * immutable for the lifetime of the current Activity — re-read on CONFIGURATION_CHANGED
  * or when [ACTION_APPLICATION_RESTRICTIONS_CHANGED] is broadcast.
  *
- * ## Supported restriction keys (set in app_restrictions.xml):
+ * Supported restriction keys (set in app_restrictions.xml):
  *
  * | Key                        | Type    | Default | Description                         |
  * |----------------------------|---------|---------|-------------------------------------|
@@ -54,9 +54,7 @@ class EnterprisePolicy @Inject constructor(
             ?.applicationRestrictions
             .also { Timber.d("EnterprisePolicy: restrictions=$it") }
 
-    // -------------------------------------------------------------------------
     // Policy accessors
-    // -------------------------------------------------------------------------
 
     /** Maximum number of gesture authentication attempts before lock-out. */
     val maxGestureAttempts: Int
@@ -88,3 +86,4 @@ class EnterprisePolicy @Inject constructor(
     val isManagedDevice: Boolean
         get() = restrictions?.isEmpty == false
 }
+

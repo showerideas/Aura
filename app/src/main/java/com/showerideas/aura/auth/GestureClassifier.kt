@@ -18,13 +18,13 @@ import kotlin.math.sqrt
 private val Context.classifierDataStore by preferencesDataStore("aura_gesture_classifier")
 
 /**
- * Phase 9.4 — On-device gesture embedding classifier.
+ * On-device gesture embedding classifier.
  *
  * Takes the 63-float hand-landmark embeddings produced by [CameraHandEmbedder]
  * and makes a binary authentication decision: "is this the user's enrolled
  * gesture?" (ACCEPT) or "is this a different/spoofed gesture?" (REJECT).
  *
- * ## Algorithm
+ * Algorithm
  * During enrolment [train] is called with N captured embeddings (N ≥ 3
  * recommended). The classifier computes:
  *   1. A centroid (per-dimension mean) over the enrolled samples.
@@ -34,13 +34,10 @@ private val Context.classifierDataStore by preferencesDataStore("aura_gesture_cl
  * candidate embedding to the centroid and returns a normalised confidence
  * score in [0, 1]. A score ≥ [CONFIDENCE_GATE] results in ACCEPT.
  *
- * This is a lightweight "meta-embedding" approach that works well for
- * single-class personalised biometrics without requiring a GPU or JNI TFLite
- * invocation. A full on-device TFLite variant (FlatBuffer transfer-learning
- * model, updating only the final classification layer) is the planned Phase
- * 9.4-b upgrade.
+ * This is a lightweight "meta-embedding" approach: single-class personalised
+ * biometrics without a GPU or JNI TFLite invocation.
  *
- * ## Persistence
+ * Persistence
  * The centroid and spread are serialised as a float array and stored in
  * DataStore (as a base64 FlatBuffer blob), surviving app restarts without
  * re-enrolment.
@@ -75,9 +72,7 @@ class GestureClassifier @Inject constructor(
     @Volatile private var centroid : FloatArray? = null
     @Volatile private var spread   : Float       = 1f
 
-    // -------------------------------------------------------------------------
     // Enrolment API
-    // -------------------------------------------------------------------------
 
     /**
      * Train the classifier on [enrolledEmbeddings].
@@ -118,9 +113,7 @@ class GestureClassifier @Inject constructor(
         persist(c, s)
     }
 
-    // -------------------------------------------------------------------------
     // Authentication API
-    // -------------------------------------------------------------------------
 
     /**
      * Predict whether [embedding] matches the enrolled gesture.
@@ -161,9 +154,7 @@ class GestureClassifier @Inject constructor(
         context.classifierDataStore.edit { it.clear() }
     }
 
-    // -------------------------------------------------------------------------
     // Persistence (FlatBuffer-style: centroid + spread as raw float bytes)
-    // -------------------------------------------------------------------------
 
     private suspend fun persist(c: FloatArray, s: Float) = withContext(Dispatchers.IO) {
         val buf = ByteBuffer.allocate((EMBED_DIM + 1) * 4).order(ByteOrder.LITTLE_ENDIAN)
@@ -190,9 +181,7 @@ class GestureClassifier @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Vector math
-    // -------------------------------------------------------------------------
 
     private fun l2Norm(v: FloatArray): Float {
         var sum = 0f
@@ -207,3 +196,4 @@ class GestureClassifier @Inject constructor(
         return dot / sqrt(na * nb)
     }
 }
+

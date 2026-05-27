@@ -28,14 +28,14 @@ data class ExchangeSession(
      * Non-null when state == [State.COMPLETED] and the peer was a returning contact
      * whose visible fields changed since the last exchange. The UI should show
      * [com.showerideas.aura.ui.contacts.ContactMergeBottomSheet] to let the user
-     * review what changed (Phase 6.3 / Phase 6.7).
+     * review what changed ().
      */
     val mergeEvent: MergeEvent? = null,
     /**
      * True when state == [State.COMPLETED] and the peer's [Contact.profileVersion]
      * is higher than the value stored in [KnownPeer.lastSeenProfileVersion].
      * The UI shows a "Card updated" Snackbar to inform the user that the peer
-     * updated their contact details since the last exchange (Phase 6.7).
+     * updated their contact details since the last exchange.
      */
     val profileVersionBumped: Boolean = false
 ) {
@@ -92,3 +92,4 @@ data class ExchangeSession(
         val serviceId: String
     )
 }
+

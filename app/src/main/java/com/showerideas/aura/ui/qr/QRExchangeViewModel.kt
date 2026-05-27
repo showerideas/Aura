@@ -46,7 +46,7 @@ import javax.inject.Inject
  *      4. Derive SAS from both ephemeral public keys -- show for MITM check.
  *      5. User confirms SAS match -> save contact to Room.
  *
- * ## SAS verification on QR path
+ * SAS verification on QR path
  * The Nearby path shows a SAS dialog mid-exchange (State.VERIFYING). The QR
  * path mirrors this: after decrypting the peer's profile but before saving it
  * to Room, [PairingResult.AwaitingSasConfirmation] is emitted. The Fragment
@@ -80,7 +80,7 @@ class QRExchangeViewModel @Inject constructor(
          * Full exchange succeeded — [contact] has been persisted to Room.
          * [mergeEvent] is non-null when the contact was a returning peer whose
          * visible fields changed; the Fragment should show [ContactMergeBottomSheet]
-         * (Phase 6.3 / Phase 6.7).
+         * ().
          */
         data class Success(val contact: Contact, val mergeEvent: MergeEvent? = null) : PairingResult()
         /**
@@ -320,7 +320,7 @@ class QRExchangeViewModel @Inject constructor(
     /**
      * Apply per-field [selections] chosen by the user in the merge bottom sheet.
      * Called from [QRExchangeFragment] after the user reviews a [PairingResult.Success]
-     * that included a non-null [MergeEvent] (Phase 6.3 / 6.7).
+     * that included a non-null [MergeEvent].
      */
     fun applyMergeSelections(base: Contact, selections: Map<String, String>) {
         viewModelScope.launch {

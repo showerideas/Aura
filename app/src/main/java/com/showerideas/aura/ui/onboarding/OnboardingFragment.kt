@@ -117,9 +117,7 @@ class OnboardingFragment : Fragment() {
         _binding = null
     }
 
-    // -------------------------------------------------------------------------
     // Pager adapter
-    // -------------------------------------------------------------------------
 
     private inner class OnboardingPagerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun getItemViewType(position: Int) = position
@@ -150,9 +148,7 @@ class OnboardingFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Gesture enrollment page
-    // -------------------------------------------------------------------------
 
     private fun wireGesturePage(root: View) {
         // Guard: only wire collectors and listeners once. ViewPager2 can call

@@ -12,7 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 /**
- * T19 — Deeplink web-landing round-trip integration tests.
+ * Deeplink web-landing round-trip integration tests.
  *
  * Verifies the full intent-routing contract for AURA share links:
  *   https://aura.app/c/<base64url-payload>
@@ -34,9 +34,7 @@ class DeeplinkIntentRoutingTest {
         const val AURA_PATH_PREFIX = "/c/"
     }
 
-    // -------------------------------------------------------------------------
     // Intent-filter contract
-    // -------------------------------------------------------------------------
 
     @Test
     fun `generated URL matches intent-filter scheme and host`() {
@@ -64,9 +62,7 @@ class DeeplinkIntentRoutingTest {
         assertEquals(AURA_HOST,   intent.data!!.host)
     }
 
-    // -------------------------------------------------------------------------
     // Round-trip through URI
-    // -------------------------------------------------------------------------
 
     @Test
     fun `round-trip encode decode preserves all standard fields`() {
@@ -120,9 +116,7 @@ class DeeplinkIntentRoutingTest {
         assertFalse("No space in payload", segment.contains(' '))
     }
 
-    // -------------------------------------------------------------------------
     // Non-AURA URI rejection
-    // -------------------------------------------------------------------------
 
     @Test
     fun `non-AURA URL returns null`() {
@@ -139,9 +133,7 @@ class DeeplinkIntentRoutingTest {
         assertNull("http must not be decoded as AURA deeplink", DeeplinkUtils.decodeShareUrl(url))
     }
 
-    // -------------------------------------------------------------------------
     // Edge cases
-    // -------------------------------------------------------------------------
 
     @Test
     fun `unicode display name survives round-trip`() {
@@ -166,9 +158,7 @@ class DeeplinkIntentRoutingTest {
         assertNull(decoded["displayName"])
     }
 
-    // -------------------------------------------------------------------------
     // Helper
-    // -------------------------------------------------------------------------
 
     private fun assertFalse(msg: String, cond: Boolean) = assertTrue(msg, !cond)
 }

@@ -3,19 +3,19 @@ package com.showerideas.aura.security
 import java.security.MessageDigest
 
 /**
- * Phase 8.4 — Binary Merkle tree proof verifier (SHA-256).
+ * Binary Merkle tree proof verifier (SHA-256).
  *
  * Verifies that a given [leaf] value is a member of a Merkle tree whose
  * root hash is [knownRoot], using an inclusion proof supplied by the
  * transparency log server.
  *
- * ## Proof format
+ * Proof format
  * The server supplies an ordered list of sibling hashes. The [proofPath]
  * alternates direction based on [leafIndex]: at each level, if the current
  * index is even the sibling is on the right; if odd the sibling is on the
  * left.
  *
- * ## Node hashing
+ * Node hashing
  * Each internal node is H(left || right) where H = SHA-256.
  * Leaf nodes are pre-hashed by the caller: H(item_bytes).
  */
@@ -65,9 +65,7 @@ object MerkleVerifier {
         return digest.digest(itemBytes).joinToString("") { "%02x".format(it) }
     }
 
-    // -------------------------------------------------------------------------
     // Private
-    // -------------------------------------------------------------------------
 
     /** SHA-256([left_hex || right_hex]) → hex string. */
     private fun combineHashes(left: String, right: String): String {
@@ -79,3 +77,4 @@ object MerkleVerifier {
     private fun hexToBytes(hex: String): ByteArray =
         ByteArray(hex.length / 2) { i -> hex.substring(i * 2, i * 2 + 2).toInt(16).toByte() }
 }
+

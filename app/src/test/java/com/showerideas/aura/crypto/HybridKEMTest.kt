@@ -4,16 +4,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 /**
- * Phase 8.1 — Unit tests for [HybridKEM].
+ * Unit tests for [HybridKEM].
  *
  * Runs on JVM (no Android runtime required) because BouncyCastle is a pure
  * Java library and the test targets are JVM-only.
  */
 class HybridKEMTest {
 
-    // -------------------------------------------------------------------------
     // Round-trip correctness
-    // -------------------------------------------------------------------------
 
     @Test
     fun `encapsulate and decapsulate produce identical 32-byte shared secrets`() {
@@ -56,9 +54,7 @@ class HybridKEMTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Independence: two fresh key pairs produce different secrets
-    // -------------------------------------------------------------------------
 
     @Test
     fun `two separate exchanges produce different shared secrets`() {
@@ -88,9 +84,7 @@ class HybridKEMTest {
         assertFalse("Two encapsulations must produce different shared secrets", ss1.contentEquals(ss2))
     }
 
-    // -------------------------------------------------------------------------
     // Error cases
-    // -------------------------------------------------------------------------
 
     @Test(expected = IllegalArgumentException::class)
     fun `encapsulate rejects public key of wrong length`() {

@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Phase F1 — Phone-side Wearable Data Layer sender.
+ * Phone-side Wearable Data Layer sender.
  *
  * Discovers all connected Wear OS nodes and opens a [ChannelClient] channel at
  * [CHANNEL_PATH] ("/aura/exchange-state") to each one. When the AURA exchange
@@ -24,12 +24,12 @@ import javax.inject.Singleton
  * The watch-side [WearPhoneBridge] (in the `:wearos` module) receives the byte
  * and updates the [AuraTileService] tile.
  *
- * ## Lifecycle
+ * Lifecycle
  * Instantiate once (Hilt @Singleton). Call [sendState] from wherever the
  * [NearbyExchangeService] emits a new [ExchangeState]. Call [close] when the
  * application is shutting down.
  *
- * ## Robustness
+ * Robustness
  * If a channel write fails (watch disconnected, channel torn down), the error is
  * logged and the channel is removed from the active set. The next [sendState]
  * call automatically rediscovers connected nodes.

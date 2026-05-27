@@ -8,7 +8,7 @@ import androidx.car.app.model.MessageTemplate
 import androidx.car.app.model.Template
 
 /**
- * Phase 7.3 — Android Auto COMPLETED screen.
+ * Android Auto COMPLETED screen.
  *
  * Shown after the SAS verification step resolves (success or failure).
  * A single "Done" action pops back to [IdleScreen].

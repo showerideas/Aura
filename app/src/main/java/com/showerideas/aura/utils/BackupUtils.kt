@@ -17,9 +17,9 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Phase 6.10 — Encrypted contact backup / restore.
+ * Encrypted contact backup / restore.
  *
- * ## Format
+ * Format
  * The backup file is a single binary blob:
  *
  *   [4 bytes magic: 0x41555242 "AURB"]
@@ -29,11 +29,11 @@ import javax.crypto.spec.SecretKeySpec
  *   [N bytes  AES-256-GCM ciphertext of UTF-8 JSON]
  *   [16 bytes AES-GCM auth tag   (appended by JCE)]
  *
- * ## Key derivation
+ * Key derivation
  * PBKDF2WithHmacSHA256, 310 000 iterations (NIST 2023 guidance), 256-bit output.
  * (Argon2id is preferable but Android < 12 lacks platform support; PBKDF2 is safe here.)
  *
- * ## JSON schema
+ * JSON schema
  * ```json
  * {
  *   "format": "aura-backup",
@@ -43,7 +43,7 @@ import javax.crypto.spec.SecretKeySpec
  * }
  * ```
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * BackupUtils.export(contacts, passphrase, outputStream)
  * val contacts = BackupUtils.restore(passphrase, inputStream)
@@ -60,9 +60,7 @@ object BackupUtils {
     private const val AES_TRANSFORMATION = "AES/GCM/NoPadding"
     private const val GCM_TAG_BITS = 128
 
-    // -------------------------------------------------------------------------
     // Export
-    // -------------------------------------------------------------------------
 
     /**
      * Encrypt [contacts] with [passphrase] and write the backup blob to [out].
@@ -90,9 +88,7 @@ object BackupUtils {
         out.write(ciphertext)
     }
 
-    // -------------------------------------------------------------------------
     // Restore
-    // -------------------------------------------------------------------------
 
     /**
      * Decrypt and deserialize contacts from a [BackupUtils.export]-produced stream.
@@ -136,9 +132,7 @@ object BackupUtils {
         return parseJson(String(plaintext, Charsets.UTF_8))
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun deriveKey(passphrase: CharArray, salt: ByteArray): SecretKey {
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
@@ -212,9 +206,7 @@ object BackupUtils {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Exception type
-    // -------------------------------------------------------------------------
 
     class BackupException(message: String, cause: Throwable? = null) :
         Exception(message, cause)

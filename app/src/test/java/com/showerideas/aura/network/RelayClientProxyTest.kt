@@ -6,7 +6,7 @@ import org.junit.Test
 import java.net.InetSocketAddress
 
 /**
- * Phase 8.3 — Unit tests for RelayClient proxy configuration.
+ * Unit tests for RelayClient proxy configuration.
  *
  * Verifies that [RelayClient.setAnonymizationProxy] correctly configures
  * the SOCKS5 proxy and that the proxy can be cleared. Full integration

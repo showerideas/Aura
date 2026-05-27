@@ -25,9 +25,7 @@ class LivenessGuardTest {
         guard = LivenessGuard()
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     /** Generate a 63-float embedding with all values set to [value]. */
     private fun constantEmbedding(value: Float) = FloatArray(63) { value }
@@ -45,9 +43,7 @@ class LivenessGuardTest {
         return last
     }
 
-    // -------------------------------------------------------------------------
     // Collecting state
-    // -------------------------------------------------------------------------
 
     @Test
     fun `returns Collecting before window is full`() {
@@ -65,9 +61,7 @@ class LivenessGuardTest {
         assertTrue(result is LivenessGuard.Result.Collecting)
     }
 
-    // -------------------------------------------------------------------------
     // Spoof detection (static source — near-zero drift)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `detects static source — identical embeddings produce Spoof`() {
@@ -101,9 +95,7 @@ class LivenessGuardTest {
         assertTrue("Near-zero drift should be detected as spoof: $drift", drift!! < LivenessGuard.MIN_MEAN_DRIFT)
     }
 
-    // -------------------------------------------------------------------------
     // Live detection (real hand — visible drift)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `detects live hand — large drift produces Live`() {
@@ -152,9 +144,7 @@ class LivenessGuardTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Reset
-    // -------------------------------------------------------------------------
 
     @Test
     fun `reset clears window — Collecting immediately after reset`() {
@@ -183,9 +173,7 @@ class LivenessGuardTest {
         assertTrue("Expected Live after reset and re-fill, got $last", last is LivenessGuard.Result.Live)
     }
 
-    // -------------------------------------------------------------------------
     // currentMeanDrift
-    // -------------------------------------------------------------------------
 
     @Test
     fun `currentMeanDrift returns null before 2 frames`() {
@@ -200,3 +188,4 @@ class LivenessGuardTest {
         assertNotNull(guard.currentMeanDrift())
     }
 }
+

@@ -177,7 +177,7 @@ class ProfileFragment : Fragment() {
 
         binding.btnSave.setOnClickListener { saveProfile() }
 
-        // Phase 6.8 — share card as a deep-link URL via the system share sheet.
+        // share card as a deep-link URL via the system share sheet.
         binding.btnShareCard.setOnClickListener {
             val profile = viewModel.profile.value ?: run {
                 Toast.makeText(requireContext(), R.string.profile_saved, Toast.LENGTH_SHORT).show()

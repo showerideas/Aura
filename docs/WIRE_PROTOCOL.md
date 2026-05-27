@@ -1,6 +1,6 @@
 # AURA Wire Protocol Reference
 
-*Last updated: 2026-05-26 | Current version: v7 (sealed-sender)*
+*Last updated: 2026-05-27 | Current version: v9 (Noise_XX overlay + ML-DSA-65 hybrid sigs)*
 
 ## Table of Contents
 
@@ -34,15 +34,17 @@ All integers are **big-endian** unless noted. All lengths are in bytes.
 
 ## Version History
 
-| Version | Byte | Feature added                        | Status  |
-|---------|------|--------------------------------------|---------|
-| v1      | 0x01 | X25519 ECDH key exchange             | Legacy  |
-| v2      | 0x02 | X3DH + Double Ratchet session init   | Stable  |
-| v3      | 0x03 | SAS 6-digit verification             | Stable  |
-| v4      | 0x04 | Encrypted profile payload            | Stable  |
-| v5      | 0x05 | QR relay fallback channel            | Stable  |
-| v6      | 0x06 | ML-KEM-768 + X25519 hybrid KEM       | Current |
-| v7      | 0x07 | Sealed-sender profile envelope       | Current |
+| Version | Byte | Feature added                                       | Status  |
+|---------|------|-----------------------------------------------------|---------|
+| v1      | 0x01 | X25519 ECDH key exchange                            | Legacy  |
+| v2      | 0x02 | X3DH + Double Ratchet session init                  | Stable  |
+| v3      | 0x03 | SAS 6-digit verification                            | Stable  |
+| v4      | 0x04 | Encrypted profile payload                           | Stable  |
+| v5      | 0x05 | QR relay fallback channel                           | Stable  |
+| v6      | 0x06 | ML-KEM-768 + X25519 hybrid KEM                      | Stable  |
+| v7      | 0x07 | Sealed-sender profile envelope                      | Stable  |
+| v8      | 0x08 | ML-DSA-65 hybrid identity signatures + SPKI pinning | Stable  |
+| v9      | 0x09 | Noise_XX channel overlay + identity rotation chain  | Current |
 
 Implementations MUST reject frames with unknown version bytes.
 Implementations SHOULD negotiate downward if the remote peer advertises a lower version.

@@ -32,7 +32,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * Phase 9.2 — On-device analytics screen.
+ * On-device analytics screen.
  *
  * Surfaces aggregate insights derived entirely from local [ExchangeAuditEntry] records.
  * No data leaves the device. Sections:
@@ -77,9 +77,7 @@ class AnalyticsFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Rendering
-    // -------------------------------------------------------------------------
 
     private fun renderState(state: AnalyticsViewModel.AnalyticsState) {
         if (state.totalExchanges == 0) {
@@ -194,9 +192,7 @@ class AnalyticsFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // CSV export
-    // -------------------------------------------------------------------------
 
     private fun exportCsv() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -236,9 +232,7 @@ class AnalyticsFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun makeSubtitle(text: String) = TextView(requireContext()).apply {
         this.text = text

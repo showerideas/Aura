@@ -7,9 +7,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * T22 — Automated accessibility scanner + contract documentation.
+ * Automated accessibility scanner + contract documentation.
  *
- * ## What this tests
+ * What this tests
  * [AccessibilityChecks.enable] wires Google's accessibility-testing framework into
  * every subsequent Espresso interaction in the test process. Any ViewAction or
  * ViewAssertion that runs on a view with a failing accessibility rule causes the
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
  * runs after [setUpAccessibilityChecks]. No additional assertions are needed
  * in individual tests — failing checks throw immediately.
  *
- * ## Manual checklist (verified by QA on each release)
+ * Manual checklist (verified by QA on each release)
  * - [ ] All icon-only buttons have contentDescription:
  *       btnExchange, btnNfc, btnQrScan, audit export FAB, profile switcher
  * - [ ] SAS 6-digit display has accessibilityLiveRegion="polite"
@@ -35,7 +35,7 @@ import org.junit.runner.RunWith
  * - [ ] TalkBack: navigate ExchangeFragment without vision — all controls announced
  * - [ ] High-contrast mode: SAS code and status chips remain legible at 1.5× font scale
  *
- * ## CI integration
+ * CI integration
  * The [setUpAccessibilityChecks] method is annotated @BeforeClass so it runs once
  * per test suite invocation. All existing Espresso tests (ExchangeFlowEspressoTest,
  * NfcExchangeEspressoTest, OnboardingEspressoTest) inherit the accessibility checks

@@ -8,20 +8,18 @@ import com.showerideas.aura.model.ProfileType
  *
  * Register on [AppDatabase] via `@TypeConverters(Converters::class)`.
  *
- * ## Covered types
+ * Covered types
  * - [ProfileType] — stored as its [Enum.name] string (e.g. "PERSONAL", "WORK").
  *   The DEFAULT clause in every migration that adds this column uses the same
  *   name-based string, so persisted rows round-trip cleanly.
  *
- * ## ByteArray? — NOT covered here
+ * ByteArray? — NOT covered here
  * Room maps `ByteArray` to BLOB natively; nullable `ByteArray?` is also handled
  * without a converter. No entry needed for [KnownPeer.rotationCertificate].
  */
 class Converters {
 
-    // -------------------------------------------------------------------------
     // ProfileType
-    // -------------------------------------------------------------------------
 
     @TypeConverter
     fun fromProfileType(type: ProfileType): String = type.name

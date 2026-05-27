@@ -24,6 +24,7 @@ import com.showerideas.aura.model.Contact
 import com.showerideas.aura.model.ExchangeSession
 import com.showerideas.aura.model.MergeEvent
 import com.showerideas.aura.ui.MainActivity
+import com.showerideas.aura.crypto.HybridKemEngine
 import com.showerideas.aura.utils.CryptoUtils
 import com.showerideas.aura.utils.DoubleRatchetState
 import com.showerideas.aura.utils.IdentityRotationDetector
@@ -31,6 +32,7 @@ import com.showerideas.aura.utils.PayloadValidator
 import com.showerideas.aura.utils.SasVerifier
 import com.showerideas.aura.utils.vibrateDouble
 import com.showerideas.aura.utils.vibrateShort
+import javax.crypto.spec.SecretKeySpec
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import androidx.annotation.VisibleForTesting
@@ -55,10 +57,10 @@ import javax.inject.Inject
  * │  2. First mutual discovery → requestConnection()                    │
  * │  3. Both accept → CONNECTED                                         │
  * │  4. ECDSA challenge/response — device identity verification         │
- * │  5. Initiator sends ephemeral EC public key                         │
- * │  6. Responder sends its EC public key back                          │
- * │  7. Both derive shared AES-256 session key via ECDH                 │
- * │  8. SAS PIN verification (out-of-band verbal match)                 │
+ * │  5. Initiator sends KEM HELLO (ML-KEM-768+X25519 hybrid public key) │
+ * │  6. Responder sends KEM HELLO_ACK (ciphertext + negotiated version) │
+ * │  7. Both derive 32-byte shared secret via post-quantum hybrid KEM   │
+ * │  8. SAS PIN verification (SHA-256 of shared secret, verbal match)   │
  * │  9. Each side encrypts their profile map → sends as BYTES payload   │
  * │ 10. Each side decrypts → saves contact → SESSION COMPLETE           │
  * └─────────────────────────────────────────────────────────────────────┘
@@ -105,9 +107,7 @@ class NearbyExchangeService : Service() {
         private val _connectedCount: MutableStateFlow<Int> = MutableStateFlow(0)
         val connectedCount: StateFlow<Int> = _connectedCount.asStateFlow()
 
-        // -----------------------------------------------------------------------
         // NFC bootstrap — set by MainActivity.onResume / cleared on session start
-        // -----------------------------------------------------------------------
 
         @Volatile var nfcLocalKeyPair: java.security.KeyPair? = null
         @Volatile var pendingNfcBootstrap: NfcExchangeHelper.NfcBootstrap? = null
@@ -166,9 +166,7 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Injected dependencies
-    // -------------------------------------------------------------------------
 
     @Inject lateinit var transport: NearbyTransport
     @Inject lateinit var profileRepository: ProfileRepository
@@ -178,6 +176,7 @@ class NearbyExchangeService : Service() {
     @Inject lateinit var identityRotationDetector: IdentityRotationDetector
     @Inject lateinit var auditRepository: ExchangeAuditRepository
     @Inject lateinit var authPreferences: AuthPreferences
+    @Inject lateinit var hybridKemEngine: HybridKemEngine
 
     @Volatile private var gestureVerified: Boolean = false
 
@@ -190,7 +189,10 @@ class NearbyExchangeService : Service() {
 
     private enum class HandshakeState { IDLE, KEY_SENT, KEY_RECEIVED, COMPLETE }
 
+    /** Ephemeral EC keypair — used ONLY for NFC-bootstrapped sessions (classical ECDH). */
     private var ourKeyPair: java.security.KeyPair? = null
+    /** Active hybrid KEM session for Nearby/Wi-Fi Direct/BLE exchanges. */
+    @Volatile private var kemSession: HybridKemEngine.KemSession? = null
     @Volatile private var sessionKey: javax.crypto.SecretKey? = null
     @Volatile private var connectedEndpoint: String? = null
     @Volatile private var peerPublicKey: PublicKey? = null
@@ -218,6 +220,7 @@ class NearbyExchangeService : Service() {
     private data class PeerCtx(
         var handshake: HandshakeState = HandshakeState.IDLE,
         var sessionKey: javax.crypto.SecretKey? = null,
+        var kemSession: HybridKemEngine.KemSession? = null,
         var peerPub: PublicKey? = null,
         var sendRatchet: DoubleRatchetState? = null,
         var recvRatchet: DoubleRatchetState? = null
@@ -225,9 +228,7 @@ class NearbyExchangeService : Service() {
     private val peerCtxByEndpoint = ConcurrentHashMap<String, PeerCtx>()
     private val awaitingAvatarStream: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-    // -------------------------------------------------------------------------
     // Service lifecycle
-    // -------------------------------------------------------------------------
 
     override fun onCreate() {
         super.onCreate()
@@ -289,9 +290,7 @@ class NearbyExchangeService : Service() {
         super.onDestroy()
     }
 
-    // -------------------------------------------------------------------------
     // Transport callback wiring — called once in onCreate
-    // -------------------------------------------------------------------------
 
     /**
      * Wire all [NearbyTransport] callbacks to the service's session logic.
@@ -301,9 +300,7 @@ class NearbyExchangeService : Service() {
      */
     private fun wireTransportCallbacks() {
 
-        // ------------------------------------------------------------------
         // onConnectionInitiated — async blocklist check before accept/reject
-        // ------------------------------------------------------------------
         transport.onConnectionInitiated = onConnectionInitiated@{ endpointId, _ ->
             Timber.d("Connection initiated from $endpointId")
             pendingConnections.add(endpointId)
@@ -330,9 +327,7 @@ class NearbyExchangeService : Service() {
             }
         }
 
-        // ------------------------------------------------------------------
         // onConnected — connection established, start challenge/response
-        // ------------------------------------------------------------------
         transport.onConnected = { endpointId, _, _ ->
             Timber.i("Connected to $endpointId (mode=$currentMode)")
             vibrateDouble()
@@ -349,9 +344,7 @@ class NearbyExchangeService : Service() {
             }
         }
 
-        // ------------------------------------------------------------------
         // onDisconnected
-        // ------------------------------------------------------------------
         transport.onDisconnected = disconnectHandler@{ endpointId ->
             Timber.d("Disconnected from $endpointId")
             pendingConnections.remove(endpointId)
@@ -367,9 +360,7 @@ class NearbyExchangeService : Service() {
             }
         }
 
-        // ------------------------------------------------------------------
         // onEndpointFound — initiate outgoing connection (CAS guard)
-        // ------------------------------------------------------------------
         transport.onEndpointFound = endpointFoundHandler@{ endpointId, _ ->
             Timber.d("Endpoint found: $endpointId (mode=$currentMode)")
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) return@endpointFoundHandler
@@ -383,9 +374,7 @@ class NearbyExchangeService : Service() {
             transport.requestConnection(localName, endpointId)
         }
 
-        // ------------------------------------------------------------------
         // onPayloadReceived — dispatch on first-byte message type
-        // ------------------------------------------------------------------
         transport.onPayloadReceived = payloadHandler@{ endpointId, data ->
             if (data.isEmpty()) return@payloadHandler
             when (data[0]) {
@@ -405,17 +394,13 @@ class NearbyExchangeService : Service() {
             }
         }
 
-        // ------------------------------------------------------------------
         // Avatar STREAM — gms flavor only; no-op on foss / test doubles
-        // ------------------------------------------------------------------
         transport.onAvatarStreamReceived = { endpointId, stream ->
             handleIncomingAvatarStream(endpointId, stream)
         }
     }
 
-    // -------------------------------------------------------------------------
     // Session management
-    // -------------------------------------------------------------------------
 
     private fun startSession(
         mode: ExchangeSession.ExchangeMode = ExchangeSession.ExchangeMode.PEER_TO_PEER
@@ -444,10 +429,13 @@ class NearbyExchangeService : Service() {
         }
         scope.launch { auditRepository.pruneOldEntries() }
 
-        // NFC bootstrap — consume the keypair + bootstrap once per session
+        // NFC bootstrap — consume the keypair + bootstrap once per session.
+        // ourKeyPair is only needed when an NFC-bootstrapped session supplies a
+        // pre-generated EC keypair. All other exchanges use HybridKemEngine (PQ hybrid KEM).
         val nfcBootstrap = pendingNfcBootstrap.also { pendingNfcBootstrap = null }
         ourKeyPair = nfcLocalKeyPair?.also { nfcLocalKeyPair = null }
-            ?: CryptoUtils.generateEphemeralECDHKeyPair()
+            ?: if (nfcBootstrap != null) CryptoUtils.generateEphemeralECDHKeyPair() else null
+        kemSession = null
 
         if (nfcBootstrap != null) {
             sessionChannel = ExchangeAuditEntry.CHANNEL_NFC
@@ -525,6 +513,8 @@ class NearbyExchangeService : Service() {
         scope.launch { authPreferences.setGestureGateOpen(false) }
         connectionRequested.set(false)
         handshakeState = HandshakeState.IDLE
+        kemSession     = null
+        ourKeyPair     = null
         peerPublicKey  = null
         sessionKey     = null
         sendRatchet    = null
@@ -543,9 +533,7 @@ class NearbyExchangeService : Service() {
         stopSelf()
     }
 
-    // -------------------------------------------------------------------------
     // Advertising + discovery
-    // -------------------------------------------------------------------------
 
     private fun startAdvertisingAndDiscovery() {
         val deviceName = android.provider.Settings.Secure.getString(
@@ -559,9 +547,7 @@ class NearbyExchangeService : Service() {
         updateSessionState(ExchangeSession.State.DISCOVERING)
     }
 
-    // -------------------------------------------------------------------------
     // Device identity challenge / response
-    // -------------------------------------------------------------------------
 
     private fun sendChallenge(endpointId: String) {
         try {
@@ -718,95 +704,156 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // ECDH key exchange
-    // -------------------------------------------------------------------------
+    // Post-quantum hybrid KEM key exchange (ML-KEM-768 + X25519, wire protocol v8)
 
+    /**
+     * Initiator side: create a new hybrid KEM session and send a KEM HELLO to the peer.
+     *
+     * The HELLO carries our hybrid public key (1217 bytes encoded) inside a JSON envelope.
+     * The peer responds with a HELLO_ACK containing the encapsulated ciphertext, after which
+     * both sides can independently derive the same 32-byte shared secret.
+     */
     private fun sendPublicKey(endpointId: String) {
-        val kp = ourKeyPair ?: return
-        val encodedKey = Base64.getEncoder().encodeToString(kp.public.encoded)
-        val payload    = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + encodedKey.toByteArray(Charsets.UTF_8)
-        transport.sendBytes(endpointId, payload)
-        Timber.d("Public key sent to $endpointId")
+        val (session, hello) = hybridKemEngine.initiatorSession(sessionId, HybridKemEngine.MAX_VERSION)
 
         if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
             val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
+            ctx.kemSession = session
             if (ctx.handshake == HandshakeState.IDLE) ctx.handshake = HandshakeState.KEY_SENT
-            return
+        } else {
+            kemSession = session
+            if (handshakeState == HandshakeState.IDLE) handshakeState = HandshakeState.KEY_SENT
         }
-        if (handshakeState == HandshakeState.IDLE) handshakeState = HandshakeState.KEY_SENT
+
+        val payload = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + hello.toJson().toByteArray(Charsets.UTF_8)
+        transport.sendBytes(endpointId, payload)
+        Timber.d("KEM HELLO sent to $endpointId (v${hello.maxVersion}, session=${sessionId.take(8)})")
     }
 
+    /**
+     * Handle an incoming MSG_TYPE_PUBLIC_KEY message.
+     *
+     * With the hybrid KEM protocol the same message type carries two different payloads:
+     * - A JSON `HelloPayload`    (from the initiator — contains the hybrid public key)
+     * - A JSON `HelloAckPayload` (from the responder — contains the KEM ciphertext)
+     *
+     * Which one we expect is determined by our current [handshakeState]:
+     * - `IDLE`     → we haven't sent yet, so the peer is the initiator; parse as HELLO.
+     * - `KEY_SENT` → we already sent a HELLO, so the peer is responding; parse as HELLO_ACK.
+     */
     private fun handleIncomingPublicKey(endpointId: String, data: ByteArray) {
         try {
-            val encodedKey      = String(data, Charsets.UTF_8)
-            val keyBytes        = Base64.getDecoder().decode(encodedKey)
-            val decodedPeerKey  = decodeEC256PublicKey(keyBytes)
-
-            val kp = ourKeyPair ?: run {
-                Timber.e("Local keypair missing when peer key arrived")
-                terminateSession(ExchangeSession.State.ERROR)
-                return
-            }
+            val json = String(data, Charsets.UTF_8)
 
             if (currentMode == ExchangeSession.ExchangeMode.ROOM_HOST) {
-                val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
-                ctx.peerPub = decodedPeerKey
-                when (ctx.handshake) {
-                    HandshakeState.KEY_SENT -> {
-                        ctx.sessionKey  = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
-                        val (sr, rr)   = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = false)
-                        ctx.sendRatchet = sr; ctx.recvRatchet = rr
-                        ctx.handshake   = HandshakeState.COMPLETE
-                        sendProfile(endpointId)
-                    }
-                    HandshakeState.IDLE -> {
-                        ctx.handshake   = HandshakeState.KEY_RECEIVED
-                        sendPublicKey(endpointId)
-                        ctx.sessionKey  = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
-                        val (sr, rr)   = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = false)
-                        ctx.sendRatchet = sr; ctx.recvRatchet = rr
-                        ctx.handshake   = HandshakeState.COMPLETE
-                        sendProfile(endpointId)
-                    }
-                    else -> Timber.w("Duplicate room-host public key from $endpointId")
-                }
+                handleRoomHostKemMessage(endpointId, json)
                 return
             }
 
-            peerPublicKey = decodedPeerKey
-
+            // P2P / Room-guest path
             when (handshakeState) {
                 HandshakeState.KEY_SENT -> {
-                    sessionKey     = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    // We sent HELLO first (we are the initiator). The peer responded with HELLO_ACK.
+                    val ack     = HybridKemEngine.HelloAckPayload.fromJson(json)
+                    val session = kemSession ?: run {
+                        Timber.e("kemSession null in KEY_SENT state — session state corrupt")
+                        terminateSession(ExchangeSession.State.ERROR); return
+                    }
+                    hybridKemEngine.completeInitiatorSession(session, ack)
+                    val ss = session.sharedSecret ?: run {
+                        Timber.e("KEM shared secret null after completeInitiatorSession")
+                        terminateSession(ExchangeSession.State.ERROR); return
+                    }
+                    sessionKey     = SecretKeySpec(ss, "AES")
                     val (sr, rr)  = initDirectionalRatchets(sessionKey!!, isInitiator = true)
-                    sendRatchet = sr; recvRatchet = rr
+                    sendRatchet    = sr; recvRatchet = rr
                     handshakeState = HandshakeState.COMPLETE
-                    Timber.d("Handshake COMPLETE (initiator)")
+                    Timber.i("Handshake COMPLETE — initiator, PQ-hybrid v${session.negotiatedVersion}, session=${sessionId.take(8)}")
                     showSasAndAwaitConfirmation(endpointId)
                 }
+
                 HandshakeState.IDLE -> {
-                    handshakeState = HandshakeState.KEY_RECEIVED
-                    sendPublicKey(endpointId)
-                    sessionKey     = CryptoUtils.deriveSharedAESKey(kp.private, decodedPeerKey)
+                    // Peer sent HELLO first (peer is the initiator, we are the responder).
+                    val hello        = HybridKemEngine.HelloPayload.fromJson(json)
+                    val (session, ack) = hybridKemEngine.responderSession(hello)
+                    kemSession         = session
+                    val ss = session.sharedSecret ?: run {
+                        Timber.e("KEM shared secret null after responderSession")
+                        terminateSession(ExchangeSession.State.ERROR); return
+                    }
+                    sessionKey     = SecretKeySpec(ss, "AES")
                     val (sr, rr)  = initDirectionalRatchets(sessionKey!!, isInitiator = false)
-                    sendRatchet = sr; recvRatchet = rr
+                    sendRatchet    = sr; recvRatchet = rr
+                    handshakeState = HandshakeState.KEY_RECEIVED
+
+                    val ackPayload = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + ack.toJson().toByteArray(Charsets.UTF_8)
+                    transport.sendBytes(endpointId, ackPayload)
+                    Timber.d("KEM HELLO_ACK sent to $endpointId (v${session.negotiatedVersion})")
+
                     handshakeState = HandshakeState.COMPLETE
-                    Timber.d("Handshake COMPLETE (responder)")
+                    Timber.i("Handshake COMPLETE — responder, PQ-hybrid v${session.negotiatedVersion}, session=${sessionId.take(8)}")
                     showSasAndAwaitConfirmation(endpointId)
                 }
+
                 HandshakeState.KEY_RECEIVED, HandshakeState.COMPLETE ->
-                    Timber.w("Duplicate public key (state=$handshakeState) — ignoring")
+                    Timber.w("Duplicate KEM message (state=$handshakeState) — ignoring from $endpointId")
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to process peer public key")
+            Timber.e(e, "Failed to process KEM message from $endpointId")
             terminateSession(ExchangeSession.State.ERROR)
         }
     }
 
-    // -------------------------------------------------------------------------
+    /** Room-host variant: each peer in the room has its own [PeerCtx] with its own KEM session. */
+    private fun handleRoomHostKemMessage(endpointId: String, json: String) {
+        val ctx = peerCtxByEndpoint.getOrPut(endpointId) { PeerCtx() }
+        when (ctx.handshake) {
+            HandshakeState.KEY_SENT -> {
+                // We sent a HELLO to this peer; they replied with HELLO_ACK.
+                val ack     = HybridKemEngine.HelloAckPayload.fromJson(json)
+                val session = ctx.kemSession ?: run {
+                    Timber.e("Room host: kemSession null for $endpointId in KEY_SENT state")
+                    terminateSession(ExchangeSession.State.ERROR); return
+                }
+                hybridKemEngine.completeInitiatorSession(session, ack)
+                val ss = session.sharedSecret ?: run {
+                    Timber.e("Room host: shared secret null after completion for $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return
+                }
+                ctx.sessionKey  = SecretKeySpec(ss, "AES")
+                val (sr, rr)   = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = true)
+                ctx.sendRatchet = sr; ctx.recvRatchet = rr
+                ctx.handshake   = HandshakeState.COMPLETE
+                Timber.i("Room host: handshake COMPLETE with $endpointId (initiator, v${session.negotiatedVersion})")
+                sendProfile(endpointId)
+            }
+
+            HandshakeState.IDLE -> {
+                // Peer sent HELLO; we are the responder for this room slot.
+                val hello             = HybridKemEngine.HelloPayload.fromJson(json)
+                val (session, ack)    = hybridKemEngine.responderSession(hello)
+                ctx.kemSession        = session
+                val ss = session.sharedSecret ?: run {
+                    Timber.e("Room host: shared secret null after responder session for $endpointId")
+                    terminateSession(ExchangeSession.State.ERROR); return
+                }
+                ctx.sessionKey  = SecretKeySpec(ss, "AES")
+                val (sr, rr)   = initDirectionalRatchets(ctx.sessionKey!!, isInitiator = false)
+                ctx.sendRatchet = sr; ctx.recvRatchet = rr
+                ctx.handshake   = HandshakeState.KEY_RECEIVED
+
+                val ackPayload = byteArrayOf(MSG_TYPE_PUBLIC_KEY) + ack.toJson().toByteArray(Charsets.UTF_8)
+                transport.sendBytes(endpointId, ackPayload)
+                ctx.handshake = HandshakeState.COMPLETE
+                Timber.i("Room host: handshake COMPLETE with $endpointId (responder, v${session.negotiatedVersion})")
+                sendProfile(endpointId)
+            }
+
+            else -> Timber.w("Room host: duplicate KEM message from $endpointId (state=${ctx.handshake})")
+        }
+    }
+
     // SAS + ratchet helpers
-    // -------------------------------------------------------------------------
 
     private fun initDirectionalRatchets(
         key: javax.crypto.SecretKey,
@@ -821,9 +868,11 @@ class NearbyExchangeService : Service() {
     }
 
     private fun showSasAndAwaitConfirmation(endpointId: String) {
-        val our  = ourKeyPair?.public  ?: return
-        val peer = peerPublicKey       ?: return
-        val pin  = SasVerifier.derive(our, peer)
+        val ss = kemSession?.sharedSecret ?: run {
+            Timber.e("Cannot display SAS — KEM shared secret unavailable for $endpointId")
+            terminateSession(ExchangeSession.State.ERROR); return
+        }
+        val pin = SasVerifier.deriveFromSharedSecret(ss)
         Timber.i("SAS PIN $pin derived for $endpointId — awaiting UI confirmation")
         pendingSasEndpointId = endpointId
         val current = sessionState.value
@@ -832,9 +881,7 @@ class NearbyExchangeService : Service() {
         updateNotification(getString(R.string.status_verifying))
     }
 
-    // -------------------------------------------------------------------------
     // Profile exchange
-    // -------------------------------------------------------------------------
 
     private fun handleIncomingProfile(endpointId: String, encryptedData: ByteArray) {
         if (encryptedData.size > MAX_PROFILE_PAYLOAD_BYTES) {
@@ -996,9 +1043,7 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Avatar streaming — gms (NearbyConnectionsTransport) only
-    // -------------------------------------------------------------------------
 
     /**
      * Send the user's avatar as a STREAM payload.
@@ -1136,9 +1181,7 @@ class NearbyExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun decodeEC256PublicKey(encoded: ByteArray): PublicKey {
         val spec  = java.security.spec.X509EncodedKeySpec(encoded)
@@ -1183,7 +1226,7 @@ class NearbyExchangeService : Service() {
     }
 
     private fun createNotificationChannel() {
-        // T44: delegate to centralized hardened channel registry
+        // delegate to centralized hardened channel registry
         NotificationChannels.ensureChannels(this)
     }
 

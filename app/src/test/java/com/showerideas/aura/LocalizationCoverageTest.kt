@@ -8,13 +8,13 @@ import javax.xml.parsers.DocumentBuilderFactory
 /**
  * JVM unit test that verifies localization key coverage without needing an Android device.
  *
- * ## Why this exists
+ * Why this exists
  * AURA ships 7 locale overlays (DE, ES, FR, HI, JA, KO, ZH-CN). Any time a new string
  * is added to `values/strings.xml` there is a risk of forgetting to add translations,
  * which causes a silent English fallback for users in those locales. This test catches
  * that regression at build time (before any device is involved).
  *
- * ## How it works
+ * How it works
  * The test reads `strings.xml` using the Java XML DOM parser (no Android runtime needed).
  * It collects every `<string name="...">` key from the base `values/` folder and from
  * each `values-xx/` overlay, then asserts that the overlay sets are supersets of the base.
@@ -22,7 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * `translatable="false"` strings are excluded — they are intentionally left untranslated
  * (e.g. app_name, package identifiers).
  *
- * ## Path resolution
+ * Path resolution
  * JVM unit tests run with the working directory set to the Gradle module root (`app/`).
  * The path `src/main/res` is therefore resolvable from `System.getProperty("user.dir")`.
  *
@@ -35,9 +35,7 @@ class LocalizationCoverageTest {
         private val LOCALES = listOf("de", "es", "fr", "hi", "ja", "ko", "zh-rCN")
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun all_base_string_keys_are_present_in_every_locale() {
@@ -111,9 +109,7 @@ class LocalizationCoverageTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Resolve the `app/src/main/res` directory.

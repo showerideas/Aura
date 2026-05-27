@@ -14,7 +14,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * RecyclerView adapter for the exchange audit log screen (Phase 6.6).
+ * RecyclerView adapter for the exchange audit log screen.
  *
  * Each row shows: timestamp, outcome chip (colour-coded), channel chip,
  * peer identity hash (truncated to 16 chars), and error code if present.

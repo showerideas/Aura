@@ -14,7 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * Phase 9.1 — Quick-select bottom sheet shown before an exchange starts.
+ * Quick-select bottom sheet shown before an exchange starts.
  * Displays the user's share presets as chips; tapping one applies it and
  * dismisses the sheet.
  *
@@ -29,7 +29,7 @@ class SharePresetBottomSheet(
         const val TAG = "SharePresetBottomSheet"
 
         /**
-         * T18 — Show the preset picker from any [FragmentManager] context.
+         * Show the preset picker from any [FragmentManager] context.
          *
          * Used by the home-screen FAB long-press and the QS tile settings shortcut
          * so the user can quickly switch which fields to share before starting an exchange.

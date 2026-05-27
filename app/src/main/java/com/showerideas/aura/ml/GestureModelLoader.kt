@@ -13,10 +13,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Phase 10.3 — Centralised MediaPipe gesture model loader with caching and
+ * Centralised MediaPipe gesture model loader with caching and
  * integrity verification.
  *
- * ## Loading strategy
+ * Loading strategy
  *
  * 1. **Bundled asset** (`assets/gesture_recognizer.task`) — primary source.
  *    Ships with the APK; verified via SHA-256 at first load per app install.
@@ -27,19 +27,17 @@ import javax.inject.Singleton
  *    thereafter. MediaPipe requires a file-system path, not an asset stream.
  *    This avoids re-copying the asset on every recognizer creation.
  *
- * 3. **Future update slot** — if a newer model is downloaded OTA (e.g. via
- *    an in-app update flow), it can be placed in the same cache directory.
- *    [GestureModelLoader] will prefer it over the bundled asset if it passes
- *    SHA-256 verification. This hook is reserved for Phase 9.4+ ML updates.
+ * 3. **OTA update slot** — a newer model in the same cache directory is
+ *    preferred over the bundled asset if it passes SHA-256 verification.
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * @Inject lateinit var modelLoader: GestureModelLoader
  *
  * val recognizer = modelLoader.createRecognizer()
  * ```
  *
- * ## Thread safety
+ * Thread safety
  * [createRecognizer] is safe to call from any thread. The first call does I/O
  * (asset copy); subsequent calls are O(1) path resolution. Dispatch to
  * [kotlinx.coroutines.Dispatchers.IO] to avoid blocking the main thread.
@@ -57,14 +55,14 @@ class GestureModelLoader @Inject constructor(
         private const val EXPECTED_SHA256 =
             "f7bbcc17ecc99c879f45f58d36e4e0feec78e9b0aedde99d9b1a5f2e28dbd36c"
     }
-
+ *
     /** Resolved absolute path to the model file (set once, reused). */
     @Volatile private var resolvedModelPath: String? = null
-
+ *
     // ─────────────────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────────────────
-
+ *
     /**
      * Build and return a [GestureRecognizer] configured with the best available model.
      *

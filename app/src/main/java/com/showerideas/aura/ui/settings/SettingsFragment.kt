@@ -181,9 +181,7 @@ class SettingsFragment : Fragment() {
         try { requireContext().unregisterReceiver(this) } catch (_: Exception) {}
     }
 
-    // -------------------------------------------------------------------------
     // Accessibility mode — volume-button reliability on Samsung/MIUI/ColorOS
-    // -------------------------------------------------------------------------
 
     private fun wireAccessibilitySection() {
         binding.rowAccessibilityMode.setOnClickListener {
@@ -211,9 +209,7 @@ class SettingsFragment : Fragment() {
         )
     }
 
-    // -------------------------------------------------------------------------
-    // Security section — key rotation + exchange history (Phase 6.5 / 6.6)
-    // -------------------------------------------------------------------------
+    // Security section — key rotation + exchange history
 
     private fun wireSecuritySection() {
         // Key rotation row
@@ -243,9 +239,7 @@ class SettingsFragment : Fragment() {
     }
 
 
-    // -------------------------------------------------------------------------
-    // Phase 8.3 — Tor/Orbot anonymization proxy
-    // -------------------------------------------------------------------------
+    // Tor/Orbot anonymization proxy
 
     private fun wireTorSection() {
         val orbotInstalled = viewModel.isOrbotInstalled
@@ -316,9 +310,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Phase F1 — Wear OS companion pairing
-    // -------------------------------------------------------------------------
+    // Wear OS companion pairing
 
     private fun wireWearSection() {
         binding.rowWearCompanion.setOnClickListener {

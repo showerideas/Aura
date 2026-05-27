@@ -19,15 +19,11 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * NFC tap-to-exchange helper — Tasks 1 and 2.
+ * NFC tap-to-exchange helper.
  *
- * Task 1 additions:
- *  - [parseNdefMessageWithNonce] — backward-compatible 3-part payload (uuid / key / nonce)
- *  - [deriveSessionToken] — HKDF(ecdhShared || nonce, info="aura-room-v1") → 32-byte token
- *
- * Task 2 additions:
- *  - [enableReaderMode] / [disableReaderMode] — NfcAdapter.enableReaderMode initiator path
- *  - [exchangeApduViaNfc] — full IsoDep APDU exchange with chaining support
+ * Supports two exchange paths:
+ *  - NDEF bootstrap: [parseNdefMessageWithNonce], [deriveSessionToken]
+ *  - IsoDep APDU: [enableReaderMode], [disableReaderMode], [exchangeApduViaNfc]
  */
 object NfcExchangeHelper {
 
@@ -39,7 +35,7 @@ object NfcExchangeHelper {
     data class NfcBootstrap(
         val peerSessionUuid    : String,
         val peerPublicKeyBytes : ByteArray,
-        /** Task 3 — session nonce from 3-part payload; null for legacy 2-part payloads. */
+        /** session nonce from 3-part payload; null for legacy 2-part payloads. */
         val sessionNonce       : ByteArray? = null
     ) {
         override fun equals(other: Any?): Boolean {
@@ -88,7 +84,7 @@ object NfcExchangeHelper {
         }
     }
 
-    // ── Reader mode — Task 2 (initiator path) ────────────────────────────
+    // ── Reader mode ────────────────────────────
 
     /**
      * Enable NFC reader mode. Call in onResume.
@@ -110,7 +106,7 @@ object NfcExchangeHelper {
         Timber.d("NFC: reader mode disabled")
     }
 
-    // ── IsoDep APDU exchange — Task 2 ────────────────────────────────────
+    // ── IsoDep APDU exchange ────────────────────────────────────
 
     /**
      * Drive the full APDU exchange as the reader/initiator side.
@@ -179,7 +175,7 @@ object NfcExchangeHelper {
         }
     }
 
-    // ── Session token HKDF — Task 1 / Task 3 ─────────────────────────────
+    // ── Session token HKDF  ─────────────────────────────
 
     /**
      * Derive a 32-byte session token: HKDF-SHA256(ecdhShared || sessionNonce, info="aura-room-v1").
@@ -284,7 +280,7 @@ object NfcExchangeHelper {
         return null
     }
 
-    /** Parse with optional nonce (Task 3 — backward compatible with 2-part payloads). */
+    /** Parse with optional nonce (backward compatible with 2-part payloads). */
     fun parseNdefMessageWithNonce(message: NdefMessage): NfcBootstrap? {
         for (record in message.records) {
             val mimeType = String(record.type, Charsets.UTF_8)
@@ -306,3 +302,4 @@ object NfcExchangeHelper {
 
     private fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 }
+

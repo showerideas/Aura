@@ -3,12 +3,12 @@ package com.showerideas.aura.utils
 import timber.log.Timber
 
 /**
- * Task 32 — Fixed-length wire frame for traffic analysis resistance.
+ * Fixed-length wire frame for traffic analysis resistance.
  *
  * All AURA sealed envelopes are padded to [WIRE_FRAME_SIZE] bytes before transmission.
  * A passive observer sees identical-length packets regardless of profile size.
  *
- * ## Format
+ * Format
  * ```
  * [actual_len(2 BE)] [envelope_bytes] [random_padding to WIRE_FRAME_SIZE]
  * ```

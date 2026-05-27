@@ -24,7 +24,7 @@ import java.util.Base64
  * same key material and expected output are embedded in the iOS Swift test
  * [AuraCompanionTests] so that both platforms can be independently verified.
  *
- * ## Fixed test vector (NIST P-256 / secp256r1)
+ * Fixed test vector (NIST P-256 / secp256r1)
  *
  * The key bytes below were generated once and hardcoded so the test is
  * deterministic across runs and platforms:
@@ -41,7 +41,7 @@ import java.util.Base64
  *   Info : "aes-256-gcm-session-key" (UTF-8)
  *   Hash : SHA-256
  *
- * ## Wire-format note
+ * Wire-format note
  * On the wire, each party sends their X.509-encoded public key (SubjectPublicKeyInfo,
  * 65 bytes uncompressed = 91 bytes DER).  The recipient decodes it, derives the
  * shared key, and encrypts the profile payload with AES-256-GCM.

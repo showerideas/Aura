@@ -14,7 +14,7 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
- * Phase 7.4 / H1 — WorkManager periodic worker that prunes stale exchange
+ * WorkManager periodic worker that prunes stale exchange
  * audit log entries from Room.
  *
  * The retention window is keyed on [EnterprisePolicy.auditLogRetentionDays]:
@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit
  * Runs daily. Any entry whose [ExchangeAuditEntry.timestampMs] is older than
  * (now − retention_days) is deleted via [ExchangeAuditRepository.pruneOldEntries].
  *
- * ## Scheduling
+ * Scheduling
  * Call [enqueue] from `Application.onCreate` (after Hilt is ready).
  * [ExistingPeriodicWorkPolicy.UPDATE] makes repeated calls idempotent.
  *
- * ## Compliance note
+ * Compliance note
  * MDM-configured retention limits are a common enterprise security requirement
  * (SOC 2 Type II, ISO 27001). This worker ensures AURA respects the admin's
  * data-retention policy without manual intervention.

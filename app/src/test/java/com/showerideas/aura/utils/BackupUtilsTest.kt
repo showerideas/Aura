@@ -9,7 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 /**
- * Phase 6.10 — Unit tests for [BackupUtils].
+ * Unit tests for [BackupUtils].
  *
  * Verifies:
  * 1. Round-trip: export then restore produces byte-for-byte identical contacts.
@@ -44,9 +44,7 @@ class BackupUtilsTest {
         )
     )
 
-    // -------------------------------------------------------------------------
     // Round-trip
-    // -------------------------------------------------------------------------
 
     @Test
     fun roundTrip_restoresContactsExactly() {
@@ -72,9 +70,7 @@ class BackupUtilsTest {
         assertNull("Null identityKeyHash must survive round-trip", bob.identityKeyHash)
     }
 
-    // -------------------------------------------------------------------------
     // Wrong passphrase
-    // -------------------------------------------------------------------------
 
     @Test(expected = BackupUtils.BackupException::class)
     fun wrongPassphrase_throwsBackupException() {
@@ -83,9 +79,7 @@ class BackupUtilsTest {
         BackupUtils.restore(wrongPassphrase, ByteArrayInputStream(buf.toByteArray()))
     }
 
-    // -------------------------------------------------------------------------
     // Corrupted ciphertext
-    // -------------------------------------------------------------------------
 
     @Test(expected = BackupUtils.BackupException::class)
     fun corruptedCiphertext_throwsBackupException() {
@@ -97,9 +91,7 @@ class BackupUtilsTest {
         BackupUtils.restore(passphrase, ByteArrayInputStream(bytes))
     }
 
-    // -------------------------------------------------------------------------
     // Magic mismatch
-    // -------------------------------------------------------------------------
 
     @Test(expected = BackupUtils.BackupException::class)
     fun wrongMagic_throwsBackupException() {
@@ -107,9 +99,7 @@ class BackupUtilsTest {
         BackupUtils.restore(passphrase, ByteArrayInputStream(garbage))
     }
 
-    // -------------------------------------------------------------------------
     // Random IV/salt guarantees ciphertext uniqueness
-    // -------------------------------------------------------------------------
 
     @Test
     fun twoExports_produceDifferentCiphertext() {
@@ -124,9 +114,7 @@ class BackupUtilsTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Empty contacts guard
-    // -------------------------------------------------------------------------
 
     @Test(expected = IllegalArgumentException::class)
     fun emptyContacts_throwsIllegalArgument() {

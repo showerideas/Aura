@@ -5,14 +5,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T33 — Wire Protocol v8: Post-quantum hybrid KEM session engine.
+ * Wire Protocol v8: Post-quantum hybrid KEM session engine.
  *
  * Wraps [HybridKEM] with protocol negotiation so that AURA sessions can
  * advertise and accept ML-KEM-768+X25519 capability in a backward-compatible
  * way. Older peers that only support protocol v6 (classical ECDH) are still
  * served correctly.
  *
- * ## Negotiation flow
+ * Negotiation flow
  * ```
  * Initiator                           Responder
  *    │                                   │
@@ -27,11 +27,11 @@ import javax.inject.Singleton
  *    │─── ENCRYPTED_PROFILE ─────────────►│
  * ```
  *
- * ## Version constants
+ * Version constants
  * - `WIRE_V6` = 6 — classical ECDH (legacy, always supported)
- * - `WIRE_V8` = 8 — ML-KEM-768 + X25519 hybrid KEM (T33 addition)
+ * - `WIRE_V8` = 8 — ML-KEM-768 + X25519 hybrid KEM
  *
- * ## Negotiation rule
+ * Negotiation rule
  * Both peers advertise their maximum supported version. The session uses
  * `min(initiator_max, responder_max)` to guarantee backward compatibility.
  * If only one peer supports v8, the session falls back to v6.
@@ -43,7 +43,7 @@ class HybridKemEngine @Inject constructor() {
         /** Classical ECDH protocol version (always supported). */
         const val WIRE_V6: Int = 6
 
-        /** Post-quantum hybrid KEM protocol version (T33). */
+        /** Post-quantum hybrid KEM protocol version. */
         const val WIRE_V8: Int = 8
 
         /** Maximum version this implementation supports. */
@@ -53,9 +53,7 @@ class HybridKemEngine @Inject constructor() {
         const val MIN_VERSION: Int = WIRE_V6
     }
 
-    // -------------------------------------------------------------------------
     // Session type
-    // -------------------------------------------------------------------------
 
     /**
      * An active KEM session between two peers.
@@ -74,9 +72,7 @@ class HybridKemEngine @Inject constructor() {
         val isComplete   : Boolean get() = sharedSecret != null
     }
 
-    // -------------------------------------------------------------------------
     // Negotiation
-    // -------------------------------------------------------------------------
 
     /**
      * Create an initiator session. Call this on the device that opens the
@@ -151,14 +147,12 @@ class HybridKemEngine @Inject constructor() {
         val ciphertext = ack.ciphertextBytes
             ?: error("v8 HELLO_ACK missing ciphertext — peer sent malformed ACK")
 
-        session.sharedSecret = HybridKEM.decapsulate(keyPair, ciphertext)
+        session.sharedSecret = HybridKEM.decapsulate(ciphertext, keyPair)
         Timber.i("HybridKemEngine: initiator decapsulated — shared secret derived for session %s",
             session.sessionId.take(8))
     }
 
-    // -------------------------------------------------------------------------
     // Wire payloads
-    // -------------------------------------------------------------------------
 
     /**
      * HELLO payload sent by the initiator.
@@ -234,9 +228,7 @@ class HybridKemEngine @Inject constructor() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Version negotiation
-    // -------------------------------------------------------------------------
 
     /**
      * Agree on the highest version both peers support.

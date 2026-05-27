@@ -8,7 +8,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 
 /**
- * Phase 5.3 — Accessibility layout audit (JVM unit test, no Android runtime needed).
+ * Accessibility layout audit (JVM unit test, no Android runtime needed).
  *
  * Parses every layout XML in app/src/main/res/layout/ and enforces:
  *
@@ -35,9 +35,7 @@ class AccessibilityLayoutAuditTest {
         private const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun imageViews_have_contentDescription_or_marked_decorative() {
@@ -126,9 +124,7 @@ class AccessibilityLayoutAuditTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun layoutDirectory(): File {
         val moduleRoot = File(System.getProperty("user.dir") ?: ".")

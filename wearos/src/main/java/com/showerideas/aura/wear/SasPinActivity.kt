@@ -9,14 +9,14 @@ import androidx.activity.ComponentActivity
 import timber.log.Timber
 
 /**
- * T35 — Wear OS SAS PIN confirmation activity.
+ * Wear OS SAS PIN confirmation activity.
  *
  * When the phone enters the VERIFYING state during an AURA exchange,
  * [WearPhoneBridge] relays the 6-digit SAS code and the exchange state byte
  * to the watch. This activity is launched on the watch so the user can
  * compare the codes and confirm or reject without looking at the phone.
  *
- * ## Launch contract
+ * Launch contract
  * The phone side sends a Wearable Data Layer message on path
  * [CHANNEL_PATH_SAS] with the following payload:
  *   [6-byte ASCII SAS digits] [1-byte action: 0=confirm, 1=reject]
@@ -24,7 +24,7 @@ import timber.log.Timber
  * The watch displays the SAS code and two large-touch-target buttons.
  * The result is sent back via a Data Layer message on [CHANNEL_PATH_SAS_ACK].
  *
- * ## Wear OS UI constraints
+ * Wear OS UI constraints
  * - No XML layouts — inline [View] construction for :wearos module isolation.
  * - Large circular buttons (56 dp) for glanceability and fat-finger accuracy.
  * - Ambient mode: activity finishes if not confirmed within [TIMEOUT_MS].
@@ -56,9 +56,7 @@ class SasPinActivity : ComponentActivity() {
         finish()
     }
 
-    // -------------------------------------------------------------------------
     // Activity lifecycle
-    // -------------------------------------------------------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +73,7 @@ class SasPinActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    // -------------------------------------------------------------------------
     // UI construction
-    // -------------------------------------------------------------------------
 
     private fun buildContentView(): View {
         // Simple vertical layout: SAS label + code + Confirm + Reject
@@ -134,9 +130,7 @@ class SasPinActivity : ComponentActivity() {
             layoutParams = lp
         }
 
-    // -------------------------------------------------------------------------
     // Ack transmission
-    // -------------------------------------------------------------------------
 
     private fun sendAck(ack: Byte) {
         // In production: send via Wearable.getMessageClient(this).sendMessage(...)
@@ -144,3 +138,4 @@ class SasPinActivity : ComponentActivity() {
         Timber.i("SasPinActivity: sending ack=%d for SAS %s", ack.toInt(), sasCode)
     }
 }
+

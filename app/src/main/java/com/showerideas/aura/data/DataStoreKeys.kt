@@ -11,6 +11,7 @@ object DataStoreKeys {
     val AUTH_METHOD = stringPreferencesKey("auth_method")
     val BG_ACTIVATION_ENABLED = booleanPreferencesKey("bg_activation_enabled")
     val GESTURE_GATE_OPEN = booleanPreferencesKey("gesture_gate_open")
-    /** Phase 8.3: route relay traffic through Tor/Orbot when true. */
+    /** route relay traffic through Tor/Orbot when true. */
     val TOR_PROXY_ENABLED = booleanPreferencesKey("tor_proxy_enabled")
 }
+

@@ -12,7 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.guava.future
 
 /**
- * Phase 7.2 — Wear OS tile showing AURA exchange state.
+ * Wear OS tile showing AURA exchange state.
  * Tile states: IDLE / ACTIVE / SAS (awaiting verification)
  */
 class AuraWearTileService : TileService() {

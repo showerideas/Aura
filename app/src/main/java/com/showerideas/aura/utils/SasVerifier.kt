@@ -6,18 +6,18 @@ import java.security.PublicKey
 /**
  * Short Authentication String (SAS) derivation for first-meet MITM protection.
  *
- * ## Problem
+ * Problem
  * AURA's ECDSA challenge/response catches key-substitution attacks against *known* peers
  * (TOFU registry detects the mismatch). But on the very first exchange between two devices,
  * neither has seen the other's identity key before — a MITM who can intercept the Nearby
  * session could substitute their own key and neither party would notice.
  *
- * ## Mitigation
+ * Mitigation
  * Both parties display the same 6-digit SAS derived from their ephemeral ECDH public keys.
  * A MITM who substitutes their own key produces a different SAS, which the users can compare
  * verbally before confirming the exchange.
  *
- * ## Derivation
+ * Derivation
  * ```
  * SAS = big_endian_24bit(SHA-256(canonical_key_a || canonical_key_b)) % 1_000_000
  * ```
@@ -27,13 +27,13 @@ import java.security.PublicKey
  * - The first 3 bytes (24 bits) of the 256-bit hash are taken as a big-endian integer.
  * - The result is reduced modulo 10^6 (range 0..999_999) and zero-padded to 6 digits.
  *
- * ## Security note
+ * Security note
  * A 6-digit SAS has ~20 bits of entropy — enough to make a brute-force key-substitution
  * attack impractical in the short window of a physical face-to-face exchange. It does NOT
  * provide cryptographic security against a patient offline attacker; that is handled by the
  * ECDSA identity-key layer and the TOFU registry for all subsequent sessions.
  *
- * ## UI integration
+ * UI integration
  * Show the SAS to both parties *before* the profile payload is exchanged. If both users
  * confirm the numbers match, proceed. If they differ, abort with [ExchangeSession.State.ERROR].
  * UI integration is tracked in the v1.2 milestone.
@@ -108,9 +108,32 @@ object SasVerifier {
         )
     }
 
-    // -------------------------------------------------------------------------
+    /**
+     * Derive the SAS directly from a KEM shared secret.
+     *
+     * Used when the session key is established via a post-quantum hybrid KEM (ML-KEM-768 +
+     * X25519) rather than a classical ECDH exchange. Both parties derive the same shared
+     * secret from the KEM handshake; hashing it gives a deterministic SAS without needing
+     * to exchange additional public keys for the comparison.
+     *
+     * Derivation:
+     * ```
+     * SAS = big_endian_24bit(SHA-256(sharedSecret)) % 1_000_000
+     * ```
+     *
+     * @param sharedSecret 32-byte KEM shared secret from [HybridKemEngine.KemSession.sharedSecret].
+     * @return A zero-padded 6-digit decimal string, e.g. `"042731"`.
+     */
+    fun deriveFromSharedSecret(sharedSecret: ByteArray): String {
+        val hash = MessageDigest.getInstance("SHA-256").digest(sharedSecret)
+        val top24bits = ((hash[0].toInt() and 0xFF) shl 16) or
+                        ((hash[1].toInt() and 0xFF) shl  8) or
+                         (hash[2].toInt() and 0xFF)
+        val sasValue = top24bits.toLong() % SAS_MODULUS
+        return sasValue.toString().padStart(SAS_DIGITS, '0')
+    }
+
     // Internal helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Lexicographic comparison of two byte arrays.

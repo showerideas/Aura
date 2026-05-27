@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Task 8 — An AURA multi-party exchange room session.
+ * An AURA multi-party exchange room session.
  *
  * A Room is a temporary cryptographic session in which N participants
  * simultaneously exchange contact cards. The host creates the room;
@@ -46,3 +46,4 @@ data class RoomSession(
 )
 
 enum class RoomState { ACTIVE, CLOSED }
+

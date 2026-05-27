@@ -16,9 +16,7 @@ import java.util.UUID
  */
 class NfcExchangeHelperTest {
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun generateECPublicKey() =
         KeyPairGenerator.getInstance("EC").apply { initialize(256) }
@@ -42,9 +40,7 @@ class NfcExchangeHelperTest {
         return NfcExchangeHelper.NfcBootstrap(sessionUuid, keyBytes)
     }
 
-    // -------------------------------------------------------------------------
     // Payload format round-trip
-    // -------------------------------------------------------------------------
 
     @Test
     fun `buildPayload includes session UUID and public key`() {
@@ -102,9 +98,7 @@ class NfcExchangeHelperTest {
         assertNull("Parsing must reject keys shorter than 64 bytes", result)
     }
 
-    // -------------------------------------------------------------------------
     // MIME type constant
-    // -------------------------------------------------------------------------
 
     @Test
     fun `MIME_TYPE follows application slash vnd pattern`() {
@@ -118,9 +112,7 @@ class NfcExchangeHelperTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // NfcBootstrap equality
-    // -------------------------------------------------------------------------
 
     @Test
     fun `NfcBootstrap equals and hashCode are value-based`() {
@@ -143,9 +135,7 @@ class NfcExchangeHelperTest {
         assertNotEquals("Different session UUIDs must produce non-equal NfcBootstrap", b1, b2)
     }
 
-    // -------------------------------------------------------------------------
     // Multiple round-trips — session uniqueness
-    // -------------------------------------------------------------------------
 
     @Test
     fun `two exchanges with different sessions produce different payloads`() {

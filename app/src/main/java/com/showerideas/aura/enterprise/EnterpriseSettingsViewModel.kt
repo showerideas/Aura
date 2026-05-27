@@ -5,7 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 /**
- * Phase 7.4 — ViewModel for [EnterpriseSettingsFragment].
+ * ViewModel for [EnterpriseSettingsFragment].
  *
  * Exposes [EnterprisePolicy] directly; no mutation is possible since MDM
  * policies are system-controlled.

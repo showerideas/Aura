@@ -9,23 +9,23 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T27 — Multi-gesture library: up to [MAX_GESTURES] named gesture profiles per user.
+ * Multi-gesture library: up to [MAX_GESTURES] named gesture profiles per user.
  *
  * AURA supports a library of distinct gesture enrollments so users can assign
  * different gestures to different contexts (e.g. "work profile" = thumbs-up,
  * "personal profile" = peace sign). One gesture is always the "active" profile
  * used for authentication; others are stored and can be switched at any time.
  *
- * ## Storage
+ * Storage
  * Each gesture is stored as a named embedding in [EncryptedSharedPreferences]
  * under a UUID slot key. Metadata (name, createdAt) is stored alongside.
  *
- * ## Zero-fill deletion
+ * Zero-fill deletion
  * When a gesture is deleted, the slot is explicitly overwritten with zeros
  * before being removed from preferences, preventing recovery of embedding data
  * from the shared-preferences backing store.
  *
- * ## Active profile
+ * Active profile
  * [activeSlotId] is persisted so the correct gesture survives app restarts.
  * [GestureAuthManager] reads the active embedding from [GestureLibrary] during
  * authentication.
@@ -47,9 +47,7 @@ class GestureLibrary @Inject constructor(
         private const val ZERO_FILLER = "DELETED_ZERO_FILL"
     }
 
-    // -------------------------------------------------------------------------
     // Data types
-    // -------------------------------------------------------------------------
 
     /**
      * A single enrolled gesture slot.
@@ -66,9 +64,7 @@ class GestureLibrary @Inject constructor(
         val sampleCount: Int
     )
 
-    // -------------------------------------------------------------------------
     // Prefs access
-    // -------------------------------------------------------------------------
 
     private val prefs by lazy {
         val masterKey = MasterKey.Builder(context)
@@ -83,9 +79,7 @@ class GestureLibrary @Inject constructor(
         )
     }
 
-    // -------------------------------------------------------------------------
     // Slot management
-    // -------------------------------------------------------------------------
 
     /**
      * All currently enrolled gesture slots (in enrollment order).
@@ -221,9 +215,7 @@ class GestureLibrary @Inject constructor(
     /** Total number of enrolled gestures. */
     fun count(): Int = slotIds().size
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun slotIds(): List<String> {
         val raw = prefs.getString(KEY_SLOTS, null) ?: return emptyList()
@@ -246,3 +238,4 @@ class GestureLibrary @Inject constructor(
         }
     }
 }
+

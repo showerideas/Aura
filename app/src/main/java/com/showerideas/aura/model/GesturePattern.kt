@@ -32,3 +32,4 @@ data class GesturePattern(
 
     override fun hashCode(): Int = 31 * id.hashCode() + featureVector.contentHashCode()
 }
+

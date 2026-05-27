@@ -14,7 +14,7 @@ import timber.log.Timber
 import kotlin.math.abs
 
 /**
- * T35 — Wear OS wrist-raise gesture trigger for AURA exchange.
+ * Wear OS wrist-raise gesture trigger for AURA exchange.
  *
  * Detects the characteristic "raise wrist to view" motion using the watch's
  * accelerometer and gyroscope:
@@ -29,7 +29,7 @@ import kotlin.math.abs
  *
  * The trigger is debounced by [DEBOUNCE_MS] to prevent spurious re-fires.
  *
- * ## Integration
+ * Integration
  * Register this trigger in the WearOS activity or service that owns the
  * exchange lifecycle. Connect its [wristRaiseEvents] flow to start
  * advertising mode automatically.
@@ -50,9 +50,7 @@ class WristRaiseTrigger(private val context: Context) : SensorEventListener {
         private const val SENSOR_DELAY_US = SensorManager.SENSOR_DELAY_GAME
     }
 
-    // -------------------------------------------------------------------------
     // State
-    // -------------------------------------------------------------------------
 
     private val sensorManager   = context.getSystemService<SensorManager>()!!
     private val gyroscope       = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
@@ -64,9 +62,7 @@ class WristRaiseTrigger(private val context: Context) : SensorEventListener {
     private var lastEventMs     = 0L
     private var lastAccelZ      = 0f
 
-    // -------------------------------------------------------------------------
     // Lifecycle
-    // -------------------------------------------------------------------------
 
     /**
      * Start listening for wrist-raise gestures.
@@ -93,9 +89,7 @@ class WristRaiseTrigger(private val context: Context) : SensorEventListener {
         Timber.d("WristRaiseTrigger: stopped")
     }
 
-    // -------------------------------------------------------------------------
     // SensorEventListener
-    // -------------------------------------------------------------------------
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
@@ -116,9 +110,7 @@ class WristRaiseTrigger(private val context: Context) : SensorEventListener {
         // Not used — accuracy changes do not affect raise detection.
     }
 
-    // -------------------------------------------------------------------------
     // Private
-    // -------------------------------------------------------------------------
 
     private fun debounceAndFire() {
         val now = System.currentTimeMillis()

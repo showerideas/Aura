@@ -5,7 +5,7 @@ import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 
 /**
- * Task 31 — Certificate pin validation utilities.
+ * Certificate pin validation utilities.
  *
  * Implements two-pin configuration (primary + backup) and pin expiry detection.
  * Works alongside the existing SPKI pinning in RelayClient.

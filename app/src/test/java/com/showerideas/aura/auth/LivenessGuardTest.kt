@@ -9,7 +9,7 @@ import org.junit.Test
 import kotlin.math.sqrt
 
 /**
- * T21 — Coverage milestone 70%: unit tests for [LivenessGuard].
+ * Coverage milestone 70%: unit tests for [LivenessGuard].
  *
  * Tests the three-check anti-spoofing pipeline:
  * 1. Passive drift window (60 frames)
@@ -25,9 +25,7 @@ class LivenessGuardTest {
         guard = LivenessGuard()
     }
 
-    // -------------------------------------------------------------------------
     // Collecting state
-    // -------------------------------------------------------------------------
 
     @Test
     fun `single frame returns Collecting`() {
@@ -43,9 +41,7 @@ class LivenessGuardTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Static (spoof) detection
-    // -------------------------------------------------------------------------
 
     @Test
     fun `identical embeddings detect DRIFT_TOO_LOW spoof`() {
@@ -70,9 +66,7 @@ class LivenessGuardTest {
             result is LivenessGuard.Result.Spoof)
     }
 
-    // -------------------------------------------------------------------------
     // Live detection and challenge
-    // -------------------------------------------------------------------------
 
     @Test
     fun `60 live frames returns ChallengeRequired`() {
@@ -125,9 +119,7 @@ class LivenessGuardTest {
             result is LivenessGuard.Result.Live || result is LivenessGuard.Result.ChallengeRequired)
     }
 
-    // -------------------------------------------------------------------------
     // Reset
-    // -------------------------------------------------------------------------
 
     @Test
     fun `reset clears window and challenge`() {
@@ -143,9 +135,7 @@ class LivenessGuardTest {
             guard.feed(liveEmbedding(0)) is LivenessGuard.Result.Collecting)
     }
 
-    // -------------------------------------------------------------------------
     // currentMeanDrift
-    // -------------------------------------------------------------------------
 
     @Test
     fun `currentMeanDrift is null before two frames`() {
@@ -164,9 +154,7 @@ class LivenessGuardTest {
             drift!! >= LivenessGuard.MIN_MEAN_DRIFT)
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     /** 63-float embedding with realistic live drift (frame-dependent offset). */
     private fun liveEmbedding(frame: Int): FloatArray {

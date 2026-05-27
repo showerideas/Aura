@@ -7,20 +7,20 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * Symmetric-ratchet state for AURA exchange sessions.
  *
- * ## What this provides
+ * What this provides
  * Forward secrecy within an exchange session. Every payload (profile data, avatar,
  * challenge bytes) is encrypted with a unique one-time key derived from a shared
  * chain key. After the key is consumed the chain advances, making it impossible to
  * rederive past keys even if a later chain state is exposed.
  *
- * ## Relationship to the full Signal Double Ratchet
+ * Relationship to the full Signal Double Ratchet
  * This is the *symmetric ratchet* half of the Signal Double Ratchet (Section 2.2
  * in the Signal specification). The other half — the DH ratchet for break-in
  * recovery — is omitted intentionally: AURA's single-round-trip exchange model
  * has no async round-trip available to carry new DH keys. The symmetric ratchet
  * alone provides forward secrecy for all messages in the session.
  *
- * ## Key derivation functions (KDF chain)
+ * Key derivation functions (KDF chain)
  * ```
  * messageKey = HMAC-SHA256(chainKey, "AURA-MSG-KEY\x01")
  * nextChain  = HMAC-SHA256(chainKey, "AURA-CHAIN-ADV\x02")
@@ -28,7 +28,7 @@ import javax.crypto.spec.SecretKeySpec
  * Domain-separated labels ensure the message key and the next chain key are
  * cryptographically independent (they cannot be derived from each other).
  *
- * ## Integration
+ * Integration
  * 1. Both peers derive the same ECDH session key via [CryptoUtils.deriveSharedAESKey].
  * 2. Each side calls [DoubleRatchetState.from] with that session key.
  * 3. For every encrypted payload: call [nextMessageKey] → encrypt with AES-GCM via
@@ -63,18 +63,14 @@ class DoubleRatchetState private constructor(private var chainKey: ByteArray) {
             DoubleRatchetState(chainKeyBytes.copyOf())
     }
 
-    // -------------------------------------------------------------------------
     // State
-    // -------------------------------------------------------------------------
 
     private var _messageIndex = 0
 
     /** Number of message keys derived so far (useful for debugging / logging). */
     val messageIndex: Int get() = _messageIndex
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Derive the next one-time AES-256 message key and advance the chain.
@@ -120,9 +116,7 @@ class DoubleRatchetState private constructor(private var chainKey: ByteArray) {
      */
     fun exportChainKey(): ByteArray = chainKey.copyOf()
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun hmac(key: ByteArray, data: ByteArray): ByteArray {
         val mac = Mac.getInstance(HMAC_ALGO)

@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
  * These tests verify the API surface and runtime behaviour of the biometric
  * authentication helper without requiring actual biometric hardware.
  *
- * ## What is tested
+ * What is tested
  *  - [BiometricAuthHelper.isAvailable] returns a [Boolean] without throwing
  *    on any API level or device configuration (emulator, no hardware, locked).
  *  - The result is consistent across two calls within the same process — the
@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
  *    `false` — confirming the helper correctly reports unavailability instead
  *    of crashing or returning a false positive.
  *
- * ## What is NOT tested
+ * What is NOT tested
  *  - The biometric prompt UI (requires real hardware + user interaction).
  *  - The `onSuccess` / `onFailure` callbacks (tested manually per MANUAL_QA_PASS.md).
  *

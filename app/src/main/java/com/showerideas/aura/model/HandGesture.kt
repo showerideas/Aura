@@ -34,3 +34,4 @@ enum class HandGesture(
         val selectable: List<HandGesture> = entries.filter { it != NONE }
     }
 }
+

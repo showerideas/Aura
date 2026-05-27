@@ -9,7 +9,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * T21 — Coverage milestone 70%: unit tests for [MeshRoutingTable].
+ * Coverage milestone 70%: unit tests for [MeshRoutingTable].
  *
  * Tests routing decisions, TTL enforcement, deduplication, serialisation,
  * and hotspot-underlay config.
@@ -35,9 +35,7 @@ class MeshRoutingTableTest {
         payload: ByteArray = byteArrayOf(1, 2, 3)
     ) = MeshRoutingTable.MeshPacket(origin, dest, msgId, ttl, hop, payload)
 
-    // -------------------------------------------------------------------------
     // Route management
-    // -------------------------------------------------------------------------
 
     @Test
     fun `upsertRoute adds entry`() {
@@ -77,9 +75,7 @@ class MeshRoutingTableTest {
         assertNull(table.routeTo("unknown_dest"))
     }
 
-    // -------------------------------------------------------------------------
     // Forward decisions
-    // -------------------------------------------------------------------------
 
     @Test
     fun `TTL 0 → Drop`() {
@@ -156,9 +152,7 @@ class MeshRoutingTableTest {
             dec is MeshRoutingTable.ForwardDecision.Drop)
     }
 
-    // -------------------------------------------------------------------------
     // Serialisation round-trip
-    // -------------------------------------------------------------------------
 
     @Test
     fun `serialise and deserialise round-trip preserves all fields`() {
@@ -192,9 +186,7 @@ class MeshRoutingTableTest {
         assertNull(table.deserialise(ByteArray(0)))
     }
 
-    // -------------------------------------------------------------------------
     // Hotspot config
-    // -------------------------------------------------------------------------
 
     @Test
     fun `hotspot config initially null`() {

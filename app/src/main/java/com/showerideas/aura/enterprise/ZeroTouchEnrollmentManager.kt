@@ -9,7 +9,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T29 — Zero-touch enrollment for MDM/EMM-provisioned devices.
+ * Zero-touch enrollment for MDM/EMM-provisioned devices.
  *
  * When an IT administrator deploys AURA via an EMM console (e.g. VMware Workspace ONE,
  * Microsoft Intune, Google Endpoint Management), they can pre-fill the user's profile
@@ -17,7 +17,7 @@ import javax.inject.Singleton
  * populates the in-app profile on first launch — the user never has to type their name
  * or email, and the profile matches the corporate directory.
  *
- * ## Pre-provisioned fields (set in app_restrictions.xml)
+ * Pre-provisioned fields (set in app_restrictions.xml)
  *
  * | MDM key                  | Profile field   | Description                          |
  * |--------------------------|-----------------|--------------------------------------|
@@ -30,7 +30,7 @@ import javax.inject.Singleton
  *
  * Fields not set by the MDM are left blank for the user to fill in manually.
  *
- * ## Enrollment flow
+ * Enrollment flow
  * 1. Device is factory-reset and enrolled via zero-touch or QR code provisioning.
  * 2. MDM pushes managed config with [PRE_FILL_*] keys.
  * 3. AURA starts → MainActivity calls [applyIfNotEnrolled].

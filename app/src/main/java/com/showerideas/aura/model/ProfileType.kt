@@ -6,14 +6,14 @@ package com.showerideas.aura.model
  *
  * Stored as a TEXT column in Room (name of the enum constant, e.g. "PERSONAL").
  *
- * ## Design rationale
+ * Design rationale
  * AURA users often want to share different information in professional vs.
  * personal settings. Rather than requiring them to edit their profile before
  * each exchange, multiple profiles let them pick the right "card" at exchange
  * time. The active profile is selected by the gesture that unlocks the exchange
- * (gesture-per-profile is implemented in Phase 6.4.2).
+ * (gesture-per-profile is implemented in).
  *
- * ## Values
+ * Values
  * - [PERSONAL] — the default, for social/personal contact sharing.
  * - [WORK]     — professional information (company, title, work email/phone).
  * - [CUSTOM]   — user-defined label stored in [Profile.customLabel]; v2.3+.

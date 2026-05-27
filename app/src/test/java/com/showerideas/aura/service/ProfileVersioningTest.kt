@@ -17,7 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 /**
- * Unit tests for Phase 6.7 profile version tracking.
+ * Unit tests for profile version tracking.
  *
  * Verifies the [KnownPeerRepository] version-bump helpers and the logic that
  * decides whether [ExchangeSession.profileVersionBumped] should be set:
@@ -50,9 +50,7 @@ class ProfileVersioningTest {
         dao = mock()
     }
 
-    // -------------------------------------------------------------------------
     // getLastSeenProfileVersion
-    // -------------------------------------------------------------------------
 
     @Test
     fun `getLastSeenProfileVersion returns 0 when endpoint unknown`() = runTest {
@@ -84,9 +82,7 @@ class ProfileVersioningTest {
         assertEquals(0, result)
     }
 
-    // -------------------------------------------------------------------------
     // updateLastSeenProfileVersion
-    // -------------------------------------------------------------------------
 
     @Test
     fun `updateLastSeenProfileVersion delegates to dao`() = runTest {
@@ -106,14 +102,12 @@ class ProfileVersioningTest {
         verify(dao).updateLastSeenProfileVersion("ep-1", 0)
     }
 
-    // -------------------------------------------------------------------------
     // profileVersionBumped logic (simulated in-test — mirrors NearbyExchangeService)
     //
     // The service logic is:
     //   val storedVersion = repo.getLastSeenProfileVersion(endpointId)
     //   val bumped = storedVersion > 0 && contact.profileVersion > storedVersion
     //   if (contact.profileVersion > 0) repo.updateLastSeenProfileVersion(...)
-    // -------------------------------------------------------------------------
 
     private fun computeBumped(storedVersion: Int, incomingVersion: Int): Boolean =
         storedVersion > 0 && incomingVersion > storedVersion

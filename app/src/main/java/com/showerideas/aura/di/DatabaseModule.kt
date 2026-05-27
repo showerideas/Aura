@@ -52,8 +52,9 @@ object DatabaseModule {
     fun provideExchangeAuditDao(db: AppDatabase): ExchangeAuditDao =
         db.exchangeAuditDao()
 
-    /** v9: Share preset DAO (Phase 9.1). */
+    /** v9: Share preset DAO. */
     @Provides
     fun provideSharePresetDao(db: AppDatabase): SharePresetDao =
         db.sharePresetDao()
 }
+

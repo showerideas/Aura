@@ -94,9 +94,7 @@ class VolumeButtonListenerService : Service() {
         super.onDestroy()
     }
 
-    // -------------------------------------------------------------------------
     // Internal
-    // -------------------------------------------------------------------------
 
     private fun setupMediaSession() {
         mediaSession = android.media.session.MediaSession(this, "AuraVolumeListener")
@@ -159,7 +157,7 @@ class VolumeButtonListenerService : Service() {
     }
 
     private fun createNotificationChannel() {
-        // T44: centralized hardened channel registry
+        // centralized hardened channel registry
         NotificationChannels.ensureChannels(this)
     }
 

@@ -8,14 +8,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Task 1 — NFC Host Card Emulation service with APDU chaining.
+ * NFC Host Card Emulation service with APDU chaining.
  *
  * Extends the v2.0.1 implementation with:
  *  - APDU chaining for payloads >255 bytes (SW=61XX chain protocol)
  *  - GET RESPONSE (INS=C0) handler for chained reads
- *  - [setLocalKeyBytes] with session nonce for Task 3 Room bootstrap
+ *  - [setLocalKeyBytes] with session nonce for Room session bootstrap
  *
- * ## APDU protocol (with chaining)
+ * APDU protocol (with chaining)
  *
  * | Step | APDU                           | Response                    |
  * |------|--------------------------------|-----------------------------|
@@ -54,7 +54,7 @@ class AuraHceService : HostApduService() {
             Timber.d("AuraHceService: key registered for session=$sessionUuid")
         }
 
-        /** Extended variant — includes sessionNonce for Task 3 Room bootstrap. */
+        /** Extended variant — includes sessionNonce for Room session bootstrap. */
         fun setLocalKeyBytes(sessionUuid: String, pubKeyBytes: ByteArray, sessionNonce: ByteArray) {
             val encodedKey   = Base64.getEncoder().encodeToString(pubKeyBytes)
             val encodedNonce = Base64.getEncoder().encodeToString(sessionNonce)
@@ -148,3 +148,4 @@ class AuraHceService : HostApduService() {
         }
     }
 }
+

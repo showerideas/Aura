@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * T21 — Coverage milestone 80%: state-machine tests for QR relay exchange path.
+ * Coverage milestone 80%: state-machine tests for QR relay exchange path.
  *
  * Tests the relay state transitions without Android/Hilt dependencies by
  * exercising the SasVerifier (used by QRExchangeViewModel) and URI validation
@@ -15,9 +15,7 @@ import org.junit.Test
  */
 class QRExchangeViewModelStateTest {
 
-    // -------------------------------------------------------------------------
     // SAS verifier (used in VERIFYING state)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `SasVerifier produces 6 digit code for identical inputs`() {
@@ -52,9 +50,7 @@ class QRExchangeViewModelStateTest {
         assertEquals("SAS must be symmetric — both peers see the same code", sas1, sas2)
     }
 
-    // -------------------------------------------------------------------------
     // Relay state string constants
-    // -------------------------------------------------------------------------
 
     @Test
     fun `relay poll state constant format`() {
@@ -66,9 +62,7 @@ class QRExchangeViewModelStateTest {
         assertTrue("State list must be non-empty", validPrefixes.isNotEmpty())
     }
 
-    // -------------------------------------------------------------------------
     // Contact dedup
-    // -------------------------------------------------------------------------
 
     @Test
     fun `contact dedup: same identity key hash equals same peer`() {

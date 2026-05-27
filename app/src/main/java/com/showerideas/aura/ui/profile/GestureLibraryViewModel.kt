@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Phase 9.3 — ViewModel for GestureLibraryFragment.
+ * ViewModel for GestureLibraryFragment.
  * Manages up to 5 named gesture profiles stored in EncryptedSharedPreferences.
  */
 @HiltViewModel

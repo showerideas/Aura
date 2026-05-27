@@ -6,7 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 
 /**
- * Task 8 — A participant in an AURA exchange room.
+ * A participant in an AURA exchange room.
  */
 @Entity(
     tableName = "room_members",
@@ -39,3 +39,4 @@ data class RoomMember(
     @ColumnInfo(name = "card_received")
     val cardReceived: Boolean = false
 )
+

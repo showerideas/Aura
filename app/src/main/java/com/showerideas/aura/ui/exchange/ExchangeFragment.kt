@@ -92,7 +92,7 @@ class ExchangeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Phase 9.1 — show share-preset picker before auth gate if presets exist.
+        // show share-preset picker before auth gate if presets exist.
         // The picker is non-blocking: dismissal or selection both proceed to the auth gate.
         showSharePresetPickerThenAuth()
 
@@ -119,9 +119,7 @@ class ExchangeFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Gesture gate — camera-based hand embedding
-    // -------------------------------------------------------------------------
 
     private fun startGestureGate() {
         if (viewModel.hasGesturePattern()) {
@@ -242,9 +240,7 @@ class ExchangeFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Biometric gate (unchanged)
-    // -------------------------------------------------------------------------
 
     private fun startBiometricGate() {
         binding.gestureConfirmSection.visibility = View.GONE
@@ -268,9 +264,7 @@ class ExchangeFragment : Fragment() {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun showUnprotectedExchangeDialog() {
         AlertDialog.Builder(requireContext())
@@ -287,9 +281,7 @@ class ExchangeFragment : Fragment() {
     }
 
 
-    // -------------------------------------------------------------------------
-    // Phase 9.1 — Share preset picker
-    // -------------------------------------------------------------------------
+    // Share preset picker
 
     /**
      * Show [SharePresetBottomSheet] if the user has any presets defined.
@@ -367,7 +359,7 @@ class ExchangeFragment : Fragment() {
             binding.btnCancel.setOnClickListener {
                 findNavController().navigate(R.id.action_exchange_to_contacts)
             }
-            // Show merge review sheet when a returning contact updated their card (Phase 6.3/6.7).
+            // Show merge review sheet when a returning contact updated their card.
             val mergeEvent: MergeEvent? = session.mergeEvent
             if (mergeEvent != null && mergeEvent.hasChanges && !mergeSheetShown) {
                 mergeSheetShown = true
@@ -375,7 +367,7 @@ class ExchangeFragment : Fragment() {
                     viewModel.applyMergeSelections(mergeEvent.preserved, selections)
                 }.show(childFragmentManager, ContactMergeBottomSheet.TAG)
             }
-            // Phase 6.7: show "Card updated" banner if this peer bumped their profile version.
+            // show "Card updated" banner if this peer bumped their profile version.
             if (session.profileVersionBumped && !cardUpdatedSnackbarShown) {
                 cardUpdatedSnackbarShown = true
                 val name = session.receivedContact?.displayName?.takeIf { it.isNotBlank() }
@@ -422,7 +414,7 @@ class ExchangeFragment : Fragment() {
      * to be considered verified — provides defence-in-depth against MITM.
      */
     private fun showSasDialog(pin: String) {
-        // Haptic pulse to draw attention (T20 hardening).
+        // Haptic pulse to draw attention
         binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
         // Inflate custom view with identicon + accessible code display + countdown bar.
@@ -437,7 +429,7 @@ class ExchangeFragment : Fragment() {
         dialogView.findViewById<TextView>(R.id.tv_sas_instruction)
             .text = getString(R.string.sas_dialog_instruction)
 
-        // T20: countdown progress bar (max=300 steps, 1 step per 100 ms = 30 s total)
+        // countdown progress bar (max=300 steps, 1 step per 100 ms = 30 s total)
         val progressBar = dialogView.findViewById<ProgressBar>(R.id.pb_sas_countdown)
 
         val dialog = AlertDialog.Builder(requireContext())

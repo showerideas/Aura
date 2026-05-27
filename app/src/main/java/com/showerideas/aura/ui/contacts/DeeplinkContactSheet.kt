@@ -14,7 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
 /**
- * Phase 6.8 / C1 — Pre-filled "Add Contact" bottom sheet.
+ * Pre-filled "Add Contact" bottom sheet.
  *
  * Shown when the user opens an AURA share deeplink (https://aura.app/c/…).
  * [DeeplinkUtils.decodeShareUrl] decodes the fields; MainActivity passes them

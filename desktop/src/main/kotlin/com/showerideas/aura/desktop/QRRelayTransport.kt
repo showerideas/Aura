@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 /**
- * T40 — Desktop companion: QR relay transport (primary exchange channel).
+ * Desktop companion: QR relay transport (primary exchange channel).
  *
  * On desktop there is no BLE or NFC hardware, so the QR relay becomes the
  * primary exchange transport. The user:
@@ -20,12 +20,12 @@ import java.util.concurrent.TimeUnit
  *  3. The desktop app polls the relay until the peer's encrypted profile arrives.
  *  4. Both sides verify the SAS code (shown on-screen), then save the contact.
  *
- * ## Relay API (mirrors RelayClient.kt on Android)
+ * Relay API (mirrors RelayClient.kt on Android)
  * POST /api/exchange/v1/{slotId}   — upload encrypted payload (JSON body)
  * GET  /api/exchange/v1/{slotId}   — poll for peer's encrypted payload
  * DELETE /api/exchange/v1/{slotId} — clean up after exchange completes
  *
- * ## Wire compatibility
+ * Wire compatibility
  * Payloads are JSON with the same structure as the Android relay path:
  * ```json
  * {
@@ -60,9 +60,7 @@ class QRRelayTransport(
             .build()
     }
 
-    // -------------------------------------------------------------------------
     // Upload
-    // -------------------------------------------------------------------------
 
     /**
      * Upload the local encrypted profile to the relay slot [slotId].
@@ -83,9 +81,7 @@ class QRRelayTransport(
         }.getOrDefault(false)
     }
 
-    // -------------------------------------------------------------------------
     // Poll
-    // -------------------------------------------------------------------------
 
     /**
      * Poll the relay for the peer's encrypted profile.
@@ -117,9 +113,7 @@ class QRRelayTransport(
         }.getOrNull()
     }
 
-    // -------------------------------------------------------------------------
     // Cleanup
-    // -------------------------------------------------------------------------
 
     suspend fun deleteSlot(slotId: String): Boolean = withContext(Dispatchers.IO) {
         val request = Request.Builder()

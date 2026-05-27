@@ -76,7 +76,7 @@ class ContactDetailBottomSheet : BottomSheetDialogFragment() {
                     binding.ivAvatar.setImageBitmap(avatarBitmap)
                     binding.ivAvatar.visibility = View.VISIBLE
 
-                    // Phase 6.9: cryptographic identity fingerprint — always derived
+                    // cryptographic identity fingerprint — always derived
                     // from identityKeyHash (stable across reconnections), falling back
                     // to sourceEndpointId for contacts pre-dating the identity-key field.
                     // Shown at 48 dp as a security indicator, not as a decorative avatar.

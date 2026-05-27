@@ -16,27 +16,27 @@ import timber.log.Timber
  * [VolumeButtonListenerService] for OEMs (Samsung One UI, MIUI, ColorOS,
  * HyperOS) that do not route media button events to background MediaSessions.
  *
- * ## Why AccessibilityService?
+ * Why AccessibilityService?
  * The Android AccessibilityService key-event callback ([onKeyEvent]) is
  * guaranteed by the platform to receive physical key events, including volume
  * buttons, BEFORE the system handles them — on every OEM skin tested.
  * This is the same mechanism used by password managers and system-level
  * input assistants.
  *
- * ## Privacy note
+ * Privacy note
  * AURA's AccessibilityService is declared with
  * `accessibilityEventTypes="typeAllMask (AAPT2-compatible, events ignored in onAccessibilityEvent)"` — it registers ZERO accessibility
  * events from other apps. It only intercepts key events via
  * `flagRequestFilterKeyEvents`. It cannot see the content of other apps.
  *
- * ## User opt-in
+ * User opt-in
  * This service CANNOT be activated programmatically. The user must go to:
  *   Settings -> Accessibility -> AURA -> Enable
  * This is a platform security requirement — accessibility services always
  * require explicit user consent. [SettingsFragment] provides a direct
  * deeplink and a status indicator.
  *
- * ## Triple-press detection
+ * Triple-press detection
  * Identical logic to [VolumeButtonListenerService]: three VOLUME_DOWN events
  * within [TRIPLE_PRESS_WINDOW_MS] fire [VolumeButtonListenerService.ACTION_AURA_ACTIVATE].
  * The volume change itself is NOT consumed (returns false) so the ringer
@@ -69,9 +69,7 @@ class AuraAccessibilityService : AccessibilityService() {
     private val pressTimestamps = ArrayDeque<Long>(REQUIRED_PRESSES + 1)
     private val lock = Any()
 
-    // -------------------------------------------------------------------------
     // AccessibilityService overrides
-    // -------------------------------------------------------------------------
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // No accessibility events subscribed — intentionally empty.
@@ -97,9 +95,7 @@ class AuraAccessibilityService : AccessibilityService() {
         Timber.i("AuraAccessibilityService connected — key-event filtering active")
     }
 
-    // -------------------------------------------------------------------------
     // Triple-press detection
-    // -------------------------------------------------------------------------
 
     private fun handleVolumeDown() {
         val triggered = synchronized(lock) {

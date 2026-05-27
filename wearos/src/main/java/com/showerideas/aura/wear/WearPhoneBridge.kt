@@ -12,7 +12,7 @@ import timber.log.Timber
 import java.io.InputStream
 
 /**
- * Phase 7.2 — Wear OS side of the phone↔watch data bridge.
+ * Wear OS side of the phone↔watch data bridge.
  *
  * The paired phone's [com.showerideas.aura.wear.PhoneWearSender] opens a
  * Wearable Data Layer channel on path [CHANNEL_PATH] and streams a single
@@ -20,7 +20,7 @@ import java.io.InputStream
  * service receives that byte, updates [WearStateStore], and asks the system
  * to refresh the [AuraTileService] tile.
  *
- * ## Data format (phone → watch)
+ * Data format (phone → watch)
  * Each message is a single byte whose value is the [ExchangeState.ordinal].
  * Fixed-width messages allow partial reads to be detected and discarded.
  */
@@ -33,9 +33,7 @@ class WearPhoneBridge : WearableListenerService() {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // -------------------------------------------------------------------------
     // WearableListenerService callbacks
-    // -------------------------------------------------------------------------
 
     override fun onChannelOpened(channel: Channel) {
         Timber.d("WearPhoneBridge: channel opened from ${channel.nodeId} path=${channel.path}")
@@ -63,9 +61,7 @@ class WearPhoneBridge : WearableListenerService() {
         scope.cancel()
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Reads state bytes from the phone until the channel is closed or an error
@@ -97,3 +93,4 @@ class WearPhoneBridge : WearableListenerService() {
     private suspend fun <T> awaitTask(task: com.google.android.gms.tasks.Task<T>): T =
         kotlinx.coroutines.tasks.await(task)
 }
+

@@ -20,9 +20,7 @@ import org.junit.Test
  */
 class IdentityRotationDetectorTest {
 
-    // -------------------------------------------------------------------------
     // In-memory test doubles
-    // -------------------------------------------------------------------------
 
     /**
      * Minimal ContactDao stub that returns a fixed list from [observeAll].
@@ -46,9 +44,7 @@ class IdentityRotationDetectorTest {
     private fun detectorWith(contacts: List<Contact>): IdentityRotationDetector =
         IdentityRotationDetector(ContactRepository(StubContactDao(contacts)))
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun makeContact(name: String, keyHash: String? = null) = Contact(
         id = "test-${name.lowercase().replace(' ', '-')}",
@@ -56,9 +52,7 @@ class IdentityRotationDetectorTest {
         identityKeyHash = keyHash
     )
 
-    // -------------------------------------------------------------------------
     // check() — first contact (no stored identity)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `check returns FirstContact when no contacts exist`() = runTest {
@@ -94,9 +88,7 @@ class IdentityRotationDetectorTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // check() — matching key (returning peer, same device)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `check returns KeyMatches when incoming hash equals stored hash`() = runTest {
@@ -122,9 +114,7 @@ class IdentityRotationDetectorTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // check() — rotated key (possible MITM, reinstall, or new device)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `check returns KeyRotated when incoming hash differs from stored hash`() = runTest {
@@ -153,9 +143,7 @@ class IdentityRotationDetectorTest {
             rotated.shortDiff.contains("ZYXWVUTSRQPO"))
     }
 
-    // -------------------------------------------------------------------------
     // checkByStoredHash() — lookup by key hash rather than name
-    // -------------------------------------------------------------------------
 
     @Test
     fun `checkByStoredHash returns KeyMatches when hashes are equal`() = runTest {
@@ -195,9 +183,7 @@ class IdentityRotationDetectorTest {
         assertEquals("hash-alice-NEW",    rotated.incomingHash)
     }
 
-    // -------------------------------------------------------------------------
     // Multi-contact edge cases
-    // -------------------------------------------------------------------------
 
     @Test
     fun `check uses first contact with non-null hash when multiple match the name`() = runTest {

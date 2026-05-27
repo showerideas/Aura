@@ -25,12 +25,12 @@ import javax.inject.Singleton
 private val Context.blocklistDataStore by preferencesDataStore("aura_blocklist")
 
 /**
- * Phase 8.4 — Remote blocklist transparency log client.
+ * Remote blocklist transparency log client.
  *
  * Fetches a signed, Merkle-rooted blocklist from the AURA transparency log
  * server and maintains a local [BloomFilter] for O(1) membership checks.
  *
- * ## Transparency log server response format
+ * Transparency log server response format
  * ```json
  * {
  *   "version"   : 3,
@@ -41,11 +41,11 @@ private val Context.blocklistDataStore by preferencesDataStore("aura_blocklist")
  * }
  * ```
  *
- * ## Signature verification
+ * Signature verification
  * The server signs `SHA-256(root_hex || timestamp_decimal)` with an Ed25519
  * private key. The corresponding public key is bundled in the APK.
  *
- * ## Refresh policy
+ * Refresh policy
  * [BlocklistRefreshWorker] calls [refresh] every 24 hours (or on demand).
  * The filter is persisted in DataStore so it survives process restarts
  * without re-downloading.
@@ -80,9 +80,7 @@ class TransparencyLogClient @Inject constructor(
     // Cached filter in memory (rebuilt from DataStore on first use)
     @Volatile private var cachedFilter: BloomFilter? = null
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Returns true if [deviceFingerprint] is on the blocklist.
@@ -158,9 +156,7 @@ class TransparencyLogClient @Inject constructor(
     suspend fun currentVersion(): Long =
         context.blocklistDataStore.data.first()[KEY_LIST_VERSION] ?: 0L
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private suspend fun loadFilter(): BloomFilter? {
         cachedFilter?.let { return it }

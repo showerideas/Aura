@@ -25,14 +25,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T11 — UWB proximity confirmation for AURA exchange sessions.
+ * UWB proximity confirmation for AURA exchange sessions.
  *
  * Uses the [UwbManager] (Android 12+, Pixel 6+ and select OEM devices) to measure
  * the physical distance between two peers. When the measured distance drops below
  * [AUTO_CONFIRM_DISTANCE_CM], the SAS verification step is automatically confirmed
  * — physical proximity is itself a sufficient MITM defence at < 50 cm.
  *
- * ## Protocol integration
+ * Protocol integration
  * 1. Both peers exchange their [UwbAddress] and [UwbComplexChannel] via the existing
  *    wire-protocol BYTES payload (MSG_TYPE_UWB_OOB = 0x06) before ranging starts.
  * 2. The controller peer starts ranging; the controllee responds.
@@ -40,11 +40,11 @@ import javax.inject.Singleton
  * 4. [NearbyExchangeService] observes [rangingState] and auto-confirms SAS
  *    when Confirmed is emitted.
  *
- * ## Fallback
+ * Fallback
  * If the device does not support UWB ([isUwbAvailable] == false), the manager does
  * nothing. SAS confirmation falls back to the manual verbal PIN comparison path.
  *
- * ## Thread safety
+ * Thread safety
  * All ranging callbacks are delivered on a background thread; [_rangingState] is
  * a [MutableStateFlow] (thread-safe).
  */
@@ -61,9 +61,7 @@ class UwbRangingManager @Inject constructor(
         private const val UWB_PREAMBLE_INDEX = 11
     }
 
-    // -------------------------------------------------------------------------
     // Ranging state
-    // -------------------------------------------------------------------------
 
     sealed class RangingState {
         object Idle : RangingState()
@@ -80,9 +78,7 @@ class UwbRangingManager @Inject constructor(
     private val _rangingState = MutableStateFlow<RangingState>(RangingState.Idle)
     val rangingState: StateFlow<RangingState> = _rangingState.asStateFlow()
 
-    // -------------------------------------------------------------------------
     // Device capability
-    // -------------------------------------------------------------------------
 
     /** True if the device hardware supports UWB ranging. */
     val isUwbAvailable: Boolean by lazy {
@@ -94,9 +90,7 @@ class UwbRangingManager @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Ranging lifecycle
-    // -------------------------------------------------------------------------
 
     private var controllerScope: UwbControllerSessionScope? = null
 
@@ -158,9 +152,7 @@ class UwbRangingManager @Inject constructor(
         Timber.d("UWB ranging stopped")
     }
 
-    // -------------------------------------------------------------------------
     // Local address for OOB exchange
-    // -------------------------------------------------------------------------
 
     /**
      * Return the local [UwbAddress] to be shared with the peer via OOB bytes.
@@ -179,9 +171,7 @@ class UwbRangingManager @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Private: interpret ranging result
-    // -------------------------------------------------------------------------
 
     private fun handleRangingResult(result: RangingResult) {
         when (result) {

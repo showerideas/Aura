@@ -37,7 +37,7 @@ data class Contact(
     val identityKeyHash: String? = null,
     /**
      * The [Profile.version] received from the peer at exchange time.
-     * Used by Phase 6.7 to surface the "Card updated" banner when a returning
+     * Used by to surface the "Card updated" banner when a returning
      * contact's version is higher than [KnownPeer.lastSeenProfileVersion].
      * Added in DB v8 (MIGRATION_7_8). DEFAULT 0 for backward compat.
      */

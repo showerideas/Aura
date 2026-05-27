@@ -21,9 +21,7 @@ import org.junit.Test
  */
 class WifiDirectTransportTest {
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun pair(): Pair<FakeWifiDirectTransport, FakeWifiDirectTransport> {
         val alice = FakeWifiDirectTransport("alice")
@@ -37,9 +35,7 @@ class WifiDirectTransportTest {
         return alice to bob
     }
 
-    // -------------------------------------------------------------------------
     // Connection lifecycle
-    // -------------------------------------------------------------------------
 
     @Test
     fun `connectTo fires onConnected on both sides`() {
@@ -74,9 +70,7 @@ class WifiDirectTransportTest {
         assertTrue("alice" in bobFound)
     }
 
-    // -------------------------------------------------------------------------
     // Payload delivery
-    // -------------------------------------------------------------------------
 
     @Test
     fun `sendBytes delivers payload to peer`() {
@@ -163,9 +157,7 @@ class WifiDirectTransportTest {
         assertEquals(2, queue.size)
     }
 
-    // -------------------------------------------------------------------------
     // Payload isolation — two sessions don't bleed
-    // -------------------------------------------------------------------------
 
     @Test
     fun `two independent pairs do not receive each other payloads`() {
@@ -186,9 +178,7 @@ class WifiDirectTransportTest {
         assertArrayEquals(byteArrayOf(0x22), bob2Received[0])
     }
 
-    // -------------------------------------------------------------------------
     // Disconnect semantics
-    // -------------------------------------------------------------------------
 
     @Test
     fun `disconnectFrom fires onDisconnected on both sides`() {
@@ -228,9 +218,7 @@ class WifiDirectTransportTest {
         assertEquals(2, disconnected.size)
     }
 
-    // -------------------------------------------------------------------------
     // Advertising / discovery lifecycle
-    // -------------------------------------------------------------------------
 
     @Test
     fun `startAdvertising records serviceId`() {
@@ -263,9 +251,7 @@ class WifiDirectTransportTest {
         assertTrue(alice.discoveryServiceIds.isEmpty())
     }
 
-    // -------------------------------------------------------------------------
     // rejectConnection
-    // -------------------------------------------------------------------------
 
     @Test
     fun `rejectConnection disconnects peer`() {

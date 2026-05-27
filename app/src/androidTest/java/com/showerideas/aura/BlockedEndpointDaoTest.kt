@@ -84,9 +84,7 @@ class BlockedEndpointDaoTest {
         assertEquals("second", all.first().note)
     }
 
-    // -----------------------------------------------------------------------
     // isBlockedByKeyHash — stable identity-based blocklist
-    // -----------------------------------------------------------------------
 
     @Test
     fun isBlockedByKeyHash_returns_true_when_hash_matches() = runBlocking {

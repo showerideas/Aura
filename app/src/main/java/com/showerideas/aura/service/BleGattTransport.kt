@@ -13,32 +13,34 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Task 7 — BLE GATT direct transport implementing [NearbyTransport].
- * Task 66 — BLE 6.2 Shorter Connection Interval (SCI) optimization.
+ * BLE GATT direct transport implementing [NearbyTransport].
+ * Includes BLE 6.2 Shorter Connection Interval (SCI) optimization.
  *
- * ## Architecture
+ * Architecture
  * - AURA GATT service UUID: [SERVICE_UUID]
  * - TX characteristic ([TX_CHAR_UUID]): server notifies → client reads
  * - RX characteristic ([RX_CHAR_UUID]): client writes → server receives
  * - On connect: client calls [requestMtu(512)], waits for [onMtuChanged], then discovers services
  * - Data framing: [4-byte header: 2-byte seqNo + 2-byte totalChunks] + payload chunk
  *
- * ## BLE 6.2 SCI (Task 66)
+ * BLE 6.2 SCI
  * After MTU negotiation, [attemptSciNegotiation] checks for BLE 6.2 SCI support on both the
  * local device (API 36+) and the remote device ([BluetoothDevice.getSupportedFeatures]).
  * If both sides support SCI: requests [BleSessionMetrics.CONNECTION_PRIORITY_DCK] (375 µs–4 ms
  * connection interval). Falls back to [BluetoothGatt.CONNECTION_PRIORITY_HIGH] silently.
  * Session metrics captured in [sessionMetrics] map for audit-log integration.
  *
- * ## Compatibility matrix (Task 66)
- * | Local      | Remote     | Negotiated priority              |
- * |------------|------------|----------------------------------|
- * | BLE 6.2+   | BLE 6.2+   | CONNECTION_PRIORITY_DCK (SCI)    |
- * | BLE 6.2+   | BLE 5.x    | CONNECTION_PRIORITY_HIGH         |
- * | BLE 5.x    | any        | CONNECTION_PRIORITY_HIGH (no-op) |
- *
- * See: [argenox.com — BLE 6.2 SCI negotiation procedure]
- * See: [NordicSemiconductor/Android-BLE-Library — CONNECTION_PRIORITY_DCK]
+ * Usage
+ * ```kotlin
+ * val transport = BleGattTransport(context)
+ * transport.onEndpointFound = { addr, name -> transport.requestConnection("", addr) }
+ * transport.onConnected     = { addr, name, _ -> /* start handshake */ }
+ * transport.onPayloadReceived = { addr, bytes -> /* handle message */ }
+ * transport.startAdvertising("my-device", "aura")
+ * transport.startDiscovery("aura")
+ * // ...
+ * transport.stopAllEndpoints()
+ * ```
  *
  * @see [NordicSemiconductor/Android-BLE-Library] for reference GATT patterns
  * @see [blessed-android] for MTU negotiation best practices

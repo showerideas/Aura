@@ -14,9 +14,7 @@ import javax.crypto.spec.SecretKeySpec
  */
 class DoubleRatchetStateTest {
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     /** Create a deterministic 256-bit AES key from a UTF-8 seed. */
     private fun seedKey(seed: String): javax.crypto.SecretKey {
@@ -25,9 +23,7 @@ class DoubleRatchetStateTest {
         return SecretKeySpec(bytes, "AES")
     }
 
-    // -------------------------------------------------------------------------
     // Synchronisation — sender and receiver produce identical keys
-    // -------------------------------------------------------------------------
 
     @Test
     fun `sender and receiver derive identical keys in order`() {
@@ -53,9 +49,7 @@ class DoubleRatchetStateTest {
         assertArrayEquals("CryptoUtils.newRatchet keys must match for same session", k1, k2)
     }
 
-    // -------------------------------------------------------------------------
     // Forward secrecy — each derived key is unique
-    // -------------------------------------------------------------------------
 
     @Test
     fun `consecutive message keys are all distinct`() {
@@ -80,9 +74,7 @@ class DoubleRatchetStateTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Chain advancement — chain key evolves after each step
-    // -------------------------------------------------------------------------
 
     @Test
     fun `chain key changes after each nextMessageKey call`() {
@@ -98,9 +90,7 @@ class DoubleRatchetStateTest {
         assertFalse("Chain keys at step 0 and 2 must differ", chain0.contentEquals(chain2))
     }
 
-    // -------------------------------------------------------------------------
     // Message index counter
-    // -------------------------------------------------------------------------
 
     @Test
     fun `messageIndex increments on each nextMessageKey call`() {
@@ -121,9 +111,7 @@ class DoubleRatchetStateTest {
         assertEquals(2, idx2)
     }
 
-    // -------------------------------------------------------------------------
     // fromBytes round-trip (serialization)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `ratchet resumed from exported chain key produces same keys`() {
@@ -143,9 +131,7 @@ class DoubleRatchetStateTest {
         assertArrayEquals("Resumed ratchet must produce same key as original", origNext, resumedNext)
     }
 
-    // -------------------------------------------------------------------------
     // Encrypt / decrypt round-trip via CryptoUtils helpers
-    // -------------------------------------------------------------------------
 
     @Test
     fun `ratchetEncrypt and ratchetDecrypt round-trip correctly`() {
@@ -197,9 +183,7 @@ class DoubleRatchetStateTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Key material is 256-bit AES
-    // -------------------------------------------------------------------------
 
     @Test
     fun `message keys are 256-bit AES`() {
@@ -209,3 +193,4 @@ class DoubleRatchetStateTest {
         assertEquals(32, key.encoded.size) // 256 bits = 32 bytes
     }
 }
+

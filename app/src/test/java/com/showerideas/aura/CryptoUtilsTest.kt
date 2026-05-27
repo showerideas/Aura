@@ -88,9 +88,7 @@ class CryptoUtilsTest {
         assertArrayEquals(plaintext, pt)
     }
 
-    // -------------------------------------------------------------------------
     // HKDF-SHA256 after ECDH — NIST SP 800-56A compliance
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derived key is 32 bytes`() {
@@ -123,13 +121,11 @@ class CryptoUtilsTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // ECDSA challenge / response
     //
     // The Android Keystore path (getOrCreateDeviceIdentityKey) is unavailable
     // on the JVM — so for unit testing we generate plain secp256r1 keys via
     // KeyPairGenerator and exercise signChallenge / verifyChallenge directly.
-    // -------------------------------------------------------------------------
 
     private fun makeIdentityKeyPair(): java.security.KeyPair {
         val kpg = java.security.KeyPairGenerator.getInstance("EC")

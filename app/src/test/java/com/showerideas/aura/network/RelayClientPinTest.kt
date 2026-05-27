@@ -19,7 +19,7 @@ import java.security.PrivateKey
 import java.security.Signature
 
 /**
- * Phase 10.2 — Certificate pinning unit tests for [RelayClient].
+ * Certificate pinning unit tests for [RelayClient].
  *
  * Covers:
  * 1. Pin expiry epoch is set and in the future.
@@ -61,7 +61,7 @@ class RelayClientPinTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Phase 10.2 — runtime SPKI pin checks
+    // runtime SPKI pin checks
     // ─────────────────────────────────────────────────────────────────────
 
     /**
@@ -265,3 +265,4 @@ class RelayClientPinTest {
         return der(0x17, str.toByteArray(Charsets.US_ASCII))  // 0x17 = UTCTime
     }
 }
+

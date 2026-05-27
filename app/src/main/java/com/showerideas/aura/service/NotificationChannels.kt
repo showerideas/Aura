@@ -6,13 +6,13 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 
 /**
- * T44 — Centralized notification-channel registry with hardened privacy settings.
+ * Centralized notification-channel registry with hardened privacy settings.
  *
  * All channels are created here; services call [ensureChannels] in onCreate() and
  * reference the [CHANNEL_*] constants directly so channel definitions are never
  * duplicated across services.
  *
- * ## Visibility model
+ * Visibility model
  * | Channel          | Importance | Lock-screen visibility |
  * |------------------|------------|------------------------|
  * | EXCHANGE         | LOW        | PRIVATE (title only)   |
@@ -25,9 +25,7 @@ import androidx.core.app.NotificationCompat
  */
 object NotificationChannels {
 
-    // -------------------------------------------------------------------------
     // Channel IDs — reference these from services, never use raw strings
-    // -------------------------------------------------------------------------
 
     /** Foreground exchange service — active during an AURA session. */
     const val CHANNEL_EXCHANGE = "aura_exchange_channel"
@@ -41,9 +39,7 @@ object NotificationChannels {
     /** Background volume-button listener — minimally intrusive. */
     const val CHANNEL_BG_LISTENER = "aura_bg_channel"
 
-    // -------------------------------------------------------------------------
     // Bootstrap
-    // -------------------------------------------------------------------------
 
     /**
      * Create all AURA notification channels.
@@ -94,9 +90,7 @@ object NotificationChannels {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Security-alert helper
-    // -------------------------------------------------------------------------
 
     /**
      * Post a security alert notification.

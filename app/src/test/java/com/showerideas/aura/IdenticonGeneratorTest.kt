@@ -21,9 +21,7 @@ import org.junit.Test
  */
 class IdenticonGeneratorTest {
 
-    // -------------------------------------------------------------------------
     // Hash determinism (pure SHA-256, no Android dependency)
-    // -------------------------------------------------------------------------
 
     private fun sha256(input: ByteArray): ByteArray {
         return java.security.MessageDigest.getInstance("SHA-256").digest(input)
@@ -53,9 +51,7 @@ class IdenticonGeneratorTest {
             empty.contentEquals(blank))
     }
 
-    // -------------------------------------------------------------------------
     // Color derivation math (no Android dependency)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `hue is bounded within 0-360 degrees for all 256 byte values`() {
@@ -93,9 +89,7 @@ class IdenticonGeneratorTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // API surface validation (compile-time check via type system)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `string and byteArray overloads both exist in API`() {

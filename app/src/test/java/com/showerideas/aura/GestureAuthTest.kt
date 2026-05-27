@@ -19,11 +19,9 @@ import kotlin.math.sqrt
  */
 class GestureAuthTest {
 
-    // -------------------------------------------------------------------------
     // Constants mirrored from production code.
     // Any change to these values in GestureAuthManager / CameraHandEmbedder
     // must be intentional and should update the test expectations below.
-    // -------------------------------------------------------------------------
 
     /** Cosine similarity threshold from GestureAuthManager.SIMILARITY_THRESHOLD */
     private val SIMILARITY_THRESHOLD = 0.88f
@@ -35,9 +33,7 @@ class GestureAuthTest {
      */
     private val EMBEDDING_SIZE = 63   // 21 landmarks × (x, y, z)
 
-    // -------------------------------------------------------------------------
     // Cosine similarity — inlined to avoid MediaPipe native-library issues
-    // -------------------------------------------------------------------------
 
     private fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
         if (a.size != b.size) return 0f
@@ -51,9 +47,7 @@ class GestureAuthTest {
         return dot / sqrt(normA * normB)
     }
 
-    // -------------------------------------------------------------------------
     // Cosine similarity contract tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun `identical vectors have cosine similarity of 1`() {
@@ -127,9 +121,7 @@ class GestureAuthTest {
         assertEquals("EMBEDDING_SIZE must be 21 × 3 = 63", 63, EMBEDDING_SIZE)
     }
 
-    // -------------------------------------------------------------------------
     // GesturePattern model contracts
-    // -------------------------------------------------------------------------
 
     @Test
     fun `gesture pattern equality is based on id and feature vector`() {

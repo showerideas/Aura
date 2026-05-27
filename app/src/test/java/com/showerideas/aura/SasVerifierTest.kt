@@ -21,9 +21,7 @@ class SasVerifierTest {
 
     private fun ecKeyPair() = CryptoUtils.generateEphemeralECDHKeyPair()
 
-    // -------------------------------------------------------------------------
     // 1. Determinism
-    // -------------------------------------------------------------------------
 
     @Test
     fun `same key pair always produces the same SAS`() {
@@ -43,9 +41,7 @@ class SasVerifierTest {
         assertEquals(fromKeys, fromBytes)
     }
 
-    // -------------------------------------------------------------------------
     // 2. Symmetry (canonical ordering)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `derive(a, b) equals derive(b, a)`() {
@@ -67,9 +63,7 @@ class SasVerifierTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // 3. Range and format
-    // -------------------------------------------------------------------------
 
     @Test
     fun `SAS is always exactly 6 characters`() {
@@ -112,9 +106,7 @@ class SasVerifierTest {
         assertTrue("SAS must match 6-digit zero-padded format", sas.matches(Regex("\\d{6}")))
     }
 
-    // -------------------------------------------------------------------------
     // 4. Sensitivity — one key change must (almost always) change the SAS
-    // -------------------------------------------------------------------------
 
     @Test
     fun `different key pairs produce different SAS values in a sample of 50`() {
@@ -149,9 +141,7 @@ class SasVerifierTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 5. Verification helper
-    // -------------------------------------------------------------------------
 
     @Test
     fun `verify returns true when SAS matches`() {
@@ -182,9 +172,7 @@ class SasVerifierTest {
         assertTrue("verify(b, a) must also pass", SasVerifier.verify(sas, b.public, a.public))
     }
 
-    // -------------------------------------------------------------------------
     // 6. MITM sensitivity — using a different device identity key changes the SAS
-    // -------------------------------------------------------------------------
 
     @Test
     fun `MITM key substitution produces a different SAS`() {
@@ -200,6 +188,41 @@ class SasVerifierTest {
             "MITM key substitution must produce a different SAS (with overwhelming probability)",
             honestSas,
             mitmSas
+        )
+    }
+
+    // 7. deriveFromSharedSecret — used by the post-quantum hybrid KEM path
+
+    @Test
+    fun `deriveFromSharedSecret produces a 6-digit zero-padded string`() {
+        val secret = java.security.SecureRandom().let { rng ->
+            ByteArray(32).also { rng.nextBytes(it) }
+        }
+        val sas = SasVerifier.deriveFromSharedSecret(secret)
+        assertTrue("SAS must be 6 chars, got: $sas", sas.length == SasVerifier.SAS_DIGITS)
+        assertTrue("SAS must be all digits, got: $sas", sas.all { it.isDigit() })
+        assertTrue("SAS must be < 1_000_000", sas.toLong() < 1_000_000L)
+    }
+
+    @Test
+    fun `deriveFromSharedSecret is deterministic for the same secret`() {
+        val secret = ByteArray(32) { it.toByte() }
+        assertEquals(
+            "Same shared secret must always produce the same SAS",
+            SasVerifier.deriveFromSharedSecret(secret),
+            SasVerifier.deriveFromSharedSecret(secret)
+        )
+    }
+
+    @Test
+    fun `deriveFromSharedSecret produces different SAS for different secrets`() {
+        val rng = java.security.SecureRandom()
+        val s1  = ByteArray(32).also { rng.nextBytes(it) }
+        val s2  = ByteArray(32).also { rng.nextBytes(it) }
+        assertNotEquals(
+            "Different KEM shared secrets should produce different SAS values",
+            SasVerifier.deriveFromSharedSecret(s1),
+            SasVerifier.deriveFromSharedSecret(s2)
         )
     }
 }

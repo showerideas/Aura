@@ -69,9 +69,7 @@ object IdenticonGenerator {
         return render(hash, size)
     }
 
-    // -------------------------------------------------------------------------
     // Private rendering
-    // -------------------------------------------------------------------------
 
     private fun render(hash: ByteArray, size: Int): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)

@@ -8,13 +8,13 @@ import com.showerideas.aura.model.MergeEvent
  * Computes a field-level diff between two [Contact] instances that represent the
  * same person (same [Contact.identityKeyHash]).
  *
- * ## What is compared
+ * What is compared
  * Only user-visible profile fields are diffed. Internal record-keeping fields
  * ([Contact.id], [Contact.receivedAt], [Contact.sourceEndpointId], etc.) are
  * excluded because they are not part of the person's vCard and the user cannot
  * meaningfully compare them.
  *
- * ## What is NOT compared
+ * What is NOT compared
  * - [Contact.id] — stable UUID, never changes
  * - [Contact.receivedAt] — always newer in the incoming contact
  * - [Contact.isFavorite] — user preference, preserved during deduplication
@@ -25,7 +25,7 @@ import com.showerideas.aura.model.MergeEvent
  * - [Contact.avatarUri] — compared as a boolean (changed/unchanged) because
  *   the actual URIs differ across sessions even for the same image
  *
- * ## Output
+ * Output
  * A [MergeEvent] whose [MergeEvent.diffs] list contains one [ContactFieldDiff]
  * per changed field. If all visible fields are identical, [MergeEvent.hasChanges]
  * is false and the caller should suppress the merge dialog.

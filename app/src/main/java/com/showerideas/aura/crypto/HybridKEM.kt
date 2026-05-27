@@ -17,7 +17,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Phase 8.1 — Post-quantum hybrid KEM: ML-KEM-768 + X25519.
+ * Post-quantum hybrid KEM: ML-KEM-768 + X25519.
  *
  * Implements the standard hybrid KEM construction that combines a classical
  * elliptic-curve Diffie-Hellman (X25519) with the NIST post-quantum KEM
@@ -30,7 +30,7 @@ import javax.crypto.spec.SecretKeySpec
  * ML-KEM-768 provides post-quantum harvesting resistance ("store now, decrypt
  * later" attack mitigation).
  *
- * ## Wire protocol v6 byte layout
+ * Wire protocol v6 byte layout
  * Public key  : [0x06 version][x25519_pub(32)][mlkem768_pub(1184)]  → 1217 bytes
  * Ciphertext  : [x25519_ephemeral_pub(32)][mlkem768_ct(1088)]        → 1120 bytes
  * Shared secret: 32 bytes (HKDF output)
@@ -49,9 +49,7 @@ object HybridKEM {
 
     private val rng = SecureRandom()
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Generate a new hybrid key pair for one side of the key exchange.
@@ -152,9 +150,7 @@ object HybridKEM {
         return hkdfCombine(x25519SharedSecret, mlkemSharedSecret)
     }
 
-    // -------------------------------------------------------------------------
     // Key serialisation helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Encode a hybrid public key as bytes for transmission.
@@ -167,9 +163,7 @@ object HybridKEM {
             keyPair.mlkemPublic.encoded.copyInto(buf, X25519_VERSION_OFFSET + X25519_PUB_BYTES)
         }
 
-    // -------------------------------------------------------------------------
     // Wire sizes (public — used by serialisation layer)
-    // -------------------------------------------------------------------------
 
     const val X25519_PUB_BYTES  = 32
     const val MLKEM_PUB_BYTES   = 1184      // ML-KEM-768 public key
@@ -179,9 +173,7 @@ object HybridKEM {
 
     private const val X25519_VERSION_OFFSET = 1  // skip version byte
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun generateX25519KeyPair(): Pair<X25519PrivateKeyParameters, X25519PublicKeyParameters> {
         val gen = X25519KeyPairGenerator().also { it.init(X25519KeyGenerationParameters(rng)) }
@@ -225,9 +217,7 @@ object HybridKEM {
     }
 }
 
-// -------------------------------------------------------------------------
 // Data classes
-// -------------------------------------------------------------------------
 
 /**
  * A hybrid key pair for the AURA ML-KEM-768 + X25519 construction.

@@ -4,7 +4,7 @@ import java.security.MessageDigest
 import java.util.BitSet
 
 /**
- * Phase 8.4 — Space-efficient probabilistic set membership filter.
+ * Space-efficient probabilistic set membership filter.
  *
  * Uses k=7 independent hash functions derived from SHA-256 to probe m=65536 bit
  * positions. For a set of n=10,000 blocked identities this gives a false-positive
@@ -70,9 +70,7 @@ class BloomFilter(
     /** Number of bits currently set (useful for diagnostics). */
     val populatedBitCount: Int get() = bits.cardinality()
 
-    // -------------------------------------------------------------------------
     // Private
-    // -------------------------------------------------------------------------
 
     /**
      * Map ([item], [seed]) → a bit index in [0, bitCount).

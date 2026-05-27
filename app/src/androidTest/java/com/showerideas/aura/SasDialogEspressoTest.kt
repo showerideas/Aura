@@ -25,13 +25,13 @@ import org.junit.runner.RunWith
  * Espresso tests for the SAS (Short Authentication String) verification dialog
  * in [com.showerideas.aura.ui.exchange.ExchangeFragment].
  *
- * ## Strategy
+ * Strategy
  * The SAS dialog appears when [NearbyExchangeService.sessionState] transitions
  * to [ExchangeSession.State.VERIFYING]. In production this requires a live peer
  * completing ECDH; in tests we use the companion's [NearbyExchangeService.injectTestSessionState]
  * test hook to set the state directly, bypassing the transport layer entirely.
  *
- * ## Flow
+ * Flow
  * 1. Navigate to [ExchangeFragment] via btn_activate.
  * 2. Dismiss the "unprotected exchange" dialog if no gesture is enrolled.
  * 3. Inject a VERIFYING session with a known PIN.
@@ -76,9 +76,7 @@ class SasDialogEspressoTest {
         NearbyExchangeService.injectTestSessionState(null)
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun sas_dialog_appears_and_displays_pin() {
@@ -127,9 +125,7 @@ class SasDialogEspressoTest {
         onView(withId(R.id.tv_sas_instruction)).check(matches(isDisplayed()))
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun injectVerifyingSession(pin: String) {
         activityRule.scenario.onActivity {
@@ -182,3 +178,4 @@ class SasDialogEspressoTest {
         }
     }
 }
+

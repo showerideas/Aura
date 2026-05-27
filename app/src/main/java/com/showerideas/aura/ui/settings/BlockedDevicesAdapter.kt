@@ -36,7 +36,7 @@ class BlockedDevicesAdapter(
                 DateFormat.getDateTimeInstance().format(Date(item.blockedAt))
             binding.btnUnblock.setOnClickListener { onUnblock(item) }
 
-            // Phase 6.9 — identicon derived from identity-key hash when
+            // identicon derived from identity-key hash when
             // available, falling back to the ephemeral endpoint ID.
             val seed = item.identityKeyHash ?: item.endpointId
             binding.ivIdenticon.setImageBitmap(IdenticonGenerator.generate(seed, size = 192))

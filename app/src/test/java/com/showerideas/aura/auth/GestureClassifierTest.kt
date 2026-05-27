@@ -10,7 +10,7 @@ import org.junit.Test
 import kotlin.math.sqrt
 
 /**
- * Phase 9.4 — Unit tests for [GestureClassifier].
+ * Unit tests for [GestureClassifier].
  *
  * Uses a concrete test double (no Android runtime needed) — DataStore is
  * not exercised here; persistence is tested separately in integration tests.
@@ -73,9 +73,7 @@ class GestureClassifierTest {
     private fun differentGesture() = FloatArray(63) { i -> if (i % 2 == 0) -1f else 1f }
         .also { v -> val n = sqrt(63f); for (i in v.indices) v[i] /= n }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun `enrolled gesture returns high confidence`() {
@@ -129,3 +127,4 @@ class GestureClassifierTest {
         assertTrue(pred.accepted)
     }
 }
+

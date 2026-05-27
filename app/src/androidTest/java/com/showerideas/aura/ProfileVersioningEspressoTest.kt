@@ -24,7 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Phase 6.7 — Instrumented test verifying that the "Card updated" Snackbar
+ * Instrumented test verifying that the "Card updated" Snackbar
  * appears when a completed exchange session has [ExchangeSession.profileVersionBumped] = true.
  *
  * Strategy mirrors [SasDialogEspressoTest]: we inject a pre-built
@@ -69,9 +69,7 @@ class ProfileVersioningEspressoTest {
         NearbyExchangeService.injectTestSessionState(null)
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun profileVersionBump_showsCardUpdatedSnackbar() {
@@ -124,9 +122,7 @@ class ProfileVersioningEspressoTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun waitForSnackbar(text: String, timeoutMs: Long = 5_000L) {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs

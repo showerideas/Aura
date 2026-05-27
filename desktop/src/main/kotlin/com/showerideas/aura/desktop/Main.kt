@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import java.awt.image.BufferedImage
 
 /**
- * T40 — Desktop companion entry point (Compose Desktop).
+ * Desktop companion entry point (Compose Desktop).
  *
  * Minimal UI scaffold for the AURA desktop companion:
  *  - Generates a QR code containing the user's exchange URL
@@ -126,9 +126,7 @@ fun AuraDesktopApp() {
     }
 }
 
-// -------------------------------------------------------------------------
 // Helpers
-// -------------------------------------------------------------------------
 
 private fun generateSlotId(): String =
     java.util.UUID.randomUUID().toString().replace("-", "").take(32)
@@ -149,3 +147,4 @@ private fun generateQrBitmap(url: String): ImageBitmap? = runCatching {
 
 /** Placeholder SAS — replace with real HKDF derivation in production. */
 private fun deriveFakeSas(): String = (100000..999999).random().toString()
+

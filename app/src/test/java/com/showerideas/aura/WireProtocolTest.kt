@@ -66,9 +66,7 @@ class WireProtocolTest {
         bobEcdh = CryptoUtils.generateEphemeralECDHKeyPair()
     }
 
-    // -------------------------------------------------------------------------
     // 1. ECDH — same session key derived on both sides
-    // -------------------------------------------------------------------------
 
     @Test
     fun `ECDH both parties derive the same session key`() {
@@ -94,9 +92,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 2. Profile encryption / decryption
-    // -------------------------------------------------------------------------
 
     @Test
     fun `profile encrypted by Alice decrypts correctly on Bob's side`() {
@@ -132,9 +128,7 @@ class WireProtocolTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // 3 & 4. Challenge / response
-    // -------------------------------------------------------------------------
 
     @Test
     fun `challenge signed by the right key verifies successfully`() {
@@ -169,9 +163,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 5. Replay attack — nonce deduplication
-    // -------------------------------------------------------------------------
 
     @Test
     fun `same encrypted payload presented twice fails on second presentation`() {
@@ -198,9 +190,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 6. Stale timestamp
-    // -------------------------------------------------------------------------
 
     @Test
     fun `payload timestamped more than 60 seconds ago is rejected`() {
@@ -230,9 +220,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 7. Oversized profile ( /  size gate)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `oversized encrypted payload triggers size rejection`() {
@@ -260,9 +248,7 @@ class WireProtocolTest {
         assertFalse("Payload at exactly the limit must not be oversized", justUnder.size > maxBytes)
     }
 
-    // -------------------------------------------------------------------------
     // 8. Field length cap
-    // -------------------------------------------------------------------------
 
     @Test
     fun `displayName over 500 chars is rejected by PayloadValidator`() {
@@ -299,9 +285,7 @@ class WireProtocolTest {
             PayloadValidator.validateProfilePayload(map, now))
     }
 
-    // -------------------------------------------------------------------------
     // 9. Bad ciphertext — AES-GCM authentication tag failure
-    // -------------------------------------------------------------------------
 
     @Test
     fun `bitflip in ciphertext causes AES-GCM to throw`() {
@@ -330,9 +314,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // 10. Concurrent room guests — distinct session keys per guest
-    // -------------------------------------------------------------------------
 
     @Test
     fun `room host derives different session keys for each guest`() {
@@ -374,9 +356,7 @@ class WireProtocolTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // 11. FakeNearbyTransport — basic routing verification
-    // -------------------------------------------------------------------------
 
     @Test
     fun `FakeNearbyTransport routes bytes from Alice to Bob`() {
@@ -468,9 +448,7 @@ class WireProtocolTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     /** Generate a JVM ECDSA keypair — substitutes for AndroidKeyStore in tests. */
     private fun generateJvmEcKeyPair(): KeyPair {

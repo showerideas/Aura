@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Edge-case tests for [ContactDiffEngine] — Phase 5.2 coverage hardening.
+ * Edge-case tests for [ContactDiffEngine] coverage hardening.
  *
  * The primary tests in [ContactDiffEngineTest] cover the happy-path diff.
  * This file covers boundary conditions, blank/null values, whitespace trimming,
@@ -37,9 +37,7 @@ class ContactDiffEngineEdgeCasesTest {
         identityKeyHash = "abc123"
     )
 
-    // -------------------------------------------------------------------------
     // diff — no changes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff identical contacts produces empty diffs`() {
@@ -57,9 +55,7 @@ class ContactDiffEngineEdgeCasesTest {
         assertFalse("Leading/trailing whitespace should not count as a change", event.hasChanges)
     }
 
-    // -------------------------------------------------------------------------
     // diff — single field changes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects displayName change`() {
@@ -115,9 +111,7 @@ class ContactDiffEngineEdgeCasesTest {
         assertEquals("bio", event.diffs.single().field)
     }
 
-    // -------------------------------------------------------------------------
     // diff — avatar (presence-based, not URI-based)
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects avatar added`() {
@@ -154,9 +148,7 @@ class ContactDiffEngineEdgeCasesTest {
             event.diffs.any { it.field == "avatarUri" })
     }
 
-    // -------------------------------------------------------------------------
     // diff — multiple fields changed at once
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects all changed fields in one pass`() {
@@ -173,9 +165,7 @@ class ContactDiffEngineEdgeCasesTest {
         assertTrue(fields.containsAll(setOf("displayName", "email", "company")))
     }
 
-    // -------------------------------------------------------------------------
     // applySelections
-    // -------------------------------------------------------------------------
 
     @Test
     fun `applySelections with empty map returns base unchanged`() {

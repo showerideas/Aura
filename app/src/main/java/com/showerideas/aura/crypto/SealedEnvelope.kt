@@ -12,14 +12,14 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Phase 8.2 — Sealed sender profile envelope (wire protocol v7).
+ * Sealed sender profile envelope (wire protocol v7).
  *
  * Hides the sender's identity from passive observers. The outer frame contains
  * only an ephemeral public key; the sender's static identity is encrypted
  * inside the payload. The recipient learns who sent the message only after
  * successfully decrypting it.
  *
- * ## Security properties
+ * Security properties
  * • **Sender anonymity**: an observer cannot determine the sender from the wire.
  * • **Receiver authentication**: only the intended recipient can decrypt.
  * • **Sealed sender integrity**: a malicious relay cannot substitute a different
@@ -27,14 +27,14 @@ import javax.crypto.spec.SecretKeySpec
  * • **Length hiding**: the payload is padded to a fixed frame size so message
  *   length does not leak context (e.g. profile size differences between users).
  *
- * ## Wire format (v7)
+ * Wire format (v7)
  * ```
  * Outer frame: [0x07][ephemeral_pub(32)][iv(12)][gcm_tag_len=16][ciphertext(FRAME_SIZE)]
  * Inner plain: [sender_static_pub(32)][payload_len(4 BE)][payload][padding zeros]
  * ```
  * Total outer frame bytes: 1 + 32 + 12 + 16 + FRAME_SIZE
  *
- * ## Key derivation
+ * Key derivation
  * ```
  * ephemeral_ss = X25519(ephemeral_priv, recipient_static_pub)
  * static_ss    = X25519(sender_static_priv, recipient_static_pub)
@@ -62,9 +62,7 @@ object SealedEnvelope {
 
     private val rng = SecureRandom()
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Wrap a profile [payload] into a sealed envelope addressed to [recipientStaticPub].
@@ -201,9 +199,7 @@ object SealedEnvelope {
         return UnwrapResult(senderStaticPub, payload)
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private fun generateX25519KeyPair(): Pair<X25519PrivateKeyParameters, X25519PublicKeyParameters> {
         val gen = X25519KeyPairGenerator().also { it.init(X25519KeyGenerationParameters(rng)) }
@@ -249,9 +245,7 @@ object SealedEnvelope {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Result types
-    // -------------------------------------------------------------------------
 
     data class UnwrapResult(
         val senderStaticPub : X25519PublicKeyParameters,
@@ -267,3 +261,4 @@ object SealedEnvelope {
 
     class SealedEnvelopeException(message: String, cause: Throwable? = null) : Exception(message, cause)
 }
+

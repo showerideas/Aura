@@ -24,7 +24,7 @@ import javax.net.ssl.X509TrustManager
  *   PUT  {baseUrl}/v1/slots/{endpoint}   — upload encrypted bytes; idempotent
  *   GET  {baseUrl}/v1/slots/{endpoint}   — fetch bytes; HTTP 204/404 = not yet posted
  *
- * ## Certificate pinning (defence-in-depth)
+ * Certificate pinning (defence-in-depth)
  *
  * Pinning operates at two independent layers:
  *
@@ -37,13 +37,13 @@ import javax.net.ssl.X509TrustManager
  *    or [BuildConfig.RELAY_SPKI_PIN_BACKUP]. This layer fires even on rooted devices
  *    and debug builds where NSC can be bypassed via user-installed CAs.
  *
- * ### Pin rotation
+ * Pin rotation
  * Update `RELAY_SPKI_PIN_PRIMARY` / `RELAY_SPKI_PIN_BACKUP` in CI environment variables
  * **before** the current certificate expires. See `docs/QR_RELAY_SETUP.md` for the
  * rotation runbook. The `RELAY_PIN_EXPIRY_EPOCH_MS` BuildConfig field triggers a 30-day
  * early warning in logs so rotation is never a surprise.
  *
- * ### Generating a pin
+ * Generating a pin
  * ```bash
  * openssl s_client -connect relay.example.com:443 < /dev/null 2>/dev/null \
  *   | openssl x509 -pubkey -noout \
@@ -70,7 +70,7 @@ open class RelayClient @Inject constructor() {
     private val pinnedSslContext: SSLContext? by lazy { buildPinnedSslContext() }
 
     init {
-        // Phase 5.7 — certificate pin expiry early-warning.
+        // certificate pin expiry early-warning.
         val expiryMs   = BuildConfig.RELAY_PIN_EXPIRY_EPOCH_MS
         val nowMs      = System.currentTimeMillis()
         val remaining  = expiryMs - nowMs
@@ -94,7 +94,7 @@ open class RelayClient @Inject constructor() {
         }
     }
 
-    /** Phase 8.3 — SOCKS5 proxy address for Tor/Orbot anonymization. Null = direct. */
+    /** SOCKS5 proxy address for Tor/Orbot anonymization. Null = direct. */
     @Volatile private var socksProxy: java.net.InetSocketAddress? = null
 
     fun setAnonymizationProxy(socksAddress: java.net.InetSocketAddress?) {

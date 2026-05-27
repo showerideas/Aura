@@ -284,3 +284,4 @@ class QRExchangeRelayFlowTest {
             (err as QRExchangeViewModel.PairingResult.Error).message.contains("SAS", ignoreCase = true))
     }
 }
+

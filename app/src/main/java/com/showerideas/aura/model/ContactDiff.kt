@@ -38,3 +38,4 @@ data class MergeEvent(
     /** True when at least one visible field changed. */
     val hasChanges: Boolean get() = diffs.isNotEmpty()
 }
+

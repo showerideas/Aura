@@ -24,10 +24,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *  v3 → v4: identityKeyHash columns on blocked_endpoints + contacts
  *  v4 → v5: exchange_audit_log table
  *  v5 → v6: profile_type, is_active, custom_label columns on profile
- *  v6 → v7: rotation_certificate column on known_peers (Phase 6.5)
+ *  v6 → v7: rotation_certificate column on known_peers
  *  v7 → v8: version column on profile, profile_version on contacts,
- *  v10 → v11: transport column on exchange_audit_log (T17)
- *           last_seen_profile_version on known_peers (Phase 6.7)
+ *  v10 → v11: transport column on exchange_audit_log
+ *           last_seen_profile_version on known_peers
  */
 object Migrations {
 
@@ -117,7 +117,7 @@ object Migrations {
      * - `is_active INTEGER NOT NULL DEFAULT 1` — the first (and previously only)
      *   profile row is active by default.
      * - `custom_label TEXT NOT NULL DEFAULT ''` — user-supplied label for
-     *   ProfileType.CUSTOM (unused until Phase 6.4.3).
+     *   ProfileType.CUSTOM (unused until).
      */
     val MIGRATION_5_6: Migration = object : Migration(5, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -152,7 +152,7 @@ object Migrations {
     }
 
     /**
-     * v8: Profile versioning (Phase 6.7) and contact deduplication improvements (Phase 6.3).
+     * v8: Profile versioning and contact deduplication improvements.
      *
      * - `profile.version INTEGER NOT NULL DEFAULT 1` — auto-incremented on every profile save.
      *   Sent to peers so they can detect when a returning contact updated their card.
@@ -191,7 +191,7 @@ object Migrations {
     }
 
     /**
-     * Task 8 — v10: Add room_sessions and room_members tables for multi-party exchange.
+     * v10: Add room_sessions and room_members tables for multi-party exchange.
      *
      * room_sessions: holds the cryptographic room session (host/join, PIN, key, TTL).
      * room_members: holds the participants in a room session (FK cascade on room close).
@@ -227,7 +227,7 @@ object Migrations {
     }
 
     /**
-     * v10 → v11: T17 — Add [transport] column to exchange_audit_log.
+     * v10 → v11: Add [transport] column to exchange_audit_log.
      * Records the physical transport layer used (BLE_GATT, WIFI_DIRECT, LORA, etc.).
      * Nullable with no default so legacy records have NULL transport.
      */
@@ -253,3 +253,4 @@ object Migrations {
         MIGRATION_10_11
     )
 }
+

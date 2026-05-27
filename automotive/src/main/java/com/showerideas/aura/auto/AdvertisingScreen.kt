@@ -8,7 +8,7 @@ import androidx.car.app.model.MessageTemplate
 import androidx.car.app.model.Template
 
 /**
- * Phase 7.3 — Android Auto ADVERTISING screen.
+ * Android Auto ADVERTISING screen.
  *
  * Shown while the phone is broadcasting its profile over Nearby Connections
  * waiting for a peer.  The only action cancels the exchange and returns to

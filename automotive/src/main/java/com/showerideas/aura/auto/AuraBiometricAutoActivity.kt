@@ -10,7 +10,7 @@ import androidx.fragment.app.FragmentActivity
 import timber.log.Timber
 
 /**
- * Phase G2 — Biometric-only auth gate for Android Auto / Automotive OS.
+ * Biometric-only auth gate for Android Auto / Automotive OS.
  *
  * In Automotive OS and Android Auto sessions the phone camera is NOT available
  * to the car app — the gesture-biometric pipeline (MediaPipe hand landmarks)
@@ -18,13 +18,13 @@ import timber.log.Timber
  * [BiometricPrompt] (fingerprint / face / device credential) and sends the
  * result back to the calling screen via a broadcast.
  *
- * ## Flow
+ * Flow
  * 1. [IdleScreen] (or [AuraVoiceActivity]) launches this Activity.
  * 2. [BiometricPrompt] is shown using the FragmentActivity host.
  * 3. On SUCCESS: broadcast [ACTION_BIOMETRIC_SUCCESS] → AdvertisingScreen launches.
  * 4. On ERROR / FAIL: broadcast [ACTION_BIOMETRIC_FAILED] → IdleScreen shows error.
  *
- * ## Why not BiometricPrompt in the Car App Library?
+ * Why not BiometricPrompt in the Car App Library?
  * The Car App Library runs on the head unit's display; BiometricPrompt must run
  * on the phone's display (where the sensor is). This Activity runs on the phone
  * and bridges the two surfaces via a broadcast.
@@ -105,3 +105,4 @@ class AuraBiometricAutoActivity : FragmentActivity() {
         finish()
     }
 }
+

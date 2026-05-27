@@ -4,36 +4,36 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * T14 — Anti-spoofing liveness guard for AURA's gesture authentication pipeline.
+ * Anti-spoofing liveness guard for AURA's gesture authentication pipeline.
  *
- * ## The Attack
+ * The Attack
  * An attacker who knows someone's enrolled gesture could hold up a photo or play
  * a video of that person's hand to defeat gesture auth. The camera model will
  * happily extract landmarks and compute a high-similarity embedding from a static
  * source — it cannot tell a live hand from an image.
  *
- * ## The Defence (three independent checks)
+ * The Defence (three independent checks)
  *
- * ### 1. Passive drift detection (original)
+ * 1. Passive drift detection (original)
  * A real live hand, even held as still as possible, exhibits involuntary
  * micro-tremors (physiological tremor, ~4–12 Hz, 1–5 mm amplitude). These
  * manifest as small but detectable frame-to-frame landmark drift in the 63-float
  * embedding space. A static image or pre-recorded video produces near-zero drift.
  *
- * ### 2. Challenge gesture (T14 addition)
+ * 2. Challenge gesture
  * A randomised challenge is issued once the passive window fills. The user must
  * briefly extend their index finger (or perform whichever gesture is drawn at
  * random from [ChallengeGesture]) within [CHALLENGE_TIMEOUT_FRAMES] frames.
  * Pre-recorded videos cannot respond to a real-time challenge.
  *
- * ### 3. Optical flow check (T14 addition)
+ * 3. Optical flow check
  * Inter-frame velocity of the wrist landmark (index 0) is compared with the
  * mean velocity of all fingertip landmarks (indices 4,8,12,16,20). In live
  * video the hand moves coherently — wrist and fingertips share similar global
  * velocity. A digitally-composited replay or image-swap attack produces wrist /
  * fingertip velocity incoherence detectable via [MAX_VELOCITY_RATIO].
  *
- * ## Calibration
+ * Calibration
  * Empirical measurements on a Pixel 7 Pro (30 fps, front camera, 40–60 cm):
  *  - Live hand, pose held steady:  mean drift ≈ 0.012–0.060
  *  - Photo on-screen (6" display): mean drift ≈ 0.0002–0.0009
@@ -42,7 +42,7 @@ import kotlin.math.sqrt
  * [MIN_MEAN_DRIFT] = 0.003 sits well above the static noise floor.
  * [WINDOW_FRAMES]  = 60 ≈ 2 s at 30 fps for reliable challenge + flow analysis.
  *
- * ## Integration
+ * Integration
  * Feed each frame's embedding via [feed]. Gate the final cosine-similarity match
  * on [Result.Live]. On [Result.Spoof] abort the attempt and increment lockout.
  * On [Result.ChallengeRequired] display a UI prompt for the challenge gesture.
@@ -77,9 +77,7 @@ class LivenessGuard {
         private val FINGERTIP_INDICES = intArrayOf(4, 8, 12, 16, 20)
     }
 
-    // -------------------------------------------------------------------------
     // Challenge gesture enum
-    // -------------------------------------------------------------------------
 
     enum class ChallengeGesture(val displayResKey: String) {
         EXTEND_INDEX("liveness_challenge_extend_index"),
@@ -87,9 +85,7 @@ class LivenessGuard {
         SPREAD_FINGERS("liveness_challenge_spread_fingers")
     }
 
-    // -------------------------------------------------------------------------
     // Result type
-    // -------------------------------------------------------------------------
 
     sealed class Result {
         /** Rolling window not yet full — not enough frames to make a call. */
@@ -124,9 +120,7 @@ class LivenessGuard {
         VELOCITY_INCOHERENT
     }
 
-    // -------------------------------------------------------------------------
     // State
-    // -------------------------------------------------------------------------
 
     private val window        = ArrayDeque<FloatArray>(WINDOW_FRAMES + 1)
     private var challenge     : ChallengeGesture? = null
@@ -134,9 +128,7 @@ class LivenessGuard {
     private var frameCount    : Int = 0
     private var challengeMet  : Boolean = false
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Feed the latest 63-float hand embedding (21 landmarks × x,y,z) from a
@@ -211,9 +203,7 @@ class LivenessGuard {
     /** The currently active challenge gesture, or null if not yet issued. */
     fun currentChallenge(): ChallengeGesture? = challenge
 
-    // -------------------------------------------------------------------------
     // Challenge detection
-    // -------------------------------------------------------------------------
 
     /**
      * Lightweight rule-based challenge detection on the 63-float embedding.
@@ -250,9 +240,7 @@ class LivenessGuard {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Optical flow helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Ratio of wrist velocity to mean fingertip velocity across the last frame pair.
@@ -280,9 +268,7 @@ class LivenessGuard {
         return sqrt(dx * dx + dy * dy + dz * dz)
     }
 
-    // -------------------------------------------------------------------------
     // Drift helpers
-    // -------------------------------------------------------------------------
 
     private fun meanFrameDrift(): Float {
         var totalDrift = 0f
@@ -302,3 +288,4 @@ class LivenessGuard {
         return sqrt(sumSq)
     }
 }
+

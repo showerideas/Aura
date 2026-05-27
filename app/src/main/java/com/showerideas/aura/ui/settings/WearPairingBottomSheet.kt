@@ -15,7 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * Phase F1 — Settings → "Wear OS" companion pairing bottom sheet (phone-side).
+ * Settings → "Wear OS" companion pairing bottom sheet (phone-side).
  *
  * Shows:
  *   • Connected Wear OS watch nodes (display names from the Wearable Data Layer)

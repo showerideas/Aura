@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Task 9 — ViewModel for the Room creation / join flow.
+ * ViewModel for the Room creation / join flow.
  */
 @HiltViewModel
 class RoomViewModel @Inject constructor(

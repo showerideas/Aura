@@ -61,9 +61,7 @@ class AuthPreferences @Inject constructor(
         context.authPrefsDataStore.edit { it[DataStoreKeys.GESTURE_GATE_OPEN] = open }
     }
 
-    // -------------------------------------------------------------------------
-    // Phase 8.3: Tor proxy preference
-    // -------------------------------------------------------------------------
+    // Tor proxy preference
 
     val torProxyEnabled: Flow<Boolean> = context.authPrefsDataStore.data
         .map { it[DataStoreKeys.TOR_PROXY_ENABLED] ?: false }
@@ -72,12 +70,10 @@ class AuthPreferences @Inject constructor(
         context.authPrefsDataStore.edit { it[DataStoreKeys.TOR_PROXY_ENABLED] = enabled }
     }
 
-    // -------------------------------------------------------------------------
-    // Phase 9.3: Gesture profile metadata (name, timestamp, presence)
+    // Gesture profile metadata (name, timestamp, presence)
     //
     // Stored in the same EncryptedSharedPreferences file as the embeddings so
     // all gesture data is co-located and encrypted at rest.
-    // -------------------------------------------------------------------------
 
     fun getGestureProfileName(slot: Int): String? =
         gesturePrefs.getString("gesture_profile_name_$slot", null)

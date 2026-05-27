@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Phase 5.8 — Gesture model manager for the FOSS (non-GMS) flavor.
+ * Gesture model manager for the FOSS (non-GMS) flavor.
  *
  * F-Droid policy prohibits downloading binaries at *build* time from non-audited URLs.
  * For the FOSS variant the model is therefore downloaded at *first app launch* and
@@ -23,13 +23,13 @@ import javax.inject.Singleton
  * The GMS flavor continues to use the `downloadGestureModel` Gradle task which
  * bundles the model in `assets/` at build time.
  *
- * ## Call site
+ * Call site
  * ```kotlin
  * val modelPath = modelDownloadManager.requireModel()  // suspending, call from IO
  * BaseOptions.builder().setModelAssetPath(modelPath).build()
  * ```
  *
- * ## Files layout
+ * Files layout
  * ```
  * app internal storage:
  *   gesture_recognizer.task   — the verified model
@@ -90,9 +90,7 @@ class ModelDownloadManager @Inject constructor(
     /** True if the model already exists and its SHA-256 matches [EXPECTED_SHA256]. */
     fun isModelReady(): Boolean = modelFile.exists() && verifySha256(modelFile)
 
-    // -------------------------------------------------------------------------
     // Private
-    // -------------------------------------------------------------------------
 
     private fun downloadModel() {
         val tempFile = File(context.filesDir, "$MODEL_FILENAME.tmp")
@@ -137,3 +135,4 @@ class ModelDownloadManager @Inject constructor(
     class ModelDownloadException(message: String, cause: Throwable? = null) :
         Exception(message, cause)
 }
+

@@ -1,7 +1,7 @@
 package com.showerideas.aura.model
 
 /**
- * Task 30 — Identity key rotation certificate.
+ * Identity key rotation certificate.
  *
  * Proves that [newPublicKeyBytes] is authorized by the holder of [oldPublicKeyBytes].
  * The [signature] is ECDSA-SHA256(oldPrivateKey, oldPublicKeyBytes || newPublicKeyBytes).

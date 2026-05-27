@@ -88,9 +88,7 @@ interface NearbyTransport {
     /** Disconnect all endpoints and clean up. */
     fun stopAllEndpoints()
 
-    // -------------------------------------------------------------------------
     // Optional streaming (avatar) — gms only; no-ops on foss / test doubles
-    // -------------------------------------------------------------------------
 
     /**
      * Send an avatar as a raw byte stream.

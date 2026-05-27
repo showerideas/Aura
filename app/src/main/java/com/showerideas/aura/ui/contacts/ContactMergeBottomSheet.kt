@@ -22,13 +22,13 @@ import com.showerideas.aura.model.MergeEvent
  * This sheet surfaces the diff so the user can review which fields changed and
  * optionally revert individual fields back to their previous values.
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * val event: MergeEvent = // from ContactRepository.saveDeduped()
  * ContactMergeBottomSheet.newInstance(event).show(supportFragmentManager, TAG)
  * ```
  *
- * ## Field-level selection
+ * Field-level selection
  * Each diff row contains a [SwitchMaterial]:
  * - **ON (default)**: keep the new value (already saved in Room)
  * - **OFF**: revert to the old value
@@ -114,7 +114,6 @@ class ContactMergeBottomSheet : BottomSheetDialogFragment() {
         super.onDestroyView()
     }
 
-    // -------------------------------------------------------------------------
 
     private fun addDiffRow(diff: ContactFieldDiff) {
         val row = LayoutInflater.from(requireContext())
@@ -140,3 +139,4 @@ class ContactMergeBottomSheet : BottomSheetDialogFragment() {
         }
     }
 }
+

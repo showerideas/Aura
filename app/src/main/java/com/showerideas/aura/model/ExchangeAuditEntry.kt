@@ -65,9 +65,9 @@ data class ExchangeAuditEntry(
     val channel: String = CHANNEL_NEARBY,
     /**
      * Physical transport layer used. Null for legacy records (pre-v11 migration).
-     * "BLE_GATT"    — direct BLE GATT (Task 7).
+     * "BLE_GATT"    — direct BLE GATT.
      * "WIFI_DIRECT" — Wi-Fi Direct (Task 4/5).
-     * "LORA"        — LoRa via Meshtastic (Task 39).
+     * "LORA"        — LoRa via Meshtastic.
      * "NFC_HCE"     — NFC Host Card Emulation (Task 1/84).
      * "NEARBY_AUTO" — Nearby Connections auto-selected transport.
      */

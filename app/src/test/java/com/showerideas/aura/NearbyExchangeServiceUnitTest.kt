@@ -36,9 +36,7 @@ class NearbyExchangeServiceUnitTest {
         NearbyExchangeService.injectTestSessionState(null)
     }
 
-    // -------------------------------------------------------------------------
     // Intent-action constant contracts
-    // -------------------------------------------------------------------------
 
     @Test
     fun `ACTION_START has expected value`() {
@@ -99,9 +97,7 @@ class NearbyExchangeServiceUnitTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // sessionState StateFlow — reactive contract
-    // -------------------------------------------------------------------------
 
     @Test
     fun `sessionState is null at startup`() = runBlocking {
@@ -140,9 +136,7 @@ class NearbyExchangeServiceUnitTest {
         assertEquals(session, emitted)
     }
 
-    // -------------------------------------------------------------------------
     // ExchangeSession data class invariants
-    // -------------------------------------------------------------------------
 
     @Test
     fun `ExchangeSession defaults to ADVERTISING state and PEER_TO_PEER mode`() {

@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Phase 9.1 — A named share preset that stores which contact fields to include
+ * A named share preset that stores which contact fields to include
  * when starting an AURA exchange.
  *
  * Presets allow quick selection of field subsets (e.g., "Professional" = name +
@@ -41,3 +41,4 @@ data class SharePreset(
         )
     }
 }
+

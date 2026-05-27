@@ -47,9 +47,7 @@ class ExchangeAuditDaoTest {
         db.close()
     }
 
-    // -----------------------------------------------------------------------
     // Helpers
-    // -----------------------------------------------------------------------
 
     private fun entry(
         outcome: String = ExchangeAuditEntry.OUTCOME_SUCCESS,
@@ -64,9 +62,7 @@ class ExchangeAuditDaoTest {
         timestampMs = timestampMs
     )
 
-    // -----------------------------------------------------------------------
     // insert + observeAll
-    // -----------------------------------------------------------------------
 
     @Test
     fun insert_then_observeAll_returns_entry() = runBlocking {
@@ -94,9 +90,7 @@ class ExchangeAuditDaoTest {
         )
     }
 
-    // -----------------------------------------------------------------------
     // observeRecent
-    // -----------------------------------------------------------------------
 
     @Test
     fun observeRecent_caps_at_given_limit() = runBlocking {
@@ -113,9 +107,7 @@ class ExchangeAuditDaoTest {
         assertEquals(2, recent.size)
     }
 
-    // -----------------------------------------------------------------------
     // observeForPeer
-    // -----------------------------------------------------------------------
 
     @Test
     fun observeForPeer_filters_by_peerIdentityKeyHash() = runBlocking {
@@ -137,9 +129,7 @@ class ExchangeAuditDaoTest {
         assertEquals(0, dao.observeForPeer("hash-unknown").first().size)
     }
 
-    // -----------------------------------------------------------------------
     // count
-    // -----------------------------------------------------------------------
 
     @Test
     fun count_reflects_number_of_inserted_entries() = runBlocking {
@@ -149,9 +139,7 @@ class ExchangeAuditDaoTest {
         assertEquals(2, dao.count())
     }
 
-    // -----------------------------------------------------------------------
     // countFailuresForPeer
-    // -----------------------------------------------------------------------
 
     @Test
     fun countFailuresForPeer_counts_FAILED_and_SPOOF_within_window() = runBlocking {
@@ -175,9 +163,7 @@ class ExchangeAuditDaoTest {
         assertEquals(0, dao.countFailuresForPeer("hash-unknown", since = 0L))
     }
 
-    // -----------------------------------------------------------------------
     // deleteOlderThan
-    // -----------------------------------------------------------------------
 
     @Test
     fun deleteOlderThan_removes_old_entries_preserves_newer() = runBlocking {
@@ -194,9 +180,7 @@ class ExchangeAuditDaoTest {
         assertTrue(remaining.all { it.timestampMs >= cutoff })
     }
 
-    // -----------------------------------------------------------------------
     // deleteAll
-    // -----------------------------------------------------------------------
 
     @Test
     fun deleteAll_clears_table() = runBlocking {

@@ -12,7 +12,7 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Phase 9.2 — ViewModel for the on-device exchange analytics screen.
+ * ViewModel for the on-device exchange analytics screen.
  * All data is derived from local [ExchangeAuditEntry] records — zero telemetry.
  */
 @HiltViewModel

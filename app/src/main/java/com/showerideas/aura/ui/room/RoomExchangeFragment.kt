@@ -127,9 +127,7 @@ class RoomExchangeFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Camera gesture gate
-    // -------------------------------------------------------------------------
 
     private fun startGestureGate() {
         binding.gestureGateSection.visibility = View.VISIBLE
@@ -220,9 +218,7 @@ class RoomExchangeFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Action button handler (session running OR no-pattern path)
-    // -------------------------------------------------------------------------
 
     private fun onActionPressed() {
         if (sessionRunning) {
@@ -275,3 +271,4 @@ class RoomExchangeFragment : Fragment() {
         _binding = null
     }
 }
+

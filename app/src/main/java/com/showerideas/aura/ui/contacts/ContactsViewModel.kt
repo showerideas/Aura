@@ -76,7 +76,7 @@ class ContactsViewModel @Inject constructor(
     }
 
     /**
-     * Phase 6.8 / C1 — Save a contact decoded from an AURA share deeplink.
+     * Save a contact decoded from an AURA share deeplink.
      *
      * [fields] is the map produced by [com.showerideas.aura.utils.DeeplinkUtils.decodeShareUrl].
      * Uses [ContactRepository.saveDeduped] so returning contacts merge instead of duplicate.

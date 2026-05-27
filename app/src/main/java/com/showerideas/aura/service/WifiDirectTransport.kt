@@ -32,13 +32,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Wi-Fi Direct transport implementing [NearbyTransport].
  *
- * ## Why Wi-Fi Direct?
+ * Why Wi-Fi Direct?
  * Google Nearby Connections requires Play Services. Replacing it with a pure
  * Android Wi-Fi Direct stack removes the GMS dependency and makes AURA eligible
  * for F-Droid distribution. The [NearbyTransport] abstraction means the entire
  * crypto layer ([WireProtocol], [CryptoUtils], [SasVerifier]) is reused unchanged.
  *
- * ## Architecture
+ * Architecture
  * ```
  * ┌───────────────┐         ┌───────────────┐
  * │  Peer A       │ Wi-Fi   │  Peer B       │
@@ -49,25 +49,25 @@ import java.util.concurrent.atomic.AtomicBoolean
  * └───────────────┘         └───────────────┘
  * ```
  *
- * ## Service discovery
+ * Service discovery
  * AURA uses Wi-Fi Direct DNS-SD service registration (`_aura._tcp`) so peers
  * can find each other without knowing each other's MAC addresses in advance.
  * Service records include a `localName` TXT record used as the Nearby-compatible
  * "endpoint name".
  *
- * ## Group Owner (GO) negotiation
+ * Group Owner (GO) negotiation
  * Wi-Fi Direct requires one peer to be the Group Owner. GO acts as the TCP server;
  * the client connects to the GO's IP address. To break ties deterministically,
  * we set `groupOwnerIntent` based on lexicographic comparison of our announced
  * `localName` against the peer's — lower name → higher intent (more eager to be GO).
  * This mirrors the SAS derivation tiebreaker in [SasVerifier].
  *
- * ## Data framing
+ * Data framing
  * Each payload is length-prefixed: `[4-byte big-endian length][payload bytes]`.
  * [DataInputStream.readInt] / [DataOutputStream.writeInt] handle the framing.
  * Maximum payload size: 1 MB (enforced at read time to prevent OOM attacks).
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * val transport = WifiDirectTransport(context)
  * transport.onEndpointFound = { id, name -> transport.requestConnection(localName, id) }
@@ -79,7 +79,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * transport.release()   // call in onDestroy
  * ```
  *
- * ## Permissions required
+ * Permissions required
  * - `android.permission.ACCESS_WIFI_STATE`
  * - `android.permission.CHANGE_WIFI_STATE`
  * - `android.permission.ACCESS_FINE_LOCATION` (API < 33)
@@ -89,9 +89,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressLint("MissingPermission")   // permissions checked at runtime in MainActivity
 class WifiDirectTransport(private val context: Context) : NearbyTransport {
 
-    // -------------------------------------------------------------------------
     // NearbyTransport callbacks
-    // -------------------------------------------------------------------------
 
     override var onPayloadReceived: ((endpointId: String, data: ByteArray) -> Unit)? = null
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
@@ -99,9 +97,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
     override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
-    // -------------------------------------------------------------------------
     // Internal state
-    // -------------------------------------------------------------------------
 
     private val manager: WifiP2pManager =
         context.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager
@@ -132,9 +128,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
     /** The peer MAC address for the current single P2P connection. */
     @Volatile private var connectedPeerMac: String? = null
 
-    // -------------------------------------------------------------------------
     // BroadcastReceiver
-    // -------------------------------------------------------------------------
 
     private val receiver = object : BroadcastReceiver() {
         @Suppress("DEPRECATION")
@@ -177,9 +171,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         }
     }
 
-    // -------------------------------------------------------------------------
     // NearbyTransport — lifecycle
-    // -------------------------------------------------------------------------
 
     override fun startAdvertising(localName: String, serviceId: String) {
         this.localName = localName
@@ -334,9 +326,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         Timber.d("WifiDirect: all endpoints stopped")
     }
 
-    // -------------------------------------------------------------------------
     // NearbyTransport — data transfer
-    // -------------------------------------------------------------------------
 
     override fun sendBytes(endpointId: String, data: ByteArray) {
         val out = activeStreams[endpointId]
@@ -359,9 +349,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Resource release
-    // -------------------------------------------------------------------------
 
     /**
      * Release all Wi-Fi Direct resources. Call this from [Service.onDestroy].
@@ -376,9 +364,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Connection handling
-    // -------------------------------------------------------------------------
 
     private fun handleConnectionInfo(info: WifiP2pInfo) {
         isGroupOwner = info.isGroupOwner
@@ -488,9 +474,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         activeStreams.clear()
     }
 
-    // -------------------------------------------------------------------------
     // BroadcastReceiver management
-    // -------------------------------------------------------------------------
 
     private fun registerBroadcastReceiver() {
         if (receiverRegistered.compareAndSet(false, true)) {
@@ -511,9 +495,7 @@ class WifiDirectTransport(private val context: Context) : NearbyTransport {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun loggingListener(op: String) = object : WifiP2pManager.ActionListener {
         override fun onSuccess() { Timber.d("WifiDirect: $op succeeded") }

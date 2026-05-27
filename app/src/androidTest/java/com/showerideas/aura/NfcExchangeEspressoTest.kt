@@ -19,13 +19,13 @@ import java.util.UUID
 /**
  * Instrumented tests for the NFC exchange layer.
  *
- * ## Device requirements
+ * Device requirements
  * Tests guarded by [assumeTrue] will be skipped automatically on emulators
  * and devices without NFC hardware. Only [auraHceService_*] tests run
  * unconditionally because [AuraHceService.processCommandApdu] is pure byte
  * logic with no NFC hardware dependency.
  *
- * ## What is tested
+ * What is tested
  * - **NDEF build / parse round-trip** — [NfcExchangeHelper.buildNdefMessage] +
  *   [NfcExchangeHelper.parseNdefMessage] are inverses of each other.
  * - **NFC permission declared** — the app manifest contains
@@ -37,7 +37,7 @@ import java.util.UUID
  * - **NfcExchangeHelper lifecycle** — [NfcExchangeHelper.enable] and
  *   [NfcExchangeHelper.disable] complete without throwing on an NFC-capable device.
  *
- * ## Two-device tap test
+ * Two-device tap test
  * A full "tap two devices together" test requires real NFC hardware pairs
  * and is deliberately excluded from the automated suite. Use the manual
  * QA recipe in `docs/manual-qa-nfc.md` for physical two-device verification.
@@ -54,9 +54,7 @@ class NfcExchangeEspressoTest {
         AuraHceService.clearLocalKey()
     }
 
-    // -------------------------------------------------------------------------
     // NDEF build + parse round-trip (no NFC hardware required)
-    // -------------------------------------------------------------------------
 
     @Test
     fun ndef_buildAndParse_roundTrip_preservesSessionUuidAndPublicKey() {
@@ -124,9 +122,7 @@ class NfcExchangeEspressoTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // NFC permission / feature manifest declarations
-    // -------------------------------------------------------------------------
 
     @Test
     fun manifest_declaresNfcPermission() {
@@ -159,9 +155,7 @@ class NfcExchangeEspressoTest {
         )
     }
 
-    // -------------------------------------------------------------------------
     // AuraHceService APDU processing (no NFC hardware required)
-    // -------------------------------------------------------------------------
 
     @Test
     fun auraHceService_noLocalKey_returnsEmptyBytes() {
@@ -253,9 +247,7 @@ class NfcExchangeEspressoTest {
         }
     }
 
-    // -------------------------------------------------------------------------
     // NfcExchangeHelper lifecycle — requires real NFC hardware
-    // -------------------------------------------------------------------------
 
     @Test
     fun nfcHelper_enableAndDisable_doNotThrowOnNfcCapableDevice() {

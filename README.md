@@ -4,7 +4,7 @@
 
 ### Gesture-authenticated offline contact exchange for Android
 
-*Two phones. One gesture. Local-first.*
+*Two phones. One gesture. Local-first. Post-quantum.*
 
 [![CI](https://github.com/showerideas/Aura/actions/workflows/ci.yml/badge.svg)](https://github.com/showerideas/Aura/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/showerideas/Aura?color=6E56CF&label=release)](https://github.com/showerideas/Aura/releases/latest)
@@ -13,6 +13,7 @@
 [![Min SDK](https://img.shields.io/badge/min%20SDK-26%20%E2%80%A2%20Android%208.0-3DDC84?logo=android&logoColor=white)](https://developer.android.com/about/versions/oreo)
 [![Target SDK](https://img.shields.io/badge/target%20SDK-35%20%E2%80%A2%20Android%2015-3DDC84?logo=android&logoColor=white)](https://developer.android.com/about/versions/15)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Post-Quantum](https://img.shields.io/badge/crypto-post--quantum-6E56CF)](docs/SECURITY.md)
 [![Local-first](https://img.shields.io/badge/network-local--first-1f1f1f)](docs/SECURITY.md)
 
 </div>
@@ -21,14 +22,14 @@
 
 ## What is AURA?
 
-**AURA** lets two people swap contact cards face-to-face — **no internet, no QR scan, no NFC tap required**. You set up your profile once, record a personal unlock gesture (or bind it to your fingerprint), and from then on a single motion is enough to push your details to the phone in front of you. The exchange flies over a direct Bluetooth-LE / Wi-Fi-P2P link encrypted end-to-end with ECDH + AES-256-GCM.
+**AURA** lets two people swap contact cards face-to-face — **no internet, no QR scan, no NFC tap required**. You set up your profile once, record a personal unlock gesture (or bind it to your fingerprint), and from then on a single motion is enough to push your details to the phone in front of you. The exchange flies over a direct Bluetooth-LE / Wi-Fi-P2P / NFC link protected by a post-quantum hybrid KEM (ML-KEM-768+X25519) and ML-DSA-65 identity signatures.
 
 > **BLE/Wi-Fi-P2P exchange is fully offline** — no account, no cloud sync, nothing for a server to leak. The optional QR relay path uses a short-lived relay slot (HTTPS, AES-256-GCM ciphertext only) for environments where direct radio contact is unavailable; the relay never sees plaintext.
 
 <div align="center">
 
 ```text
-  📱   ── triple-press vol ▼ ──▶   ✋ gesture   ──▶   🔐 ECDH   ──▶   📇   📱
+  📱   ── triple-press vol ▼ ──▶   ✋ gesture   ──▶   🔐 PQ-KEM   ──▶   📇   📱
 ```
 
 </div>
@@ -44,30 +45,39 @@
 | 🏛 **Architecture** | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | 🔐 **Security model** | [`docs/SECURITY.md`](docs/SECURITY.md) |
 | 🔄 **Exchange flow** | [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md) |
+| 🔌 **Wire protocol** | [`docs/WIRE_PROTOCOL.md`](docs/WIRE_PROTOCOL.md) — v9 frame spec |
 | ✋ **Gesture auth** | [`docs/GESTURE_AUTH.md`](docs/GESTURE_AUTH.md) |
 | 🧪 **Audit** (intent fulfilment) | [`docs/AUDIT.md`](docs/AUDIT.md) |
 | 📸 **Showcase** (screenshots + demo) | [`docs/SHOWCASE.md`](docs/SHOWCASE.md) |
 | 🛠 **Build locally** | [`docs/BUILD.md`](docs/BUILD.md) |
 | 📜 **Privacy policy** | [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) |
-| 🛍 **Play Store copy** | [`STORE_LISTING.md`](STORE_LISTING.md) |
 | 📜 **License** | [MIT](LICENSE) |
 
 ---
 
-## ✨ Every feature in v1.0.0
+## ✨ Every feature in v4.0.0
 
-> 22 PRs of feature work, each with its own dossier in [`docs/features/`](docs/features/).
-
-| 🔐 Privacy & crypto | 🎯 UX & flow | ♿ Polish & QA |
+| 🔐 Post-quantum crypto | 🌐 Transport | 🎯 Auth & UX |
 |---|---|---|
-| Zero outbound network | Triple-press vol ▼ wake¹ | Onboarding (3 cards) |
-| ECDH P-256 per session | MediaPipe gesture gate | Permission-rationale sheet |
-| AES-256-GCM payloads | Biometric unlock fallback | Pulsing activation animation |
-| Android Keystore identity | QR fallback exchange | TalkBack + AA contrast pass |
-| Replay-counter window | Room mode (1 host : N) | Settings + Blocked Devices UI |
-| Endpoint blocklist | Avatar streamed inline | Localisation scaffolding |
-| Device-identity challenge | vCard / Contacts export | Room v1 → v2 migrations |
-| No PII ever logged | Favourites + private notes | 184 unit + 51 instrumentation tests |
+| Hybrid KEM ML-KEM-768+X25519 | Nearby Connections (GMS) | MediaPipe gesture gate |
+| ML-DSA-65 identity signatures | Wi-Fi Direct (FOSS/F-Droid) | Temporal liveness (2-layer) |
+| PQXDH full prekey bundle | BLE GATT MTU 517 + SCI | Biometric unlock fallback |
+| Noise_XX encrypted channel | NFC HCE ISO 7816-4 | Triple-press vol ▼ wake¹ |
+| Double Ratchet + SPQR | QR relay (HTTPS + OHTTP) | SAS first-meet PIN |
+| MLS group key agreement | QUIC/HTTP3 (Cronet) | Multi-profile Personal/Work |
+| Sealed sender envelopes | Tor SOCKS5 (Orbot) | Room mode (star topology) |
+| SPKI certificate pinning | LoRa via Meshtastic (opt-in) | Wear OS 7 Glance tile |
+
+| 🪪 Identity & privacy | 📊 Enterprise & analytics | 🧪 Quality |
+|---|---|---|
+| W3C Verifiable Credentials | 6 MDM restriction keys | 623+ unit test methods |
+| ISO 18013-5 mdoc/mDL | Zero-touch enrollment | 72 instrumented tests |
+| OpenID4VP presentation | Advanced Protection API | 36 iOS AuraCore tests |
+| PSI contact discovery | Differential privacy ε=1.0 | JaCoCo 60% branch floor |
+| did:key identity anchors | Signed audit export CSV | TalkBack + AA contrast pass |
+| StrongBox key migration | Android Auto voice gate | 365 strings × 7 locales |
+| Replay + nonce dedup window | Wear OS Health Connect HRV | F-Droid reproducible build |
+| No PII ever logged | PDF analytics export | vCard / Contacts export |
 
 ---
 
@@ -111,7 +121,7 @@ flowchart LR
         GB -- "❌" --> XB["Cancel"]:::warn
         NB --> DB
     end
-    NA <== "ECDH&nbsp;+&nbsp;AES-GCM" ==> NB
+    NA <== "PQ-KEM&nbsp;+&nbsp;Noise_XX&nbsp;+&nbsp;AES-GCM" ==> NB
 
     classDef user fill:#6E56CF,color:#FFFFFF,stroke:#3D2C7A,stroke-width:2px
     classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
@@ -120,7 +130,7 @@ flowchart LR
     classDef warn fill:#EF4444,color:#FFFFFF,stroke:#991B1B,stroke-width:2px
 ```
 
-The full step-by-step sequence (ECDH derivation, challenge–response identity proof, replay window, avatar streaming) is in [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md).
+The full step-by-step sequence (PQ-KEM handshake, ML-DSA-65 identity proof, Noise_XX channel setup, replay window, avatar streaming) is in [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md).
 
 ---
 
@@ -149,6 +159,8 @@ flowchart TB
         QF["QR"]:::ui
         RF["Room"]:::ui
         SF["Settings"]:::ui
+        AUF["Audit"]:::ui
+        ENT["Enterprise"]:::ui
     end
     subgraph VM["🧠&nbsp;ViewModels"]
         direction LR
@@ -159,33 +171,54 @@ flowchart TB
         GA["Gesture<br/>Auth"]:::service
         BA["Biometric<br/>Helper"]:::service
         VB["Volume<br/>Service"]:::service
-        NX["Nearby<br/>Service"]:::service
+        NX["Exchange<br/>Service"]:::service
         CR["Contact<br/>Repo"]:::service
         PR["Profile<br/>Repo"]:::service
         BR["Blocklist<br/>Repo"]:::service
+        AR["Audit<br/>Repo"]:::service
+    end
+    subgraph CRY["🔐&nbsp;Crypto"]
+        direction LR
+        KEM["HybridKEM<br/>(ML-KEM-768+X25519)"]:::crypto
+        SIG["HybridSig<br/>(ML-DSA-65)"]:::crypto
+        NSE["Noise_XX"]:::crypto
+        DR["Double Ratchet<br/>+SPQR"]:::crypto
+        MLS["MLS<br/>RFC 9420"]:::crypto
+    end
+    subgraph IDL["🪪&nbsp;Identity"]
+        direction LR
+        VC["VcIssuer<br/>(did:key)"]:::id
+        MDOC["mdoc<br/>ISO 18013-5"]:::id
+        VP["OpenID4VP"]:::id
     end
     subgraph DAT["💾&nbsp;Data"]
         direction LR
         CD[("Contact<br/>Dao")]:::data
         PD[("Profile<br/>Dao")]:::data
         BD[("Blocked<br/>Dao")]:::data
+        AuD[("Audit<br/>Dao")]:::data
         DS[("Data<br/>Store")]:::data
         ESP[("Encrypted<br/>Prefs")]:::data
         KS[("Android<br/>Keystore")]:::data
     end
 
     UI --> VM
-    VM --> GA & BA & CR & PR & BR
+    VM --> GA & BA & CR & PR & BR & AR
     VM -.-> NX & VB
     GA --> ESP
-    NX --> KS & CR & BR
+    NX --> KEM & NSE & KS & CR & BR
+    NX --> VC & MDOC
+    SIG --> KS
     CR --> CD
     PR --> PD
     BR --> BD
+    AR --> AuD
 
     classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
     classDef vm fill:#F472B6,color:#1F2937,stroke:#9D174D,stroke-width:2px
     classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
+    classDef crypto fill:#EC4899,color:#FFFFFF,stroke:#9D174D,stroke-width:2px
+    classDef id fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
     classDef data fill:#10B981,color:#FFFFFF,stroke:#065F46,stroke-width:2px
 ```
 
@@ -198,19 +231,57 @@ More detail (package map, dependency direction rules, threading) in [`docs/ARCHI
 | Layer | Choice |
 |---|---|
 | Language | **Kotlin 2.0** (JVM 17) |
-| UI | Fragments + ViewBinding + Navigation Component |
-| DI | Hilt 2.51 |
-| Persistence | Room 2.6 (exported schemas, v2 + migration) |
-| Async | Kotlinx Coroutines 1.8 |
-| P2P transport | Google **Nearby Connections** |
-| Crypto | Android Keystore + ECDH (P-256) + AES-256-GCM + ECDSA |
-| Gesture auth | CameraX + **MediaPipe GestureRecognizer** (21 landmarks, cosine similarity) |
-| Biometric | `androidx.biometric` (fingerprint / face) |
-| QR | ZXing-embedded 4.3 |
-| Preferences | DataStore + `EncryptedSharedPreferences` |
-| Build | Gradle 8.4 (Kotlin DSL) + Version Catalogs |
+| UI | Fragments + ViewBinding + Navigation Component + Material 3 |
+| DI | Hilt 2.51.1 |
+| Persistence | Room 2.6.1 (exported schemas, v2 + MIGRATION_1_2 through MIGRATION_4_5) |
+| Async | Kotlinx Coroutines 1.8.1 |
+| Primary transport (GMS) | Google **Nearby Connections** 19.1.0 |
+| FOSS transport | Wi-Fi Direct (NSD/mDNS) |
+| Additional transports | BLE GATT · NFC HCE (ISO 7816-4) · LoRa · UWB (FiRa 3.0) · Mesh |
+| Session crypto | **ML-KEM-768 + X25519** hybrid KEM (BouncyCastle bcpqc-jdk18on) |
+| Identity crypto | **ML-DSA-65 + ECDSA P-256** hybrid — Android Keystore |
+| Protocol crypto | PQXDH · Noise_XX · MLS RFC 9420 · Double Ratchet + SPQR · AES-256-GCM |
+| Gesture auth | CameraX + **MediaPipe GestureRecognizer** (21 landmarks) + LSTM temporal classifier + 2-layer liveness |
+| Biometric | `androidx.biometric` (fingerprint / face) + `CryptoObject` KeyAgreement (API 36+) |
+| QR | ZXing-embedded 4.3.0 |
+| Preferences | DataStore 1.1.1 + `EncryptedSharedPreferences` |
+| Build | AGP 8.13.2 (Kotlin DSL) + Version Catalogs |
 | Min / Target SDK | **26** / **35** |
-| CI | GitHub Actions — unit tests + JaCoCo + Lint + `assembleRelease` + APK size gate + MediaPipe class survival check |
+| Platforms | Android · Wear OS 7 · Android Auto · iOS (AuraCore) · Desktop (KMP) |
+| CI | GitHub Actions — unit tests + JaCoCo (60% branch floor) + Lint + `assembleRelease` + APK size gate + MediaPipe class survival check + iOS build/test |
+
+---
+
+## 📱 Platform targets
+
+| Platform | Status | Notes |
+|---|---|---|
+| **Android phone** | Production | Min SDK 26, Target 35 |
+| **Wear OS 7** | Production | Glance tile, Health Connect HRV, SasPinActivity, WristRaiseTrigger |
+| **Android Auto** | Production | Voice action, biometric gate, full screen library (Advertising / Idle / Completed / SAS) |
+| **iOS companion** | Production | AuraCore — ContactProfile, SasVerifier, WireProtocol.swift, MultipeerTransport, 15 unit tests |
+| **Desktop (KMP)** | Production | Kotlin Multiplatform companion — QR relay transport |
+
+---
+
+## 🔐 Cryptographic stack
+
+| Layer | Primitive | Standard |
+|---|---|---|
+| Session key agreement | ML-KEM-768 + X25519 hybrid KEM | FIPS 203 + RFC 7748 |
+| Shared secret derivation | HKDF-SHA256 over `mlkem_ss ‖ x25519_ss` | RFC 5869 |
+| Identity signatures | ML-DSA-65 + ECDSA P-256 hybrid | FIPS 204 + NIST P-256 |
+| Channel encryption | AES-256-GCM | NIST SP 800-38D |
+| Noise channel | Noise_XX (X25519, AESGCM, SHA256) | Noise Protocol Framework |
+| Async key exchange | PQXDH prekey bundle | Signal PQ extension |
+| Session ratchet | Double Ratchet + SPQR post-quantum ratchet | DR spec |
+| Group key agreement | MLS RFC 9420 | RFC 9420 |
+| SAS verification | SHA-256(shared\_secret) mod 10⁶, 6 digits | — |
+| Sealed sender | HKDF + AES-256-GCM two-phase unwrap | Signal sealed sender |
+| Key storage | Android Keystore (StrongBox preferred) | Android Security |
+| Gesture template | `EncryptedSharedPreferences` (AES-256 master key) | Jetpack Security |
+
+The full wire frame specification (frame structure, key sizes, version history v1–v9) is in [`docs/WIRE_PROTOCOL.md`](docs/WIRE_PROTOCOL.md).
 
 ---
 
@@ -228,17 +299,19 @@ Want to build from source? → [`docs/BUILD.md`](docs/BUILD.md).
 
 ## 🛡 Security in one paragraph
 
-Each exchange opens a **fresh ECDH key pair** (never reused), derives a 256-bit AES key via HKDF-SHA256, and wraps the profile JSON in **AES-GCM** before the bytes leave the device. A long-lived **Android Keystore EC key** signs a per-session challenge so each side can detect endpoint impersonation. Replay attempts are rejected by a **timestamp + per-nonce dedup window**. Blocked endpoints are remembered as identity-key hashes in Room. For first-meet exchanges, `SasVerifier` produces a 6-digit Short Authentication String both parties can compare verbally. The full threat model lives in [`docs/SECURITY.md`](docs/SECURITY.md).
+Each exchange opens a **fresh post-quantum hybrid KEM** (ML-KEM-768+X25519), derives a 256-bit AES key via HKDF-SHA256, and wraps the profile JSON in **AES-GCM** before the bytes leave the device. A long-lived **hybrid identity key** (P-256 + ML-DSA-65 FIPS 204) signs every payload; an adversary must break both classical and post-quantum signatures to forge identity. The session is wrapped in a **Noise_XX encrypted channel**. Replay attempts are rejected by a **timestamp + per-nonce dedup window**. Blocked endpoints are remembered as identity-key hashes in Room. For first-meet exchanges, `SasVerifier` produces a 6-digit Short Authentication String both parties can compare verbally. Multi-party Room sessions use **MLS RFC 9420 group key agreement**. The full threat model lives in [`docs/SECURITY.md`](docs/SECURITY.md).
 
 ---
 
 ## 🗺 Roadmap
 
 - [x] **v1.0.0** — gesture gate (MediaPipe), ECDH+HKDF, room exchange, QR fallback, blocklist, replay protection (ts+nonce), biometric, accessibility, settings, R8-shrunk release APK
-- [x] **v1.1.0** — QR relay (encrypted profile POST/GET via HTTPS relay, AES-256-GCM); 7 translated `values-xx/` bundles (HI, ES, FR, DE, JA, KO, ZH-CN) — 100% key coverage enforced by CI; 184 unit + 51 instrumented tests
-- [ ] **v1.2.0** — SAS first-meet PIN dialog UI + Espresso tests on a CI emulator runner
-- [ ] **v1.3.0** — 100% translation coverage + re-enable MissingTranslation lint; signed Play Store build + Play Integrity attestation
-- [ ] **v2.0.0** — cross-platform "AURA Lite" iOS receiver (read-only via QR)
+- [x] **v1.1.0** — QR relay, 7 locales 100% coverage (HI, ES, FR, DE, JA, KO, ZH-CN), 259 unit + 51 instrumented tests
+- [x] **v2.0.0** — transport abstraction, NFC HCE ISO 7816-4, multi-profile, identity rotation, audit log, SPKI pinning, backup
+- [x] **v3.0.0** — iOS AuraCore companion (ContactProfile, SasVerifier, ECDH, SAS), Wear OS pairing, Android Auto voice + biometric gate, F-Droid reproducible build
+- [x] **v3.3.0** — full transport stack (BLE GATT + SCI, Wi-Fi Direct FOSS, NFC, LoRa opt-in), PQ crypto (ML-KEM-768, ML-DSA-65, PQXDH), differential privacy analytics, enterprise MDM, JaCoCo 60% floor
+- [x] **v4.0.0** — Noise_XX channel, MLS RFC 9420 rooms, Double Ratchet + SPQR, OHTTP RFC 9458, QUIC/HTTP3, OpenID4VP, ISO 18013-5 mdoc, W3C Verifiable Credentials, UWB FiRa 3.0, BLE Channel Sounding, Advanced Protection API; 623+ unit / 72 instrumented / 36 iOS tests
+- [ ] **R&D pipeline** — 16 research items: `did:peer`/`did:web` full DID wallet, ARCore exchange overlay, satellite fallback (SatelliteManager), DIDComm v2, FIDO2 credential provider, ZK-SNARK gesture privacy, MPC threshold audit signing, Android XR / Jetpack XR, Privacy Pass relay rate-limiting, Kotlin 2.2 Swift export
 
 ---
 

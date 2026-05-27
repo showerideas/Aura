@@ -6,7 +6,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * T21 — Coverage milestone 70%: unit tests for [TemporalGestureClassifier].
+ * Coverage milestone 70%: unit tests for [TemporalGestureClassifier].
  *
  * Tests the 30-frame sliding window, motion-profile analysis, and spoof detection.
  */

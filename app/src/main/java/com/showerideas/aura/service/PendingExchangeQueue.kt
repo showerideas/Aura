@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T37 — Delay-tolerant store-and-forward queue for AURA exchanges.
+ * Delay-tolerant store-and-forward queue for AURA exchanges.
  *
  * When two devices cannot exchange directly (e.g. one is in airplane mode, they
  * missed each other, or the BLE range was insufficient), the initiator can "park"
@@ -24,7 +24,7 @@ import javax.inject.Singleton
  * encodes a Bloom-filter hint so nearby AURA devices know a pending exchange is
  * waiting without revealing which specific peer it targets.
  *
- * ## Protocol
+ * Protocol
  * 1. Initiator calls [enqueue] with their encrypted profile payload.
  * 2. The local BLE advertiser reads [bloomFilterHint] and includes it in the AURA
  *    service data field (8 bytes) of the BLE advertisement.
@@ -32,17 +32,17 @@ import javax.inject.Singleton
  *    recipient, and if so requests a full delivery session.
  * 4. On successful delivery the sender calls [dequeue] to remove the entry.
  *
- * ## Privacy
+ * Privacy
  * The Bloom filter hint uses the sender's identity key hash as the item. The
  * receiver can test whether a specific hash is in the filter (true positive ~99.2%)
  * but cannot enumerate all senders — the filter is a compact probabilistic set with
  * no reverse operation.
  *
- * ## Storage
+ * Storage
  * Pending entries are persisted in [DataStore] as JSON-serialised [PendingEntry]
  * objects. DataStore provides atomic, transactional writes with crash safety.
  *
- * ## TTL
+ * TTL
  * Entries expire after [ENTRY_TTL_MS] (24 hours default). Expired entries are
  * pruned automatically by [pruneExpired].
  */
@@ -66,9 +66,7 @@ class PendingExchangeQueue @Inject constructor(
 
     private val dataStore get() = context.pendingExchangeDataStore
 
-    // -------------------------------------------------------------------------
     // Entry model
-    // -------------------------------------------------------------------------
 
     /**
      * A single parked exchange.
@@ -88,9 +86,7 @@ class PendingExchangeQueue @Inject constructor(
             System.currentTimeMillis() - enqueuedAtMs > ENTRY_TTL_MS
     }
 
-    // -------------------------------------------------------------------------
     // Queue operations
-    // -------------------------------------------------------------------------
 
     /** Add a pending exchange to the queue. Returns the entry ID, or null if queue is full. */
     suspend fun enqueue(senderKeyHash: String, encryptedPayload: String): String? {
@@ -135,9 +131,7 @@ class PendingExchangeQueue @Inject constructor(
     suspend fun pendingEntries(): List<PendingEntry> =
         loadEntries().filter { !it.isExpired() }
 
-    // -------------------------------------------------------------------------
     // Bloom filter hint for BLE advertising
-    // -------------------------------------------------------------------------
 
     /**
      * 8-byte Bloom filter hint suitable for inclusion in a BLE service data field.
@@ -172,9 +166,7 @@ class PendingExchangeQueue @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private suspend fun loadEntries(): List<PendingEntry> {
         val json = dataStore.data.map { prefs -> prefs[QUEUE_KEY] }.first() ?: return emptyList()

@@ -40,7 +40,7 @@ data class KnownPeer(
     /**
      * The last [Profile.version] value received from this peer during an exchange.
      * On next exchange, if the incoming version is higher, a "Card updated" banner
-     * is shown via [ContactMergeBottomSheet] (Phase 6.7).
+     * is shown via [ContactMergeBottomSheet].
      * Added in DB v8 (MIGRATION_7_8). DEFAULT 0 so existing rows show a banner
      * on first exchange after upgrade (correct — user has never seen the current version).
      */

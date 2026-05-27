@@ -55,3 +55,4 @@ interface ExchangeAuditDao {
     @Query("DELETE FROM exchange_audit_log WHERE timestampMs < :beforeMs")
     suspend fun deleteOlderThan(beforeMs: Long)
 }
+

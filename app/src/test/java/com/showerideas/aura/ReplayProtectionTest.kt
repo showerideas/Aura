@@ -124,9 +124,7 @@ class ReplayProtectionTest {
         assertEquals("fixed", map["_nonce"])
     }
 
-    // -----------------------------------------------------------------------
     // per-field length cap tests
-    // -----------------------------------------------------------------------
 
     @Test
     fun `field at exactly the cap limit is accepted`() {

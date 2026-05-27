@@ -19,7 +19,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * ViewModel for the exchange audit log screen (Phase 6.6).
+ * ViewModel for the exchange audit log screen.
  *
  * Exposes all audit entries as a [StateFlow] and provides CSV export
  * and clear operations.

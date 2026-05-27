@@ -23,20 +23,20 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * T29 — Signed audit log export WorkManager task.
+ * Signed audit log export WorkManager task.
  *
  * Triggered by the IT admin via EnterpriseSettingsFragment or on a scheduled
  * basis when [EnterprisePolicy.auditLogRetentionDays] > 0. Exports all
  * [ExchangeAuditEntry] records as a signed CSV file to the device's cache
  * directory, then fires a share intent for the EMM agent or admin to collect.
  *
- * ## Signing
+ * Signing
  * The export is signed with the device's ECDSA identity key so the IT admin can
  * verify the log came from this specific device and was not tampered with.
  * The signature is appended as a final column in the CSV and as a separate
  * `.sig` file alongside the CSV.
  *
- * ## Privacy
+ * Privacy
  * The export contains only the fields in [ExchangeAuditEntry] — no plaintext
  * names, emails, or profile data. Only timing, outcome, channel, and key hashes.
  */

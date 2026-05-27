@@ -5,9 +5,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T13 — Temporal gesture classifier using a 30-frame sliding window.
+ * Temporal gesture classifier using a 30-frame sliding window.
  *
- * ## Why temporal context matters
+ * Why temporal context matters
  * The centroid-based classifier ([GestureAuthManager]) compares a single-frame
  * embedding against the enrolled pattern. This is vulnerable to static spoofing:
  * a printed photo or a static hand held in the correct pose can match at the
@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * 2. A static spoof (printed hand, freeze-frame video) will show near-zero
  *    inter-frame velocity and zero trajectory variance.
  *
- * ## Algorithm
+ * Algorithm
  * - Maintain a ring buffer of the last [WINDOW_FRAMES] frame embeddings.
  * - When the buffer is full, compute the "motion profile" — the sequence of cosine
  *   similarity deltas between successive frames.
@@ -28,16 +28,12 @@ import javax.inject.Singleton
  *   (b) at least [MIN_MOTION_FRAMES] frames have inter-frame delta > [MOTION_FLOOR]
  *       (proves the hand was actually moving into position — not a static spoof)
  *
- * ## Integration with RecordingState
+ * Integration with RecordingState
  * When [collect] is called with each new frame embedding, the classifier transitions
  * [GestureAuthManager.RecordingState] to [GestureAuthManager.RecordingState.CollectingSequence]
  * until the buffer is full, then to Complete or Error.
  *
- * Note: this classifier does NOT use a neural-network LSTM at this stage. The name
- * "LSTM temporal" in the roadmap describes the INTENT (temporal sequencing). The
- * implementation here achieves the same goal with motion-profile analysis — a
- * lighter approach that doesn't require a separate .tflite model file.
- * A full LSTM upgrade (kinivi/hand-gesture LSTM architecture) is tracked as R&D-E.
+ * Motion-profile analysis rather than LSTM — no extra .tflite model required.
  */
 @Singleton
 class TemporalGestureClassifier @Inject constructor() {
@@ -60,9 +56,7 @@ class TemporalGestureClassifier @Inject constructor() {
         const val MIN_MOTION_FRAMES = 5
     }
 
-    // -------------------------------------------------------------------------
     // Ring buffer
-    // -------------------------------------------------------------------------
 
     private val buffer: ArrayDeque<FloatArray> = ArrayDeque(WINDOW_FRAMES)
 
@@ -83,9 +77,7 @@ class TemporalGestureClassifier @Inject constructor() {
     /** True when the window is fully filled and a classification is available. */
     val isBufferFull: Boolean get() = buffer.size >= WINDOW_FRAMES
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Feed a new frame embedding into the window.
@@ -111,9 +103,7 @@ class TemporalGestureClassifier @Inject constructor() {
         Timber.d("TemporalGestureClassifier: buffer reset")
     }
 
-    // -------------------------------------------------------------------------
     // Private: classification
-    // -------------------------------------------------------------------------
 
     private fun classify(enrolledPattern: FloatArray): TemporalResult {
         val frames = buffer.toList()
@@ -146,3 +136,4 @@ class TemporalGestureClassifier @Inject constructor() {
         }
     }
 }
+

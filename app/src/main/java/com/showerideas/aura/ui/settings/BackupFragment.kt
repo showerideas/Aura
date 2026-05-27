@@ -22,9 +22,9 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Phase 10.4 — Encrypted backup / restore screen (polished).
+ * Encrypted backup / restore screen (polished).
  *
- * Improvements over Phase 6.10 baseline:
+ * Improvements over baseline:
  * - Export filename includes the current date: `aura_backup_YYYYMMDD.aurbak`
  * - Passphrase confirmation field on the export dialog catches typos before
  *   the key derivation runs (a typo locks the user out of their own backup).
@@ -204,3 +204,4 @@ class BackupFragment : Fragment() {
         _binding = null
     }
 }
+

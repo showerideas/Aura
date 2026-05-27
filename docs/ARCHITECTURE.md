@@ -226,13 +226,14 @@ The wire format is one byte of `MSG_TYPE` followed by a body whose shape depends
 
 | `MSG_TYPE` | Hex | Body |
 |---|---|---|
-| `PUBLIC_KEY` | `0x01` | SPKI-encoded ephemeral ECDH public key |
+| `PUBLIC_KEY` (Hello) | `0x01` | JSON `HelloPayload` — X25519 pub (32 B) + ML-KEM-768 pub (1184 B) |
+| `PUBLIC_KEY` (HelloAck) | `0x01` | JSON `HelloAckPayload` — X25519 eph pub (32 B) + ML-KEM-768 ciphertext (1088 B) |
 | `PROFILE` | `0x02` | `AES-GCM(profile JSON)` (IV ‖ ciphertext ‖ tag) |
 | `AVATAR` | `0x03` | Base64(SPKI pub key) `\|` STREAM-payload-id |
 | `CHALLENGE` | `0x04` | Base64(SPKI long-lived pub key) `\|` 32-byte nonce |
-| `CHALLENGE_RESPONSE` | `0x05` | Base64(SPKI long-lived pub key) `\|` ECDSA signature |
+| `CHALLENGE_RESPONSE` | `0x05` | Base64(SPKI long-lived pub key) `\|` ML-DSA-65+ECDSA hybrid signature |
 
-See [`EXCHANGE_FLOW.md`](EXCHANGE_FLOW.md) for the full ordered walkthrough.
+The full v9 frame specification (version byte, frame types, sealed sender, key sizes) is in [`WIRE_PROTOCOL.md`](WIRE_PROTOCOL.md). See [`EXCHANGE_FLOW.md`](EXCHANGE_FLOW.md) for the full ordered walkthrough.
 
 ---
 
@@ -290,16 +291,18 @@ ViewModels use `@HiltViewModel`. The `AuraApplication` class is annotated `@Hilt
 
 | Property | Value | Where |
 |---|---|---|
-| AGP | 8.4.0 | `gradle/libs.versions.toml` |
+| AGP | 8.13.2 | `gradle/libs.versions.toml` |
 | Kotlin | 2.0.0 | `gradle/libs.versions.toml` |
 | Compile / Target SDK | 35 | `app/build.gradle.kts` |
 | Min SDK | 26 | `app/build.gradle.kts` |
 | JVM target | 17 | `app/build.gradle.kts` |
 | `applicationId` | `com.showerideas.aura` (`.debug` suffix on debug) | `app/build.gradle.kts` |
-| `versionCode` / `versionName` | `2` / `1.1.0` | `app/build.gradle.kts` |
+| `versionCode` / `versionName` | `2` / `1.1.0` (build.gradle — see note) | `app/build.gradle.kts` |
 | `isMinifyEnabled` (release) | `true` | `app/build.gradle.kts` |
 | ProGuard rules | `app/proguard-rules.pro` | linked in `release` block |
 | Schema export dir | `app/schemas/` | annotation processor arg |
-| Signing config | env-var driven (CI leaves blank → unsigned APK) | `app/build.gradle.kts` |
+| Signing config | env-var driven (`KEYSTORE_BASE64` etc. in GitHub Secrets) | `app/build.gradle.kts` |
+
+> **Note:** The declared `versionName` in `app/build.gradle.kts` is the APK-visible version. The logical engineering milestone (`v4.0.0` in `ROADMAP.md`) tracks feature delivery independently — bump `versionCode`/`versionName` when cutting a public release.
 
 For the actual build invocation see [`BUILD.md`](BUILD.md).

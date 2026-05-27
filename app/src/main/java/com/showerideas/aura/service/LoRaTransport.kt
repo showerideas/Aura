@@ -22,12 +22,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * T39 — LoRa transport via Meshtastic AIDL bridge.
+ * LoRa transport via Meshtastic AIDL bridge.
  *
  * Enables AURA exchanges over LoRa (long-range radio) when the user has the
  * Meshtastic Android app installed and a compatible LoRa hardware node connected.
  *
- * ## Architecture
+ * Architecture
  * ```
  * AURA app                Meshtastic app         LoRa hardware
  * ┌──────────────┐  AIDL  ┌──────────────────┐   radio
@@ -38,17 +38,17 @@ import javax.inject.Singleton
  * Payloads are compressed with LZ4/DEFLATE before transmission to fit within
  * LoRa's severely limited MTU (~200 bytes per packet at typical spreading factors).
  *
- * ## Payload budget
+ * Payload budget
  * LoRa MTU at SF7/BW125: ~200 bytes. Compressed AURA exchange card: ~120 bytes.
  * Large profiles (with avatar) are stripped of the avatar before LoRa transmission.
  *
- * ## BuildConfig gate
+ * BuildConfig gate
  * The LoRa feature is behind `BuildConfig.ENABLE_LORA`. When false (the default
  * for GMS builds), none of the Meshtastic AIDL calls are made and the class is
  * a no-op stub. Enable it via `gradle.properties`:
  *   `aura.lora.enabled=true`
  *
- * ## Meshtastic AIDL
+ * Meshtastic AIDL
  * The full AIDL definition lives in the Meshtastic-Android project:
  *   https://github.com/meshtastic/Meshtastic-Android
  *
@@ -83,9 +83,7 @@ class LoRaTransport @Inject constructor(
         }.getOrDefault(false)
     }
 
-    // -------------------------------------------------------------------------
     // State
-    // -------------------------------------------------------------------------
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val inboundChannel = Channel<ByteArray>(capacity = Channel.UNLIMITED)
@@ -97,9 +95,7 @@ class LoRaTransport @Inject constructor(
     val isAvailable: Boolean
         get() = LORA_ENABLED && isMeshtasticInstalled()
 
-    // -------------------------------------------------------------------------
     // Lifecycle
-    // -------------------------------------------------------------------------
 
     /**
      * Attempt to bind the Meshtastic AIDL service.
@@ -130,9 +126,7 @@ class LoRaTransport @Inject constructor(
         scope.cancel()
     }
 
-    // -------------------------------------------------------------------------
     // Send / receive
-    // -------------------------------------------------------------------------
 
     /**
      * Send an AURA exchange payload over LoRa.
@@ -192,9 +186,7 @@ class LoRaTransport @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // DEFLATE compression (LZ4 requires NDK; DEFLATE is available in stdlib)
-    // -------------------------------------------------------------------------
 
     /**
      * DEFLATE-compress [input] with level 9 (max compression for bandwidth-limited LoRa).
@@ -232,9 +224,7 @@ class LoRaTransport @Inject constructor(
         return out.toByteArray()
     }
 
-    // -------------------------------------------------------------------------
     // Meshtastic service connection
-    // -------------------------------------------------------------------------
 
     private val meshConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -249,9 +239,7 @@ class LoRaTransport @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
 
     private fun isMeshtasticInstalled(): Boolean = try {
         context.packageManager.getPackageInfo(MESH_PACKAGE, 0)

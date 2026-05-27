@@ -55,9 +55,7 @@ class CameraHandEmbedder @Inject constructor(
     private val modelDownloadManager: ModelDownloadManager
 ) {
 
-    // -------------------------------------------------------------------------
     // Public state
-    // -------------------------------------------------------------------------
 
     sealed class GestureState {
         /** No hand visible in the frame. */
@@ -93,9 +91,7 @@ class CameraHandEmbedder @Inject constructor(
     private val _gestureState = MutableStateFlow<GestureState>(GestureState.NoHand)
     val gestureState: StateFlow<GestureState> = _gestureState
 
-    // -------------------------------------------------------------------------
     // Internals
-    // -------------------------------------------------------------------------
 
     companion object {
         private const val TAG = "CameraHandEmbedder"
@@ -176,9 +172,7 @@ class CameraHandEmbedder @Inject constructor(
     private var lastGesture = HandGesture.NONE
     private var lastEmbedding: FloatArray? = null
 
-    // -------------------------------------------------------------------------
     // Lifecycle
-    // -------------------------------------------------------------------------
 
     /**
      * Bind the camera + MediaPipe pipeline to [lifecycleOwner] and render the
@@ -219,13 +213,11 @@ class CameraHandEmbedder @Inject constructor(
         _gestureState.value = GestureState.NoHand
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
 
     /**
-     * Phase 5.8 — Resolve the model file path.
+     * Resolve the model file path.
      *
      * GMS flavor: model is in assets/ (bundled at build time by downloadGestureModel).
      * FOSS flavor: model is downloaded to internal storage by [ModelDownloadManager]
@@ -245,7 +237,7 @@ class CameraHandEmbedder @Inject constructor(
 
     private fun initRecognizer() {
         try {
-            // Phase 5.8 — resolve model path first (FOSS = internal storage, GMS = assets/)
+            // resolve model path first (FOSS = internal storage, GMS = assets/)
             val modelPath = resolveModelPath()
             val options = GestureRecognizer.GestureRecognizerOptions.builder()
                 .setBaseOptions(

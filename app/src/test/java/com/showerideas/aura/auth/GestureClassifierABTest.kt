@@ -6,7 +6,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Phase J1 — Gesture classifier A/B test.
+ * Gesture classifier A/B test.
  *
  * Generates a synthetic dataset (100 genuine + 100 impostor embeddings) and
  * evaluates two decision strategies:
@@ -22,9 +22,7 @@ import kotlin.random.Random
  */
 class GestureClassifierABTest {
 
-    // -------------------------------------------------------------------------
     // Constants — must match GestureClassifier companion object
-    // -------------------------------------------------------------------------
 
     private val EMBED_DIM        = 63
     private val CONFIDENCE_GATE  = GestureClassifier.CONFIDENCE_GATE   // 0.82f
@@ -34,9 +32,7 @@ class GestureClassifierABTest {
     private val GENUINE_NOISE    = 0.15f
     private val BASE_SEED        = 42L
 
-    // -------------------------------------------------------------------------
     // Math helpers — exact copies of GestureClassifier private functions
-    // -------------------------------------------------------------------------
 
     private fun l2Norm(v: FloatArray): Float {
         var sum = 0f
@@ -51,9 +47,7 @@ class GestureClassifierABTest {
         return dot / sqrt(na * nb)
     }
 
-    // -------------------------------------------------------------------------
     // Training (mirrors GestureClassifier.train)
-    // -------------------------------------------------------------------------
 
     /** Returns (centroid, spread). */
     private fun train(enrolled: List<FloatArray>): Pair<FloatArray, Float> {
@@ -73,9 +67,7 @@ class GestureClassifierABTest {
         return Pair(c, spread)
     }
 
-    // -------------------------------------------------------------------------
     // Prediction strategies
-    // -------------------------------------------------------------------------
 
     /** Config A — raw cosine similarity against the centroid. */
     private fun predictCosineOnly(
@@ -98,9 +90,7 @@ class GestureClassifierABTest {
         return conf >= CONFIDENCE_GATE
     }
 
-    // -------------------------------------------------------------------------
     // Data generation
-    // -------------------------------------------------------------------------
 
     /** Random unit-sphere embedding. */
     private fun randomEmbedding(rng: Random): FloatArray {
@@ -116,9 +106,7 @@ class GestureClassifierABTest {
         return if (norm > 0f) FloatArray(EMBED_DIM) { v[it] / norm } else v
     }
 
-    // -------------------------------------------------------------------------
     // Tests
-    // -------------------------------------------------------------------------
 
     @Test
     fun `AB test - cosine-only vs full classifier on standard noise dataset`() {
@@ -317,3 +305,4 @@ class GestureClassifierABTest {
         )
     }
 }
+

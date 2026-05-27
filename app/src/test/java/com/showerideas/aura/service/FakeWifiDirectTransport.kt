@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * enabling full wire-protocol JVM unit tests without real Wi-Fi Direct,
  * Android devices, or emulators.
  *
- * ## Usage
+ * Usage
  * ```kotlin
  * val alice = FakeWifiDirectTransport("alice")
  * val bob   = FakeWifiDirectTransport("bob")
@@ -26,9 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
 
-    // -------------------------------------------------------------------------
     // NearbyTransport callbacks
-    // -------------------------------------------------------------------------
 
     override var onPayloadReceived: ((endpointId: String, data: ByteArray) -> Unit)? = null
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
@@ -36,9 +34,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
     override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
-    // -------------------------------------------------------------------------
     // Test introspection
-    // -------------------------------------------------------------------------
 
     /** All bytes received from each remote, in order. Key = remoteLocalName. */
     val receivedFrom: MutableMap<String, ConcurrentLinkedQueue<ByteArray>> =
@@ -54,9 +50,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
     private val _discoveryServiceIds = mutableListOf<String>()
     private val connectedPeers = mutableMapOf<String, FakeWifiDirectTransport>()
 
-    // -------------------------------------------------------------------------
     // Simulation helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Simulate a mutual Wi-Fi Direct connection between this fake and [peer].
@@ -96,9 +90,7 @@ class FakeWifiDirectTransport(val localName: String) : NearbyTransport {
         peer.onDisconnected?.invoke(localName)
     }
 
-    // -------------------------------------------------------------------------
     // NearbyTransport implementation
-    // -------------------------------------------------------------------------
 
     override fun sendBytes(endpointId: String, data: ByteArray) {
         val peer = connectedPeers[endpointId]

@@ -9,7 +9,7 @@ import org.junit.Test
 import java.security.SecureRandom
 
 /**
- * Phase 8.2 — Unit tests for [SealedEnvelope].
+ * Unit tests for [SealedEnvelope].
  */
 class SealedEnvelopeTest {
 

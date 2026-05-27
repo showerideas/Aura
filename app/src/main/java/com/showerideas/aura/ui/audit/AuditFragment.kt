@@ -23,7 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
- * Exchange audit log screen (Phase 6.6).
+ * Exchange audit log screen.
  *
  * Shows a timeline of all [ExchangeAuditEntry] rows from Room in reverse
  * chronological order. Toolbar actions:

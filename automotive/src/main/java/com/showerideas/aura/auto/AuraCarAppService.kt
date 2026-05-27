@@ -8,7 +8,7 @@ import androidx.car.app.validation.HostValidator
 import timber.log.Timber
 
 /**
- * T36 — Android Auto / Automotive OS entry point with TTS and contact-list support.
+ * Android Auto / Automotive OS entry point with TTS and contact-list support.
  *
  * The head unit binds [AuraCarAppService] when the driver connects their phone
  * (Android Auto) or launches AURA from the Automotive OS app launcher.
@@ -17,14 +17,9 @@ import timber.log.Timber
  *   IdleScreen → AdvertisingScreen → SasScreen → CompletedScreen
  *         └──────────────────────────────────── ContactListScreen (secondary action)
  *
- * T36 additions vs Phase 7.3:
- * - [AutoTtsAnnouncer] initialised on session create; shut down on session end.
- *   Announces advertising, exchange-complete (with contact name), cancel events.
- * - Gesture authentication is disabled while in Auto mode via a SharedPreferences
- *   flag ([PREF_AUTO_MODE_GESTURE_DISABLED]) that GestureAuthManager reads on each
- *   auth attempt. Restored to false when the session ends.
- * - [ContactListScreen] is accessible from [IdleScreen] as a secondary action so
- *   the driver can browse recent contacts while parked.
+ * [AutoTtsAnnouncer] announces advertising, exchange-complete, and cancel events.
+ * Gesture auth is suppressed during Auto sessions via [PREF_AUTO_MODE_GESTURE_DISABLED].
+ * [ContactListScreen] is accessible from [IdleScreen] as a secondary action.
  */
 class AuraCarAppService : CarAppService() {
 
@@ -76,9 +71,7 @@ class AuraSession : Session() {
         Timber.i("AuraSession: Auto session ended — gesture auth re-enabled")
     }
 
-    // -------------------------------------------------------------------------
     // Gesture-disabled flag
-    // -------------------------------------------------------------------------
 
     private fun setGestureAuthDisabled(disabled: Boolean) {
         carContext

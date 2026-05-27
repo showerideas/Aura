@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Provided via Hilt in the `gms` product flavor — see `di/TransportModule.kt`
  * in the `gms` source set.
  *
- * ## Avatar STREAM payloads
+ * Avatar STREAM payloads
  * Nearby Connections supports STREAM payloads for large binary transfers (avatar JPEG).
  * This is not part of the [NearbyTransport] interface (Wi-Fi Direct is bytes-only).
  * [NearbyExchangeService] downcasts to [NearbyConnectionsTransport] to access
@@ -37,9 +37,7 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
 
     internal val client: ConnectionsClient = Nearby.getConnectionsClient(context)
 
-    // -------------------------------------------------------------------------
     // NearbyTransport callbacks
-    // -------------------------------------------------------------------------
 
     override var onPayloadReceived: ((endpointId: String, data: ByteArray) -> Unit)? = null
     override var onConnected: ((endpointId: String, remoteName: String, isIncoming: Boolean) -> Unit)? = null
@@ -47,9 +45,7 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
     override var onEndpointFound: ((endpointId: String, remoteName: String) -> Unit)? = null
     override var onConnectionInitiated: ((endpointId: String, remoteName: String) -> Unit)? = null
 
-    // -------------------------------------------------------------------------
     // Avatar streaming — NearbyTransport optional extension (gms only)
-    // -------------------------------------------------------------------------
 
     private var _onAvatarStreamReceived: ((endpointId: String, stream: java.io.InputStream) -> Unit)? = null
 
@@ -58,9 +54,7 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
         get() = _onAvatarStreamReceived
         set(value) { _onAvatarStreamReceived = value }
 
-    // -------------------------------------------------------------------------
     // Internal state
-    // -------------------------------------------------------------------------
 
     /** endpointId → remoteName, captured in [ConnectionLifecycleCallback.onConnectionInitiated]. */
     private val endpointNames = ConcurrentHashMap<String, String>()
@@ -71,9 +65,7 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
      */
     private val incomingInitiated: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-    // -------------------------------------------------------------------------
     // Nearby Connections callbacks
-    // -------------------------------------------------------------------------
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
@@ -136,9 +128,7 @@ class NearbyConnectionsTransport(context: Context) : NearbyTransport {
         }
     }
 
-    // -------------------------------------------------------------------------
     // NearbyTransport — implementation
-    // -------------------------------------------------------------------------
 
     override fun startAdvertising(localName: String, serviceId: String) {
         val options = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()

@@ -65,7 +65,7 @@ class HomeFragment : Fragment() {
         binding.btnRoomMode.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_room)
         }
-        // T18: long-press the exchange FAB to quickly pick a share preset
+        // long-press the exchange FAB to quickly pick a share preset
         binding.btnActivate.setOnLongClickListener {
             SharePresetBottomSheet.show(childFragmentManager) { _ ->
                 // Preset selected — user can now tap to start an exchange with this preset active
@@ -91,14 +91,14 @@ class HomeFragment : Fragment() {
                         else               -> getString(R.string.profile_type_personal)
                     }
                     binding.chipActiveProfile.text = typeLabel
-                    // Phase 6.8: enable share button once a profile exists
+                    // enable share button once a profile exists
                     binding.btnShareCard.isEnabled = profile != null &&
                         profile.displayName.isNotBlank()
                 }
             }
         }
 
-        // Phase 6.8: share card deeplink via Android share sheet.
+        // share card deeplink via Android share sheet.
         binding.btnShareCard.setOnClickListener {
             val profile = latestProfile ?: return@setOnClickListener
             val url = DeeplinkUtils.generateShareUrl(profile)

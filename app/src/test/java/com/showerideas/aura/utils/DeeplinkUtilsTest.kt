@@ -9,16 +9,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [DeeplinkUtils] — Phase 6.8 share-card deeplink encoding.
+ * Unit tests for [DeeplinkUtils] share-card deeplink encoding.
  *
  * All tests run on the JVM (no Android dependencies); the Base64 + JSONObject
  * operations are standard Java/Kotlin library calls available in unit-test scope.
  */
 class DeeplinkUtilsTest {
 
-    // -------------------------------------------------------------------------
     // generateShareUrl
-    // -------------------------------------------------------------------------
 
     @Test
     fun `generateShareUrl produces a valid https aura app c URL`() {
@@ -112,9 +110,7 @@ class DeeplinkUtilsTest {
         assertNull(decoded["displayName"])
     }
 
-    // -------------------------------------------------------------------------
     // decodeShareUrl
-    // -------------------------------------------------------------------------
 
     @Test
     fun `decodeShareUrl returns null for non-aura URL`() {
@@ -162,9 +158,7 @@ class DeeplinkUtilsTest {
         assertEquals("O'Brien, Dr. & Sons <test>", decoded!!["displayName"])
     }
 
-    // -------------------------------------------------------------------------
     // URL structure invariants
-    // -------------------------------------------------------------------------
 
     @Test
     fun `generated URL contains no padding characters`() {

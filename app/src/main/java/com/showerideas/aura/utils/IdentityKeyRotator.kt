@@ -7,7 +7,7 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 
 /**
- * Task 30 — Identity key rotation for AURA.
+ * Identity key rotation for AURA.
  *
  * When a user rotates their identity key:
  * 1. Generate a new P-256 key pair.

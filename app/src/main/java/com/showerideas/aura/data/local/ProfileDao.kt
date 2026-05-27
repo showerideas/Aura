@@ -7,17 +7,17 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Data access object for the `profile` table.
  *
- * ## Single-profile legacy path
+ * Single-profile legacy path
  * The original row keyed `"local_profile"` is preserved and remains the active
  * profile after DB v6 migration. All existing callers that used [get] / [observe]
  * continue to work — they are re-routed to the active-profile equivalents.
  *
- * ## Multi-profile additions (DB v6)
+ * Multi-profile additions (DB v6)
  * New DAO methods support listing, creating, switching, and deleting profiles.
  * Exactly one row must have `is_active = 1` at all times; [setActive] enforces
  * this atomically inside a `@Transaction`.
  *
- * ## Why abstract class + open @Transaction method?
+ * Why abstract class + open @Transaction method?
  * Room + Kotlin 2.0 / KAPT requires two things for `@Transaction` suspend methods:
  * 1. The DAO must be an abstract class (not an interface) — KAPT generates `final`
  *    stubs for interface default methods, which Room rejects.
@@ -30,9 +30,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 abstract class ProfileDao {
 
-    // -------------------------------------------------------------------------
     // Backward-compatible single-profile queries (legacy callers)
-    // -------------------------------------------------------------------------
 
     /**
      * Returns the currently-active profile as a Flow, or null if the table
@@ -46,9 +44,7 @@ abstract class ProfileDao {
     @Query("SELECT * FROM profile WHERE is_active = 1 LIMIT 1")
     abstract suspend fun get(): Profile?
 
-    // -------------------------------------------------------------------------
-    // Multi-profile queries (Phase 6.4)
-    // -------------------------------------------------------------------------
+    // Multi-profile queries
 
     /** All profiles ordered by creation time — drives the profile switcher list. */
     @Query("SELECT * FROM profile ORDER BY createdAt ASC")
@@ -81,9 +77,7 @@ abstract class ProfileDao {
     @Query("UPDATE profile SET is_active = 1 WHERE id = :id")
     abstract suspend fun activate(id: String)
 
-    // -------------------------------------------------------------------------
     // Write operations
-    // -------------------------------------------------------------------------
 
     /** Insert or replace a profile row (used for the legacy local_profile upsert). */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -113,3 +107,4 @@ abstract class ProfileDao {
     @Query("DELETE FROM profile")
     abstract suspend fun clear()
 }
+

@@ -7,7 +7,7 @@ import org.junit.Test
 import java.security.MessageDigest
 
 /**
- * Phase 10.3 — Unit tests for GestureModelLoader's hash verification logic.
+ * Unit tests for GestureModelLoader's hash verification logic.
  *
  * These are pure JVM tests; they exercise the SHA-256 logic in isolation
  * without any Android context or MediaPipe runtime.

@@ -63,9 +63,7 @@ class ExchangeViewModel @Inject constructor(
     val authMethod: StateFlow<String> = authPreferences.authMethod
         .stateIn(viewModelScope, SharingStarted.Eagerly, AuthPreferences.DEFAULT_METHOD)
 
-    // -------------------------------------------------------------------------
-    // Phase 9.1: Share presets
-    // -------------------------------------------------------------------------
+    // Share presets
 
     /** Emits the current list of share presets (default + user-created). */
     val sharePresets: StateFlow<List<SharePreset>> = sharePresetDao.getAllPresetsFlow()
@@ -78,7 +76,6 @@ class ExchangeViewModel @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
 
     fun cancelExchange() = NearbyExchangeService.stop(context)
 
@@ -113,3 +110,4 @@ class ExchangeViewModel @Inject constructor(
         viewModelScope.launch { contactRepository.applyMergeSelections(base, selections) }
     }
 }
+

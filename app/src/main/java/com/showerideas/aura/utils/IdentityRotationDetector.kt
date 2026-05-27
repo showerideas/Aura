@@ -11,7 +11,7 @@ import javax.inject.Singleton
  * Detects when a re-connecting peer presents a different identity key hash than
  * the one stored in their [com.showerideas.aura.model.Contact] record.
  *
- * ## Trust Model: TOFU (Trust On First Use)
+ * Trust Model: TOFU (Trust On First Use)
  * On the first exchange with a peer, AURA records their identity key hash in
  * [com.showerideas.aura.model.Contact.identityKeyHash]. On all subsequent sessions,
  * the peer must present the same key. If the key changes, one of three things happened:
@@ -26,7 +26,7 @@ import javax.inject.Singleton
  * the new key. The SAS (Short Authentication String — see [SasVerifier]) provides an
  * additional out-of-band check the user can perform if they suspect case 3.
  *
- * ## Usage in NearbyExchangeService
+ * Usage in NearbyExchangeService
  * After receiving the peer's ECDSA identity public key in the HELLO handshake,
  * compute `incomingHash = CryptoUtils.identityKeyHash(peerIdentityKey)`, then call:
  * ```kotlin
@@ -37,7 +37,7 @@ import javax.inject.Singleton
  * }
  * ```
  *
- * ## Thread safety
+ * Thread safety
  * [check] is a suspend function — always call from a coroutine.
  */
 @Singleton
@@ -45,9 +45,7 @@ class IdentityRotationDetector @Inject constructor(
     private val contactRepository: ContactRepository
 ) {
 
-    // -------------------------------------------------------------------------
     // Result type
-    // -------------------------------------------------------------------------
 
     sealed class RotationEvent {
 
@@ -85,9 +83,7 @@ class IdentityRotationDetector @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     /**
      * Check whether [incomingKeyHash] for a known peer matches their stored contact.
@@ -156,9 +152,7 @@ class IdentityRotationDetector @Inject constructor(
         }
     }
 
-    // -------------------------------------------------------------------------
     // Companion — pure static helpers (JVM-unit-testable, no coroutine needed)
-    // -------------------------------------------------------------------------
 
     companion object {
         /**

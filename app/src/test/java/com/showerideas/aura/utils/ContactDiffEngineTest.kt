@@ -36,9 +36,7 @@ class ContactDiffEngineTest {
         identityKeyHash = hash
     )
 
-    // -------------------------------------------------------------------------
     // No changes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff identical contacts returns empty diff`() {
@@ -57,9 +55,7 @@ class ContactDiffEngineTest {
         assertFalse("Whitespace-only difference should not produce a diff", event.hasChanges)
     }
 
-    // -------------------------------------------------------------------------
     // Single field changes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects name change`() {
@@ -112,9 +108,7 @@ class ContactDiffEngineTest {
         assertEquals("bio", event.diffs[0].field)
     }
 
-    // -------------------------------------------------------------------------
     // Avatar change
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects avatar added`() {
@@ -151,9 +145,7 @@ class ContactDiffEngineTest {
         assertTrue(avatarDiff.isEmpty())
     }
 
-    // -------------------------------------------------------------------------
     // Multiple field changes
-    // -------------------------------------------------------------------------
 
     @Test
     fun `diff detects multiple changed fields`() {
@@ -167,9 +159,7 @@ class ContactDiffEngineTest {
         assertFalse(event.diffs.any { it.field == "email" })
     }
 
-    // -------------------------------------------------------------------------
     // applySelections
-    // -------------------------------------------------------------------------
 
     @Test
     fun `applySelections replaces selected fields`() {
@@ -198,9 +188,7 @@ class ContactDiffEngineTest {
         assertEquals(9999L, result.receivedAt)
     }
 
-    // -------------------------------------------------------------------------
     // MergeEvent properties
-    // -------------------------------------------------------------------------
 
     @Test
     fun `MergeEvent hasChanges false when diffs empty`() {
@@ -228,9 +216,7 @@ class ContactDiffEngineTest {
         assertEquals("Alice", event.previous.displayName)
     }
 
-    // -------------------------------------------------------------------------
     // Label coverage
-    // -------------------------------------------------------------------------
 
     @Test
     fun `all diff fields have non-blank labels`() {

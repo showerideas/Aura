@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
  * Kept deliberately minimal: only fields the user explicitly chooses to share.
  * Sensitive fields are stored encrypted via EncryptedSharedPreferences.
  *
- * ## Multiple profiles (v2.2+)
+ * Multiple profiles (v2.2+)
  * The [profileType] column distinguishes Personal from Work (and Custom) cards.
  * The existing `"local_profile"` row retains its PK to preserve upgrade
  * compatibility; new profiles use UUID-based IDs.
@@ -60,7 +60,7 @@ data class Profile(
      * Monotonically-increasing profile version, auto-incremented by
      * [com.showerideas.aura.data.ProfileRepository.update] on every field save.
      * Sent to peers via [toShareableMap] so they can detect when a returning contact
-     * updated their card — used by Phase 6.7 to surface the "Card updated" banner.
+     * updated their card — used by to surface the "Card updated" banner.
      * Added in DB v8 (MIGRATION_7_8).
      */
     @ColumnInfo(name = "version")
@@ -76,7 +76,7 @@ data class Profile(
             if ("title" in enabled && title.isNotBlank()) put("title", title)
             if ("website" in enabled && website.isNotBlank()) put("website", website)
             if ("bio" in enabled && bio.isNotBlank()) put("bio", bio)
-            // Version is always sent — peers use it to detect card updates (Phase 6.7).
+            // Version is always sent — peers use it to detect card updates.
             put("version", version.toString())
         }
     }

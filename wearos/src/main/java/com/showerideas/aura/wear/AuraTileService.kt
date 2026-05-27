@@ -20,7 +20,7 @@ import kotlinx.coroutines.guava.future
 import timber.log.Timber
 
 /**
- * Phase 7.2 — AURA exchange status tile for the Wear OS tile carousel.
+ * AURA exchange status tile for the Wear OS tile carousel.
  *
  * Displays:
  *   • "AURA" header in cyan
@@ -30,7 +30,7 @@ import timber.log.Timber
  * [WearPhoneBridge] calls [requestUpdate] whenever the phone sends a new
  * exchange state byte, causing the system to re-call [onTileRequest].
  *
- * ## Tile refresh policy
+ * Tile refresh policy
  * The tile sets a 5-minute freshness hint so it stays current without
  * draining the watch battery.  Real-time updates arrive via [requestUpdate].
  */
@@ -49,9 +49,7 @@ class AuraTileService : TileService() {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // -------------------------------------------------------------------------
     // TileService contract
-    // -------------------------------------------------------------------------
 
     override fun onTileRequest(
         requestParams: RequestBuilders.TileRequest
@@ -74,9 +72,7 @@ class AuraTileService : TileService() {
         scope.cancel()
     }
 
-    // -------------------------------------------------------------------------
     // Layout builder
-    // -------------------------------------------------------------------------
 
     private fun buildTile(state: ExchangeState): Tile {
         val layout = LayoutElementBuilders.Column.Builder()
@@ -162,3 +158,4 @@ class AuraTileService : TileService() {
             .build()
     }
 }
+

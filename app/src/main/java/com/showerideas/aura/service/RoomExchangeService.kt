@@ -28,9 +28,9 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * T10 — Multi-party room exchange service (star-topology card router).
+ * Multi-party room exchange service (star-topology card router).
  *
- * ## Architecture
+ * Architecture
  * ```
  *         ┌─────────────┐
  *         │  Host/Hub   │  ← RoomExchangeService runs here
@@ -45,7 +45,7 @@ import javax.crypto.spec.SecretKeySpec
  * with a per-delivery re-encryption (fresh IV, same room key). Once delivery
  * is ACKed the card is decrypted locally and saved via [ContactDao].
  *
- * ## Room key
+ * Room key
  * The 32-byte room key from [RoomSession.roomKey] (Base64) is used as the
  * AES-256 key for both inbound decryption and outbound re-encryption.
  * Each message uses a fresh 12-byte random IV stored as a prefix:
@@ -53,7 +53,7 @@ import javax.crypto.spec.SecretKeySpec
  * [12-byte IV] [16-byte GCM tag + ciphertext]
  * ```
  *
- * ## Lifecycle
+ * Lifecycle
  * Start via [ACTION_START] with [EXTRA_ROOM_ID]. Stop via [ACTION_STOP] or
  * when the room expires ([RoomRepository.ROOM_TTL_MS] = 10 min).
  */
@@ -94,9 +94,7 @@ class RoomExchangeService : Service() {
 
     private var currentRoomId: String? = null
 
-    // -------------------------------------------------------------------------
     // Service lifecycle
-    // -------------------------------------------------------------------------
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -135,9 +133,7 @@ class RoomExchangeService : Service() {
         super.onDestroy()
     }
 
-    // -------------------------------------------------------------------------
     // Card routing
-    // -------------------------------------------------------------------------
 
     /**
      * Accept an encrypted card from [senderId], buffer it, then route a
@@ -229,9 +225,7 @@ class RoomExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Crypto helpers
-    // -------------------------------------------------------------------------
 
     private fun decodeRoomKey(base64Key: String): SecretKey? = try {
         val keyBytes = android.util.Base64.decode(base64Key, android.util.Base64.NO_WRAP)
@@ -266,9 +260,7 @@ class RoomExchangeService : Service() {
         return cipher.doFinal(ciphertext)
     }
 
-    // -------------------------------------------------------------------------
     // Contact persistence
-    // -------------------------------------------------------------------------
 
     private suspend fun persistContact(plaintext: ByteArray, senderMemberId: String, roomId: String) {
         try {
@@ -296,9 +288,7 @@ class RoomExchangeService : Service() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Room expiry watch
-    // -------------------------------------------------------------------------
 
     private suspend fun watchRoomExpiry(roomId: String) {
         roomRepository.observeRoom(roomId).collect { room ->
@@ -318,9 +308,7 @@ class RoomExchangeService : Service() {
         stopSelf()
     }
 
-    // -------------------------------------------------------------------------
     // Notification
-    // -------------------------------------------------------------------------
 
     private fun buildNotification() = NotificationCompat.Builder(this, NotificationChannels.CHANNEL_EXCHANGE)
         .setSmallIcon(R.drawable.ic_aura_notification)

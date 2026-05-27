@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * Phase 6.11 — Quick Settings tile for AURA exchange.
+ * Quick Settings tile for AURA exchange.
  *
  * Tile state mirrors [NearbyExchangeService.sessionState]:
  *   - Active (blue, subtitle "Exchanging")   when a session is live
@@ -29,7 +29,7 @@ class AuraQsTileService : TileService() {
     companion object {
         /** Intent extra action broadcasted when tile is tapped */
         const val ACTION_START_EXCHANGE = "com.showerideas.aura.ACTION_START_EXCHANGE"
-        /** Intent action to open the share-preset picker from QS long-press (T18) */
+        /** Intent action to open the share-preset picker from QS long-press */
         const val ACTION_SHOW_PRESET_PICKER = "com.showerideas.aura.ACTION_SHOW_PRESET_PICKER"
     }
 
@@ -80,7 +80,7 @@ class AuraQsTileService : TileService() {
 
 
     /**
-     * T18 — QS tile long-press sub-action (Android 11+, MIUI / OxygenOS surface it in edit mode).
+     * QS tile long-press sub-action (Android 11+, MIUI / OxygenOS surface it in edit mode).
      *
      * Long-pressing the tile opens a minimal preset-switch intent so the user can
      * flip their active share preset without entering the full app. We launch

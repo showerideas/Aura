@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 /**
- * T36 — Verifies that AuraCarAppService correctly writes/clears the
+ * Verifies that AuraCarAppService correctly writes/clears the
  * gesture-disabled flag so downstream GestureAuthManager can respect it.
  */
 @RunWith(RobolectricTestRunner::class)

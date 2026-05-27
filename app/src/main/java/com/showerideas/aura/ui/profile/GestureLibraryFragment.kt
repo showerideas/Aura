@@ -25,7 +25,7 @@ import java.text.DateFormat
 import java.util.Date
 
 /**
- * Phase 9.3 — Gesture Library screen.
+ * Gesture Library screen.
  *
  * Displays up to [GestureLibraryViewModel.MAX_GESTURE_PROFILES] named gesture slots.
  * For each slot the user can:
@@ -74,19 +74,10 @@ class GestureLibraryFragment : Fragment() {
         }
     }
 
-    // -------------------------------------------------------------------------
     // Actions
-    // -------------------------------------------------------------------------
 
-    /**
-     * Navigate to ProfileFragment with the slot index in args so it records
-     * into the specified gesture slot instead of the default (slot 0).
-     *
-     * TODO: pass slot arg once ProfileFragment supports multi-slot enrollment.
-     */
     private fun navigateToEnroll(slot: Int) {
-        // For now, navigate back to Profile to let user record in the primary slot.
-        // Multi-slot enrollment wiring is tracked as a follow-up in Phase 9.3.
+        // Multi-slot enrollment not yet wired — navigate to primary slot for now.
         Toast.makeText(requireContext(),
             getString(R.string.gesture_library_enroll_hint, slot + 1),
             Toast.LENGTH_SHORT).show()
@@ -94,7 +85,6 @@ class GestureLibraryFragment : Fragment() {
     }
 
     private fun testGesture(slot: Int) {
-        // TODO Phase 9.3 follow-up: launch camera in test-match mode against slot `slot`.
         Toast.makeText(requireContext(), R.string.gesture_library_test_coming_soon, Toast.LENGTH_SHORT).show()
     }
 
@@ -131,9 +121,7 @@ class GestureLibraryFragment : Fragment() {
         _binding = null
     }
 
-    // -------------------------------------------------------------------------
     // RecyclerView adapter
-    // -------------------------------------------------------------------------
 
     private inner class GestureProfileAdapter(
         private val onEnroll: (Int) -> Unit,

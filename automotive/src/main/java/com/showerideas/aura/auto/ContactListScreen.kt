@@ -10,7 +10,7 @@ import androidx.car.app.model.Row
 import androidx.car.app.model.Template
 
 /**
- * T36 — Android Auto contact list screen.
+ * Android Auto contact list screen.
  *
  * Displays recently-exchanged AURA contacts in the Car App Library
  * [ListTemplate]. Contacts are passed in at construction time (read from

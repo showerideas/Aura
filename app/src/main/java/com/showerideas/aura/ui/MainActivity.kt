@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         val kp = CryptoUtils.generateEphemeralECDHKeyPair()
         NearbyExchangeService.nfcLocalKeyPair = kp
         NfcExchangeHelper.enable(this, kp.public, sessionUuid)
-        // Phase 6.1 — also push the same key into HCE so we respond over NFC
+        // also push the same key into HCE so we respond over NFC
         // in both directions (we act as reader via NfcExchangeHelper, as card
         // via AuraHceService).
         AuraHceService.setLocalKey(kp.public.encoded, sessionUuid)
@@ -125,6 +125,12 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+
+        // Handle App Links (https://aura.app/c/*) BEFORE any early-return so
+        // deeplinks are processed even when the intent is not an NFC tap.
+        handleDeeplink(intent)
+
+        // NFC tap-to-exchange bootstrap — returns null for non-NFC intents.
         val bootstrap = NfcExchangeHelper.handleIntent(intent) ?: return
         Timber.i("NFC tap received — peerSession=${bootstrap.peerSessionUuid}")
         NearbyExchangeService.pendingNfcBootstrap = bootstrap
@@ -132,9 +138,6 @@ class MainActivity : AppCompatActivity() {
         if (navController.currentDestination?.id != R.id.exchangeFragment) {
             navController.navigate(R.id.exchangeFragment)
         }
-    
-        // Phase 6.8 — handle incoming Share AURA deeplinks (https://aura.app/c/*)
-        handleDeeplink(intent)
     }
 
     override fun onDestroy() {
@@ -145,7 +148,6 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean =
         navController.navigateUp() || super.onSupportNavigateUp()
 
-    // -------------------------------------------------------------------------
 
     private fun setupNavigation() {
         val navHost = supportFragmentManager
@@ -217,7 +219,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // -----------------------------------------------------------------
     // Settings entry point.
     //
     // The toolbar gear navigates to the SettingsFragment in the nav graph.
@@ -225,7 +226,6 @@ class MainActivity : AppCompatActivity() {
     // MenuProvider so existing fragments that already add their own
     // MenuProviders (e.g. ContactsFragment) don't collide on lifecycle
     // ordering.
-    // -----------------------------------------------------------------
 
     override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Phase 6.8 — route incoming https://aura.app/c/{token} App Links to the
+     * route incoming https://aura.app/c/{token} App Links to the
      * contact-import flow. DeeplinkUtils decodes the base64url JSON payload;
      * we then navigate to the contacts screen so the user can save the card.
      */

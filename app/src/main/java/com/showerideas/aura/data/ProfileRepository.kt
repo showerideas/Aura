@@ -11,23 +11,15 @@ import javax.inject.Singleton
 /**
  * Repository for the user's own profile(s).
  *
- * ## Single-profile legacy path
- * [profile] and [get] / [save] / [update] / [getOrCreate] are unchanged from
- * v1.x — all existing callers continue to work without modification.
- *
- * ## Multi-profile additions (Phase 6.4 / DB v6)
- * [allProfiles] exposes all rows ordered by creation time.
- * [setActive] atomically switches the active profile.
- * [create] builds a new profile row with a UUID key and the desired type.
- * [delete] removes a non-active profile.
+ * Single-profile interface ([profile], [get], [save], [update], [getOrCreate]) is
+ * backward-compatible with v1.x callers. Multi-profile additions (DB v6): [allProfiles],
+ * [setActive], [create], [delete].
  */
 @Singleton
 class ProfileRepository @Inject constructor(
     private val profileDao: ProfileDao
 ) {
-    // -------------------------------------------------------------------------
     // Backward-compatible single-profile interface
-    // -------------------------------------------------------------------------
 
     /** Flow of the currently-active profile. Used by HomeViewModel for the greeting. */
     val profile: Flow<Profile?> = profileDao.observe()
@@ -40,7 +32,7 @@ class ProfileRepository @Inject constructor(
 
     /**
      * Update an existing profile, stamping [Profile.updatedAt] and incrementing
-     * [Profile.version] so peers detect card changes on their next exchange (Phase 6.7).
+     * [Profile.version] so peers detect card changes on their next exchange.
      */
     suspend fun update(profile: Profile) {
         val updated = profile.copy(
@@ -55,9 +47,7 @@ class ProfileRepository @Inject constructor(
         return profileDao.getActive() ?: Profile().also { profileDao.insert(it) }
     }
 
-    // -------------------------------------------------------------------------
-    // Multi-profile interface (Phase 6.4)
-    // -------------------------------------------------------------------------
+    // Multi-profile interface
 
     /** All profiles ordered oldest-first — drives the profile switcher list. */
     val allProfiles: Flow<List<Profile>> = profileDao.getAllProfiles()

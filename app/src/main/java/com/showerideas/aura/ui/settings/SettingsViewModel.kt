@@ -23,10 +23,10 @@ import javax.inject.Inject
 /**
  * Backing ViewModel for the Settings screen. Centralises all app-wide knobs.
  *
- * Phase 6.5 addition: [rotateIdentityKey] — generates a new Android Keystore
+ * [rotateIdentityKey] — generates a new Android Keystore
  * identity key and produces a rotation certificate for known peers.
  *
- * Phase 8.3 addition: [setTorProxyEnabled] — routes relay traffic via Orbot.
+ * [setTorProxyEnabled] — routes relay traffic via Orbot.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -65,9 +65,7 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun contactCount(): Int = contactRepository.count()
 
-    // -------------------------------------------------------------------------
-    // Phase 6.5: Identity key rotation
-    // -------------------------------------------------------------------------
+    // Identity key rotation
 
     /**
      * Rotate the device identity key in Android Keystore.
@@ -75,9 +73,8 @@ class SettingsViewModel @Inject constructor(
      * Runs on [Dispatchers.IO] — Keystore ops must not block the main thread.
      * Returns `true` on success, `false` if the rotation failed (UI shows error toast).
      *
-     * The [CryptoUtils.RotationCertificate] produced here is logged;
-     * in Phase 6.5.2 it will be stored in KnownPeer.rotationCertificate and
-     * broadcast to known peers on next exchange.
+     * The [CryptoUtils.RotationCertificate] is logged; persistence to
+     * KnownPeer and broadcast on next exchange is not yet implemented.
      */
     suspend fun rotateIdentityKey(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
@@ -87,15 +84,13 @@ class SettingsViewModel @Inject constructor(
                 "New key: ${cert.newPublicKeyBytes.size} bytes, " +
                 "Cert sig: ${cert.signatureBytes.size} bytes"
             )
-            // TODO (Phase 6.5.2): persist cert to KnownPeerRepository + broadcast on next exchange
+
         }.onFailure { e ->
             Timber.e(e, "Identity key rotation failed")
         }.isSuccess
     }
 
-    // -------------------------------------------------------------------------
-    // Phase 8.3 — Orbot/Tor anonymization proxy
-    // -------------------------------------------------------------------------
+    // Orbot/Tor anonymization proxy
 
     /** True if org.torproject.android (Orbot) is installed on this device. */
     val isOrbotInstalled: Boolean

@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * JVM unit tests for key rotation domain logic (Phase 6.5).
+ * JVM unit tests for key rotation domain logic.
  *
  * Tests the data model additions and [IdentityRotationDetector] behaviour.
  * Note: [CryptoUtils.rotateDeviceIdentityKey] requires the Android Keystore
@@ -17,9 +17,7 @@ import org.junit.Test
  */
 class KeyRotationTest {
 
-    // -------------------------------------------------------------------------
     // KnownPeer data model
-    // -------------------------------------------------------------------------
 
     @Test
     fun knownPeer_defaults_to_null_rotationCertificate() {
@@ -61,9 +59,7 @@ class KeyRotationTest {
         assertFalse(peer.rotationCertificate != null)
     }
 
-    // -------------------------------------------------------------------------
     // IdentityRotationDetector
-    // -------------------------------------------------------------------------
 
     @Test
     fun rotationDetector_returns_false_for_same_key() {
@@ -110,9 +106,7 @@ class KeyRotationTest {
         assertFalse(IdentityRotationDetector.hasKeyChanged(peer, base64))
     }
 
-    // -------------------------------------------------------------------------
     // Rotation certificate byte consistency
-    // -------------------------------------------------------------------------
 
     @Test
     fun rotationCertificate_is_non_empty_when_set() {

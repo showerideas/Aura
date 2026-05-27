@@ -47,11 +47,12 @@ sequenceDiagram
     Note over NCA,NCB: Channel is now encrypted by<br/>Nearby Connections itself (ECDH+AES-GCM)<br/>but we layer our own crypto on top.
 
     rect rgb(245,243,255)
-    note over NCA,NCB: Phase 1 — ephemeral ECDH for the AURA layer
-    NCA->>NCB: MSG_TYPE_PUBLIC_KEY ‖ SPKI(ephPubA)
-    NCB->>NCA: MSG_TYPE_PUBLIC_KEY ‖ SPKI(ephPubB)
-    NCA->>NCA: sharedKey = ECDH(ephPrivA, ephPubB) → AES-256
-    NCB->>NCB: sharedKey = ECDH(ephPrivB, ephPubA) → AES-256
+    note over NCA,NCB: Phase 1 — PQ-hybrid KEM (ML-KEM-768 + X25519)
+    NCA->>NCB: MSG_TYPE_PUBLIC_KEY ‖ HelloPayload(x25519_pub ‖ mlkem768_pub)
+    NCB->>NCB: kemSession = responderSession(HelloPayload)
+    NCB->>NCA: MSG_TYPE_PUBLIC_KEY ‖ HelloAckPayload(x25519_eph_pub ‖ mlkem768_ciphertext)
+    NCA->>NCA: sharedKey = completeInitiatorSession(HelloAckPayload) → 32-byte KEM secret → AES-256
+    NCB->>NCB: sharedKey already set from responderSession() → AES-256
     end
 
     rect rgb(254,242,242)
@@ -92,8 +93,8 @@ sequenceDiagram
 
 ### Notes on the phases
 
-- **Phase 1** runs an *additional* ECDH on top of the one Nearby Connections already negotiated, so even if Nearby's own crypto were broken the profile payload remains opaque on the wire.
-- **Phase 2** binds the session to each side's Android-Keystore identity key. The nonce is 32 cryptographically random bytes; the signature is over `nonce ‖ idPub` to prevent cross-protocol misuse.
+- **Phase 1** runs a **post-quantum hybrid KEM** (ML-KEM-768 + X25519) *on top of* the encryption Nearby Connections already provides. The initiator sends a `HelloPayload` (X25519 pub + ML-KEM-768 pub); the responder encapsulates against both, sends back a `HelloAckPayload` (X25519 ephemeral pub + ML-KEM-768 ciphertext). Both derive a 32-byte shared secret via `HKDF-SHA256(mlkem_ss ‖ x25519_ss)`. The session key breaks only if *both* algorithms are broken simultaneously. NFC-bootstrapped sessions fall back to classical ECDH for the bootstrap step only.
+- **Phase 2** binds the session to each side's Android-Keystore **ML-DSA-65 + ECDSA P-256 hybrid** identity key. The nonce is 32 cryptographically random bytes; the signature is over `nonce ‖ idPub` to prevent cross-protocol misuse.
 - **Phase 3** wraps the JSON profile in AES-GCM using the Phase-1 derived key. Two replay-protection fields are stamped into the plaintext envelope by `PayloadValidator.stamp()`: `_ts` (current epoch ms) and `_nonce` (random UUID). On receipt, `PayloadValidator.validate()` checks `_ts` is within the allowed recency window and that `_nonce` has not been seen before — a bounded `ConcurrentHashSet` (max 1,000 entries, purged every 5 min) acts as the dedup store.
 - **Phase 4** is optional. The avatar travels as a Nearby Connections `STREAM` payload (not `BYTES`), so multi-megabyte images don't block the small text messages.
 

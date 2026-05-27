@@ -4,7 +4,7 @@ import com.showerideas.aura.model.GesturePattern
 import java.util.UUID
 
 /**
- * Phase 9.3 — Extension for GestureAuthManager.authenticateAny().
+ * Extension for GestureAuthManager.authenticateAny().
  * Returns true if any enrolled gesture profile scores above threshold.
  *
  * The primary GestureAuthManager.match() checks the active (slot 0) profile.

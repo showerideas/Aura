@@ -31,22 +31,22 @@ Desktop companion shipped. LoRa transport shipped. JaCoCo 80% floor. CI green.
 | Layer | State |
 |---|---|
 | Core app | v4.0.0 — production-ready |
-| Gesture gate | MediaPipe Hands + LSTM temporal classifier + 2-layer liveness (passive drift + active challenge) + continuous IMU-based behavioral auth |
-| Transport | Google Nearby Connections (GMS) + Wi-Fi Direct (FOSS) + BLE GATT (BLE 6.2 SCI) + NFC HCE + QR relay + LoRa |
+| Gesture gate | MediaPipe Hands + temporal classifier (motion-profile analysis, 30-frame window — not LSTM) + 2-layer liveness (passive drift + active challenge) + continuous IMU collection + feature extraction (ML inference pending behavioral model enrollment) |
+| Transport | Google Nearby Connections (GMS) + Wi-Fi Direct (FOSS) + BLE GATT (BLE 6.2 SCI) + NFC HCE + QR relay + LoRa (opt-in: requires Meshtastic app + ENABLE_LORA=true build flag) |
 | NFC | HCE ISO 7816-4 full impl + NDEF tap + reader mode + session token bootstrap |
 | BLE GATT | Full GATT server/client + MTU 517 + chunked transfer + BLE Channel Sounding ranging (API 36+) |
 | QR relay | AES-256-GCM HTTPS + Tor SOCKS5 (Orbot) + OHTTP RFC 9458 + QUIC/HTTP3 (Cronet) |
-| Crypto | Hybrid KEM ML-KEM-768+X25519 · ML-DSA-65 identity signatures · PQXDH full prekey bundle · Sealed sender · Noise_XX channel · Double Ratchet + SPQR · MLS RFC 9420 rooms · SAS · TOFU |
+| Crypto | Hybrid KEM ML-KEM-768+X25519 · ML-DSA-65 identity signatures · PQXDH full prekey bundle · Sealed sender · Noise_XX channel · Double Ratchet + SPQR · MLS RFC 9420 rooms (simplified flat topology, not full TreeKEM) · SAS · TOFU |
 | Wire protocol | v9 — SPKI pinning · ML-DSA-65 hybrid sigs · identity rotation · replay protection · PQ hybrid KEM · Noise_XX overlay |
 | Multi-profile | Personal / Work — wired; enterprise MDM retention |
 | Audit log | ExchangeAuditLog Room table + CSV export + AuditFragment UI + differential privacy ε=1.0 analytics export |
 | Identity | W3C Verifiable Credentials (did:key + JsonWebSignature2020) · ISO 18013-5 mdoc/mDL (id.aura.contact.1) · OpenID4VP verifiable presentation |
-| Localization | 313 strings × 7 locales — 100% coverage, human-reviewed |
-| Test suite | 300+ unit methods + 55 instrumented + 15 iOS AuraCoreTests — JaCoCo 80% floor |
+| Localization | 365 strings × 7 locales — 100% coverage, human-reviewed |
+| Test suite | 623+ unit methods + 72 instrumented + 36 iOS tests (19 AuraCoreTests + 17 AuraCompanionTests) — JaCoCo 60% branch floor |
 | CI | Green — lint + unit + JaCoCo + assembleRelease + APK size gate + iOS build/test |
 | Distribution | F-Droid reproducible build script + submission guide — live |
 | Signing | PKCS12 keystore in GitHub Secrets — signed AAB confirmed |
-| iOS | AuraCore companion — ContactProfile, SasVerifier, AuraExchangeCoordinator, WireProtocol.swift, MultipeerTransport, 15 tests |
+| iOS | AuraCore companion — ContactProfile, SasVerifier, AuraExchangeCoordinator, WireProtocol.swift, MultipeerTransport, NFCExchangeBootstrap; 36 tests across AuraCoreTests + AuraCompanionTests |
 | Wear OS | Glance tile + Health Connect HRV + SasPinActivity + WristRaiseTrigger; Wear OS 7 production-complete |
 | Android Auto | Voice action + biometric auth gate; full screen library (Advertising/Completed/Idle/Sas) |
 | Room sessions | Multi-party card exchange — star topology, 10-min TTL, delivery ACK, MLS group key agreement |

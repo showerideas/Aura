@@ -7,7 +7,7 @@ import androidx.car.app.connection.CarConnection
 import timber.log.Timber
 
 /**
- * Phase G1 — Transparent trampoline Activity for Android Auto voice actions.
+ * Transparent trampoline Activity for Android Auto voice actions.
  *
  * The Android Assistant routes voice commands (e.g. "start an AURA exchange")
  * to this Activity via an ACTION_SEARCH intent. On receipt we detect whether
@@ -17,7 +17,7 @@ import timber.log.Timber
  * If no projection is active (e.g. the user invoked this via the phone launcher),
  * we simply finish immediately — the main app handles exchange initiation directly.
  *
- * ## Voice command registration
+ * Voice command registration
  * The intent-filter in AndroidManifest.xml registers this Activity for:
  *   android.intent.action.SEARCH — standard Google Assistant query action
  *
@@ -67,3 +67,4 @@ class AuraVoiceActivity : Activity() {
         const val ACTION_VOICE_START_EXCHANGE = "com.showerideas.aura.auto.VOICE_START_EXCHANGE"
     }
 }
+

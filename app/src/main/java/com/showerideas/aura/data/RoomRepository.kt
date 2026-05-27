@@ -9,7 +9,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Task 8 — Repository for multi-party exchange Room sessions.
+ * Repository for multi-party exchange Room sessions.
  *
  * Wraps [RoomSessionDao], enforces 10-minute TTL, and exposes [StateFlow]-backed
  * queries for the UI layer.
