@@ -440,7 +440,6 @@
     <string name="backup_restore_subtitle">Import contacts from a previously exported .aurbak file. Existing contacts with the same ID will be updated.</string>
     <string name="backup_action_export">Export encrypted backup</string>
     <string name="backup_action_restore">Import from backup</string>
-    <string name="backup_passphrase_hint">Encryption passphrase</string>
     <string name="backup_passphrase_export_title">Set backup passphrase</string>
     <string name="backup_passphrase_export_message">Choose a strong passphrase to encrypt your backup. You will need it to restore.</string>
     <string name="backup_passphrase_restore_title">Enter backup passphrase</string>
