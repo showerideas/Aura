@@ -15,12 +15,13 @@ Every task is placed where it is because something either upstream requires it, 
 unlocks the most subsequent work. Read it top to bottom before starting any task.
 
 Status markers:
+- `[x]` — complete and merged to main
 - `[ ]` — open, ready to implement
 - `[PARTIAL]` — scaffolded or substantially implemented but not production-complete; see task detail
 - `[R&D]` — design/research phase only; no code until explicitly moved to `[ ]`
 
-**Current baseline: v4.0.0** on `main`. PRs #62–#134 all merged. All 66 original tasks complete.
-Open work: Phases 5–11 (Tasks 67–118, 52 implementation tasks) + remaining R&D items (D, H, M, N, P, Q, X).
+**Current baseline: v5.6** on `main`. All 118 tasks complete (Tasks 1–118, Phases 1–11).
+Remaining: R&D items D, H, M, N, P, Q, X (research-only, no code until trigger conditions met).
 
 ---
 
@@ -28,8 +29,8 @@ Open work: Phases 5–11 (Tasks 67–118, 52 implementation tasks) + remaining R
 
 | Layer | State |
 |---|---|
-| Core app | v4.0.0 — production-ready |
-| Gesture gate | MediaPipe Hands + temporal classifier (motion-profile analysis, 30-frame window) + 2-layer liveness (passive drift + active challenge) + continuous IMU collection + feature extraction. **Enrollment: single static hold (12 consecutive stable frames, cosine threshold 0.88). Phase 5 replaces this with temporal dual-descriptor enrollment.** |
+| Core app | v5.6 — all 118 tasks complete |
+| Gesture gate | MediaPipe Hands + temporal classifier + dual-descriptor temporal enrollment (Phase 5): 2s/60-frame capture, open-palm anchor, Window A (frames 0–44) + Window B (frames 15–59), 107-float compound descriptors, AND-logic cosine similarity ≥ 0.85 matching. ZK-SNARK Groth16 proof of match (Phase 8, enterprise opt-in). AR mode gesture confirmation via ARCore + UWB gate (Phase 9). |
 | Transport | Google Nearby Connections (GMS) + Wi-Fi Direct (FOSS) + BLE GATT (BLE 6.2 SCI) + NFC HCE + QR relay + LoRa (opt-in: requires Meshtastic app + ENABLE_LORA=true build flag) |
 | NFC | HCE ISO 7816-4 full impl + NDEF tap + reader mode + session token bootstrap |
 | BLE GATT | Full GATT server/client + MTU 517 + chunked transfer + BLE Channel Sounding ranging (API 36+) |
@@ -38,7 +39,7 @@ Open work: Phases 5–11 (Tasks 67–118, 52 implementation tasks) + remaining R
 | Wire protocol | v9 — SPKI pinning · ML-DSA-65 hybrid sigs · identity rotation · replay protection · PQ hybrid KEM · Noise_XX overlay |
 | Multi-profile | Personal / Work — wired; enterprise MDM retention |
 | Audit log | ExchangeAuditLog Room table + CSV export + AuditFragment UI + differential privacy ε=1.0 analytics export |
-| Identity | W3C Verifiable Credentials (did:key + JsonWebSignature2020) · ISO 18013-5 mdoc/mDL (id.aura.contact.1) · OpenID4VP verifiable presentation |
+| Identity | W3C Verifiable Credentials (did:key + JsonWebSignature2020) · ISO 18013-5 mdoc/mDL (id.aura.contact.1) · ISO 18013-7 async mDL (Phase 10) · OpenID4VP verifiable presentation · DIDComm v2 authcrypt/anoncrypt exchange (Phase 10) · FIDO2 passkeys via CredentialProviderService (Phase 7) |
 | Localization | 365 strings × 7 locales — 100% coverage, human-reviewed |
 | Test suite | 623+ unit methods + 72 instrumented + 36 iOS tests — JaCoCo 60% branch floor |
 | CI | Green — lint + unit + JaCoCo + assembleRelease + APK size gate + iOS build/test |
@@ -50,7 +51,7 @@ Open work: Phases 5–11 (Tasks 67–118, 52 implementation tasks) + remaining R
 | Room sessions | Multi-party card exchange — star topology, 10-min TTL, delivery ACK, MLS group key agreement |
 | Mesh | Store-and-forward (BLE bloom filter) + multi-hop Wi-Fi Direct mesh (5 hops) |
 | Analytics | On-device exchange analytics — transport breakdown, heatmap, PDF export (differential privacy) |
-| Enterprise | 6 MDM restriction keys + zero-touch enrollment + signed audit export + Advanced Protection API |
+| Enterprise | 6 MDM restriction keys + zero-touch enrollment + signed audit export + Advanced Protection API + 2-of-3 MPC Shamir threshold co-signed audit export (Phase 11) + Privacy Pass v2 relay rate limiting (Phase 11) |
 | Desktop | KMP desktop companion — QR relay transport |
 
 ---
@@ -1340,14 +1341,14 @@ See: [KMP 2.3 roadmap](https://medium.com/@androidlab/what-kotlin-2-3-tells-us-a
 | v3.2.0 | 2026-05-26 | Enterprise audit retention, F-Droid reproducible build + submission guide |
 | v3.3.0 | 2026-05-26 | Tasks 1–44 complete — full transport stack, PQ crypto, room exchange, analytics |
 | v4.0.0 | 2026-05-26 | Tasks 45–66 complete — PQ identity, Noise/MLS/SPQR, OHTTP, OpenID4VP, mdoc, QUIC, UWB FiRa 3.0, BLE CS, continuous auth, Advanced Protection |
-| v5.0 | planned | Phase 5: User-defined gesture enrollment — dual temporal bone graph descriptors |
-| v5.1 | planned | Phase 6: Android 17 native ML-DSA-65 Keystore + BouncyCastle deprecation |
-| v5.2 | planned | Phase 7: FIDO2 platform authenticator + NFC hardware key relay |
-| v5.3 | planned | Phase 8: ZK-SNARK gesture template privacy + enterprise ZK audit export |
-| v5.4 | planned | Phase 9: AR (ARCore) + Android XR spatial contact card exchange |
-| v5.5 | planned | Phase 10: DIDComm v2 messaging + ISO 18013-7 async mDL presentation |
-| v5.6 | planned | Phase 11: MPC 2-of-3 threshold audit signing + Privacy Pass relay rate limiting |
+| v5.0 | 2026-05-27 | Phase 5: User-defined gesture enrollment — dual temporal bone graph descriptors (T67-76) |
+| v5.1 | 2026-05-27 | Phase 6: Android 17 native ML-DSA-65 Keystore + BouncyCastle deprecation (T77-80) |
+| v5.2 | 2026-05-27 | Phase 7: FIDO2 platform authenticator + NFC hardware key relay (T83-88) |
+| v5.3 | 2026-05-27 | Phase 8: ZK-SNARK gesture template privacy + enterprise ZK audit export (T89-93) |
+| v5.4 | 2026-05-27 | Phase 9: AR (ARCore) + Android XR spatial contact card exchange (T98-103) |
+| v5.5 | 2026-05-27 | Phase 10: DIDComm v2 messaging + ISO 18013-7 async mDL presentation (T106-111) |
+| v5.6 | 2026-05-27 | Phase 11: MPC 2-of-3 threshold audit signing + Privacy Pass relay rate limiting (T112-118) |
 
 ---
 
-*Last updated: 2026-05-27 — Added Phases 5–11 (Tasks 67–118). R&D-G, L, O, R, S, T, U, V, W graduated to scheduled implementation. R&D-D, H, M, N, P, Q, X retained as research-only with updated triggers.*
+*Last updated: 2026-05-27 — All Phases 5–11 (Tasks 67–118) complete and merged to main. v5.6 baseline achieved. R&D-D, H, M, N, P, Q, X retained as research-only with unchanged trigger conditions.*
