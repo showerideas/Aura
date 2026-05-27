@@ -266,15 +266,10 @@ class ContinuousAuthMonitor : Service(), SensorEventListener {
             // No model yet — enrollment required. Trust by default until enrolled.
             return 1.0f
         }
-        // TODO: Load TFLite model + run inference
-        // val interpreter = Interpreter(modelFile, Interpreter.Options().apply {
-        //     addDelegate(NnApiDelegate())
-        // })
-        // val input = Array(1) { features }
-        // val output = Array(1) { FloatArray(1) }
-        // interpreter.run(input, output)
-        // return output[0][0].coerceIn(0f, 1f)
-        return 1.0f  // stub until enrollment flow generates model
+        // R&D: TFLite behavioral model inference — deferred to R&D pipeline item G.
+        // Model file exists but on-device inference is not yet activated.
+        // Returns full trust until the enrollment pipeline produces a trained model.
+        return 1.0f
     }
 
     // ── Session events ─────────────────────────────────────────────────────

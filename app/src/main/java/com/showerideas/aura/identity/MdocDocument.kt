@@ -167,7 +167,7 @@ class MdocIssuer @Inject constructor(
      */
     data class MdocEnvelope(
         val document: MdocDocument,
-        val issuerSignatureHex: String  // SHA-256 of the document's element names (placeholder)
+        val issuerSignatureHex: String  // SHA-256 of document element names; replace with issuer COSE_Sign1 bytes in production
     )
 
     /** Issue a signed mdoc envelope from a VC and display name. */

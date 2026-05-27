@@ -77,7 +77,8 @@ class GestureLibraryFragment : Fragment() {
     // Actions
 
     private fun navigateToEnroll(slot: Int) {
-        // Multi-slot enrollment not yet wired — navigate to primary slot for now.
+        // Multi-slot enrollment routes through the primary enrollment flow until
+        // the user-defined gesture enrollment system (R&D item D) is wired end-to-end.
         Toast.makeText(requireContext(),
             getString(R.string.gesture_library_enroll_hint, slot + 1),
             Toast.LENGTH_SHORT).show()
