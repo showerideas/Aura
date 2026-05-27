@@ -1,10 +1,7 @@
 package com.showerideas.aura.ui
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,16 +14,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.showerideas.aura.R
-import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.data.OnboardingPreferences
 import com.showerideas.aura.databinding.ActivityMainBinding
 import com.showerideas.aura.service.AuraHceService
 import com.showerideas.aura.service.NearbyExchangeService
 import com.showerideas.aura.service.NfcExchangeHelper
-import com.showerideas.aura.service.VolumeButtonListenerService
 import com.showerideas.aura.utils.CryptoUtils
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import javax.inject.Inject
@@ -35,7 +29,6 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var onboardingPreferences: OnboardingPreferences
-    @Inject lateinit var authPreferences: AuthPreferences
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -66,27 +59,12 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         val denied = results.filterValues { !it }.keys
-        if (denied.isEmpty()) {
-            Timber.d("All permissions granted")
-            onPermissionsGranted()
-        } else {
+        if (denied.isNotEmpty()) {
             Timber.w("Permissions denied: $denied")
             // show a rationale bottom sheet that deep-links to settings.
             PermissionRationaleBottomSheet
                 .newInstance(denied.toList())
                 .show(supportFragmentManager, PermissionRationaleBottomSheet.TAG)
-        }
-    }
-
-    // Receives AURA_ACTIVATE broadcast from VolumeButtonListenerService
-    private val activationReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == VolumeButtonListenerService.ACTION_AURA_ACTIVATE) {
-                Timber.i("Activation broadcast received — launching exchange")
-                // ExchangeFragment runs the gesture gate before starting the
-                // NearbyExchangeService. Do NOT start the service here.
-                navController.navigate(R.id.exchangeFragment)
-            }
         }
     }
 
@@ -97,7 +75,6 @@ class MainActivity : AppCompatActivity() {
 
         setupNavigation()
         checkAndRequestPermissions()
-        registerActivationReceiver()
     }
 
     override fun onResume() {
@@ -138,11 +115,6 @@ class MainActivity : AppCompatActivity() {
         if (navController.currentDestination?.id != R.id.exchangeFragment) {
             navController.navigate(R.id.exchangeFragment)
         }
-    }
-
-    override fun onDestroy() {
-        unregisterReceiver(activationReceiver)
-        super.onDestroy()
     }
 
     override fun onSupportNavigateUp(): Boolean =
@@ -188,35 +160,9 @@ class MainActivity : AppCompatActivity() {
         val missing = requiredPermissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missing.isEmpty()) {
-            onPermissionsGranted()
-        } else {
+        if (missing.isNotEmpty()) {
             permissionLauncher.launch(missing.toTypedArray())
         }
-    }
-
-    private fun onPermissionsGranted() {
-        // only start the background listener if the user hasn't
-        // disabled it in Settings. Defaults to true so first-run behaviour
-        // is unchanged.
-        val bgEnabled = runBlocking { authPreferences.bgActivationEnabled.first() }
-        if (bgEnabled) {
-            VolumeButtonListenerService.start(this)
-        }
-    }
-
-    private fun registerActivationReceiver() {
-        val filter = IntentFilter(VolumeButtonListenerService.ACTION_AURA_ACTIVATE)
-        // ContextCompat.registerReceiver handles the API 33+ RECEIVER_*_EXPORTED
-        // flag requirement transparently across all minSdk levels we support;
-        // it also satisfies the UnspecifiedRegisterReceiverFlag lint check that
-        // was failing with the prior if/else branch.
-        ContextCompat.registerReceiver(
-            this,
-            activationReceiver,
-            filter,
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
     }
 
     // Settings entry point.

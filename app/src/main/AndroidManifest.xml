@@ -126,12 +126,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Volume Button Foreground Service -->
-        <service
-            android:name=".service.VolumeButtonListenerService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
-
         <!-- Nearby Connections Exchange Service -->
         <service
             android:name=".service.NearbyExchangeService"
@@ -158,25 +152,6 @@
                 android:resource="@xml/aura_apdu_service" />
         </service>
 
-        <!--
-          Accessibility-service-based volume button listener (opt-in).
-          Provides reliable triple-press detection on Samsung One UI, MIUI,
-          ColorOS, and other OEM skins where MediaSession is not routed.
-          User must enable manually in Settings > Accessibility > AURA.
-          Privacy: accessibilityEventTypes="typeNone" â only key events.
-        -->
-        <service
-            android:name=".service.AuraAccessibilityService"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/aura_accessibility_service" />
-        </service>
 
         <!-- PR-07: FileProvider used to share generated .vcf files. -->
         <provider

@@ -138,16 +138,12 @@
     <string name="contact_note_hint">Añadir una nota…</string>
     <string name="contact_save_note">Guardar nota</string>
     <string name="settings_title">Ajustes</string>
-    <string name="settings_section_auth">Autenticación</string>
-    <string name="settings_section_activation">Activación</string>
-    <string name="settings_section_data">Datos</string>
+    <string name="settings_section_auth">Autenticación</string>    <string name="settings_section_data">Datos</string>
     <string name="settings_section_about">Acerca de</string>
     <string name="settings_auth_method">Método de autenticación</string>
     <string name="settings_auth_gesture">Gesto</string>
     <string name="settings_auth_biometric">Biométrico</string>
-    <string name="settings_biometric_unavailable">No disponible en este dispositivo</string>
-    <string name="settings_bg_activation">Activación en segundo plano</string>
-    <string name="settings_blocked_devices">Dispositivos bloqueados</string>
+    <string name="settings_biometric_unavailable">No disponible en este dispositivo</string>    <string name="settings_blocked_devices">Dispositivos bloqueados</string>
     <string name="settings_clear_gesture">Borrar gesto</string>
     <string name="settings_clear_contacts">Borrar todos los contactos</string>
     <string name="settings_version">Versión</string>
@@ -214,19 +210,7 @@
     <string name="sas_dialog_confirm">Coincide ✓</string>
     <string name="sas_dialog_message">Tú y tu contacto deberían ver el mismo código de 6 dígitos.\n\nTu código: %1$s\n\nPide a tu contacto que lea su código en voz alta. Si coinciden, pulsa \'Coincide\'.</string>
     <string name="sas_dialog_mismatch">No coincide — cancelar</string>
-    <string name="sas_dialog_title">Verificar código de seguridad</string>
-    <string name="settings_test_volume_press">Probar triple pulsación ahora</string>
-    <string name="settings_volume_test_fail">✗ Triple pulsación no detectada — no compatible con este dispositivo</string>
-    <string name="settings_volume_test_listening">Escuchando 3 s — presiona el volumen ▼ tres veces</string>
-    <string name="settings_volume_test_success">✓ Triple pulsación detectada — este dispositivo es compatible</string>
-    <string name="settings_volume_wake_warning">⚠ La pulsación triple del volumen funciona en Pixel y Android estándar. Puede no funcionar en Samsung, Xiaomi, OPPO u otras versiones personalizadas de Android por la interceptación de teclas a nivel del SO. Usa el botón de abajo para verificar tu dispositivo.</string>
-    <string name="status_verifying">Verificar el código con tu contacto…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">Habilita la activación confiable con triple presën de volumen en todos los dispositivos Android, incluidos Samsung, MIUI y ColorOS. AURA nunca lee contenido de otras apps.</string>
-    <string name="settings_accessibility_mode">Modo de accesibilidad (recomendado)</string>
-    <string name="settings_accessibility_enabled">Activo — funciona en todos los dispositivos ✓</string>
-    <string name="settings_accessibility_disabled">Toca para activar en Configuración de accesibilidad</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">Verificar código de seguridad</string>    <string name="status_verifying">Verificar el código con tu contacto…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC activo — intercambio de clave más rápido</string>
     <string name="exchange_nfc_active_desc">Este intercambio se inició mediante NFC — el protocolo ECDH ya está preconfigurado</string>
 

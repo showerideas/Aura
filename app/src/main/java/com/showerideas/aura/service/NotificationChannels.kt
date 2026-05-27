@@ -17,7 +17,6 @@ import androidx.core.app.NotificationCompat
  * |------------------|------------|------------------------|
  * | EXCHANGE         | LOW        | PRIVATE (title only)   |
  * | SECURITY_ALERT   | HIGH       | SECRET (hidden)        |
- * | BG_LISTENER      | MIN        | PRIVATE (title only)   |
  *
  * SECURITY_ALERT is VISIBILITY_SECRET: the SAS code or identity-mismatch warning
  * MUST NOT appear on the lock screen — an observer shoulder-surfing the lock screen
@@ -35,9 +34,6 @@ object NotificationChannels {
      * VISIBILITY_SECRET: never shown on lock screen.
      */
     const val CHANNEL_SECURITY_ALERT = "aura_security_alert_channel"
-
-    /** Background volume-button listener — minimally intrusive. */
-    const val CHANNEL_BG_LISTENER = "aura_bg_channel"
 
     // Bootstrap
 
@@ -76,18 +72,6 @@ object NotificationChannels {
             }
         )
 
-        // Background listener — absolute minimum interruption
-        nm.createNotificationChannel(
-            NotificationChannel(
-                CHANNEL_BG_LISTENER,
-                "AURA Background Listener",
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                description          = "Gesture trigger detection running in background."
-                lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE
-                setShowBadge(false)
-            }
-        )
     }
 
     // Security-alert helper

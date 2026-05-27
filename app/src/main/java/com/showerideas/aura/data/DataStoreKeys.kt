@@ -9,8 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 object DataStoreKeys {
     val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
     val AUTH_METHOD = stringPreferencesKey("auth_method")
-    val BG_ACTIVATION_ENABLED = booleanPreferencesKey("bg_activation_enabled")
-    val GESTURE_GATE_OPEN = booleanPreferencesKey("gesture_gate_open")
+val GESTURE_GATE_OPEN = booleanPreferencesKey("gesture_gate_open")
     /** route relay traffic through Tor/Orbot when true. */
     val TOR_PROXY_ENABLED = booleanPreferencesKey("tor_proxy_enabled")
 }

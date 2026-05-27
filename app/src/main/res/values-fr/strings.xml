@@ -138,16 +138,12 @@
     <string name="contact_note_hint">Ajouter une note…</string>
     <string name="contact_save_note">Enregistrer la note</string>
     <string name="settings_title">Paramètres</string>
-    <string name="settings_section_auth">Authentification</string>
-    <string name="settings_section_activation">Activation</string>
-    <string name="settings_section_data">Données</string>
+    <string name="settings_section_auth">Authentification</string>    <string name="settings_section_data">Données</string>
     <string name="settings_section_about">À propos</string>
     <string name="settings_auth_method">Méthode d\'authentification</string>
     <string name="settings_auth_gesture">Geste</string>
     <string name="settings_auth_biometric">Biométrique</string>
-    <string name="settings_biometric_unavailable">Non disponible sur cet appareil</string>
-    <string name="settings_bg_activation">Activation en arrière-plan</string>
-    <string name="settings_blocked_devices">Appareils bloqués</string>
+    <string name="settings_biometric_unavailable">Non disponible sur cet appareil</string>    <string name="settings_blocked_devices">Appareils bloqués</string>
     <string name="settings_clear_gesture">Supprimer le geste</string>
     <string name="settings_clear_contacts">Supprimer tous les contacts</string>
     <string name="settings_version">Version</string>
@@ -214,19 +210,7 @@
     <string name="sas_dialog_confirm">Correspondance ✓</string>
     <string name="sas_dialog_message">Toi et ton contact devriez voir le même code à 6 chiffres.\n\nTon code: %1$s\n\nDemande à ton contact de lire son code à voix haute. Si les codes correspondent, appuie sur \'Correspondance\'.</string>
     <string name="sas_dialog_mismatch">Non-correspondance — annuler</string>
-    <string name="sas_dialog_title">Vérifier le code de sécurité</string>
-    <string name="settings_test_volume_press">Tester le triple appui maintenant</string>
-    <string name="settings_volume_test_fail">✗ Triple appui non reçu — non pris en charge sur cet appareil</string>
-    <string name="settings_volume_test_listening">Écoute 3 s — triple appui sur volume ▼</string>
-    <string name="settings_volume_test_success">✓ Triple appui détecté — cet appareil est compatible</string>
-    <string name="settings_volume_wake_warning">⚠ Le triple appui sur le volume fonctionne sur Pixel et Android standard. Il peut ne pas fonctionner sur Samsung, Xiaomi, OPPO ou d\'autres versions personnalisées d\'Android en raison de l\'interception des touches au niveau du système. Utilise le bouton ci-dessous pour vérifier ton appareil.</string>
-    <string name="status_verifying">Vérifier le code avec ton contact…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">Active l\'activation fiable par triple pression du volume sur tous les appareils Android, y compris Samsung, MIUI et ColorOS. AURA ne lit jamais le contenu des autres apps.</string>
-    <string name="settings_accessibility_mode">Mode accessibilité (recommandé)</string>
-    <string name="settings_accessibility_enabled">Actif — fonctionne sur tous les appareils ✓</string>
-    <string name="settings_accessibility_disabled">Appuyez pour activer dans les paramètres d\'accessibilité</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">Vérifier le code de sécurité</string>    <string name="status_verifying">Vérifier le code avec ton contact…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC actif — échange de clé plus rapide</string>
     <string name="exchange_nfc_active_desc">Cet échange a été initié via NFC — la poignée de main ECDH est pré-amorcée</string>
 

@@ -138,16 +138,12 @@
     <string name="contact_note_hint">메모 추가…</string>
     <string name="contact_save_note">메모 저장</string>
     <string name="settings_title">설정</string>
-    <string name="settings_section_auth">인증</string>
-    <string name="settings_section_activation">활성화</string>
-    <string name="settings_section_data">데이터</string>
+    <string name="settings_section_auth">인증</string>    <string name="settings_section_data">데이터</string>
     <string name="settings_section_about">정보</string>
     <string name="settings_auth_method">인증 방법</string>
     <string name="settings_auth_gesture">제스처</string>
     <string name="settings_auth_biometric">생체 인증</string>
-    <string name="settings_biometric_unavailable">이 기기에서 사용할 수 없습니다</string>
-    <string name="settings_bg_activation">백그라운드 활성화</string>
-    <string name="settings_blocked_devices">차단된 기기</string>
+    <string name="settings_biometric_unavailable">이 기기에서 사용할 수 없습니다</string>    <string name="settings_blocked_devices">차단된 기기</string>
     <string name="settings_clear_gesture">제스처 삭제</string>
     <string name="settings_clear_contacts">모든 연락처 삭제</string>
     <string name="settings_version">버전</string>
@@ -213,19 +209,7 @@
     <string name="sas_dialog_confirm">일치 ✓</string>
     <string name="sas_dialog_message">당신과 연락처는 동일한 6자리 코드를 보아야 합니다.\n\n내 코드: %1$s\n\n연락처에게 코드를 소리 내어 읽도록 요청하세요. 코드가 일치하면 \'일치\'를 탭하세요.</string>
     <string name="sas_dialog_mismatch">불일치 — 중단</string>
-    <string name="sas_dialog_title">보안 코드 확인</string>
-    <string name="settings_test_volume_press">지금 세 번 누르기 테스트</string>
-    <string name="settings_volume_test_fail">✗ 세 번 누르기가 수신되지 않음 — 이 기기에서는 지원되지 않음</string>
-    <string name="settings_volume_test_listening">3초 동안 듣는 중 — 볼륨 ▼ 세 번 누르기</string>
-    <string name="settings_volume_test_success">✓ 세 번 누르기 감지됨 — 이 기기는 호환됩니다</string>
-    <string name="settings_volume_wake_warning">⚠ 볼륨 세 번 누르기는 Pixel 및 일반 Android에서 작동합니다. Samsung, Xiaomi, OPPO 또는 기타 커스텀 Android에서는 OS 수준의 키 인터셉션으로 인해 작동하지 않을 수 있습니다. 아래 버튼을 사용하여 기기를 확인하세요.</string>
-    <string name="status_verifying">연락처와 코드 확인 중…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">모든 Android 기기에서 볼륨 버튼 세 번 누르기 활성화를 지원합니다. AURA는 다른 앱의 콘텐츠를 읽지 않습니다.</string>
-    <string name="settings_accessibility_mode">접근성 모드 (권장)</string>
-    <string name="settings_accessibility_enabled">활성화됨 — 모든 기기에서 작동합니다 ✓</string>
-    <string name="settings_accessibility_disabled">접근성 설정에서 활성화하려면 탭하세요</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">보안 코드 확인</string>    <string name="status_verifying">연락처와 코드 확인 중…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC 탭 활성 — 빠른 키 교환</string>
     <string name="exchange_nfc_active_desc">이 교환은 NFC 탭으로 시작되었습니다 — ECDH 핸드셰이크가 사전 설정되었습니다</string>
 

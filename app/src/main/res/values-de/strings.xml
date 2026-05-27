@@ -138,16 +138,12 @@
     <string name="contact_note_hint">Notiz hinzufügen…</string>
     <string name="contact_save_note">Notiz speichern</string>
     <string name="settings_title">Einstellungen</string>
-    <string name="settings_section_auth">Authentifizierung</string>
-    <string name="settings_section_activation">Aktivierung</string>
-    <string name="settings_section_data">Daten</string>
+    <string name="settings_section_auth">Authentifizierung</string>    <string name="settings_section_data">Daten</string>
     <string name="settings_section_about">Über</string>
     <string name="settings_auth_method">Authentifizierungsmethode</string>
     <string name="settings_auth_gesture">Geste</string>
     <string name="settings_auth_biometric">Biometrie</string>
-    <string name="settings_biometric_unavailable">Auf diesem Gerät nicht verfügbar</string>
-    <string name="settings_bg_activation">Hintergrundaktivierung</string>
-    <string name="settings_blocked_devices">Gesperrte Geräte</string>
+    <string name="settings_biometric_unavailable">Auf diesem Gerät nicht verfügbar</string>    <string name="settings_blocked_devices">Gesperrte Geräte</string>
     <string name="settings_clear_gesture">Geste löschen</string>
     <string name="settings_clear_contacts">Alle Kontakte löschen</string>
     <string name="settings_version">Version</string>
@@ -214,19 +210,7 @@
     <string name="sas_dialog_confirm">Übereinstimmung ✓</string>
     <string name="sas_dialog_message">Sie und Ihr Kontakt sollten denselben 6-stelligen Code sehen.\n\nIhr Code: %1$s\n\nBitten Sie Ihren Kontakt, seinen Code laut vorzulesen. Wenn die Codes übereinstimmen, tippen Sie auf \'Übereinstimmung\'.</string>
     <string name="sas_dialog_mismatch">Keine Übereinstimmung — Abbrechen</string>
-    <string name="sas_dialog_title">Sicherheitscode überprüfen</string>
-    <string name="settings_test_volume_press">Dreifach-Drücken jetzt testen</string>
-    <string name="settings_volume_test_fail">✗ Dreifach-Drücken nicht empfangen – auf diesem Gerät nicht unterstützt</string>
-    <string name="settings_volume_test_listening">Warte 3 s – Dreifach Lautstärke ▼ drücken</string>
-    <string name="settings_volume_test_success">✓ Dreifach-Drücken erkannt – dieses Gerät ist kompatibel</string>
-    <string name="settings_volume_wake_warning">⚠ Dreifach-Lautstärke funktioniert auf Pixel und Standard-Android. Es funktioniert möglicherweise nicht auf Samsung, Xiaomi, OPPO oder anderen Android-Varianten aufgrund OS-seitiger Tastenunterbrechung. Verwenden Sie die Schaltfläche unten, um Ihr Gerät zu überprüfen.</string>
-    <string name="status_verifying">Code mit Ihrem Kontakt überprüfen…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">Ermöglicht zuverlässige Dreifach-Lautstärketasten-Aktivierung auf allen Android-Geräten, einschließlich Samsung, MIUI und ColorOS. AURA liest niemals Inhalte anderer Apps.</string>
-    <string name="settings_accessibility_mode">Barrierefreiheitsmodus (empfohlen)</string>
-    <string name="settings_accessibility_enabled">Aktiv — funktioniert auf allen Geräten ✓</string>
-    <string name="settings_accessibility_disabled">Tippen, um in den Eingabehilfen zu aktivieren</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">Sicherheitscode überprüfen</string>    <string name="status_verifying">Code mit Ihrem Kontakt überprüfen…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC-Tipp aktiv – schnellerer Schlüsselaustausch</string>
     <string name="exchange_nfc_active_desc">Dieser Austausch wurde per NFC-Tipp gestartet – der ECDH-Handshake ist vorbelegt</string>
 

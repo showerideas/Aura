@@ -22,7 +22,7 @@
     <string name="status_connecting">Found someone! Connecting\u2026</string>
     <string name="status_verifying">Verify the code with your contact\u2026</string>
     <string name="status_exchanging">Exchanging contact info securely\u2026</string>
-    <string name="empty_contacts">No contacts yet.\nTriple-press volume down to share.</string>
+    <string name="empty_contacts">No contacts yet.\nTap Exchange to share.</string>
     <string name="search_hint">Search contacts\u2026</string>
 
     <!-- Exchange screen / gesture gate (PR-01) -->
@@ -188,17 +188,13 @@
 
     <!-- PR-20: Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_auth">Authentication</string>
-    <string name="settings_section_activation">Activation</string>
-    <string name="settings_section_data">Data</string>
+    <string name="settings_section_auth">Authentication</string>    <string name="settings_section_data">Data</string>
     <string name="settings_section_about">About</string>
     <string name="settings_section_wear">Wear OS</string>
     <string name="settings_auth_method">Auth method</string>
     <string name="settings_auth_gesture">Gesture</string>
     <string name="settings_auth_biometric">Biometric</string>
-    <string name="settings_biometric_unavailable">Not available on this device</string>
-    <string name="settings_bg_activation">Background activation</string>
-    <string name="settings_blocked_devices">Blocked devices</string>
+    <string name="settings_biometric_unavailable">Not available on this device</string>    <string name="settings_blocked_devices">Blocked devices</string>
     <string name="settings_clear_gesture">Clear gesture</string>
     <string name="settings_clear_contacts">Clear all contacts</string>
     <string name="settings_version">Version</string>
@@ -217,12 +213,6 @@
     <string name="privacy_url" translatable="false">https://showerideas.app/aura/privacy</string>
 
     <!-- Prompt-2: Volume-button reliability disclaimer -->
-    <string name="settings_volume_wake_warning">â  Triple-press volume works on Pixel and stock Android. It may not work on Samsung, Xiaomi, OPPO, or other custom Android builds due to OS-level key interception. Use the button below to check your device.</string>
-    <string name="settings_test_volume_press">Test triple-press now</string>
-    <string name="settings_volume_test_listening">Listening for 3 s â triple-press volume â¼</string>
-    <string name="settings_volume_test_success">â Triple-press detected â this device is compatible</string>
-    <string name="settings_volume_test_fail">â Triple-press not received â not supported on this device</string>
-
     <!-- PR-20: Blocked devices -->
     <string name="blocked_devices_title">Blocked devices</string>
     <string name="blocked_devices_empty">No blocked devices</string>
@@ -246,7 +236,7 @@
          ================================================================ -->
 
     <!-- Home screen -->
-    <string name="home_activate_hint">Triple-press volume down or tap to share</string>
+    <string name="home_activate_hint">Tap Start to share your contact</string>
 
     <!-- Profile screen â share-field section -->
     <string name="profile_fields_to_share_header">Fields to share</string>
@@ -281,13 +271,6 @@
     <string name="notif_channel_desc">Active contact exchange in progress</string>
     <string name="notif_title">AURA Exchange</string>
     <string name="notif_starting">Starting exchange\u2026</string>
-
-    <!-- AuraAccessibilityService â opt-in volume button reliability -->
-    <string name="accessibility_service_description">Enables reliable triple-press volume activation on all Android devices, including Samsung, MIUI, and ColorOS. AURA never reads content from other apps â only volume button events are intercepted.</string>
-    <string name="settings_accessibility_mode">Accessibility mode (recommended)</string>
-    <string name="settings_accessibility_enabled">Active â works on all devices â</string>
-    <string name="settings_accessibility_disabled">Tap to enable in Accessibility settings</string>
-
     <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC tap active â faster key exchange</string>
     <string name="exchange_nfc_active_desc">This exchange was initiated via NFC tap â the ECDH handshake is pre-seeded</string>

@@ -41,18 +41,11 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
             AuthPreferences.DEFAULT_METHOD)
 
-    val bgActivationEnabled: StateFlow<Boolean> = authPreferences.bgActivationEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
     val torProxyEnabled: StateFlow<Boolean> = authPreferences.torProxyEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun setAuthMethod(method: String) {
         viewModelScope.launch { authPreferences.setAuthMethod(method) }
-    }
-
-    fun setBgActivation(enabled: Boolean) {
-        viewModelScope.launch { authPreferences.setBgActivationEnabled(enabled) }
     }
 
     fun clearGesture() {

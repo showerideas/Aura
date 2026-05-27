@@ -83,7 +83,6 @@ class SettingsEspressoTest {
         onView(withId(R.id.rb_auth_gesture)).perform(scrollTo()).check(matches(isDisplayed()))
         onView(withId(R.id.rb_auth_biometric)).perform(scrollTo()).check(matches(isDisplayed()))
         onView(withId(R.id.row_blocked_devices)).perform(scrollTo()).check(matches(isDisplayed()))
-        onView(withId(R.id.switch_bg_activation)).perform(scrollTo()).check(matches(isDisplayed()))
         onView(withId(R.id.tv_version)).perform(scrollTo()).check(matches(isDisplayed()))
     }
 

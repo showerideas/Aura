@@ -47,13 +47,6 @@ class AuthPreferences @Inject constructor(
         context.authPrefsDataStore.edit { it[DataStoreKeys.AUTH_METHOD] = method }
     }
 
-    val bgActivationEnabled: Flow<Boolean> = context.authPrefsDataStore.data
-        .map { it[DataStoreKeys.BG_ACTIVATION_ENABLED] ?: true }
-
-    suspend fun setBgActivationEnabled(enabled: Boolean) {
-        context.authPrefsDataStore.edit { it[DataStoreKeys.BG_ACTIVATION_ENABLED] = enabled }
-    }
-
     val gestureGateOpen: Flow<Boolean> = context.authPrefsDataStore.data
         .map { it[DataStoreKeys.GESTURE_GATE_OPEN] ?: false }
 

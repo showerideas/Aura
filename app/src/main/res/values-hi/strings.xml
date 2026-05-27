@@ -138,16 +138,12 @@
     <string name="contact_note_hint">नोट जोड़ें…</string>
     <string name="contact_save_note">नोट सहेजें</string>
     <string name="settings_title">सेटिंग</string>
-    <string name="settings_section_auth">प्रमाणीकरण</string>
-    <string name="settings_section_activation">सक्रियण</string>
-    <string name="settings_section_data">डेटा</string>
+    <string name="settings_section_auth">प्रमाणीकरण</string>    <string name="settings_section_data">डेटा</string>
     <string name="settings_section_about">के बारे में</string>
     <string name="settings_auth_method">प्रमाणीकरण विधि</string>
     <string name="settings_auth_gesture">इशारा</string>
     <string name="settings_auth_biometric">बायोमेट्रिक</string>
-    <string name="settings_biometric_unavailable">इस डिवाइस पर उपलब्ध नहीं</string>
-    <string name="settings_bg_activation">बैकग्राउंड सक्रियण</string>
-    <string name="settings_blocked_devices">ब्लॉक किए गए डिवाइस</string>
+    <string name="settings_biometric_unavailable">इस डिवाइस पर उपलब्ध नहीं</string>    <string name="settings_blocked_devices">ब्लॉक किए गए डिवाइस</string>
     <string name="settings_clear_gesture">इशारा मिटाएँ</string>
     <string name="settings_clear_contacts">सभी संपर्क मिटाएँ</string>
     <string name="settings_version">संस्करण</string>
@@ -214,19 +210,7 @@
     <string name="sas_dialog_confirm">मेल खाता है ✓</string>
     <string name="sas_dialog_message">आप और आपका संपर्क एक ही 6-अंकीय कोड देखना चाहिए।\n\nआपका कोड: %1$s\n\nअपने संपर्क से उनका कोड ज़ोर से पढ़ने को कहें। यदि कोड मेल खाते हैं, तो \'मेल खाता है\' पर टैप करें।</string>
     <string name="sas_dialog_mismatch">मेल नहीं खाता — रद्द करें</string>
-    <string name="sas_dialog_title">सुरक्षा कोड सत्यापित करें</string>
-    <string name="settings_test_volume_press">अभी ट्रिपल-प्रेस टेस्ट करें</string>
-    <string name="settings_volume_test_fail">✗ ट्रिपल-प्रेस नहीं मिला — इस डिवाइस पर समर्थित नहीं</string>
-    <string name="settings_volume_test_listening">3 सेकंड सुन रहा है — वॉल्यूम ▼ तीन बार दबाएं</string>
-    <string name="settings_volume_test_success">✓ ट्रिपल-प्रेस मिला — यह डिवाइस संगत है</string>
-    <string name="settings_volume_wake_warning">⚠ ट्रिपल-प्रेस वॉल्यूम Pixel और स्टॉक Android पर काम करता है। OS-स्तर की कुंजी अवरोधन के कारण Samsung, Xiaomi, OPPO या अन्य कस्टम Android बिल्ड पर काम नहीं कर सकता। अपने डिवाइस की जाँच करने के लिए नीचे बटन का उपयोग करें।</string>
-    <string name="status_verifying">अपने संपर्क के साथ कोड सत्यापित करें…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">सभी Android डिवाइसेस पर वॉल्यूम त्रिपल-प्रेस सक्रियकरण सक्षम करता है। AURA कभी अन्य एप्स की सामग्री नहीं पढ़ता।</string>
-    <string name="settings_accessibility_mode">अभिगम्यता मोड (अनुशंसित)</string>
-    <string name="settings_accessibility_enabled">सक्रिय — सभी डिवाइसेस पर काम करता है ✓</string>
-    <string name="settings_accessibility_disabled">अभिगम्यता सेटिंग्स में सक्षम करने के लिए टैप करें</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">सुरक्षा कोड सत्यापित करें</string>    <string name="status_verifying">अपने संपर्क के साथ कोड सत्यापित करें…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFC टैप सक्रिय — तेज़ कुंजी विनिमय</string>
     <string name="exchange_nfc_active_desc">यह आदान-प्रदान NFC टैप के माध्यम से प्रारंभ हुआ — ECDH हैंडशेक पूर्व-सीडेड है</string>
 

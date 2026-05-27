@@ -138,16 +138,12 @@
     <string name="contact_note_hint">メモを追加…</string>
     <string name="contact_save_note">メモを保存</string>
     <string name="settings_title">設定</string>
-    <string name="settings_section_auth">認証</string>
-    <string name="settings_section_activation">起動</string>
-    <string name="settings_section_data">データ</string>
+    <string name="settings_section_auth">認証</string>    <string name="settings_section_data">データ</string>
     <string name="settings_section_about">このアプリについて</string>
     <string name="settings_auth_method">認証方法</string>
     <string name="settings_auth_gesture">ジェスチャー</string>
     <string name="settings_auth_biometric">生体認証</string>
-    <string name="settings_biometric_unavailable">このデバイスでは利用できません</string>
-    <string name="settings_bg_activation">バックグラウンド起動</string>
-    <string name="settings_blocked_devices">ブロックされたデバイス</string>
+    <string name="settings_biometric_unavailable">このデバイスでは利用できません</string>    <string name="settings_blocked_devices">ブロックされたデバイス</string>
     <string name="settings_clear_gesture">ジェスチャーを削除</string>
     <string name="settings_clear_contacts">すべての連絡先を削除</string>
     <string name="settings_version">バージョン</string>
@@ -213,19 +209,7 @@
     <string name="sas_dialog_confirm">一致 ✓</string>
     <string name="sas_dialog_message">あなたと連絡先は同じ6桁のコードが表示されるはずです。\n\nあなたのコード: %1$s\n\n連絡先にコードを声に出して読むよう頼んでください。コードが一致したら\'一致\'をタップしてください。</string>
     <string name="sas_dialog_mismatch">不一致 — 中止</string>
-    <string name="sas_dialog_title">セキュリティコードを確認</string>
-    <string name="settings_test_volume_press">今すぐ3回押しをテスト</string>
-    <string name="settings_volume_test_fail">✗ 3回押しが受信されませんでした — このデバイスではサポートされていません</string>
-    <string name="settings_volume_test_listening">3秒間待機中 — 音量 ▼ を3回押してください</string>
-    <string name="settings_volume_test_success">✓ 3回押しが検出されました — このデバイスは対応しています</string>
-    <string name="settings_volume_wake_warning">⚠ 3回押し音量はPixelと標準Androidで機能します。Samsung、Xiaomi、OPPOなど独自AndroidではOSレベルのキーインターセプトにより動作しない可能性があります。下のボタンでご確認ください。</string>
-    <string name="status_verifying">連絡先とコードを確認してください…</string>
-    <!-- AuraAccessibilityService -->
-    <string name="accessibility_service_description">すべてのAndroidデバイスで頂部ボタンのトリプルプレス起動を有効にします。AURAは他のアプリのコンテンツを読み取りません。</string>
-    <string name="settings_accessibility_mode">アクセシビリティモード（推奨）</string>
-    <string name="settings_accessibility_enabled">有効 — すべてのデバイスで機能します ✓</string>
-    <string name="settings_accessibility_disabled">アクセシビリティ設定で有効にするにはタップ</string>
-    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
+    <string name="sas_dialog_title">セキュリティコードを確認</string>    <string name="status_verifying">連絡先とコードを確認してください…</string>    <!-- NFC tap-to-exchange indicator (Phase 6.1) -->
     <string name="exchange_nfc_active">NFCタップ有効 — 高速鍵交換</string>
     <string name="exchange_nfc_active_desc">この交換はNFCタップで開始されました — ECDHハンドシェイクが事前設定済みです</string>
 

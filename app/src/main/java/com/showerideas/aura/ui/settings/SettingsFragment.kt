@@ -1,9 +1,6 @@
 package com.showerideas.aura.ui.settings
 
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,19 +19,13 @@ import com.showerideas.aura.R
 import com.showerideas.aura.auth.BiometricAuthHelper
 import com.showerideas.aura.data.AuthPreferences
 import com.showerideas.aura.databinding.FragmentSettingsBinding
-import com.showerideas.aura.service.AuraAccessibilityService
-import com.showerideas.aura.service.VolumeButtonListenerService
-import android.provider.Settings as AndroidSettings
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
  * top-level Settings screen. Surfaces:
- *  - Auth method radio group (gesture / biometric — ).
- *  - Background-activation switch (drives [VolumeButtonListenerService]).
- *  - reliability warning banner + "Test triple-press now" row.
+ *  - Auth method radio group (gesture / biometric).
  *  - Data shortcuts: blocked devices, clear gesture, clear all contacts.
  *  - About: version + privacy policy link.
  */
@@ -46,13 +37,6 @@ class SettingsFragment : Fragment() {
 
     private val viewModel: SettingsViewModel by viewModels()
 
-    /**
-     * ephemeral broadcast receiver registered during the 3-second
-     * "Test triple-press now" window. Unregistered immediately on receipt or
-     * when the window expires to avoid leaking a receiver.
-     */
-    private var volumeTestReceiver: BroadcastReceiver? = null
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -63,8 +47,6 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         wireAuthSection()
-        wireActivationSection()
-        wireAccessibilitySection()
         wireSecuritySection()
         wireTorSection()
         wireDataSection()
@@ -98,115 +80,6 @@ class SettingsFragment : Fragment() {
             }
             viewModel.setAuthMethod(method)
         }
-    }
-
-    private fun wireActivationSection() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.bgActivationEnabled.collect { enabled ->
-                    if (binding.switchBgActivation.isChecked != enabled) {
-                        binding.switchBgActivation.isChecked = enabled
-                    }
-                    // show / hide the reliability warning and test button
-                    // so users understand the OEM-skin limitation whenever the
-                    // feature is enabled.
-                    val warningVisibility = if (enabled) View.VISIBLE else View.GONE
-                    binding.tvVolumeWakeWarning.visibility = warningVisibility
-                    binding.rowTestVolumePress.visibility = warningVisibility
-                    binding.rowAccessibilityMode.visibility = warningVisibility
-                }
-            }
-        }
-        binding.switchBgActivation.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setBgActivation(isChecked)
-            if (isChecked) {
-                VolumeButtonListenerService.start(requireContext())
-            } else {
-                VolumeButtonListenerService.stop(requireContext())
-            }
-        }
-
-        // "Test triple-press now" — open a 3-second window and
-        // register a one-shot receiver. Toast success/fail, then clean up.
-        binding.rowTestVolumePress.setOnClickListener {
-            startVolumeWakeTest()
-        }
-    }
-
-    /**
-     * Opens a 3-second window during which the user triple-presses
-     * the volume-down button. A [BroadcastReceiver] listens for
-     * [VolumeButtonListenerService.ACTION_AURA_ACTIVATE]. On receipt a success
-     * Toast is shown. If 3 s elapses without a broadcast, a failure Toast is shown.
-     *
-     * This gives the user immediate, honest feedback about whether their device's
-     * OEM skin routes media buttons through to AURA's MediaSession.
-     */
-    private fun startVolumeWakeTest() {
-        // Unregister any stale receiver from a previous test that didn't clean up.
-        volumeTestReceiver?.let {
-            try { requireContext().unregisterReceiver(it) } catch (_: Exception) {}
-        }
-
-        Toast.makeText(requireContext(), R.string.settings_volume_test_listening, Toast.LENGTH_SHORT).show()
-        Timber.d("Volume wake test window open — listening for ACTION_AURA_ACTIVATE")
-
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                Timber.i("Volume wake test: broadcast received — device is compatible")
-                Toast.makeText(requireContext(), R.string.settings_volume_test_success, Toast.LENGTH_LONG).show()
-                unregisterSelf()
-            }
-        }
-        volumeTestReceiver = receiver
-
-        val filter = IntentFilter(VolumeButtonListenerService.ACTION_AURA_ACTIVATE)
-        requireContext().registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-
-        // Close the window after 3 s regardless of whether we received the broadcast.
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(3_000L)
-            val still = volumeTestReceiver
-            if (still != null) {
-                Timber.d("Volume wake test: timeout — broadcast not received")
-                Toast.makeText(requireContext(), R.string.settings_volume_test_fail, Toast.LENGTH_LONG).show()
-                try { requireContext().unregisterReceiver(still) } catch (_: Exception) {}
-                volumeTestReceiver = null
-            }
-        }
-    }
-
-    private fun BroadcastReceiver.unregisterSelf() {
-        volumeTestReceiver = null
-        try { requireContext().unregisterReceiver(this) } catch (_: Exception) {}
-    }
-
-    // Accessibility mode — volume-button reliability on Samsung/MIUI/ColorOS
-
-    private fun wireAccessibilitySection() {
-        binding.rowAccessibilityMode.setOnClickListener {
-            // Open Android Accessibility settings — user must enable the service manually.
-            try {
-                startActivity(Intent(AndroidSettings.ACTION_ACCESSIBILITY_SETTINGS))
-            } catch (e: Exception) {
-                // Fallback: open main Settings if Accessibility settings is unavailable.
-                startActivity(Intent(AndroidSettings.ACTION_SETTINGS))
-            }
-        }
-    }
-
-    private fun refreshAccessibilityStatus() {
-        val enabled = AuraAccessibilityService.isEnabled(requireContext())
-        binding.tvAccessibilityStatus.text = getString(
-            if (enabled) R.string.settings_accessibility_enabled
-            else R.string.settings_accessibility_disabled
-        )
-        binding.tvAccessibilityStatus.setTextColor(
-            requireContext().getColor(
-                if (enabled) com.showerideas.aura.R.color.aura_cyan
-                else com.showerideas.aura.R.color.on_surface_secondary
-            )
-        )
     }
 
     // Security section — key rotation + exchange history
@@ -334,18 +207,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Refresh accessibility status every time the user returns from Android settings.
-        refreshAccessibilityStatus()
-    }
-
     override fun onDestroyView() {
-        // always clean up the test receiver when the fragment tears down
-        volumeTestReceiver?.let {
-            try { requireContext().unregisterReceiver(it) } catch (_: Exception) {}
-        }
-        volumeTestReceiver = null
         super.onDestroyView()
         _binding = null
     }
