@@ -17,10 +17,12 @@
 
 import Foundation
 
-// CoreNFC is an iOS-only framework — not available on macOS (Swift Package
-// targets that include macOS in their platform list, e.g. for CI). Guard the
-// entire file so the macOS toolchain skips it cleanly.
-#if canImport(CoreNFC)
+// CoreNFC is iOS-only. The AuraCompanion package declares macOS as a platform
+// so CI can run swift build on macOS runners. Use #if os(iOS) — the only
+// compile-time guard guaranteed to be false on any macOS toolchain regardless
+// of SDK version. #if canImport(CoreNFC) can evaluate true on Apple Silicon
+// macOS with newer SDKs that ship partial CoreNFC stubs.
+#if os(iOS)
 import CoreNFC
 
 @available(iOS 13.0, *)
@@ -173,4 +175,4 @@ extension NFCExchangeBootstrap: NFCTagReaderSessionDelegate {
     }
 }
 
-#endif // canImport(CoreNFC)
+#endif // os(iOS)
