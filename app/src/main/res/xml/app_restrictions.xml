@@ -9,48 +9,52 @@
 
     F-Droid note: this file is included in the FOSS flavor and has no GMS
     dependency — RestrictionsManager is part of AOSP.
+
+    Note: android:description MUST be a @string/ reference — inline strings
+    are rejected by aapt2. All descriptions live in strings.xml under the
+    restriction_desc_* namespace.
 -->
 <restrictions xmlns:android="http://schemas.android.com/apk/res/android">
 
     <restriction
         android:key="max_gesture_attempts"
         android:title="Maximum gesture authentication attempts"
-        android:description="Number of failed gesture attempts before lockout. Range: 1–10."
+        android:description="@string/restriction_desc_max_gesture_attempts"
         android:restrictionType="integer"
         android:defaultValue="5" />
 
     <restriction
         android:key="require_sas_verification"
         android:title="Require SAS verification"
-        android:description="When enabled, exchanges cannot complete without SAS code confirmation."
+        android:description="@string/restriction_desc_require_sas"
         android:restrictionType="bool"
         android:defaultValue="false" />
 
     <restriction
         android:key="disable_backup"
         android:title="Disable encrypted backup"
-        android:description="Hides and blocks the backup/restore feature."
+        android:description="@string/restriction_desc_disable_backup"
         android:restrictionType="bool"
         android:defaultValue="false" />
 
     <restriction
         android:key="audit_log_retention_days"
         android:title="Audit log retention (days)"
-        android:description="Number of days to keep exchange audit records. 0 = keep forever."
+        android:description="@string/restriction_desc_audit_log_retention"
         android:restrictionType="integer"
         android:defaultValue="90" />
 
     <restriction
         android:key="disable_tor_proxy"
         android:title="Disable Tor/Orbot proxy"
-        android:description="Hides the Tor anonymisation toggle and prevents proxy use."
+        android:description="@string/restriction_desc_disable_tor"
         android:restrictionType="bool"
         android:defaultValue="false" />
 
     <restriction
         android:key="enforce_pin_lock"
         android:title="Enforce PIN lock before exchange"
-        android:description="Requires the user to re-authenticate with device PIN before each exchange."
+        android:description="@string/restriction_desc_enforce_pin_lock"
         android:restrictionType="bool"
         android:defaultValue="false" />
 
@@ -59,42 +63,42 @@
     <restriction
         android:key="pre_fill_display_name"
         android:title="Pre-fill display name"
-        android:description="User's full name pre-populated from the corporate directory."
+        android:description="@string/restriction_desc_pre_fill_name"
         android:restrictionType="string"
         android:defaultValue="" />
 
     <restriction
         android:key="pre_fill_email"
         android:title="Pre-fill email"
-        android:description="User's work email pre-populated from the corporate directory."
+        android:description="@string/restriction_desc_pre_fill_email"
         android:restrictionType="string"
         android:defaultValue="" />
 
     <restriction
         android:key="pre_fill_org"
         android:title="Pre-fill organization"
-        android:description="Department or company name pre-populated."
+        android:description="@string/restriction_desc_pre_fill_org"
         android:restrictionType="string"
         android:defaultValue="" />
 
     <restriction
         android:key="pre_fill_job_title"
         android:title="Pre-fill job title"
-        android:description="User job title pre-populated."
+        android:description="@string/restriction_desc_pre_fill_job_title"
         android:restrictionType="string"
         android:defaultValue="" />
 
     <restriction
         android:key="pre_fill_phone"
         android:title="Pre-fill phone"
-        android:description="Work phone number pre-populated."
+        android:description="@string/restriction_desc_pre_fill_phone"
         android:restrictionType="string"
         android:defaultValue="" />
 
     <restriction
         android:key="pre_fill_profile_type"
         android:title="Pre-fill profile type"
-        android:description="Profile type: WORK or PERSONAL. Default: WORK for managed devices."
+        android:description="@string/restriction_desc_pre_fill_profile_type"
         android:restrictionType="choice"
         android:defaultValue="WORK"
         android:entries="@array/profile_type_entries"
