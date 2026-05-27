@@ -11,8 +11,8 @@
 
 | Device | Why |
 |---|---|
-| **Pixel 8 (stock Android 14)** | Primary reference device — no OEM skin, matches Play Store review environment |
-| **Samsung Galaxy A-series (Android 12 or 13)** | High-volume Samsung One UI build — tests OEM skin quirks (volume button, permissions) |
+| **Pixel 8 (stock Android 14)** | Primary reference device — stock Android, no OEM skin |
+| **Samsung Galaxy A-series (Android 12 or 13)** | High-volume Samsung One UI build — tests OEM skin quirks (permissions, BLE behaviour) |
 
 Both devices must have **Bluetooth and Wi-Fi enabled** and be within ~1 metre of each other for Nearby Connections to work reliably indoors.
 
@@ -65,8 +65,6 @@ adb -s <samsung-serial> install -r app/build/outputs/apk/release/*.apk
 ---
 
 ### S3 — Exchange activation (in-app)
-
-> Volume-button triple-press was removed. Activation is now in-app only.
 
 | Step | Expected | Pass/Fail |
 |---|---|---|
@@ -188,7 +186,7 @@ adb -s <samsung-serial> install -r app/build/outputs/apk/release/*.apk
 ```
 [ ] All S1–S11 scenarios run on Pixel 8 (Android 14)
 [ ] All S1–S11 scenarios run on Samsung A-series (Android 12 or 13)
-[ ] S3 PASS on all OEM devices (volume-button trigger removed)
+[ ] S3 PASS on all OEM devices (activation opens correctly, no OEM interference)
 [ ] No crashes observed in logcat during the pass
 [ ] No new ANRs in logcat
 [ ] APK size within 30 MB (verified by CI or manual du -k)

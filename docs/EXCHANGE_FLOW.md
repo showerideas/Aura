@@ -2,7 +2,7 @@
 
 > An exchange begins when both users open AURA and tap Exchange, the gesture/biometric gate has cleared on each side, and the two phones are within Nearby Connections range. The sequence below walks every byte sent in a successful direct exchange.
 >
-> **v5.5 addition (Task 111):** AURA now supports a third exchange path via DIDComm v2 messaging.
+> AURA supports three exchange paths: Nearby Connections (primary), QR relay (fallback), and DIDComm v2 (identity-layer).
 > See §4 below for the DIDComm exchange flow and ISO 18013-7 async mDL presentation path.
 
 ---
@@ -209,7 +209,7 @@ This is the same finite-state machine drawn at a coarser level in [`ARCHITECTURE
 
 ---
 
-## 4. DIDComm v2 exchange path (Task 111 — v5.5)
+## 4. DIDComm v2 exchange path
 
 The DIDComm exchange path enables asynchronous, store-and-forward contact exchange
 with any DIDComm v2-compatible wallet (including enterprise identity wallets).
@@ -236,7 +236,7 @@ Enterprise Wallet                    AURA (recipient)
 Messages are routed via the AURA relay (`RelayClient`) using the `did:peer:2`
 pairwise DID as the inbox slot identifier.
 
-### ISO 18013-7 async mDL presentation (Task 108)
+### ISO 18013-7 async mDL presentation
 
 ISO 18013-7 extends ISO 18013-5 proximity presentation to an online (async) path
 using OpenID4VP as the transport. The AURA verifier accepts `vp_token` responses

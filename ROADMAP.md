@@ -4,7 +4,7 @@
 > Written as a strictly ordered sequence of engineering tasks for a software team.
 > Tasks are sorted by dependency: each task may depend on those above it.
 > References are cited inline where they are relevant — there is no separate reference table.
-> Last rewrite: 2026-05-27 | v4.0.0 baseline | Phases 5–11 added | R&D-G,L,O,R,S,T,U,V,W graduated to scheduled implementation.
+> Last updated: 2026-05-27 | v5.7 baseline
 
 ---
 
@@ -153,7 +153,7 @@ See: [SatelliteManager — Google Pixel 9 satellite SOS](https://satellitetoday.
 ### R&D-Q — Android 17 Contact Picker Integration
 
 **Goal:** Privacy-preserving contact picker — apps access only selected contacts.
-**Trigger:** Only relevant if PSI contact discovery (Task 54) expands to device address book.
+**Trigger:** Only relevant if PSI contact discovery expands to device address book.
 AURA currently manages only its own contact store. No action until that changes.
 
 See: [Android 17 Contact Picker privacy feature](https://makeuseof.com/this-new-android-privacy-feature-is-actually-brilliant)
@@ -192,13 +192,13 @@ See: [KMP 2.3 roadmap](https://medium.com/@androidlab/what-kotlin-2-3-tells-us-a
 | v3.2.0 | 2026-05-26 | Enterprise audit retention, GitHub Releases APK distribution |
 | v3.3.0 | 2026-05-26 | Tasks 1–44 complete — full transport stack, PQ crypto, room exchange, analytics |
 | v4.0.0 | 2026-05-26 | Tasks 45–66 complete — PQ identity, Noise/MLS/SPQR, OHTTP, OpenID4VP, mdoc, QUIC, UWB FiRa 3.0, BLE CS, continuous auth, Advanced Protection |
-| v5.0 | 2026-05-27 | Phase 5: User-defined gesture enrollment — dual temporal bone graph descriptors (T67-76) |
-| v5.1 | 2026-05-27 | Phase 6: Android 17 native ML-DSA-65 Keystore + BouncyCastle deprecation (T77-80) |
-| v5.2 | 2026-05-27 | Phase 7: FIDO2 platform authenticator + NFC hardware key relay (T83-88) |
-| v5.3 | 2026-05-27 | Phase 8: ZK-SNARK gesture template privacy + enterprise ZK audit export (T89-93) |
-| v5.4 | 2026-05-27 | Phase 9: AR (ARCore) + Android XR spatial contact card exchange (T98-103) |
-| v5.5 | 2026-05-27 | Phase 10: DIDComm v2 messaging + ISO 18013-7 async mDL presentation (T106-111) |
-| v5.6 | 2026-05-27 | Phase 11: MPC 2-of-3 threshold audit signing + Privacy Pass relay rate limiting (T112-118) |
+| v5.0 | 2026-05-27 | Phase 5: User-defined gesture enrollment — dual temporal bone graph descriptors |
+| v5.1 | 2026-05-27 | Phase 6: Android 17 native ML-DSA-65 Keystore + BouncyCastle deprecation |
+| v5.2 | 2026-05-27 | Phase 7: FIDO2 platform authenticator + NFC hardware key relay |
+| v5.3 | 2026-05-27 | Phase 8: ZK-SNARK gesture template privacy + enterprise ZK audit export |
+| v5.4 | 2026-05-27 | Phase 9: AR (ARCore) + Android XR spatial contact card exchange |
+| v5.5 | 2026-05-27 | Phase 10: DIDComm v2 messaging + ISO 18013-7 async mDL presentation |
+| v5.6 | 2026-05-27 | Phase 11: MPC 2-of-3 threshold audit signing + Privacy Pass relay rate limiting |
 
 ---
 

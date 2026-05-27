@@ -1,6 +1,6 @@
 # AURA FIDO2 Gesture Latency Benchmark
 
-**Task 85 — Phase 7 (v5.2)**
+**FIDO2 gesture latency — Phase 7**
 
 Documents end-to-end latency from FIDO2 assertion request to signed response,
 with AURA's 2-second gesture verification path in the middle.
@@ -28,8 +28,7 @@ All measurements well within the 30-second CTAP2 timeout.
 
 ## Device Measurements
 
-> TODO(T85): populate with real benchmark results post-integration.
-> Targets: Pixel 8, Galaxy S24, Pixel 4a (low-end baseline).
+> Populate with device measurement results. Target devices: Pixel 8, Galaxy S24, Pixel 4a (low-end baseline).
 
 | Device | p50 | p95 | p99 |
 |--------|-----|-----|-----|

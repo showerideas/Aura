@@ -1,6 +1,6 @@
 # ZK-SNARK Gesture Proof Benchmark
 
-Task 92 — Performance baseline and measurement template for the gnark Groth16
+Performance baseline and measurement template for the gnark Groth16
 gesture cosine-similarity circuit (Tasks 89-93).
 
 ---

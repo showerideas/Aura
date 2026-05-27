@@ -130,7 +130,7 @@ Both phones display the same number. The user detects a MITM by comparing the nu
 ## 7. MPC threshold audit signing (v5.6)
 
 Enterprise audit exports are protected by a 2-of-3 Shamir threshold signing scheme
-(`ShamirSecretSharing.kt`, Task 112). A single administrator device cannot forge an audit log.
+(`ShamirSecretSharing.kt`). A single administrator device cannot forge an audit log.
 
 **Key ceremony:** An enterprise admin performs a key ceremony that:
 1. Generates a 256-bit ECDSA P-256 audit signing key pair.
@@ -144,7 +144,7 @@ approves via gesture verification, sends its share back encrypted, and the reque
 device reconstructs the signing key in memory, signs, then zeroes the key bytes immediately.
 
 **Privacy Pass rate limiting (v5.6):** Relay API calls attach a Privacy Pass v2 token
-(`PrivacyPassClient.kt`, Task 114) in a `Privacy-Token` header per RFC 9576. The relay
+(`PrivacyPassClient.kt`) in a `Privacy-Token` header per RFC 9576. The relay
 validates tokens against the issuer's public key to enforce per-device quotas without
 linking requests to device identity (unlinkability guarantee from blind signatures).
 

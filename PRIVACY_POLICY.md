@@ -30,7 +30,7 @@ AURA is an **offline, local-only** contact-exchange app. Your data never leaves 
 - **App preferences** — your chosen unlock method (gesture or biometric), share-field toggles, locale, etc.
 
 ### 2.2 Data transmitted during an exchange
-When you tap **Activate** (or trigger the volume-button hotword) and complete the gesture / biometric gate, AURA opens a **local** Nearby Connections session. Over that session it sends, **only**:
+When you tap **Activate** and complete the gesture / biometric gate, AURA opens a **local** Nearby Connections session. Over that session it sends, **only**:
 - The profile fields you have marked as shareable.
 - A signed challenge containing your public identity key.
 - The avatar bytes (if you chose to share an avatar).

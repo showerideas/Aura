@@ -33,6 +33,6 @@ Read docs/CONTRIBUTING.md if this is your first PR.
 - [ ] Branch name follows `type/short-slug` (e.g. `feat/qr-fallback`, `fix/race-cond`)
 - [ ] Commit message follows the body-style used by [`docs/CONTRIBUTING.md`](../docs/CONTRIBUTING.md)
 - [ ] Touched a feature with a dossier? Updated [`docs/features/`](../docs/features/) accordingly
-- [ ] Touched a public claim? Updated [`docs/AUDIT.md`](../docs/AUDIT.md) (and `STORE_LISTING.md` if user-facing)
+- [ ] Touched a public claim? Updated [`docs/AUDIT.md`](../docs/AUDIT.md)
 - [ ] No outbound network call added (AURA's core promise)
 - [ ] No new permission added without a [permission rationale](../app/src/main/java/com/showerideas/aura/ui/PermissionRationaleBottomSheet.kt) entry

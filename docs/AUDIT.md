@@ -18,7 +18,7 @@
 | H2 | "Open app → tap Exchange to activate" | 🟢 | In-app activation via the Exchange button in `HomeFragment`. Volume-button trigger was removed (unreliable on OEM skins). QS tile remains available as a quick-launch shortcut. |
 | H3 | "Perform your recorded gesture" | 🟢 | `GestureAuthManager` + CameraX + MediaPipe GestureRecognizer (21 landmarks, cosine similarity ≥ 0.88). The gesture is an ergonomic gate (30–70% FAR for same-gesture cross-person pairs, documented); the real security anchor is the ECDSA identity key. See [docs/GESTURE_AUTH.md](GESTURE_AUTH.md). |
 | H4 | "Nearby Connections P2P link forms" | 🟢 | `play-services-nearby:19.1.0` wired through `NearbyExchangeService`. |
-| H5 | "ECDH key exchange (ephemeral per session)" | 🟢 | `CryptoUtils.generateEphemeralECDHKeyPair()` + `deriveSharedAESKey()`; per-session in-memory only. |
+| H5 | "ECDH key exchange (ephemeral per session)" | 🟢 | `CryptoUtils.generateEphemeralECDHKeyPair` + `deriveSharedAESKey`; per-session in-memory only. |
 | H6 | "AES-256-GCM payload" | 🟢 | `CryptoUtils.encrypt/decrypt` use `AES/GCM/NoPadding` with 12-byte IV + 128-bit tag; tests in `CryptoUtilsTest`. |
 | H7 | "Contact saved locally — offline, always" | 🟢 | `ContactRepository` persists into Room v2 on the IO dispatcher, no remote sync. |
 | H8 | "Built for privacy: no outbound network calls. Ever." | 🟡 | **Updated claim:** BLE/Wi-Fi-P2P exchange paths have zero outbound calls. The QR relay path (`RelayClient.kt`) uses `HttpURLConnection` over HTTPS to POST/GET AES-256-GCM ciphertext to an ephemeral relay slot — no plaintext profile data transits the network. No analytics SDK, no OkHttp/Retrofit, no third-party telemetry. |
@@ -30,7 +30,7 @@
 | H14 | "Full accessibility audit: TalkBack, large fonts, high-contrast theme" | 🟢 | content descriptions, focusable targets, `Theme.Aura` checked at AA contrast. |
 | H15 | "Multilingual: English, Hindi, Spanish, French, German, Japanese, Korean, Simplified Chinese" | 🟢 | All 7 promised non-English locales now ship a curated stub of high-impact strings in `values-XX/`. Non-stubbed keys fall back to English. Tracked in [`features/20-localization.md`](features/20-localization.md). |
 | H16 | "Privacy policy: <https://showerideas.app/aura/privacy>" | 🟡 | `PRIVACY_POLICY.md` committed and deployed via `gh-pages.yml`. URL hosted at the linked address. |
-| H17 | "MIT licensed" | 🟢 | `LICENSE` shipped in PR #36. |
+| H17 | "MIT licensed" | 🟢 | `LICENSE` committed at repo root. |
 
 ---
 
@@ -95,10 +95,10 @@ flowchart LR
 
 | Rank | Item | Target | Owner |
 |:-:|---|---|---|
-| ~~1~~ | ~~Add a `LICENSE` file.~~ | ✅ **Shipped in #36** | — |
-| ~~2~~ | ~~Commit translated `values-xx/strings.xml`.~~ | ✅ **Shipped in #38** (stubs for HI, ES, FR, DE, JA, KO, ZH-CN — critical UI surface only; full coverage tracked separately) | — |
+| ~~1~~ | ~~Add a `LICENSE` file.~~ | ✅ **Complete** | — |
+| ~~2~~ | ~~Commit translated `values-xx/strings.xml`.~~ | ✅ **Complete** (stubs for HI, ES, FR, DE, JA, KO, ZH-CN — critical UI surface only; full coverage tracked separately) | — |
 | ~~3~~ | ~~Add a `connectedAndroidTest` job using `reactivecircus/android-emulator-runner` so the four instrumentation tests run on every PR.~~ | ✅ **Shipped in v1.2.0** — `instrumented.yml` wired; `MigrationTest` (×2) hardened with unique DB names + `@After` teardown; `ExchangeFlowEspressoTest` (×1) hardened with `waitForView`; `continue-on-error` flipped to `false`. | — |
-| ~~4~~ | ~~Host the privacy policy at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md` + `STORE_LISTING.md`.~~ | ✅ **Shipped in v1.3.0** — `gh-pages.yml` deploys policy on every push to main; `privacy_url` string added as `translatable="false"`; TODO banners removed. | — |
+| ~~4~~ | ~~Host the privacy policy at `https://showerideas.app/aura/privacy` and remove the TODOs in `PRIVACY_POLICY.md`.~~ | ✅ **Shipped in v1.3.0** — `gh-pages.yml` deploys policy on every push to main; `privacy_url` string added as `translatable="false"`; TODO banners removed. | — |
 | ~~5~~ | ~~Wire the release-signing pipeline.~~ | ✅ **Complete** — `release.yml` builds signed APKs on every version tag push and creates a GitHub Release with per-ABI APK slices. Keystore secrets confirmed working. | — |
 
 All items above are complete. See [`ROADMAP.md`](../ROADMAP.md) for the active R&D pipeline.
@@ -107,22 +107,22 @@ All items above are complete. See [`ROADMAP.md`](../ROADMAP.md) for the active R
 
 ## 4. Prompt-series hardening audit (2026-05-23)
 
-Post-v1.0 static analysis and fix pass. Evidence-based, no unverified claims.
+Static analysis and hardening pass. Evidence-based, no unverified claims.
 
 | # | Claim | Status | Evidence | Caveats |
 |---|---|---|---|---|
-| A1 | Gesture auth uses accelerometer + DTW | 🔴 **CORRECTED** | Actual: CameraX + MediaPipe 21-landmark cosine similarity. DTW was never implemented. Fixed in `docs/GESTURE_AUTH.md` (). | — |
+| A1 | Gesture auth uses accelerometer + DTW | 🔴 **CORRECTED** | Actual: CameraX + MediaPipe 21-landmark cosine similarity. DTW was never implemented. Fixed in `docs/GESTURE_AUTH.md`. | — |
 | A2 | P2P transport strategy is P2P_STAR | 🔴 **CORRECTED** | Actual: `Strategy.P2P_CLUSTER` in `NearbyExchangeService.kt`. H11 updated above. | — |
 | A3 | Replay protection uses monotonically advancing counter | 🔴 **CORRECTED** | Actual: `_ts` timestamp ± 60s + `_nonce` UUID dedup set. Fixed in `docs/SECURITY.md` §T3. | — |
-| A4 | MediaPipe classes survive R8 | 🟢 VERIFIED + FIXED | Zero `-keep` rules existed; R8 stripped all `com.google.mediapipe.**`. Added explicit rules in `proguard-rules.pro` (). CI now asserts via apkanalyzer. | — |
-| A5 | Model download is hermetic | 🟢 FIXED | Replaced `URL.openStream()` with `HttpURLConnection` + 30s/5min timeouts + 3 retries + SHA-256 verification + jsDelivr fallback (). | SHA256 env var requires manual setup per environment. |
-| A6 | NearbyExchangeService TOCTOU race (P2P mode) | 🟢 FIXED | `@Volatile connectionRequested` flag prevents double-`requestConnection` (, ). | `@Volatile` not strictly atomic; acceptable because `requestConnection` failure path resets the flag. |
-| A7 | `pendingChallengeByEndpoint` memory leak (room mode) | 🟢 FIXED | `pendingChallengeByEndpoint.remove(endpointId)` added to ROOM_HOST `onDisconnected` branch (, ). | — |
-| A8 | `PayloadValidator` missing string length bounds | 🟢 FIXED | `MAX_FIELD_LENGTH=500` enforced for displayName/email/phone/note; pre-decryption `MAX_PROFILE_PAYLOAD_BYTES=65536` gate added (, ). | — |
+| A4 | MediaPipe classes survive R8 | 🟢 VERIFIED + FIXED | Zero `-keep` rules existed; R8 stripped all `com.google.mediapipe.**`. Added explicit rules in `proguard-rules.pro`. CI now asserts via apkanalyzer. | — |
+| A5 | Model download is hermetic | 🟢 FIXED | Replaced `URL.openStream` with `HttpURLConnection` + 30s/5min timeouts + 3 retries + SHA-256 verification + jsDelivr fallback. | SHA256 env var requires manual setup per environment. |
+| A6 | NearbyExchangeService TOCTOU race (P2P mode) | 🟢 FIXED | `@Volatile connectionRequested` flag prevents double-`requestConnection`. | `@Volatile` not strictly atomic; acceptable because `requestConnection` failure path resets the flag. |
+| A7 | `pendingChallengeByEndpoint` memory leak (room mode) | 🟢 FIXED | `pendingChallengeByEndpoint.remove(endpointId)` added to ROOM_HOST `onDisconnected` branch. | — |
+| A8 | `PayloadValidator` missing string length bounds | 🟢 FIXED | `MAX_FIELD_LENGTH=500` enforced for displayName/email/phone/note; pre-decryption `MAX_PROFILE_PAYLOAD_BYTES=65536` gate added. | — |
 | A9 | `gestureVerified` is process-wide companion object | 🟢 FIXED | `gestureVerified` is an `@Volatile` instance variable on `NearbyExchangeService` (line 225), not a companion object. Per-instance gate — correctly scoped. | — |
-| A10 | TOFU first-meet MITM gap | 🟢 FIXED | `SasVerifier` implemented and UI fully wired: `ExchangeFragment.showSasDialog()` fires on `State.VERIFYING`; `ExchangeSession.sasPin` carries the 6-digit code; `ACTION_CONFIRM_SAS` / `ACTION_ABORT_SAS` round-trips confirmed in `NearbyExchangeService`. | — |
+| A10 | TOFU first-meet MITM gap | 🟢 FIXED | `SasVerifier` implemented and UI fully wired: `ExchangeFragment.showSasDialog` fires on `State.VERIFYING`; `ExchangeSession.sasPin` carries the 6-digit code; `ACTION_CONFIRM_SAS` / `ACTION_ABORT_SAS` round-trips confirmed in `NearbyExchangeService`. | — |
 | A11 | Volume-button wake works on all devices | ✅ RESOLVED | Volume-button trigger removed entirely — OEM skin interception made it unreliable on >50% of devices. Activation is now in-app (tap Exchange) + QS tile. |
-| A12 | APK committed to source | 🔴 **FIXED** | `app/release/*.apk` removed from git history; `app/release/` added to `.gitignore` (). | — |
-| A13 | Wire-protocol scenarios tested | 🟢 FIXED | `WireProtocolTest.kt` (17 JVM tests), `FakeNearbyTransport.kt`, `SasVerifierTest.kt` (17 tests), `NearbyTransport` interface added (, ). | Full service integration tests (requires Android runtime) deferred to v1.2 emulator CI. |
-| A14 | Test count claim in README | 🔴 **CORRECTED** | Was "32 unit + 4 instrumented" — actual 97 unit + 21 instrumented. Fixed (). | — |
-| A15 | JaCoCo coverage gate | 🟢 NEW | `jacocoTestReport` + `jacocoTestCoverageVerification` (40% branch floor) added to build and CI (). | 40% is a conservative floor; raise to 70% target iteratively. |
+| A12 | APK committed to source | 🔴 **FIXED** | `app/release/*.apk` removed from git history; `app/release/` added to `.gitignore`. | — |
+| A13 | Wire-protocol scenarios tested | 🟢 FIXED | `WireProtocolTest.kt` (17 JVM tests), `FakeNearbyTransport.kt`, `SasVerifierTest.kt` (17 tests), `NearbyTransport` interface added. | Instrumented tests run in `instrumented.yml` via emulator CI. |
+| A14 | Test count claim in README | 🔴 **CORRECTED** | Was "32 unit + 4 instrumented" — actual 97 unit + 21 instrumented. Fixed. | — |
+| A15 | JaCoCo coverage gate | 🟢 NEW | `jacocoTestReport` + `jacocoTestCoverageVerification` (40% branch floor) added to build and CI. | 40% is a conservative floor; raise to 70% target iteratively. |

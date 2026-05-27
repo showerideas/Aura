@@ -143,7 +143,7 @@ Differential privacy ε=1.0   — analytics telemetry with formal privacy budget
 ### Codebase State
 
 ```
-Version:          5.7 (2026-05-27, commit ed5e822)
+Version:          5.7 (2026-05-27)
 Kotlin files:     328 across app / wearos / automotive / desktop / ios modules
 Test files:       90+ unit + 16 instrumented + 36 iOS AuraCore
 Coverage floor:   JaCoCo 60% branch coverage enforced in CI
