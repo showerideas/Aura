@@ -526,4 +526,20 @@
     <string name="enrollment_legacy_prompt_title">Gesture update required</string>
     <string name="enrollment_legacy_prompt_body">Your gesture enrollment needs to be updated for improved security. This takes 2 seconds.</string>
 
+    <!-- Phase 9 (T98-103) — AR Exchange -->
+    <string name="ar_scanning_label">Looking for nearby AURA users\u2026</string>
+    <string name="ar_rssi_fallback_label">UWB unavailable — using Bluetooth range estimate</string>
+    <string name="ar_close_description">Close AR exchange</string>
+    <string name="ar_privacy_title">AR Exchange uses your camera</string>
+    <string name="ar_privacy_body">AR Exchange uses ARCore to detect faces and show contact cards for nearby AURA users. All face processing happens on your device — no face images or face data are sent anywhere. You still use your enrolled gesture to confirm each exchange.</string>
+    <string name="ar_privacy_accept">Enable AR Exchange</string>
+    <string name="ar_privacy_decline">Not now</string>
+    <string name="ar_settings_title">AR Exchange</string>
+    <string name="ar_settings_range_label">Detection range</string>
+    <string name="ar_settings_range_1m">1 metre</string>
+    <string name="ar_settings_range_1_5m">1.5 metres (default)</string>
+    <string name="ar_settings_range_2m">2 metres</string>
+    <string name="ar_settings_xr_ambient_label">XR ambient mode</string>
+    <string name="ar_settings_xr_ambient_summary">Show contact cards automatically on XR headsets without explicit activation</string>
+
 </resources>
