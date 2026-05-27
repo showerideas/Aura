@@ -103,7 +103,7 @@ class PasskeyRepository @Inject constructor(
  */
 @Entity(tableName = "passkeys")
 data class PasskeyEntity(
-    @PrimaryKey @ColumnInfo(name = "credential_id") val credentialId: String,
+    @PrimaryKey val credentialId: String,
     @ColumnInfo(name = "rp_id") val rpId: String,
     @ColumnInfo(name = "user_handle") val userHandle: ByteArray,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
@@ -127,6 +127,6 @@ interface PasskeyDao {
     @Delete
     fun delete(passkey: PasskeyEntity)
 
-    @Query("DELETE FROM passkeys WHERE credential_id = :credentialId")
+    @Query("DELETE FROM passkeys WHERE credentialId = :credentialId")
     fun deleteById(credentialId: String)
 }
