@@ -145,6 +145,14 @@ class ProfileFragment : Fragment() {
                             binding.tvVarianceLabel.visibility = View.GONE
                             paintStrengthBars(0)
                         }
+                        is GestureAuthManager.RecordingState.CollectingSequence -> {
+                            binding.btnRecordGesture.setText(R.string.profile_btn_recording)
+                            binding.gestureStatus.text =
+                                getString(R.string.profile_gesture_status_perform)
+                            binding.gesturePreviewProfile.visibility = View.VISIBLE
+                            binding.gestureStrengthBars.visibility = View.VISIBLE
+                            binding.tvVarianceLabel.visibility = View.VISIBLE
+                        }
                         is GestureAuthManager.RecordingState.Error -> {
                             binding.gestureStatus.text = state.message
                             viewModel.stopGestureCamera()

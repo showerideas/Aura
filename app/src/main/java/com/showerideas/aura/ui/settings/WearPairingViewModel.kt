@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -47,7 +48,7 @@ class WearPairingViewModel @Inject constructor(
     private suspend fun discoverNodes(): UiState {
         return try {
             val client = com.google.android.gms.wearable.Wearable.getNodeClient(context)
-            val nodes = kotlinx.coroutines.tasks.await(client.connectedNodes)
+            val nodes = client.connectedNodes.await()
             Timber.d("WearPairingViewModel: found %d connected node(s)", nodes.size)
             if (nodes.isEmpty()) {
                 UiState.NoNodesFound

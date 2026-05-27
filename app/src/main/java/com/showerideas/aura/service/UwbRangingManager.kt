@@ -118,12 +118,14 @@ class UwbRangingManager @Inject constructor(
             Timber.d("UWB controller session started, local=$localAddress peer=$peerAddress")
 
             val params = RangingParameters(
-                uwbConfigType = RangingParameters.CONFIG_UNICAST_DS_TWR,
-                sessionId     = 0x12345678,
-                sessionKeyInfo = null,
-                complexChannel = UwbComplexChannel(UWB_CHANNEL, UWB_PREAMBLE_INDEX),
-                peerDevices    = listOf(androidx.core.uwb.UwbDevice.createForAddress(peerAddress.address)),
-                updateRateType = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
+                uwbConfigType     = RangingParameters.CONFIG_UNICAST_DS_TWR,
+                sessionId         = 0x12345678,
+                subSessionId      = 0,
+                sessionKeyInfo    = null,
+                subSessionKeyInfo = null,
+                complexChannel    = UwbComplexChannel(UWB_CHANNEL, UWB_PREAMBLE_INDEX),
+                peerDevices       = listOf(androidx.core.uwb.UwbDevice.createForAddress(peerAddress.address)),
+                updateRateType    = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
             )
 
             _rangingState.value = RangingState.Ranging

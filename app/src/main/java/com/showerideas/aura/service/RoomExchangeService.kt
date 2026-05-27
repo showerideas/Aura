@@ -275,7 +275,7 @@ class RoomExchangeService : Service() {
                 title            = obj.optString("title"),
                 website          = obj.optString("website"),
                 bio              = obj.optString("bio"),
-                avatarBase64     = obj.optString("avatarBase64").takeIf { it.isNotBlank() },
+                avatarUri        = obj.optString("avatarBase64").takeIf { it.isNotBlank() } ?: "",
                 sourceEndpointId = "room:$roomId:$senderMemberId",
                 receivedAt       = System.currentTimeMillis(),
                 identityKeyHash  = obj.optString("identityKeyHash").takeIf { it.isNotBlank() }

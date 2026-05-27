@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         // also push the same key into HCE so we respond over NFC
         // in both directions (we act as reader via NfcExchangeHelper, as card
         // via AuraHceService).
-        AuraHceService.setLocalKey(kp.public.encoded, sessionUuid)
+        AuraHceService.setLocalKey(sessionUuid, kp.public.encoded)
     }
 
     override fun onPause() {

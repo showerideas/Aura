@@ -65,12 +65,14 @@ object FiraSessionConfig {
         require(sessionKey.size == 16) { "UWB session key must be 16 bytes (AES-128)" }
         Timber.d("FiRa 3.0 controller params: sessionId=$sessionId channel=${complexChannel.channel}")
         return RangingParameters(
-            uwbConfigType   = RangingParameters.CONFIG_UNICAST_DS_TWR_NO_AOA,
-            sessionId       = sessionId,
-            sessionKeyInfo  = sessionKey,
-            complexChannel  = complexChannel,
-            peerDevices     = listOf(androidx.core.uwb.UwbDevice(peerAddress)),
-            updateRateType  = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
+            uwbConfigType      = RangingParameters.CONFIG_UNICAST_DS_TWR,
+            sessionId          = sessionId,
+            subSessionId       = 0,
+            sessionKeyInfo     = sessionKey,
+            subSessionKeyInfo  = null,
+            complexChannel     = complexChannel,
+            peerDevices        = listOf(androidx.core.uwb.UwbDevice(peerAddress)),
+            updateRateType     = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
         )
     }
 
@@ -87,12 +89,14 @@ object FiraSessionConfig {
         require(sessionKey.size == 16) { "UWB session key must be 16 bytes" }
         Timber.d("FiRa 3.0 controllee params: sessionId=$sessionId")
         return RangingParameters(
-            uwbConfigType   = RangingParameters.CONFIG_UNICAST_DS_TWR_NO_AOA,
-            sessionId       = sessionId,
-            sessionKeyInfo  = sessionKey,
-            complexChannel  = UwbComplexChannel(channel = FIRA_CHANNEL, preambleIndex = FIRA_PREAMBLE_INDEX),
-            peerDevices     = emptyList(),
-            updateRateType  = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
+            uwbConfigType      = RangingParameters.CONFIG_UNICAST_DS_TWR,
+            sessionId          = sessionId,
+            subSessionId       = 0,
+            sessionKeyInfo     = sessionKey,
+            subSessionKeyInfo  = null,
+            complexChannel     = UwbComplexChannel(channel = FIRA_CHANNEL, preambleIndex = FIRA_PREAMBLE_INDEX),
+            peerDevices        = emptyList(),
+            updateRateType     = RangingParameters.RANGING_UPDATE_RATE_FREQUENT
         )
     }
 

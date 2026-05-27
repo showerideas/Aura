@@ -200,6 +200,7 @@ class ExchangeFragment : Fragment() {
                             getString(R.string.gesture_show_to_auth) + "  \uD83D\uDFE2"   // 🟢
                         is LivenessGuard.Result.Spoof      ->
                             getString(R.string.gesture_show_to_auth) + "  \u26A0\uFE0F"   // ⚠️
+                        else -> getString(R.string.gesture_show_to_auth)
                     }
                     binding.tvGestureHint.text = badge
                 }
