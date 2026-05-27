@@ -6,133 +6,32 @@
 
 ## 1. Package map
 
+| Package | Key classes |
+|---|---|
+| `ui` | home · profile · exchange · contacts · qr · room · settings · audit · enrollment |
+| `auth` | GestureAuthManager · DualBoneGraphTracker · TemporalGestureClassifier · LivenessGuard · BiometricAuthHelper · ContinuousAuthMonitor |
+| `service` | NearbyExchangeService · AuraHceService · AuraQsTileService · RoomExchangeService |
+| `crypto` | HybridKEM · HybridIdentityKey · NoiseChannel · DoubleRatchetState · PQXDH · MlsGroupState · SealedEnvelope · PsiContactDiscovery |
+| `identity` | VcIssuer · MdocDocument · VpBuilder · DIDCommTransport · DidResolver |
+| `network` | RelayClient · ObliviousHttpClient · QuicRelayClient · TorRelayManager · PrivacyPassClient |
+| `security` | StrongBoxKeyManager · AdvancedProtectionIntegration · BloomFilter |
+| `enterprise` | EnterprisePolicy · ZeroTouchEnrollmentManager · AuditExportWorker · ShamirSecretSharing · AuditSigningCoordinator |
+| `fido` | AuraCredentialProviderService · PasskeyRepository · CtapNfcRelay |
+| `ar` / `xr` | ArExchangeCoordinator · ArExchangeOverlay · ContactCardNode · XrExchangeActivity · SpatialContactCard |
+| `zk` | GestureZkProver · ZkProofResult |
+| `relay.privacypass` | PrivacyPassClient · TokenStore |
+| `data` — Room v12 | ContactRepository · ProfileRepository · BlocklistRepository · ExchangeAuditRepository · KnownPeerRepository |
+| `data.local` (DAOs) | ContactDao · ProfileDao · BlockedEndpointDao · KnownPeerDao · ExchangeAuditDao · PasskeyDao · SharePresetDao |
+| `utils` | CryptoUtils · PayloadValidator · SasVerifier · VCardUtils · IdentityKeyRotator · AvatarUtils · ExportUtils |
+
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12}}}%%
-flowchart TB
-    subgraph UI["🎨 ui"]
-        direction LR
-        home["home"]:::ui
-        profile["profile"]:::ui
-        exchange["exchange\n· ExchangeFragment\n· ExchangeSuccessBottomSheet\n· SharePresetBottomSheet"]:::ui
-        contacts["contacts\n· ContactsFragment (tabs)\n· ExchangeHistoryFragment\n· ContactDetailBottomSheet"]:::ui
-        onboarding["onboarding"]:::ui
-        qr["qr"]:::ui
-        room["room"]:::ui
-        settings["settings\n+ backup"]:::ui
-        audit["audit\n+ analytics"]:::ui
-    end
-    subgraph AUTH["🎯 auth"]
-        direction LR
-        GAM["GestureAuthManager"]:::service
-        CHE["CameraHandEmbedder"]:::service
-        TGC["TemporalGestureClassifier"]:::service
-        LG["LivenessGuard"]:::service
-        BAH["BiometricAuthHelper"]:::service
-        CAM["ContinuousAuthMonitor"]:::service
-        BFE["BehavioralFeatureExtractor"]:::service
-    end
-    subgraph SVC["⚙️ service"]
-        direction LR
-        NES["NearbyExchangeService"]:::service
-        HCE["AuraHceService\n(NFC)"]:::service
-        QST["AuraQsTileService"]:::service
-        PEQ["PendingExchangeQueue"]:::service
-        RES["RoomExchangeService"]:::service
-    end
-    subgraph CRY["🔐 crypto"]
-        direction LR
-        KEM["HybridKEM\nHybridKemEngine"]:::crypto
-        SIG["HybridIdentityKey\nHybridSignature"]:::crypto
-        NC["NoiseChannel\nNoiseHandshakeState"]:::crypto
-        DR["DoubleRatchetState\nSpqrState"]:::crypto
-        PQXDH["PQXDHSender\nPQXDHReceiver\nPreKeyBundle"]:::crypto
-        MLS["MlsGroupState\nMlsWelcome"]:::crypto
-        SE["SealedEnvelope"]:::crypto
-        PSI["PsiContactDiscovery"]:::crypto
-    end
-    subgraph IDL["🪪 identity"]
-        direction LR
-        VC["VcIssuer"]:::id
-        MD["MdocDocument"]:::id
-        VP["VpBuilder"]:::id
-        VCR["VerifiableCredential"]:::id
-    end
-    subgraph NET["🌐 network"]
-        direction LR
-        RC["RelayClient"]:::data
-        OC["ObliviousHttpClient"]:::data
-        QRC["QuicRelayClient"]:::data
-        TOR["TorRelayManager"]:::data
-    end
-    subgraph SEC["🛡 security"]
-        direction LR
-        SBK["StrongBoxKeyManager"]:::crypto
-        API["AdvancedProtectionIntegration"]:::crypto
-        BLF["BloomFilter"]:::crypto
-        BRW["BlocklistRefreshWorker"]:::crypto
-    end
-    subgraph ENT["🏢 enterprise"]
-        direction LR
-        EP["EnterprisePolicy"]:::id
-        ZTE["ZeroTouchEnrollmentManager"]:::id
-        AEW["AuditExportWorker"]:::id
-    end
-    subgraph DATA["💾 data — Room v11"]
-        direction LR
-        CR["ContactRepository"]:::data
-        PR["ProfileRepository"]:::data
-        BR["BlocklistRepository"]:::data
-        AR["ExchangeAuditRepository"]:::data
-        KPR["KnownPeerRepository"]:::data
-        RR["RoomRepository"]:::data
-        subgraph LOC["local DAOs"]
-            direction LR
-            CD["ContactDao"]:::data
-            PD["ProfileDao"]:::data
-            BD["BlockedEndpointDao"]:::data
-            KPD["KnownPeerDao"]:::data
-            AuD["ExchangeAuditDao"]:::data
-            SPD["SharePresetDao"]:::data
-            RSD["RoomSessionDao"]:::data
-        end
-    end
-    subgraph UTILS["🔧 utils"]
-        direction LR
-        CU["CryptoUtils"]:::crypto
-        PV["PayloadValidator"]:::crypto
-        SV["SasVerifier"]:::crypto
-        VU["VCardUtils"]:::crypto
-        IKR["IdentityKeyRotator\nIdentityRotationDetector"]:::crypto
-        AU["AvatarUtils\nIdenticonGenerator"]:::crypto
-        EU["ExportUtils\nBackupUtils"]:::crypto
-        DU["DeeplinkUtils"]:::crypto
-    end
-
-    UI --> AUTH & SVC & DATA
-    SVC --> CRY & IDL & NET & DATA
-    AUTH --> DATA
-    SEC --> DATA
-    ENT --> DATA
-    DATA --> LOC
-    CRY --> UTILS
-    AUTH --> UTILS
-
-    classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
-    classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
-    classDef crypto fill:#EC4899,color:#FFFFFF,stroke:#9D174D,stroke-width:2px
-    classDef id fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
-    classDef data fill:#10B981,color:#FFFFFF,stroke:#065F46,stroke-width:2px
+flowchart LR
+    UI["🎨 ui"] --> AUTH["🎯 auth"] & SVC["⚙️ service"] & DATA["💾 data"]
+    SVC --> CRY["🔐 crypto"] & IDL["🪪 identity"] & NET["🌐 network"] & DATA
+    AUTH --> DATA & ZK["🔬 zk"]
+    ENT["🏢 enterprise"] --> DATA
+    FIDO["🔑 fido"] --> DATA
+    AR["🥽 ar/xr"] --> AUTH
 ```
 
 ### Dependency-direction rules
@@ -148,58 +47,24 @@ flowchart TB
 ## 2. Runtime component diagram
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12}}}%%
 flowchart LR
-    subgraph FG["⚙️ Foreground services"]
-        direction TB
-        NES["NearbyExchangeService\n(BLE/WiFi-P2P exchange)"]:::service
-        HCE["AuraHceService\n(NFC HCE)"]:::service
+    subgraph UI["🎨 UI"]
+        MA["MainActivity"] --> EF["ExchangeFragment"] & CF["ContactsFragment"] & HF["HomeFragment"]
     end
-    subgraph UIp["🎨 UI process"]
-        direction TB
-        MA["MainActivity"]:::ui
-        EF["ExchangeFragment\n+SuccessBottomSheet"]:::ui
-        CF["ContactsFragment\n+HistoryTab"]:::ui
-        HF["HomeFragment"]:::ui
+    subgraph FG["⚙️ Services"]
+        NES["NearbyExchangeService"] & HCE["AuraHceService (NFC)"]
     end
     subgraph OS["📱 Android OS"]
-        direction TB
-        NC["Nearby Connections API"]:::muted
-        KS["Android Keystore"]:::muted
-        CAM["Camera (CameraX)"]:::muted
-        BIO["Biometric Prompt"]:::muted
-        NFC["NFC Manager"]:::muted
+        NC["Nearby API"] & KS["Keystore"] & CAM["Camera"] & BIO["Biometric"] & NFC["NFC"]
     end
-    subgraph STO["💾 On-device storage"]
-        direction TB
-        ROOM[("Room v11\n(11 schemas)")]:::data
-        ESP[("EncryptedSharedPreferences\n(gesture template)")]:::data
-        DSP[("DataStore\n(preferences)")]:::data
+    subgraph STO["💾 Storage"]
+        ROOM[("Room v12")] & ESP[("EncryptedPrefs")] & DSP[("DataStore")]
     end
-
-    MA --> EF & CF & HF
-    EF -->|"gesture auth"| CAM
-    EF -->|"or biometric"| BIO
-    EF -->|"verified → start"| NES
-    HF -->|"tap Exchange"| EF
-    NES <-->|"BLE / WiFi-P2P"| NC
-    NES --> KS & ROOM
-    HCE <--> NFC
-    HCE --> ROOM
-    EF --> ESP
-    MA --> DSP
-    CF -->|"history + contacts"| ROOM
+    EF --> CAM & BIO & NES
+    NES <--> NC & KS & ROOM
+    HCE <--> NFC & ROOM
+    EF --> ESP & ROOM
+    MA --> DSP & CF
 ```
 
 ### Services
@@ -216,14 +81,6 @@ flowchart LR
 `NearbyExchangeService` is the security-critical hot path. Internally it is a typed state machine over `ExchangeSession.State`:
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569'
-}}}%%
 stateDiagram-v2
     [*] --> Idle
     Idle --> Advertising: start()
@@ -234,7 +91,7 @@ stateDiagram-v2
     RoomGuest --> Connecting: onEndpointFound
     Connecting --> KeyExchange: onConnectionResult(OK)
     Connecting --> Idle: onConnectionResult(FAIL)
-    KeyExchange --> Verifying: SAS PIN derived → UI shown
+    KeyExchange --> Verifying: SAS PIN derived
     Verifying --> ProfileExchange: ACTION_CONFIRM_SAS
     Verifying --> Aborted: ACTION_ABORT_SAS / timeout
     ProfileExchange --> AvatarStream: profile saved
@@ -264,41 +121,15 @@ Full v9 frame specification in [`WIRE_PROTOCOL.md`](WIRE_PROTOCOL.md).
 ## 4. Navigation graph
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075585',
-  'lineColor':'#475569',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12}}}%%
 flowchart LR
-    Splash(["app start"]):::user --> Onb{"First launch?"}:::gate
-    Onb -- yes --> Onboard["Onboarding"]:::ui
-    Onb -- no --> Home["Home"]:::ui
-    Onboard --> Home
-
-    Home -->|"tap Exchange"| Exchange["Exchange\n+ SuccessSheet"]:::ui
-    Home -->|"Edit profile"| Profile["Profile"]:::ui
-    Profile --> GestLib["Gesture Library"]:::ui
-    Home -->|"Contacts"| Contacts["Contacts\n(My Contacts tab)"]:::ui
-    Contacts -->|"History tab"| History["Exchange\nHistory"]:::ui
-    Contacts -->|"tap row"| Detail["Contact Detail\n(BottomSheet)"]:::ui
-    Contacts -->|"overflow → Audit"| Audit["Audit Log"]:::ui
-    Audit --> Analytics["Analytics"]:::ui
-    Home -->|"QR"| QR["QR Exchange"]:::ui
-    Home -->|"Room"| Room["Room Exchange"]:::ui
-    Home -->|"Settings"| Settings["Settings"]:::ui
-    Settings --> Blocked["Blocked Devices"]:::ui
-    Settings --> Audit
-    Settings --> Backup["Backup & Restore"]:::ui
-    Exchange -->|"Done"| Contacts
-
-    classDef user fill:#6E56CF,color:#FFFFFF,stroke:#3D2C7A,stroke-width:2px
-    classDef ui fill:#8B5CF6,color:#FFFFFF,stroke:#5B21B6,stroke-width:2px
-    classDef gate fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
+    Start(["app start"]) --> Onb{"First\nlaunch?"}
+    Onb -- yes --> Onboard["Onboarding"] --> Home["Home"]
+    Onb -- no --> Home
+    Home --> Exchange["Exchange\n+SuccessSheet"] --> Contacts
+    Home --> Profile["Profile"] --> GestLib["Gesture Library"]
+    Home --> Contacts["Contacts\n+History"] --> Detail["Contact Detail"] & Audit["Audit Log"] --> Analytics["Analytics"]
+    Home --> QR["QR"] & Room["Room"] & Settings["Settings"]
+    Settings --> Blocked["Blocked Devices"] & Audit & Backup["Backup"]
 ```
 
 The Navigation Component source of truth is [`app/src/main/res/navigation/nav_graph.xml`](../app/src/main/res/navigation/nav_graph.xml).

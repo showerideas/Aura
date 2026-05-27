@@ -1,24 +1,12 @@
 # Data model
 
-> Everything that survives a process restart lives in **one Room database** (`AppDatabase`, currently at schema version `11`), plus a small amount of preference data in `DataStore` and `EncryptedSharedPreferences`.
+> Everything that survives a process restart lives in **one Room database** (`AppDatabase`, currently at schema version `12`), plus a small amount of preference data in `DataStore` and `EncryptedSharedPreferences`.
 
 ---
 
 ## 1. Entity-relationship diagram
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 erDiagram
     Profile {
         long id PK "single row, id = 0"
@@ -104,23 +92,13 @@ erDiagram
 Schema JSON exports live under `app/schemas/com.showerideas.aura.data.local.AppDatabase/<version>.json` and are verified by `MigrationTest.kt` at instrumentation-test time.
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12}}}%%
 flowchart LR
-    V1[(v1\nContact\nProfile)] -- MIGRATION_1_2 --> V2[(v2\n+ BlockedEndpoint)]
-    V2 -- MIGRATION_2_3 --> V3[(v3\n+ KnownPeer)]
-    V3 -- MIGRATION_3_4 --> V4[(v4\n+ identityKeyHash cols)]
-    V4 -- MIGRATION_4_5 --> V5[(v5\n+ ExchangeAuditEntry)]
+    V1[(v1\nContact · Profile)] -- M_1_2 --> V2[(v2\n+ BlockedEndpoint)]
+    V2 -- M_2_3 --> V3[(v3\n+ KnownPeer)]
+    V3 -- M_3_4 --> V4[(v4\n+ identityKeyHash)]
+    V4 -- M_4_5 --> V5[(v5\n+ ExchangeAuditEntry)]
+    V5 -. "v6–v11\n(see table)" .-> V11[(v11\n+ transport col\n+ share_presets\netc.)]
+    V11 -- M_11_12 --> V12[(v12\n+ passkeys\n+ gesture_zk_proof)]
 ```
 
 ---

@@ -10,18 +10,6 @@
 ## 1. The happy path — direct (1-to-1) exchange
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 sequenceDiagram
     autonumber
     actor A as User A
@@ -106,18 +94,6 @@ sequenceDiagram
 ## 2. Room mode (1 host : N guests, )
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 sequenceDiagram
     autonumber
     actor H as Host
@@ -154,18 +130,6 @@ In room mode the host runs `P2P_STAR` so multiple guests can connect simultaneou
 When BLE / Wi-Fi P2P is blocked (some corporate venues, locker-room metal cages), the user can switch to QR mode:
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 sequenceDiagram
     actor A
     actor B
@@ -189,18 +153,6 @@ The QR payload is **not** encrypted on the wire (a camera in line of sight is th
 ## 4. Failure / abort paths
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 flowchart LR
     Start([exchange initiated]) --> Gate{gesture/biometric?}
     Gate -- fail x3 --> Abort1[Cancelled: gesture]
@@ -228,18 +180,6 @@ Each `Aborted` branch surfaces in the UI as a localized message (see [`features/
 ## 5. State machine inside `NearbyExchangeService`
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':12},'sequence':{'actorMargin':50,'boxMargin':10,'noteMargin':10,'messageMargin':35}}}%%
 stateDiagram-v2
     [*] --> Idle
     Idle --> Advertising: ACTION_START

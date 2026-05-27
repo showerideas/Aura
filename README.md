@@ -54,7 +54,7 @@
 
 ---
 
-## ✨ Feature set — v4.0.0
+## ✨ Feature set — v5.6
 
 | 🔐 Post-quantum crypto | 🌐 Transport | 🎯 Auth & UX |
 |---|---|---|
@@ -83,48 +83,18 @@
 ## 🔄 How it works
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':40,'rankSpacing':50,'padding':14}}}%%
 flowchart LR
     subgraph A["📱 Phone A"]
-        direction TB
-        UA[["User A"]]:::user
-        TA["Tap Exchange"]:::service
-        GA{"Gesture\nmatch?"}:::gate
-        NA["Nearby\nExchange"]:::service
-        SA["Success\nSheet"]:::ui
-        UA --> TA --> GA
-        GA -- "✅" --> NA --> SA
-        GA -- "❌" --> XA["Cancel"]:::warn
+        UA(["User A"]) --> TA["Tap Exchange"] --> GA{"Gesture?"}
+        GA -- ✅ --> NA["PQ Exchange"] --> SA["✓ Contact saved"]
+        GA -- ❌ --> XA(["Cancel"])
     end
     subgraph B["📱 Phone B"]
-        direction TB
-        UB[["User B"]]:::user
-        TB["Tap Exchange"]:::service
-        GB{"Gesture\nmatch?"}:::gate
-        NB["Nearby\nExchange"]:::service
-        SB["Success\nSheet"]:::ui
-        UB --> TB --> GB
-        GB -- "✅" --> NB --> SB
-        GB -- "❌" --> XB["Cancel"]:::warn
+        UB(["User B"]) --> TB["Tap Exchange"] --> GB{"Gesture?"}
+        GB -- ✅ --> NB["PQ Exchange"] --> SB["✓ Contact saved"]
+        GB -- ❌ --> XB(["Cancel"])
     end
-    NA <== "PQ-KEM + Noise_XX + AES-GCM" ==> NB
-
-    classDef user fill:#6E56CF,color:#FFFFFF,stroke:#3D2C7A,stroke-width:2px
-    classDef service fill:#0EA5E9,color:#FFFFFF,stroke:#075985,stroke-width:2px
-    classDef ui fill:#10B981,color:#FFFFFF,stroke:#065F46,stroke-width:2px
-    classDef gate fill:#F59E0B,color:#1F2937,stroke:#92400E,stroke-width:2px
-    classDef warn fill:#EF4444,color:#FFFFFF,stroke:#991B1B,stroke-width:2px
+    NA <== "ML-KEM-768+X25519 · Noise_XX · AES-256-GCM" ==> NB
 ```
 
 The full step-by-step sequence (PQ-KEM handshake, ML-DSA-65 identity proof, Noise_XX channel, replay window, avatar streaming, SAS verification) is in [`docs/EXCHANGE_FLOW.md`](docs/EXCHANGE_FLOW.md).
@@ -133,85 +103,17 @@ The full step-by-step sequence (PQ-KEM handshake, ML-DSA-65 identity proof, Nois
 
 ## 🧱 Architecture at a glance
 
-```mermaid
-%%{init: {'theme':'base','themeVariables':{
-  'fontFamily':'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-  'fontSize':'14px',
-  'primaryColor':'#0EA5E9',
-  'primaryTextColor':'#0F172A',
-  'primaryBorderColor':'#075985',
-  'lineColor':'#475569',
-  'secondaryColor':'#F1F5F9',
-  'tertiaryColor':'#FAFAF9',
-  'clusterBkg':'#F8FAFC',
-  'clusterBorder':'#CBD5E1'
-},'flowchart':{'curve':'basis','nodeSpacing':28,'rankSpacing':36,'padding':10}}}%%
-flowchart TB
-    subgraph UI["🎨 UI — 14 screens"]
-        direction LR
-        HF["Home"]:::ui
-        PF["Profile"]:::ui
-        EF["Exchange\n+ SuccessSheet"]:::ui
-        CF["Contacts\n+ History tab"]:::ui
-        QF["QR"]:::ui
-        RF["Room"]:::ui
-        SF["Settings"]:::ui
-        AuF["Audit &\nAnalytics"]:::ui
-        GF["Gesture\nLibrary"]:::ui
-    end
-    subgraph SVC["⚙️ Services"]
-        direction LR
-        NX["NearbyExchangeService"]:::service
-        HCE["AuraHceService\n(NFC)"]:::service
-        QS["QsTileService"]:::service
-    end
-    subgraph AUTH["🎯 Auth"]
-        direction LR
-        GA["GestureAuth\nManager"]:::service
-        BA["Biometric\nHelper"]:::service
-        LG["LivenessGuard"]:::service
-        TG["TemporalGesture\nClassifier"]:::service
-        CA["Continuous\nAuthMonitor"]:::service
-    end
-    subgraph CRY["🔐 Crypto"]
-        direction LR
-        KEM["HybridKEM\n(ML-KEM-768+X25519)"]:::crypto
-        SIG["HybridIdentityKey\n(ML-DSA-65+ECDSA)"]:::crypto
-        NSE["NoiseChannel\n(Noise_XX)"]:::crypto
-        DR["DoubleRatchet\n+SPQR"]:::crypto
-        PQ["PQXDH\nSender/Receiver"]:::crypto
-        MLS["MlsGroupState\n(RFC 9420)"]:::crypto
-        SE["SealedEnvelope"]:::crypto
-    end
-    subgraph IDL["🪪 Identity"]
-        direction LR
-        VC["VcIssuer\n(did:key)"]:::id
-        MD["MdocDocument\n(ISO 18013-5)"]:::id
-        VP["VpBuilder\n(OpenID4VP)"]:::id
-    end
-    subgraph NET["🌐 Network"]
-        direction LR
-        RC["RelayClient\n(QR HTTPS)"]:::data
-        OC["ObliviousHttp\nClient (OHTTP)"]:::data
-        QC["QuicRelayClient\n(HTTP/3)"]:::data
-        TR["TorRelay\nManager"]:::data
-    end
-    subgraph DAT["💾 Data — Room v11"]
-        direction LR
-        CD[("ContactDao")]:::data
-        PD[("ProfileDao")]:::data
-        BD[("BlockedEndpointDao")]:::data
-        KP[("KnownPeerDao")]:::data
-        AuD[("ExchangeAuditDao")]:::data
-        SD[("SharePresetDao")]:::data
-    end
-
-    UI --> SVC & AUTH
-    SVC --> CRY & IDL & DAT
-    AUTH --> DAT
-    NET --> SVC
-    CRY --> DAT
-```
+| Layer | Components |
+|---|---|
+| 🎨 **UI** (14 screens) | Home · Profile · Exchange+SuccessSheet · Contacts+History · QR · Room · Settings · Audit · GestureLibrary |
+| ⚙️ **Services** | NearbyExchangeService · AuraHceService (NFC) · AuraQsTileService |
+| 🎯 **Auth** | GestureAuthManager · DualBoneGraphTracker · TemporalGestureClassifier · LivenessGuard · BiometricAuthHelper · ContinuousAuthMonitor |
+| 🔐 **Crypto** | HybridKEM (ML-KEM-768+X25519) · HybridIdentityKey (ML-DSA-65+ECDSA) · NoiseChannel (Noise_XX) · DoubleRatchet+SPQR · PQXDH · MlsGroupState (RFC 9420) · SealedEnvelope |
+| 🪪 **Identity** | VcIssuer (did:key · did:peer:2) · MdocDocument (ISO 18013-5/7) · VpBuilder (OpenID4VP) · DIDCommTransport · DidResolver |
+| 🌐 **Network** | RelayClient · ObliviousHttpClient (OHTTP) · QuicRelayClient (HTTP/3) · TorRelayManager · PrivacyPassClient |
+| 🔬 **ZK / FIDO / AR** | GestureZkProver (Groth16) · AuraCredentialProviderService · PasskeyRepository · ArExchangeCoordinator · SpatialContactCard |
+| 🏢 **Enterprise** | EnterprisePolicy · AuditExportWorker · ShamirSecretSharing · AuditSigningCoordinator (MPC 2-of-3) |
+| 💾 **Data** — Room v12 | ContactDao · ProfileDao · BlockedEndpointDao · KnownPeerDao · ExchangeAuditDao · PasskeyDao · SharePresetDao |
 
 Full detail (package map, dependency rules, threading) in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -302,7 +204,8 @@ Each exchange opens a **fresh post-quantum hybrid KEM** (ML-KEM-768+X25519), der
 - [x] **v3.0.0** — iOS AuraCore companion, Wear OS pairing, Android Auto voice + biometric gate, F-Droid reproducible build
 - [x] **v3.3.0** — full transport stack (BLE GATT, Wi-Fi Direct FOSS, NFC, LoRa opt-in), PQ crypto (ML-KEM-768, ML-DSA-65, PQXDH), differential privacy analytics, enterprise MDM, JaCoCo 60% floor
 - [x] **v4.0.0** — Noise_XX channel, MLS RFC 9420 rooms, Double Ratchet + SPQR, OHTTP RFC 9458, QUIC/HTTP3, OpenID4VP, ISO 18013-5 mdoc, W3C Verifiable Credentials, UWB FiRa 3.0, BLE Channel Sounding, Advanced Protection API; exchange success sheet; contacts history tab
-- [ ] **R&D pipeline** — 16 research items: `did:peer`/`did:web` full DID wallet, ARCore exchange overlay, satellite fallback (SatelliteManager), DIDComm v2, FIDO2 credential provider, ZK-SNARK gesture privacy, MPC threshold audit signing, Android XR / Jetpack XR, Privacy Pass relay rate-limiting, Kotlin 2.2 Swift export
+- [x] **v5.6** — dual-descriptor gesture enrollment, Android 17 ML-DSA-65 native Keystore, FIDO2 CredentialProvider + NFC CTAP2 relay, ZK-SNARK Groth16 gesture privacy, ARCore UWB-gated contact card, DIDComm v2 + ISO 18013-7, MPC 2-of-3 threshold audit signing, Privacy Pass relay rate-limiting, `did:peer:2` + `DidResolver`, ML Kit OCR business card import
+- [ ] **R&D pipeline** — satellite fallback (SatelliteManager), Matter/Thread IoT identity bridge, Android 17 contact picker integration, Kotlin 2.2 Swift export
 
 ---
 
