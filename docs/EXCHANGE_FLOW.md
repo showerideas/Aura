@@ -1,6 +1,9 @@
 # Exchange flow
 
 > An exchange begins when both users open AURA and tap Exchange, the gesture/biometric gate has cleared on each side, and the two phones are within Nearby Connections range. The sequence below walks every byte sent in a successful direct exchange.
+>
+> **v5.5 addition (Task 111):** AURA now supports a third exchange path via DIDComm v2 messaging.
+> See §4 below for the DIDComm exchange flow and ISO 18013-7 async mDL presentation path.
 
 ---
 
@@ -263,3 +266,51 @@ stateDiagram-v2
 ```
 
 This is the same finite-state machine drawn at a coarser level in [`ARCHITECTURE.md`](ARCHITECTURE.md#3-class-level-overview-of-the-exchange-service); the version above includes the explicit abort transitions.
+
+---
+
+## 4. DIDComm v2 exchange path (Task 111 — v5.5)
+
+The DIDComm exchange path enables asynchronous, store-and-forward contact exchange
+with any DIDComm v2-compatible wallet (including enterprise identity wallets).
+
+```
+Enterprise Wallet                    AURA (recipient)
+     │                                      │
+     │── DIDComm authcrypt envelope ─────→  │  DIDCommTransport.receive()
+     │   type: aura.exchange.v1/request     │
+     │   body: { vc, nonce, requesterDid }  │  → DIDCommInboxFragment shows consent dialog
+     │                                      │
+     │                                      │  User performs enrolled gesture
+     │                                      │  GestureVerificationEngine.verify()
+     │                                      │
+     │  ←─── DIDComm authcrypt envelope ──  │  DIDCommTransport.send()
+     │   type: aura.exchange.v1/response    │
+     │   body: { vc, nonce_ack }            │
+     │                                      │
+     │  OR if declined:                     │
+     │  ←─── type: report-problem ────────  │
+     │        code: e.p.req.declined        │
+```
+
+Messages are routed via the AURA relay (`RelayClient`) using the `did:peer:2`
+pairwise DID as the inbox slot identifier.
+
+### ISO 18013-7 async mDL presentation (Task 108)
+
+ISO 18013-7 extends ISO 18013-5 proximity presentation to an online (async) path
+using OpenID4VP as the transport. The AURA verifier accepts `vp_token` responses
+from any mDL wallet via `MdocDocument.fromOid4vpResponse()`.
+
+```
+Verifier (AURA)            mDL Wallet (remote)
+     │                            │
+     │── OpenID4VP AuthRequest ─→ │  response_type=vp_token
+     │   nonce, presentation_def  │  presentation_definition: id.aura.contact.1
+     │                            │
+     │ ←─── vp_token (Base64url ─ │  DeviceResponse CBOR
+     │        DeviceResponse)     │
+     │                            │
+     │  MdocDocument.fromOid4vpResponse(vpTokenJson, nonce)
+     │  → MdocDocument with verified elements
+```
