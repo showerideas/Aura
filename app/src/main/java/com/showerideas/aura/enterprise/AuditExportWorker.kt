@@ -12,6 +12,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.showerideas.aura.BuildConfig
 import com.showerideas.aura.data.ExchangeAuditRepository
 import com.showerideas.aura.utils.CryptoUtils
 import dagger.assisted.Assisted
@@ -78,12 +79,29 @@ class AuditExportWorker @AssistedInject constructor(
             }
 
             // Build CSV
+            // Task 91: include gesture_zk_proof column when ENABLE_ZK_AUDIT_PROOF is enabled.
+            // The proof is Base64-encoded so it survives CSV round-trips cleanly.
+            val includeZkProof = BuildConfig.ENABLE_ZK_AUDIT_PROOF
             val dateStr = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
             val csvFile = File(appContext.cacheDir, "aura_audit_${dateStr}.csv")
             val csv = buildString {
-                appendLine("id,timestampMs,peerIdentityKeyHash,direction,outcome,errorCode,channel")
+                val header = buildString {
+                    append("id,timestampMs,peerIdentityKeyHash,direction,outcome,errorCode,channel")
+                    if (includeZkProof) append(",gesture_zk_proof")
+                }
+                appendLine(header)
                 for (e in entries) {
-                    appendLine("${e.id},${e.timestampMs},${e.peerIdentityKeyHash ?: ""},${e.direction},${e.outcome},${e.errorCode ?: ""},${e.channel}")
+                    val row = buildString {
+                        append("${e.id},${e.timestampMs},${e.peerIdentityKeyHash ?: ""},")
+                        append("${e.direction},${e.outcome},${e.errorCode ?: ""},${e.channel}")
+                        if (includeZkProof) {
+                            val proofB64 = e.gestureZkProof
+                                ?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
+                                ?: ""
+                            append(",$proofB64")
+                        }
+                    }
+                    appendLine(row)
                 }
             }
             csvFile.writeText(csv)
