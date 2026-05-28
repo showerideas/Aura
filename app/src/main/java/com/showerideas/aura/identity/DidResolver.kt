@@ -1,6 +1,7 @@
 package com.showerideas.aura.identity
 
-import android.util.Base64
+import java.util.Base64
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -141,7 +142,7 @@ class DidResolver @Inject constructor() {
      * @return `did:peer:2.<base64url(keyDer)>`
      */
     fun encodePeer2Did(publicKeyDer: ByteArray): String {
-        val encoded = Base64.encodeToString(publicKeyDer, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(publicKeyDer)
         return "did:peer:2.$encoded"
     }
 
@@ -153,7 +154,7 @@ class DidResolver @Inject constructor() {
                 return null
             }
             val encoded = identifier.substring(2)
-            val keyDer = Base64.decode(encoded, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+            val keyDer = Base64.getUrlDecoder().decode(encoded)
             val ecKey = decodeP256Key(keyDer)
 
             Timber.d("DidResolver: resolved did:peer:2 (${keyDer.size} bytes)")
@@ -218,10 +219,10 @@ class DidResolver @Inject constructor() {
             val vm = vmArray.getJSONObject(0)
             val jwk = vm.optJSONObject("publicKeyJwk")
             val keyEncoded = jwk?.optString("x")?.let { x ->
-                Base64.decode(x, Base64.URL_SAFE or Base64.NO_PADDING)
+                Base64.getUrlDecoder().decode(x)
             } ?: vm.optString("publicKeyBase64").let { b64 ->
                 if (b64.isNullOrBlank()) ByteArray(0)
-                else Base64.decode(b64, Base64.DEFAULT)
+                else Base64.getDecoder().decode(b64)
             }
 
             val ecKey = runCatching { decodeP256Key(keyEncoded) }.getOrNull()

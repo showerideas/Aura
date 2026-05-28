@@ -95,7 +95,9 @@ class LivenessGuardTest {
         // Feed CHALLENGE_TIMEOUT_FRAMES more frames without a challenge response
         var result: LivenessGuard.Result = LivenessGuard.Result.Collecting
         repeat(LivenessGuard.CHALLENGE_TIMEOUT_FRAMES + 1) { i ->
-            result = guard.feed(liveEmbedding(i + 100))
+            // Use uniform ramp so EXTEND_INDEX challenge is never accidentally satisfied
+            // (yOf(4)==yOf(5) with uniform values → indexExtended check always false)
+            result = guard.feed(FloatArray(63) { 1.0f + i * 0.01f })
         }
         assertTrue("Should timeout if challenge not answered in time, got $result",
             result is LivenessGuard.Result.ChallengeTimeout)

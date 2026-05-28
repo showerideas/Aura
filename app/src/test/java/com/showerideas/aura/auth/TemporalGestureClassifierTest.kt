@@ -26,10 +26,12 @@ class TemporalGestureClassifierTest {
 
     /**
      * Produce an embedding with cosine similarity > SPATIAL_THRESHOLD to [base].
-     * Adds slight perturbation so motion floor is satisfied.
+     * Alternates +0.05/-0.05 shift per frame so consecutive inter-frame cosine
+     * delta ≈ 0.039 >> MOTION_FLOOR (0.008) while spatial similarity stays > 0.88.
      */
     private fun authenticEmbedding(base: FloatArray, frame: Int): FloatArray {
-        return FloatArray(63) { i -> base[i] + 0.002f * (frame % 5 + 1) }
+        val shift = if (frame % 2 == 0) 0.05f else -0.05f
+        return FloatArray(63) { i -> base[i] + shift }
     }
 
     /**

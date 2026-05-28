@@ -1,6 +1,7 @@
 package com.showerideas.aura.identity.didcomm
 
-import android.util.Base64
+import java.util.Base64
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -83,16 +84,16 @@ class DIDCommTransport @Inject constructor() {
 
             // Simplified direct decryption using pre-shared CEK stub.
             // Production path: perform ECDH-ES key agreement on epk to derive CEK.
-            val ciphertext = Base64.decode(ciphertextB64, Base64.URL_SAFE)
-            val iv = Base64.decode(ivB64, Base64.URL_SAFE)
+            val ciphertext = Base64.getUrlDecoder().decode(ciphertextB64)
+            val iv = Base64.getUrlDecoder().decode(ivB64)
             val cek = if (cekB64.isNotBlank()) {
-                Base64.decode(cekB64, Base64.URL_SAFE)
+                Base64.getUrlDecoder().decode(cekB64)
             } else {
                 deriveCekFromEpk(envelope, recipientPriv)
             }
 
             val cipherAndTag = if (tagB64.isNotBlank()) {
-                ciphertext + Base64.decode(tagB64, Base64.URL_SAFE)
+                ciphertext + Base64.getUrlDecoder().decode(tagB64)
             } else {
                 ciphertext
             }
@@ -130,10 +131,10 @@ class DIDCommTransport @Inject constructor() {
         JSONObject().apply {
             put("id", message.id)
             put("type", "application/didcomm-encrypted+json")
-            put("ciphertext", Base64.encodeToString(ciphertext, Base64.URL_SAFE or Base64.NO_WRAP))
-            put("iv", Base64.encodeToString(iv, Base64.URL_SAFE or Base64.NO_WRAP))
-            put("tag", Base64.encodeToString(tag, Base64.URL_SAFE or Base64.NO_WRAP))
-            put("cek_stub", Base64.encodeToString(cek, Base64.URL_SAFE or Base64.NO_WRAP))
+            put("ciphertext", Base64.getUrlEncoder().encodeToString(ciphertext))
+            put("iv", Base64.getUrlEncoder().encodeToString(iv))
+            put("tag", Base64.getUrlEncoder().encodeToString(tag))
+            put("cek_stub", Base64.getUrlEncoder().encodeToString(cek))
         }.toString()
     }
 

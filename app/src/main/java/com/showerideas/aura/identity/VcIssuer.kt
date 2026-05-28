@@ -1,6 +1,7 @@
 package com.showerideas.aura.identity
 
-import android.util.Base64
+import java.util.Base64
+
 import com.showerideas.aura.model.Profile
 import timber.log.Timber
 import java.security.MessageDigest
@@ -63,7 +64,7 @@ class VcIssuer @Inject constructor() {
         }
         return try {
             val (headerB64, _, sigB64) = proof.jws.split(".")
-            val sigBytes = Base64.decode(sigB64, Base64.URL_SAFE or Base64.NO_PADDING)
+            val sigBytes = Base64.getUrlDecoder().decode(sigB64)
             val vcNoProof = vc.copy(proof = null).toJsonString()
             val signedData = "$headerB64.$vcNoProof".toByteArray(Charsets.UTF_8)
             Signature.getInstance("SHA256withECDSA").also {
@@ -133,7 +134,7 @@ class VcIssuer @Inject constructor() {
     }
 
     private fun base64url(bytes: ByteArray): String =
-        Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
 
     private fun derToRawEcSig(der: ByteArray): ByteArray {
         var i = 2

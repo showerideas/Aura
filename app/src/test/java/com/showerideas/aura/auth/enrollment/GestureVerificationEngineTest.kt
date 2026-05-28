@@ -1,6 +1,8 @@
 package com.showerideas.aura.auth.enrollment
 
 import org.junit.Assert.*
+import com.showerideas.aura.auth.enrollment.GestureEnrollmentCapture
+import com.showerideas.aura.auth.CameraHandEmbedder
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
@@ -23,6 +25,15 @@ class GestureVerificationEngineTest {
         engine = GestureVerificationEngine(tracker, store)
     }
 
+    /**
+     * All-negative frames: centroid is anti-correlated with constant-positive pose.
+     * Compound-vector cosine against constant pose ≈ 0.67 < MATCH_THRESHOLD(0.85).
+     */
+    private fun negativePoseFrames(): List<FloatArray> =
+        List(GestureEnrollmentCapture.CAPTURE_FRAMES) {
+            FloatArray(CameraHandEmbedder.EMBEDDING_SIZE) { i -> -((i + 1) * 0.01f) }
+        }
+
     @Test fun `both windows match returns Success`() {
         val frames = TestLandmarkFactory.constantPose()
         val (descA, descB) = tracker.extract(frames)
@@ -40,7 +51,7 @@ class GestureVerificationEngineTest {
         val (descA, descB) = tracker.extract(frames)
 
         // Create a very different stored descriptor for A (random noise)
-        val noisyFrames = TestLandmarkFactory.randomNoise()
+        val noisyFrames = negativePoseFrames()
         val (storedA, _) = tracker.extract(noisyFrames)
 
         `when`(store.hasLegacyEnrollment()).thenReturn(false)
@@ -57,7 +68,7 @@ class GestureVerificationEngineTest {
         val frames = TestLandmarkFactory.constantPose()
         val (descA, descB) = tracker.extract(frames)
 
-        val noisyFrames = TestLandmarkFactory.randomNoise()
+        val noisyFrames = negativePoseFrames()
         val (_, storedB) = tracker.extract(noisyFrames)
 
         `when`(store.hasLegacyEnrollment()).thenReturn(false)
@@ -96,7 +107,7 @@ class GestureVerificationEngineTest {
     @Test fun `AND logic enforced — A-pass B-fail is not Success`() {
         val frames = TestLandmarkFactory.constantPose()
         val (descA, _) = tracker.extract(frames)
-        val noisyFrames = TestLandmarkFactory.randomNoise()
+        val noisyFrames = negativePoseFrames()
         val (_, badB) = tracker.extract(noisyFrames)
 
         `when`(store.hasLegacyEnrollment()).thenReturn(false)

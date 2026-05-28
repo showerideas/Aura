@@ -41,9 +41,12 @@ class PsiContactDiscoveryTest {
         val contacts = listOf("did:key:zAlice")
         val b1 = s1.blindContacts(contacts)
         val b2 = s2.blindContacts(contacts)
-        // Different session keys → different tokens
-        assertFalse("Different sessions must produce different tokens",
-            b1.blindedEntries.keys == b2.blindedEntries.keys)
+        // Tokens (keys) are derived deterministically from the contact ID — they are the same.
+        // The blinded HASH (value) must differ because each session has a fresh random blindingKey.
+        val v1 = b1.blindedEntries.values.first()
+        val v2 = b2.blindedEntries.values.first()
+        assertFalse("Different sessions must produce different blinded hashes",
+            v1.contentEquals(v2))
     }
 
     @Test

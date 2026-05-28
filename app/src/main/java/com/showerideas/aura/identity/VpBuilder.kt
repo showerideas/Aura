@@ -1,6 +1,7 @@
 package com.showerideas.aura.identity
 
-import android.util.Base64
+import java.util.Base64
+
 import timber.log.Timber
 import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
@@ -152,8 +153,7 @@ class VpBuilder @Inject constructor(
         nonce: String
     ): JsonWebSignature2020Proof {
         val headerJson = """{"alg":"ES256","b64":false,"crit":["b64"]}"""
-        val headerB64  = Base64.encodeToString(headerJson.toByteArray(),
-            Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        val headerB64  = Base64.getUrlEncoder().withoutPadding().encodeToString(headerJson.toByteArray())
         val vpJson = vp.toJsonString()
         val signedData = "$headerB64.$vpJson$nonce".toByteArray(Charsets.UTF_8)
         val sig = java.security.Signature.getInstance("SHA256withECDSA").also {
@@ -162,7 +162,7 @@ class VpBuilder @Inject constructor(
         }.sign()
         // DER → raw 64-byte
         val raw = derToRaw(sig)
-        val jws = "$headerB64..${Base64.encodeToString(raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)}"
+        val jws = "$headerB64..${Base64.getUrlEncoder().withoutPadding().encodeToString(raw)}"
         return JsonWebSignature2020Proof(
             created = Instant.now(),
             verificationMethod = "$did#key-1",

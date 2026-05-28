@@ -106,6 +106,12 @@ class LivenessGuardTest {
             val embedding = FloatArray(63) { 0.5f + i * 0.01f }
             last = guard.feed(embedding)
         }
+        // After WINDOW_FRAMES passive frames the guard issues EXTEND_INDEX (entries[60%3]=0).
+        // Feed one frame that satisfies: yOf(4) < yOf(5)-0.08 && yOf(8) > yOf(9)-0.04.
+        val cv1 = 0.5f + (LivenessGuard.WINDOW_FRAMES + 1) * 0.01f
+        val resp1 = FloatArray(63) { cv1 }
+        resp1[16] = cv1 + 0.09f   // index MCP y raised so yOf(4) < yOf(5)-0.08
+        last = guard.feed(resp1)
         assertTrue(
             "Expected Live for high-drift frames, got $last",
             last is LivenessGuard.Result.Live
@@ -118,6 +124,10 @@ class LivenessGuardTest {
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
             last = guard.feed(FloatArray(63) { 0.5f + i * 0.01f })
         }
+        val cv2 = 0.5f + (LivenessGuard.WINDOW_FRAMES + 1) * 0.01f
+        val resp2 = FloatArray(63) { cv2 }
+        resp2[16] = cv2 + 0.09f
+        last = guard.feed(resp2)
         val drift = (last as LivenessGuard.Result.Live).meanDrift
         assertTrue(
             "Live meanDrift should exceed MIN_MEAN_DRIFT (${LivenessGuard.MIN_MEAN_DRIFT}), was $drift",
@@ -137,6 +147,10 @@ class LivenessGuardTest {
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
             last = guard.feed(FloatArray(63) { 0.5f + i * perElement })
         }
+        val cv3 = 0.5f + (LivenessGuard.WINDOW_FRAMES + 1) * perElement
+        val resp3 = FloatArray(63) { cv3 }
+        resp3[16] = cv3 + 0.09f
+        last = guard.feed(resp3)
         // At or just above the threshold, should be Live (>= comparison)
         assertTrue(
             "Drift at threshold should be Live, got $last",
@@ -170,6 +184,11 @@ class LivenessGuardTest {
         for (i in 0..LivenessGuard.WINDOW_FRAMES) {
             last = guard.feed(FloatArray(63) { 0.5f + i * 0.02f })
         }
+        // Respond to EXTEND_INDEX challenge issued at frame 60 (after reset frameCount restarts at 0)
+        val cv4 = 0.5f + (LivenessGuard.WINDOW_FRAMES + 1) * 0.02f
+        val resp4 = FloatArray(63) { cv4 }
+        resp4[16] = cv4 + 0.09f
+        last = guard.feed(resp4)
         assertTrue("Expected Live after reset and re-fill, got $last", last is LivenessGuard.Result.Live)
     }
 

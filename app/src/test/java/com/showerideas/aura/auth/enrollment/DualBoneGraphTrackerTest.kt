@@ -72,7 +72,7 @@ class DualBoneGraphTrackerTest {
         // Frames 0-14 = slow rotation, frames 15-59 = fast flick
         // Build a hybrid: first 15 slow, next 45 fast
         val slow = TestLandmarkFactory.slowRotation()
-        val fast = TestLandmarkFactory.fastFlick()
+        val fast = TestLandmarkFactory.fastFlick(deltaPerFrame = 0.5f)
         val hybrid = slow.subList(0, 15) + fast.subList(0, 45)
         assertEquals(60, hybrid.size)
 

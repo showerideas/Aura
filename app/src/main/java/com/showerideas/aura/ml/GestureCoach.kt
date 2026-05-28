@@ -70,6 +70,7 @@ class GestureCoach @Inject constructor(
         val advice = mutableListOf<CoachingAdvice>()
 
         if (slots.isEmpty()) {
+            adviceGeneratedCount.incrementAndGet()
             return listOf(
                 CoachingAdvice(
                     "Add your first gesture pattern to begin enrollment",

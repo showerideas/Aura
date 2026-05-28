@@ -1,6 +1,7 @@
 package com.showerideas.aura.identity
 
-import android.util.Base64
+import java.util.Base64
+
 import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDate
@@ -97,10 +98,7 @@ data class MdocDocument(
             return try {
                 val json = org.json.JSONObject(vpTokenJson)
                 val vpToken = json.getString("vp_token")
-                val deviceResponseBytes = android.util.Base64.decode(
-                    vpToken,
-                    android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP
-                )
+                val deviceResponseBytes = java.util.Base64.getUrlDecoder().decode(vpToken)
 
                 // Decode CBOR DeviceResponse → extract IssuerSigned elements.
                 // Full multipaz CBOR decoding is a follow-on dependency PR.
