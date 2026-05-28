@@ -1,13 +1,14 @@
 # GitHub Actions CI for AURA.
 #
-# Every PR and every push to main runs:
+# Two parallel jobs — each on its own runner, each with a 90-min budget:
 #
-#   1. testDebugUnitTest        — JVM unit tests. ~1 minute on a clean runner.
-#   2. lintGmsDebug             — Android Lint. Fails on new issues.
-#   3. assembleGmsRelease       — Full GMS release build (R8 + shrinking). Unsigned in CI.
-#      assembleFossRelease      — Wi-Fi Direct transport build. Both validate ProGuard rules.
-#   4. check-mediapipe-classes  — Assert MediaPipe classes survived R8.
-#   5. check-apk-size           — Fail if APK exceeds size thresholds.
+#   test  — JVM unit tests (GMS + FOSS) + JaCoCo coverage gate.
+#   build — Android Lint + assembleGmsRelease + assembleFossRelease
+#           + MediaPipe R8 check + APK size gate.
+#
+# Running in parallel means wall-clock time ≈ max(test_time, build_time)
+# instead of their sum. Cold Kotlin compilation (~35-45 min on a 2-core
+# runner) happens independently in each job but no longer blocks the other.
 #
 # Note: INTERNET permission is intentionally declared (QR relay POST feature).
 # Signed APK releases are handled by release.yml (triggered on version tags).
@@ -29,10 +30,16 @@ concurrency:
 # upload-artifact, gradle/setup-gradle) ship native Node.js 24 support.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
 jobs:
-  build:
-    name: Build & test
+  # ---------------------------------------------------------------------------
+  # Job 1: Unit tests + coverage gate
+  # Compiles app + test sources, runs 87 test classes with parallel forks,
+  # generates JaCoCo XML and enforces the 40% branch-coverage floor.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Unit tests & coverage
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -49,9 +56,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Prompt-5: Cache the MediaPipe gesture model so CI doesn't re-download
-      # 8 MB on every run. Cache key is the expected SHA-256 of the model file
-      # so a model update (different hash) automatically busts the cache.
+      # Cache the MediaPipe gesture model so CI doesn't re-download 8 MB on
+      # every run. Cache key is the expected SHA-256 of the model file so a
+      # model update (different hash) automatically busts the cache.
       - name: Cache MediaPipe gesture model
         uses: actions/cache@v4
         with:
@@ -62,17 +69,14 @@ jobs:
 
       - name: Unit tests GMS (testGmsDebugUnitTest)
         run: ./gradlew testGmsDebugUnitTest --stacktrace
+
       - name: Unit tests FOSS (testFossDebugUnitTest)
         run: ./gradlew testFossDebugUnitTest --stacktrace
-        env:
-          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       # Prompt-10: generate JaCoCo XML report and enforce the 40% branch-
       # coverage floor. The report artifact is uploaded for tracking over time.
       - name: JaCoCo coverage report + gate (jacocoTestReport)
         run: ./gradlew jacocoTestReport --stacktrace
-        env:
-          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       - name: Upload JaCoCo XML coverage report
         if: always()
@@ -82,6 +86,46 @@ jobs:
           path: app/build/reports/jacoco/jacocoTestReport/
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Lint + release builds + APK validation
+  # Runs in parallel with the test job — independent Kotlin compilation on a
+  # separate runner so neither job blocks the other.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Lint & assemble
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache MediaPipe gesture model
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/assets/gesture_recognizer.task
+          key: mediapipe-gesture-model-${{ vars.GESTURE_MODEL_SHA256 || 'latest' }}
+          restore-keys: |
+            mediapipe-gesture-model-
 
       - name: Android Lint (lintGmsDebug)
         run: ./gradlew lintGmsDebug --stacktrace
@@ -98,7 +142,6 @@ jobs:
           KEYSTORE_STORE_PASSWORD: ""
           KEYSTORE_KEY_ALIAS: ""
           KEYSTORE_KEY_PASSWORD: ""
-          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       - name: Assemble FOSS release (assembleFossRelease)
         run: ./gradlew assembleFossRelease --stacktrace
@@ -107,12 +150,9 @@ jobs:
           KEYSTORE_STORE_PASSWORD: ""
           KEYSTORE_KEY_ALIAS: ""
           KEYSTORE_KEY_PASSWORD: ""
-          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       - name: Validate gesture bundle
         run: ./scripts/validate_gesture_bundle.sh app/src/main/assets/gesture_recognizer.task
-        env:
-          GESTURE_MODEL_SHA256: ${{ vars.GESTURE_MODEL_SHA256 }}
 
       # Prompt-5: assert MediaPipe classes survived R8. Without the -keep rules
       # in proguard-rules.pro, R8 strips all com.google.mediapipe.** classes and
@@ -185,15 +225,13 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload test reports
+      - name: Upload lint reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
+          name: lint-reports
           path: |
-            app/build/reports/tests
             app/build/reports/lint-results-gmsDebug.html
             app/build/reports/lint-results-gmsDebug.xml
           if-no-files-found: ignore
           retention-days: 14
-
