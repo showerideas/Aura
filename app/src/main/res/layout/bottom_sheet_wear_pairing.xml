@@ -33,6 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
+        android:accessibilityLiveRegion="polite"
         android:gravity="center"
         android:textAppearance="?attr/textAppearanceBodyMedium" />
 

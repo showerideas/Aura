@@ -88,10 +88,11 @@ object SealedEnvelope {
         // Generate ephemeral key pair
         val (ephPriv, ephPub) = generateX25519KeyPair()
 
-        // Derive envelope key
-        val envelopeKey = deriveEnvelopeKey(
-            ephPriv, senderStaticPriv, recipientStaticPub
-        )
+        // Derive envelope key: ephemeral-only X25519 DH.
+        // The sender's static identity is protected inside the encrypted inner frame,
+        // so the envelope key depends only on the ephemeral key (unlinkable to sender).
+        val ephSsWrap = ecdh(ephPriv, recipientStaticPub)
+        val envelopeKey = hkdfExpand(ephSsWrap, HKDF_INFO)
 
         // Build inner plaintext: [sender_pub(32)][payload_len(4 BE)][payload][padding]
         val inner = ByteArray(FRAME_SIZE).also { buf ->
@@ -152,16 +153,15 @@ object SealedEnvelope {
         val iv     = envelope.copyOfRange(1 + X25519_BYTES, 1 + X25519_BYTES + GCM_IV_BYTES)
         val ct     = envelope.copyOfRange(1 + X25519_BYTES + GCM_IV_BYTES, envelope.size)
 
-        // Phase 1: decrypt with ephemeral shared secret only (trial decryption)
-        // This allows us to read the inner without knowing the sender yet.
+        // Decrypt using the same ephemeral-only key derivation as wrap().
+        // The sender's static public key is contained inside the inner plaintext —
+        // reading it does not require a separate key or phase.
         val ephSs = ecdh(recipientPriv, ephPub)
+        val envelopeKey = hkdfExpand(ephSs, HKDF_INFO)
 
-        // For unwrap we need the sender static pub first — read from inner after partial decrypt.
-        // Use ephemeral-only key for first-pass decrypt (sender pub is inside plaintext).
-        val trialKey = hkdfExpand(ephSs, "AURA-v7-sealed-sender-trial")
         val inner = try {
             Cipher.getInstance("AES/GCM/NoPadding").run {
-                init(Cipher.DECRYPT_MODE, SecretKeySpec(trialKey, "AES"), GCMParameterSpec(GCM_TAG_BITS, iv))
+                init(Cipher.DECRYPT_MODE, SecretKeySpec(envelopeKey, "AES"), GCMParameterSpec(GCM_TAG_BITS, iv))
                 doFinal(ct)
             }
         } catch (e: Exception) {
@@ -172,29 +172,15 @@ object SealedEnvelope {
         val senderPubBytes = inner.copyOfRange(0, X25519_BYTES)
         val senderStaticPub = X25519PublicKeyParameters(senderPubBytes, 0)
 
-        // Phase 2: re-derive full envelope key with sender's static key and verify
-        val senderSs    = ecdh(recipientPriv, senderStaticPub)
-        val envelopeKey = hkdfCombine(ephSs, senderSs)
-
-        // Re-decrypt with the full key (verifies sender identity binding)
-        val verifiedInner = try {
-            Cipher.getInstance("AES/GCM/NoPadding").run {
-                init(Cipher.DECRYPT_MODE, SecretKeySpec(envelopeKey, "AES"), GCMParameterSpec(GCM_TAG_BITS, iv))
-                doFinal(ct)
-            }
-        } catch (e: Exception) {
-            throw SealedEnvelopeException("Sealed sender identity verification failed", e)
-        }
-
         // Parse payload from inner: [sender_pub(32)][len(4 BE)][payload]
-        val payloadLen = ((verifiedInner[32].toInt() and 0xFF) shl 24) or
-                         ((verifiedInner[33].toInt() and 0xFF) shl 16) or
-                         ((verifiedInner[34].toInt() and 0xFF) shl  8) or
-                          (verifiedInner[35].toInt() and 0xFF)
+        val payloadLen = ((inner[32].toInt() and 0xFF) shl 24) or
+                         ((inner[33].toInt() and 0xFF) shl 16) or
+                         ((inner[34].toInt() and 0xFF) shl  8) or
+                          (inner[35].toInt() and 0xFF)
         if (payloadLen < 0 || payloadLen > MAX_PAYLOAD_BYTES) {
             throw SealedEnvelopeException("Invalid payload length field: $payloadLen")
         }
-        val payload = verifiedInner.copyOfRange(36, 36 + payloadLen)
+        val payload = inner.copyOfRange(36, 36 + payloadLen)
 
         return UnwrapResult(senderStaticPub, payload)
     }

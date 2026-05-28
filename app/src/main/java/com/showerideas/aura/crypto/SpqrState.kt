@@ -137,8 +137,10 @@ class SpqrState(
             Timber.d("SpqrState: PQ ratchet step applied (receiver)")
         }
 
-        // Sender-side SPQR step: if interval hit, schedule new ML-KEM ciphertext
-        if (messageCounter > 0 && messageCounter % SPQR_STEP_INTERVAL == 0L && localPqPub != null) {
+        // Sender-side SPQR step: fire on the N-th call (N = SPQR_STEP_INTERVAL, 2N, …)
+        // messageCounter is still pre-increment; (counter+1) % interval == 0 triggers on
+        // call 10, 20, 30, … matching the test expectation ("fires at message == INTERVAL").
+        if ((messageCounter + 1) % SPQR_STEP_INTERVAL == 0L && localPqPub != null) {
             val enc = MLKEMGenerator(rng)
             val encResult = enc.generateEncapsulated(localPqPub!!)
             val ct = encResult.encapsulation

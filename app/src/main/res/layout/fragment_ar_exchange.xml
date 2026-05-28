@@ -38,7 +38,8 @@
             style="?android:attr/progressBarStyleSmall"
             android:layout_width="16dp"
             android:layout_height="16dp"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:importantForAccessibility="no" />
 
         <TextView
             android:id="@+id/tvScanningLabel"

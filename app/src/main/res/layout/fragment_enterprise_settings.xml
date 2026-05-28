@@ -22,6 +22,7 @@
                 android:id="@+id/tv_mdm_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:accessibilityLiveRegion="polite"
                 android:padding="16dp"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
         </com.google.android.material.card.MaterialCardView>

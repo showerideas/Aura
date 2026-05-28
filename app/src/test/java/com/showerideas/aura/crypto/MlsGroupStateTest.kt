@@ -62,8 +62,11 @@ class MlsGroupStateTest {
 
     @Test
     fun `process commit from another member advances epoch correctly`() {
+        // Both groups must start from the SAME initial secret — MLS requires the creator
+        // to distribute the init secret (via a Welcome) so all members share epoch 0.
+        val sharedInit = ByteArray(32) { 88.toByte() }
         val group1 = MlsGroupState("room-003")
-        group1.initialize("alice")
+        group1.initialize("alice", sharedInit)
 
         val commitSecret = ByteArray(32) { 42 }
         group1.commit(addedId = "carol", commitSecret = commitSecret)
@@ -71,7 +74,7 @@ class MlsGroupStateTest {
 
         // Simulate second group member (bob) receiving the same commit
         val group2 = MlsGroupState("room-003")
-        group2.initialize("alice")  // same init state
+        group2.initialize("alice", sharedInit)  // same init state
         group2.processCommit(addedId = "carol", commitSecret = commitSecret, confirmationTag = tag)
 
         assertEquals("Both must be at epoch 1", 1L, group1.epoch)

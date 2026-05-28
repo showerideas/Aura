@@ -262,8 +262,12 @@ class HybridIdentityKey @Inject constructor() {
         val sLen = der[i + 1].toInt() and 0xFF; i += 2
         val sBytes = der.copyOfRange(i, i + sLen)
         val raw = ByteArray(64)
-        rBytes.copyInto(raw, 32 - rBytes.size.coerceAtMost(32))
-        sBytes.copyInto(raw, 64 - sBytes.size.coerceAtMost(32))
+        // DER INTEGERs prepend 0x00 when the high bit is set (to keep value positive).
+        // Strip any such leading zero before right-aligning into the 32-byte field.
+        val rTrimmed = if (rBytes.size > 32) rBytes.copyOfRange(rBytes.size - 32, rBytes.size) else rBytes
+        val sTrimmed = if (sBytes.size > 32) sBytes.copyOfRange(sBytes.size - 32, sBytes.size) else sBytes
+        rTrimmed.copyInto(raw, 32 - rTrimmed.size)
+        sTrimmed.copyInto(raw, 64 - sTrimmed.size)
         return raw
     }
 

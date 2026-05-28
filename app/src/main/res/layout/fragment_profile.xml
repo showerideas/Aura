@@ -175,6 +175,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:accessibilityLiveRegion="polite"
             android:text="@string/profile_gesture_status_none"
             android:textColor="@color/on_surface_secondary"
             android:textSize="13sp" />
